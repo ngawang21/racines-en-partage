@@ -1,0 +1,70 @@
+---
+// Quantity stepper of the add-to-cart contract: `[data-qty]` wraps
+// `input[data-qty-for=<sku>]` and two `button[data-qty-step]`. The cart
+// client clamps the value to 1..maxQuantityPerLine and the add button of the
+// same SKU reads it. Styles: src/styles/cart.css (`.qty`).
+import Icon from './Icon.astro';
+
+interface Props {
+  sku: string;
+  max: number;
+  /** Visible label text ("Quantité"). */
+  label: string;
+  decreaseLabel: string;
+  increaseLabel: string;
+  value?: number;
+  disabled?: boolean;
+  class?: string;
+}
+const {
+  sku,
+  max,
+  label,
+  decreaseLabel,
+  increaseLabel,
+  value = 1,
+  disabled = false,
+  class: className,
+} = Astro.props;
+const id = `qty-${sku.toLowerCase()}`;
+---
+
+<div class:list={['qty-field', className]}>
+  <label class="qty-label" for={id}>{label}</label>
+  <div class="qty" data-qty>
+    <button
+      type="button"
+      class="qty-btn"
+      data-qty-step="-1"
+      aria-label={decreaseLabel}
+      aria-controls={id}
+      aria-disabled={value <= 1 ? 'true' : 'false'}
+      disabled={disabled}
+    >
+      <Icon name="minus" size={18} />
+    </button>
+    <input
+      class="qty-input"
+      id={id}
+      type="number"
+      inputmode="numeric"
+      min="1"
+      max={max}
+      step="1"
+      value={value}
+      data-qty-for={sku}
+      disabled={disabled}
+    />
+    <button
+      type="button"
+      class="qty-btn"
+      data-qty-step="1"
+      aria-label={increaseLabel}
+      aria-controls={id}
+      aria-disabled={value >= max ? 'true' : 'false'}
+      disabled={disabled}
+    >
+      <Icon name="plus" size={18} />
+    </button>
+  </div>
+</div>

@@ -414,3 +414,202 @@ p {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* ======================================================================
+   Storefront utilities (wave 2A). Appended; the foundation rules above and
+   the tokens stay untouched.
+   ====================================================================== */
+
+/* Body copy at 17 px on wide screens; section rhythm 48 to 96 px. */
+@media (min-width: 900px) {
+  body {
+    font-size: 1.0625rem;
+  }
+}
+.section {
+  padding-block: clamp(3rem, 2rem + 4.5vw, 6rem);
+}
+.section-sm {
+  padding-block: clamp(2.5rem, 1.75rem + 3vw, 4rem);
+}
+.stack > * + * {
+  margin-top: var(--stack, var(--space-4));
+}
+.measure {
+  max-width: 62ch;
+}
+
+/* Section heading: eyebrow and title on the left, an optional link on the right. */
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-8);
+  margin-bottom: clamp(var(--space-8), 4vw, var(--space-12));
+}
+.section-head h2 {
+  font-size: var(--fs-5);
+}
+.section-head .eyebrow {
+  margin-bottom: var(--space-3);
+}
+.section-head.centered {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Text link with a chevron that moves a little on hover. */
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  color: var(--forest);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--kraft);
+  text-underline-offset: 6px;
+  transition: text-decoration-color var(--dur-fast) var(--ease-out);
+}
+.link-arrow svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  transition: transform 200ms var(--ease-out);
+}
+.link-arrow:hover {
+  text-decoration-color: var(--forest);
+}
+.link-arrow:hover svg {
+  transform: translateX(3px);
+}
+.band-forest .link-arrow {
+  color: var(--cream);
+  text-decoration-color: var(--gold);
+}
+
+/* Quiet lift for cards and tiles: 2 px, soft shadow, 200 ms. */
+.lift {
+  transition:
+    transform 200ms var(--ease-out),
+    box-shadow 200ms var(--ease-out);
+}
+@media (hover: hover) {
+  .lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-soft);
+  }
+}
+
+/* Product grid: 2, 3 then 4 columns. */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-8) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 720px) {
+  .product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-12) var(--space-6);
+  }
+}
+@media (min-width: 1080px) {
+  .product-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Small rounded label used for weight, origin and "free from" values. */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--forest);
+  font-size: var(--fs--1);
+  font-weight: 500;
+  line-height: 1.3;
+}
+.tag svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--leaf);
+}
+
+/* Breadcrumbs */
+.crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ink-2);
+  font-size: var(--fs--1);
+}
+.crumbs li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.crumbs li + li::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-top: 1.5px solid var(--kraft-deep);
+  border-right: 1.5px solid var(--kraft-deep);
+  transform: rotate(45deg);
+}
+.crumbs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+.crumbs a:hover {
+  color: var(--forest);
+  text-decoration: underline;
+}
+.crumbs [aria-current] {
+  color: var(--forest);
+  font-weight: 500;
+}
+
+/* Page header shared by the inner pages. */
+.page-head {
+  padding-block: clamp(2rem, 1.5rem + 2.5vw, 3.5rem) clamp(2rem, 1.5rem + 2vw, 3rem);
+}
+.page-head h1 {
+  font-size: var(--fs-6);
+}
+.page-head .lead {
+  margin-top: var(--space-4);
+}
+.page-head .crumbs {
+  margin-bottom: var(--space-6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lift,
+  .link-arrow svg {
+    transition: none;
+  }
+  .lift:hover {
+    transform: none;
+  }
+  .link-arrow:hover svg {
+    transform: none;
+  }
+}

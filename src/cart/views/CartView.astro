@@ -1,0 +1,89 @@
+---
+// Cart page (spec 5.4): lines with pictures, steppers and remove, subtotal,
+// free-shipping progress, continue shopping and "Commander". The shell is
+// static; src/cart/page-cart.ts renders the browser cart into it.
+import Icon from '../../components/Icon.astro';
+import type { Locale } from '../../consts';
+import type { LocaleContent } from '../../content/locale-schema';
+import { routePath } from '../../i18n/routing';
+
+interface Props {
+  locale: Locale;
+  t: LocaleContent;
+  shopOpen: boolean;
+}
+const { locale, t, shopOpen } = Astro.props;
+---
+
+<section class="container cart-page" data-cart-page aria-busy="true">
+  <header class="rep-head">
+    <h1 class="rep-title">{t.cart.title}</h1>
+    <p class="rep-sub" data-cart-page-count></p>
+  </header>
+
+  <div class="cart-layout" data-cart-page-content hidden>
+    <div class="cart-layout-main">
+      <ul class="cart-lines cart-lines--page" role="list" data-cart-page-lines></ul>
+      <a class="text-link back-link" href={routePath('shop', locale)}>
+        <Icon name="chevron" size={18} class="icon-flip" />
+        {t.cart.continue}
+      </a>
+    </div>
+
+    <aside class="summary-card" aria-labelledby="cart-summary-title">
+      <h2 id="cart-summary-title" class="summary-title">{t.checkout.summaryTitle}</h2>
+      <div class="free-shipping" data-free-shipping hidden>
+        <p class="free-shipping-text" data-free-text></p>
+        <div
+          class="free-shipping-bar"
+          role="progressbar"
+          aria-label={t.cart.freeShippingProgress}
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+          data-free-bar
+        >
+          <span class="free-shipping-fill" data-free-fill></span>
+        </div>
+      </div>
+      <dl class="summary-rows">
+        <div class="summary-row">
+          <dt>{t.cart.subtotal}</dt>
+          <dd class="price" data-cart-page-subtotal></dd>
+        </div>
+        <div class="summary-row is-muted">
+          <dt>{t.cart.shipping}</dt>
+          <dd>{t.cart.shippingNextStep}</dd>
+        </div>
+      </dl>
+      <p class="summary-note">
+        <Icon name="truck" size={20} />
+        <span>{t.cart.deliveryNote}</span>
+      </p>
+      <p class="notice notice--error" data-cart-page-alert hidden>
+        {t.checkout.unavailableLines}
+      </p>
+      {!shopOpen && <p class="notice">{t.shop.closedNotice}</p>}
+      <a
+        class="btn btn-primary btn-block"
+        href={routePath('checkout', locale)}
+        data-cart-page-checkout
+        aria-disabled={shopOpen ? undefined : 'true'}
+      >
+        {t.cart.checkout}
+        <Icon name="chevron" size={18} />
+      </a>
+      <p class="secure-note">
+        <Icon name="lock" size={16} />
+        <span>{t.cart.secureNote}</span>
+      </p>
+    </aside>
+  </div>
+
+  <div class="cart-empty cart-page-empty" data-cart-page-empty hidden>
+    <span class="cart-empty-mark" aria-hidden="true"><Icon name="flower" size={32} /></span>
+    <p class="cart-empty-title">{t.cart.empty}</p>
+    <p class="cart-empty-lead">{t.cart.emptyLead}</p>
+    <a class="btn btn-primary" href={routePath('shop', locale)}>{t.cart.continue}</a>
+  </div>
+</section>

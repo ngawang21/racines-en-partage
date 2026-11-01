@@ -1,5 +1,8 @@
 ---
+import { Image } from 'astro:assets';
+import medallion from '../assets/brand/medallion.webp';
 import Base from '../layouts/Base.astro';
+import Ornament from '../components/Ornament.astro';
 import { loadLocale } from '../i18n/locale';
 import { routePath } from '../i18n/routing';
 
@@ -13,18 +16,77 @@ const [fr, en] = await Promise.all([loadLocale('fr'), loadLocale('en')]);
   title={`${fr.errors.notFoundTitle} / ${en.errors.notFoundTitle}`}
   description={fr.errors.notFoundText}
 >
-  <section class="container section">
+  <section class="container section nf">
+    <Image
+      src={medallion}
+      alt=""
+      width={120}
+      height={120}
+      densities={[1, 2]}
+      class="nf-medallion"
+    />
     <p class="eyebrow">404</p>
     <h1>{fr.errors.notFoundTitle}</h1>
     <p class="lead">{fr.errors.notFoundText}</p>
-    <p class="lead" lang="en">{en.errors.notFoundTitle}. {en.errors.notFoundText}</p>
-    <p>
-      <a class="btn btn-primary" href={routePath('home', 'fr')}>{fr.errors.backHome}</a>{' '}
-      <a class="btn btn-secondary" href={routePath('shop', 'fr')}>{fr.errors.toShop}</a>{' '}
-      <a class="btn btn-ghost" href={routePath('home', 'en')} lang="en">{en.errors.backHome}</a>{
-        ' '
-      }
-      <a class="btn btn-ghost" href={routePath('shop', 'en')} lang="en">{en.errors.toShop}</a>
-    </p>
+    <div class="nf-ctas">
+      <a class="btn btn-primary" href={routePath('shop', 'fr')}>{fr.errors.toShop}</a>
+      <a class="btn btn-secondary" href={routePath('home', 'fr')}>{fr.errors.backHome}</a>
+    </div>
+
+    <Ornament class="nf-ornament" />
+
+    <div lang="en" class="nf-en">
+      <p class="nf-en-title">{en.errors.notFoundTitle}</p>
+      <p class="nf-en-text">{en.errors.notFoundText}</p>
+      <div class="nf-ctas">
+        <a class="btn btn-secondary" href={routePath('shop', 'en')}>{en.errors.toShop}</a>
+        <a class="btn btn-ghost" href={routePath('home', 'en')}>{en.errors.backHome}</a>
+      </div>
+    </div>
   </section>
 </Base>
+
+<style>
+  .nf {
+    display: grid;
+    justify-items: center;
+    max-width: 760px;
+    text-align: center;
+  }
+  .nf :global(.nf-medallion) {
+    width: 104px;
+    height: 104px;
+    margin-bottom: var(--space-6);
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 6px var(--cream),
+      0 0 0 7px var(--gold);
+  }
+  h1 {
+    margin-top: var(--space-3);
+    font-size: var(--fs-5);
+  }
+  .lead {
+    margin-top: var(--space-4);
+  }
+  .nf-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+  }
+  .nf :global(.nf-ornament) {
+    width: min(360px, 100%);
+    margin-block: var(--space-12);
+  }
+  .nf-en-title {
+    font-family: var(--font-display);
+    font-size: var(--fs-3);
+    font-weight: 600;
+  }
+  .nf-en-text {
+    margin-top: var(--space-2);
+    color: var(--ink-2);
+  }
+</style>

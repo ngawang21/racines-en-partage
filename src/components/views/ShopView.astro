@@ -1,0 +1,240 @@
+---
+// Shop page, both locales (spec 5.4): category chips, sort select and the
+// full grid. The grid is complete without JavaScript; shop-filter.ts filters
+// and sorts the rendered cards and mirrors the state in the URL hash.
+import type { Locale } from '../../consts';
+import Base from '../../layouts/Base.astro';
+import { loadCategories, loadLocale, loadProducts, loadSettings } from '../../i18n/locale';
+import { routePath, routeUrl } from '../../i18n/routing';
+import Breadcrumbs from '../Breadcrumbs.astro';
+import ProductGrid from '../ProductGrid.astro';
+import { countLabel } from '../storefront';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const [t, categories, loaded, settings] = await Promise.all([
+  loadLocale(locale),
+  loadCategories(locale),
+  loadProducts(locale),
+  loadSettings(),
+]);
+// Default order: featured first, then the catalogue order (category, name).
+const products = [...loaded].sort((a, b) => Number(b.featured) - Number(a.featured));
+const counts: Record<string, number> = {};
+for (const p of products) counts[p.category] = (counts[p.category] ?? 0) + 1;
+const chips = [
+  { value: 'all', label: t.shop.all, count: products.length },
+  ...categories.map((c) => ({ value: c.slug, label: c.name, count: counts[c.slug] ?? 0 })),
+];
+const sorts = [
+  { value: 'featured', label: t.shop.sortFeatured },
+  { value: 'price-asc', label: t.shop.sortPriceAsc },
+  { value: 'price-desc', label: t.shop.sortPriceDesc },
+  { value: 'name', label: t.shop.sortName },
+];
+---
+
+<Base
+  {locale}
+  routeKey="shop"
+  title={t.shop.metaTitle}
+  description={t.shop.metaDescription}
+  graph={{
+    items: products.map((p) => ({ name: p.name, url: routeUrl('product', locale, p.slug) })),
+  }}
+>
+  <div class="container page-head">
+    <Breadcrumbs
+      label={t.a11y.breadcrumb}
+      items={[{ name: t.nav.home, href: routePath('home', locale) }, { name: t.nav.shop }]}
+    />
+    <h1>{t.shop.title}</h1>
+    <p class="lead">{t.shop.intro}</p>
+  </div>
+
+  <section class="container shop" aria-labelledby="shop-results">
+    <noscript
+      ><style is:inline>
+        .shop-tools {
+          display: none;
+        }
+      </style></noscript
+    >
+    <div
+      class="shop-tools"
+      data-shop-tools
+      data-count-one={t.shop.countOne.replace('{count}', '%n')}
+      data-count-many={t.shop.countMany.replace('{count}', '%n')}
+      data-locale={locale}
+    >
+      <div class="chips" role="group" aria-label={t.shop.filterLabel}>
+        {
+          chips.map((c, i) => (
+            <button
+              type="button"
+              class="chip"
+              data-filter={c.value}
+              aria-pressed={i === 0 ? 'true' : 'false'}
+            >
+              <span>{c.label}</span>
+              <span class="chip-count" aria-hidden="true">
+                {c.count}
+              </span>
+            </button>
+          ))
+        }
+      </div>
+      <div class="sort">
+        <label for="shop-sort">{t.shop.sortLabel}</label>
+        <div class="select">
+          <select id="shop-sort" data-sort>
+            {sorts.map((s) => <option value={s.value}>{s.label}</option>)}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <p id="shop-results" class="count" aria-live="polite" data-count>
+      {countLabel(products.length, t, locale)}
+    </p>
+
+    <ProductGrid {products} {locale} {t} shopOpen={settings.shop.open} headingLevel="h2" />
+    <p class="empty" data-empty hidden>{t.shop.empty}</p>
+  </section>
+</Base>
+
+<script>
+  import '../../scripts/shop-filter';
+</script>
+
+<style>
+  .shop {
+    padding-bottom: clamp(3rem, 2rem + 4.5vw, 6rem);
+  }
+  .shop-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-6);
+    padding-block: var(--space-4);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .chips {
+    display: flex;
+    gap: var(--space-2);
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .chips::-webkit-scrollbar {
+    display: none;
+  }
+  @media (min-width: 900px) {
+    .chips {
+      flex-wrap: wrap;
+      margin-inline: 0;
+      padding-inline: 0;
+      overflow: visible;
+    }
+  }
+  .chip {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: rgba(255, 255, 255, 0.5);
+    color: var(--forest);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+  }
+  .chip:hover {
+    border-color: var(--kraft-deep);
+  }
+  .chip[aria-pressed='true'] {
+    border-color: var(--forest);
+    background: var(--forest);
+    color: var(--cream);
+  }
+  .chip-count {
+    min-width: 22px;
+    padding: 1px 6px;
+    border-radius: var(--radius-pill);
+    background: var(--paper);
+    color: var(--ink-2);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .chip[aria-pressed='true'] .chip-count {
+    background: rgba(251, 246, 234, 0.16);
+    color: var(--cream);
+  }
+  .sort {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .sort label {
+    color: var(--ink-2);
+    font-size: var(--fs--1);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .select {
+    position: relative;
+  }
+  .select::after {
+    content: '';
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    border-right: 1.5px solid var(--forest);
+    border-bottom: 1.5px solid var(--forest);
+    transform: translateY(-70%) rotate(45deg);
+    pointer-events: none;
+  }
+  select {
+    min-height: 44px;
+    padding: 0 40px 0 var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--forest);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    appearance: none;
+    cursor: pointer;
+  }
+  select:hover {
+    border-color: var(--kraft-deep);
+  }
+  .count {
+    margin-block: var(--space-6) var(--space-6);
+    color: var(--ink-2);
+    font-size: var(--fs--1);
+  }
+  .empty {
+    padding-block: var(--space-12);
+    color: var(--ink-2);
+    text-align: center;
+  }
+  :global([data-product-item][hidden]) {
+    display: none;
+  }
+</style>

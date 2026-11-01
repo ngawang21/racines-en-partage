@@ -1,0 +1,195 @@
+---
+// "Notre histoire", both locales (spec 5.4): the full logo, the story in
+// sections (alternating photo and text), then a way to the shop.
+import { Image } from 'astro:assets';
+import logoFull from '../../assets/brand/logo-full.webp';
+import type { Locale } from '../../consts';
+import Base from '../../layouts/Base.astro';
+import { loadLocale, loadPage } from '../../i18n/locale';
+import { routePath } from '../../i18n/routing';
+import Breadcrumbs from '../Breadcrumbs.astro';
+import Icon from '../Icon.astro';
+import Ornament from '../Ornament.astro';
+import Picture from '../Picture.astro';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const [t, page, home] = await Promise.all([
+  loadLocale(locale),
+  loadPage(locale, 'about'),
+  loadPage(locale, 'home'),
+]);
+---
+
+<Base {locale} routeKey="about" title={page.seoTitle} description={page.seoDescription}>
+  <div class="container page-head about-head">
+    <div>
+      <Breadcrumbs
+        label={t.a11y.breadcrumb}
+        items={[{ name: t.nav.home, href: routePath('home', locale) }, { name: page.title }]}
+      />
+      <h1>{page.title}</h1>
+      <p class="lead">{page.lead}</p>
+    </div>
+    <Image
+      src={logoFull}
+      alt={t.a11y.medallionAlt}
+      widths={[280, 420, 560]}
+      sizes="(min-width: 900px) 360px, 70vw"
+      class="about-logo"
+      loading="eager"
+    />
+  </div>
+
+  <div class="container">
+    <Ornament />
+  </div>
+
+  <div class="container sections">
+    {
+      page.sections.map((s, i) => (
+        <section class:list={['story', { 'has-image': s.image, flip: i % 4 === 2 }]}>
+          {s.image && (
+            <div class="story-media">
+              <Picture
+                src={s.image}
+                alt={s.imageAlt ?? ''}
+                preset="gallery"
+                sizes="(min-width: 900px) 520px, 100vw"
+              />
+            </div>
+          )}
+          <div class="story-copy">
+            <p class="story-index" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
+            </p>
+            <h2>{s.title}</h2>
+            <p class="story-body">{s.body}</p>
+          </div>
+        </section>
+      ))
+    }
+  </div>
+
+  <section class="band-forest cta" aria-labelledby="about-cta">
+    <div class="container section cta-inner">
+      <p class="eyebrow cta-eyebrow">{home.hero.eyebrow}</p>
+      <h2 id="about-cta" class="cta-title">
+        {home.hero.title}
+        <span class="accent">{home.hero.titleAccent}</span>
+      </h2>
+      <a class="btn btn-primary" href={routePath('shop', locale)}>
+        {home.hero.cta.primary}
+        <Icon name="chevron" />
+      </a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .about-head {
+    display: grid;
+    gap: var(--space-8);
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    .about-head {
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: var(--space-16);
+    }
+  }
+  .about-head :global(.crumbs) {
+    margin-bottom: var(--space-6);
+  }
+  .about-head :global(.about-logo) {
+    justify-self: center;
+    width: min(300px, 72vw);
+    height: auto;
+  }
+  @media (min-width: 900px) {
+    .about-head :global(.about-logo) {
+      width: 320px;
+    }
+  }
+  .sections {
+    display: grid;
+    gap: clamp(3rem, 2rem + 4vw, 6rem);
+    padding-block: clamp(3rem, 2rem + 4.5vw, 6rem);
+  }
+  .story {
+    display: grid;
+    gap: var(--space-8);
+    align-items: center;
+  }
+  .story:not(.has-image) .story-copy {
+    max-width: 680px;
+    margin-inline: auto;
+    text-align: center;
+  }
+  @media (min-width: 900px) {
+    .story.has-image {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      gap: var(--space-16);
+    }
+    .story.flip .story-media {
+      order: 2;
+    }
+  }
+  .story-media {
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    border: 1px solid var(--kraft);
+    border-radius: var(--radius-l);
+    background: var(--paper);
+  }
+  .story.has-image:not(.flip) .story-media {
+    aspect-ratio: 3 / 2;
+  }
+  .story.flip .story-media {
+    aspect-ratio: 5 / 4;
+  }
+  .story.flip .story-media :global(img) {
+    object-position: 50% 82%;
+  }
+  .story-media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 55%;
+  }
+  .story-index {
+    color: var(--kraft-deep);
+    font-family: var(--font-display);
+    font-size: var(--fs-2);
+    font-style: italic;
+  }
+  h2 {
+    margin-top: var(--space-2);
+    font-size: var(--fs-4);
+  }
+  .story-body {
+    margin-top: var(--space-4);
+    color: var(--ink-2);
+    font-size: var(--fs-1);
+    line-height: 1.7;
+  }
+  .cta-inner {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-6);
+    text-align: center;
+  }
+  .cta-eyebrow {
+    color: var(--gold);
+  }
+  .cta-title {
+    max-width: 18ch;
+    font-size: var(--fs-5);
+  }
+  .cta-title .accent {
+    display: block;
+    color: var(--kraft);
+  }
+</style>

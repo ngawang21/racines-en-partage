@@ -19,7 +19,13 @@
     "packagedBy": "Conditionné en France par l'ESAT Les Oliviers",
     "copyright": "© {year} Racines en Partage. Tous droits réservés.",
     "instagram": "Instagram",
-    "maps": "Voir sur Google Maps"
+    "maps": "Voir sur Google Maps",
+    "address": "Adresse",
+    "phone": "Téléphone",
+    "email": "E-mail",
+    "hours": "Horaires",
+    "moreQuestions": "Une autre question ?",
+    "writeUs": "Écrivez-nous ou appelez-nous, nous répondons personnellement."
   },
   "shop": {
     "title": "La boutique",
@@ -39,7 +45,13 @@
     "add": "Ajouter",
     "view": "Voir le produit",
     "closedNotice": "La boutique fait une petite pause. Vous pouvez parcourir nos produits ; les commandes reprendront très bientôt.",
-    "categoryKicker": "Catégorie"
+    "categoryKicker": "Catégorie",
+    "viewAll": "Voir toute la boutique",
+    "explore": "Découvrir",
+    "landsFrom": "Nos terres d'origine",
+    "landsTo": "Notre maison",
+    "recipeCta": "Voir la recette",
+    "otherCategories": "Nos autres univers"
   },
   "product": {
     "addToCart": "Ajouter au panier",
@@ -83,7 +95,8 @@
     "disclaimer": "À consommer dans le cadre d'une alimentation variée et équilibrée et d'un mode de vie sain. Tenir hors de portée des jeunes enfants.",
     "packagedBy": "Conditionné en France par l'ESAT Les Oliviers (Gennevilliers, 92)",
     "gallery": "Photos du produit",
-    "imageOf": "Photo {n} sur {total}"
+    "imageOf": "Photo {n} sur {total}",
+    "galleryDuo": "{name}, photo d'ensemble avec un autre produit de la gamme"
   },
   "cart": {
     "title": "Votre panier",
@@ -106,7 +119,18 @@
     "added": "{name} ajouté au panier",
     "updated": "Panier mis à jour",
     "removed": "{name} retiré du panier",
-    "close": "Fermer le panier"
+    "close": "Fermer le panier",
+    "unavailable": "Ce produit n'est plus proposé.",
+    "maxReached": "{max} sachets au maximum par produit",
+    "decreaseOf": "Diminuer la quantité : {name}",
+    "increaseOf": "Augmenter la quantité : {name}",
+    "quantityOf": "Quantité : {name}",
+    "removeOf": "Retirer {name} du panier",
+    "freeShippingProgress": "Progression vers la livraison offerte",
+    "deliveryNote": "Point Relais, domicile ou retrait gratuit à Arnouville : vous choisirez à l'étape suivante.",
+    "emptyLead": "Nos poudres, tisanes, graines et cacaos vous attendent.",
+    "unitPrice": "{price} l'unité",
+    "secureNote": "Paiement sécurisé par Stripe"
   },
   "checkout": {
     "title": "Votre commande",
@@ -134,7 +158,14 @@
     "chooseRelay": "Choisissez un point relais.",
     "acceptRequired": "Merci d'accepter les conditions générales de vente pour continuer.",
     "processing": "Redirection vers le paiement…",
-    "emptyCart": "Votre panier est vide : ajoutez un produit pour passer commande."
+    "emptyCart": "Votre panier est vide : ajoutez un produit pour passer commande.",
+    "editCart": "Modifier le panier",
+    "methodLegend": "Choisissez votre mode de livraison",
+    "freeFrom": "Offerte dès {threshold}",
+    "relayLoading": "Chargement de la carte des points relais…",
+    "relayCountries": "Points relais en : {countries}",
+    "pickupTitle": "Adresse de retrait",
+    "unavailableLines": "Retirez les produits indisponibles pour continuer."
   },
   "thanks": {
     "title": "Merci pour votre commande",
@@ -152,7 +183,14 @@
     "nextHome": "Colissimo vous envoie un lien de suivi dès l'expédition.",
     "nextPickup": "Nous vous appelons pour convenir d'un rendez-vous au 9 Rue du Marché, à Arnouville.",
     "nextContact": "Une question ? Écrivez à {email} ou appelez le {phone}.",
-    "backToShop": "Retour à la boutique"
+    "backToShop": "Retour à la boutique",
+    "loading": "Nous retrouvons votre commande…",
+    "unpaid": "Le paiement n'a pas abouti. Votre panier vous attend si vous souhaitez réessayer.",
+    "backToCart": "Retour au panier",
+    "emailSent": "Un récapitulatif a été envoyé à {email}.",
+    "statusPaid": "Payée",
+    "statusPending": "En attente de confirmation",
+    "statusUnpaid": "Non payée"
   },
   "errors": {
     "notFoundTitle": "Page introuvable",

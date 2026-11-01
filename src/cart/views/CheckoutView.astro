@@ -1,0 +1,214 @@
+---
+// Checkout (spec 5.4): 1) Récapitulatif, 2) Livraison (one radio card per
+// enabled method, relay reveals the Mondial Relay picker), 3) Paiement (total,
+// terms, pay). The methods are rendered here from the settings; the lines,
+// totals and the call to POST /api/checkout live in src/cart/page-checkout.ts.
+import Icon from '../../components/Icon.astro';
+import RelayPicker from '../../components/RelayPicker.astro';
+import { INTL_LOCALE, type Locale } from '../../consts';
+import type { LocaleContent } from '../../content/locale-schema';
+import { formatPrice } from '../../i18n/format';
+import { loadSettings } from '../../i18n/locale';
+import { routePath } from '../../i18n/routing';
+import { getClientCatalog } from '../catalog';
+import { pageStrings, serializeStrings } from '../strings';
+
+interface Props {
+  locale: Locale;
+  t: LocaleContent;
+}
+const { locale, t } = Astro.props;
+const [catalog, settings] = await Promise.all([getClientCatalog(locale), loadSettings()]);
+const shopOpen = catalog.shopOpen;
+const regions = new Intl.DisplayNames([INTL_LOCALE[locale]], { type: 'region' });
+const list = new Intl.ListFormat(INTL_LOCALE[locale], { style: 'long', type: 'conjunction' });
+const countryNames = (codes: string[]) => list.format(codes.map((c) => regions.of(c) ?? c));
+const ICON = { relay: 'pin', home: 'truck', pickup: 'leaf' } as const;
+const [termsBefore = '', termsAfter = ''] = t.checkout.acceptTerms.split('{terms}');
+const address = settings.brand.address;
+const threshold = catalog.freeShippingFrom;
+---
+
+<section class="container checkout" data-checkout aria-busy="true">
+  <header class="rep-head">
+    <h1 class="rep-title">{t.checkout.title}</h1>
+    <a class="text-link" href={routePath('cart', locale)}>
+      <Icon name="chevron" size={18} class="icon-flip" />
+      {t.checkout.editCart}
+    </a>
+  </header>
+
+  {!shopOpen && <p class="notice notice--closed">{t.shop.closedNotice}</p>}
+
+  <div class="cart-empty checkout-empty" data-checkout-empty hidden>
+    <span class="cart-empty-mark" aria-hidden="true"><Icon name="flower" size={32} /></span>
+    <p class="cart-empty-title">{t.checkout.emptyCart}</p>
+    <a class="btn btn-primary" href={routePath('shop', locale)}>{t.cart.continue}</a>
+  </div>
+
+  <div class="checkout-layout" data-checkout-content hidden>
+    <div class="checkout-main">
+      <section class="co-block" aria-labelledby="co-summary-title">
+        <h2 id="co-summary-title" class="co-title">
+          <span class="co-step" aria-hidden="true">1</span>
+          {t.checkout.summaryTitle}
+        </h2>
+        <ul class="cart-lines cart-lines--summary" role="list" data-co-lines></ul>
+      </section>
+
+      <section class="co-block" aria-labelledby="co-delivery-title">
+        <h2 id="co-delivery-title" class="co-title">
+          <span class="co-step" aria-hidden="true">2</span>
+          {t.checkout.deliveryTitle}
+        </h2>
+        <fieldset class="methods" data-co-methods aria-describedby="co-delivery-error">
+          <legend class="visually-hidden">{t.checkout.methodLegend}</legend>
+          {
+            catalog.shipping.map((m) => (
+              <div class="method" data-method={m.id}>
+                <label class="method-card">
+                  <input
+                    class="method-input"
+                    type="radio"
+                    name="delivery-method"
+                    value={m.id}
+                    disabled={!shopOpen}
+                  />
+                  <span class="method-mark" aria-hidden="true" />
+                  <span class="method-icon" aria-hidden="true">
+                    <Icon name={ICON[m.id]} />
+                  </span>
+                  <span class="method-text">
+                    <span class="method-label">{m.label}</span>
+                    <span class="method-estimate">{m.estimate}</span>
+                  </span>
+                  <span class="method-price">
+                    <span class="price" data-method-price={m.id} data-amount={m.amount}>
+                      {m.amount === 0 ? t.checkout.free : formatPrice(m.amount, locale)}
+                    </span>
+                    {m.amount > 0 && threshold !== null && (
+                      <span class="method-free" data-method-free={m.id}>
+                        {t.checkout.freeFrom.replace('{threshold}', formatPrice(threshold, locale))}
+                      </span>
+                    )}
+                  </span>
+                </label>
+                <div class="method-detail" data-method-detail={m.id} hidden>
+                  {m.id === 'relay' && (
+                    <>
+                      <p class="method-note">
+                        {t.checkout.relayCountries.replace(
+                          '{countries}',
+                          countryNames(m.countries),
+                        )}
+                      </p>
+                      <RelayPicker
+                        {locale}
+                        {t}
+                        countries={m.countries}
+                        email={settings.brand.email}
+                        phone={settings.brand.phone}
+                      />
+                    </>
+                  )}
+                  {m.id === 'home' && (
+                    <p class="method-note">
+                      {t.checkout.homeCountries.replace('{countries}', countryNames(m.countries))}
+                    </p>
+                  )}
+                  {m.id === 'pickup' && (
+                    <div class="pickup-card">
+                      <p class="eyebrow">{t.checkout.pickupTitle}</p>
+                      <address class="pickup-address">
+                        {address.street}
+                        <br />
+                        {address.postcode} {address.city}
+                      </address>
+                      <p class="method-note">{t.checkout.pickupNote}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          }
+        </fieldset>
+        <p id="co-delivery-error" class="field-error" data-co-delivery-error hidden></p>
+      </section>
+    </div>
+
+    <aside class="checkout-aside">
+      <section class="co-block co-pay summary-card" aria-labelledby="co-pay-title">
+        <h2 id="co-pay-title" class="co-title">
+          <span class="co-step" aria-hidden="true">3</span>
+          {t.checkout.paymentTitle}
+        </h2>
+        <div class="free-shipping" data-free-shipping hidden>
+          <p class="free-shipping-text" data-free-text></p>
+          <div
+            class="free-shipping-bar"
+            role="progressbar"
+            aria-label={t.cart.freeShippingProgress}
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+            data-free-bar
+          >
+            <span class="free-shipping-fill" data-free-fill></span>
+          </div>
+        </div>
+        <dl class="summary-rows">
+          <div class="summary-row">
+            <dt>{t.cart.subtotal}</dt>
+            <dd class="price" data-co-subtotal></dd>
+          </div>
+          <div class="summary-row">
+            <dt>{t.cart.shipping}</dt>
+            <dd data-co-shipping></dd>
+          </div>
+          <div class="summary-row is-total">
+            <dt>{t.cart.total}</dt>
+            <dd class="price" data-co-total></dd>
+          </div>
+        </dl>
+
+        <div class="terms">
+          <input
+            id="co-terms"
+            class="terms-input"
+            type="checkbox"
+            required
+            aria-describedby="co-terms-error"
+            data-co-terms
+            disabled={!shopOpen}
+          />
+          <label for="co-terms" class="terms-label">
+            {termsBefore}
+            <a href={routePath('terms', locale)} target="_blank" rel="noopener">
+              {t.checkout.termsLink}
+              <span class="visually-hidden"> {t.a11y.newTab}</span>
+            </a>
+            {termsAfter}
+          </label>
+        </div>
+        <p id="co-terms-error" class="field-error" data-co-terms-error hidden></p>
+
+        <div class="notice notice--error" role="alert" data-co-error hidden></div>
+
+        <button
+          type="button"
+          class="btn btn-primary btn-block btn-pay"
+          data-co-pay
+          disabled={!shopOpen}
+        >
+          <Icon name="lock" size={18} />
+          <span data-co-pay-label>{t.checkout.pay}</span>
+        </button>
+        <p class="secure-note">
+          <Icon name="shield" size={18} />
+          <span>{t.checkout.secureLine}</span>
+        </p>
+      </section>
+    </aside>
+  </div>
+</section>
+<script type="application/json" id="rep-page-strings" set:html={serializeStrings(pageStrings(t))} />

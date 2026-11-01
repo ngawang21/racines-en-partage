@@ -1,4 +1,5 @@
 ---
+import CheckoutView from '../../cart/views/CheckoutView.astro';
 import Base from '../../layouts/Base.astro';
 import { loadLocale } from '../../i18n/locale';
 
@@ -12,7 +13,5 @@ const t = await loadLocale(locale);
   title={t.checkout.metaTitle}
   description={t.checkout.metaDescription}
 >
-  <section class="container section">
-    <h1>{t.checkout.title}</h1>
-  </section>
+  <CheckoutView {locale} {t} />
 </Base>

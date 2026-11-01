@@ -1,13 +1,12 @@
 ---
+import CartView from '../../cart/views/CartView.astro';
 import Base from '../../layouts/Base.astro';
-import { loadLocale } from '../../i18n/locale';
+import { loadLocale, loadSettings } from '../../i18n/locale';
 
 const locale = 'en' as const;
-const t = await loadLocale(locale);
+const [t, settings] = await Promise.all([loadLocale(locale), loadSettings()]);
 ---
 
 <Base {locale} routeKey="cart" title={t.cart.metaTitle} description={t.cart.metaDescription}>
-  <section class="container section">
-    <h1>{t.cart.title}</h1>
-  </section>
+  <CartView {locale} {t} shopOpen={settings.shop.open} />
 </Base>

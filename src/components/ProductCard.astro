@@ -1,0 +1,171 @@
+---
+// One product in a grid (spec 5.4 shop): 4:5 framed photo, weight and origin,
+// name, price, stock status when it is not plain "in stock", and the add
+// button of the cart contract. The data-* attributes feed shop-filter.ts.
+import type { Locale } from '../consts';
+import type { LocaleContent } from '../content/locale-schema';
+import type { Product } from '../content/schemas';
+import { formatPrice, formatWeight, toCents } from '../i18n/format';
+import { routePath } from '../i18n/routing';
+import AddToCart from './AddToCart.astro';
+import Picture from './Picture.astro';
+import { STOCK_CLASS, stockLabel } from './storefront';
+
+interface Props {
+  product: Product;
+  locale: Locale;
+  t: LocaleContent;
+  shopOpen: boolean;
+  /** Position in the default ("featured") order, for sorting back. */
+  index?: number;
+  headingLevel?: 'h2' | 'h3';
+}
+const { product: p, locale, t, shopOpen, index = 0, headingLevel = 'h3' } = Astro.props;
+const Heading = headingLevel;
+const href = routePath('product', locale, p.slug);
+const cents = toCents(p.price);
+const weight = formatWeight(p.weightGrams, locale);
+---
+
+<article
+  class="card lift"
+  data-product-card
+  data-category={p.category}
+  data-price={cents}
+  data-name={p.name}
+  data-weight={p.weightGrams}
+  data-order={index}
+  data-featured={p.featured ? '' : undefined}
+>
+  <div class="frame card-media">
+    <Picture src={p.images[0]!} alt="" preset="card" />
+    {
+      p.stock !== 'in_stock' && (
+        <span class:list={['badge', STOCK_CLASS[p.stock], 'card-badge']}>
+          {stockLabel(p.stock, t)}
+        </span>
+      )
+    }
+  </div>
+  <div class="card-body">
+    <p class="card-meta">
+      <span>{weight}</span>
+      <span aria-hidden="true">·</span>
+      <span>{p.origin}</span>
+    </p>
+    <Heading class="card-title">
+      <a href={href}>{p.name}</a>
+    </Heading>
+    <div class="card-foot">
+      <p class="price card-price">{formatPrice(cents, locale)}</p>
+      <AddToCart
+        sku={p.sku}
+        stock={p.stock}
+        {shopOpen}
+        label={t.shop.add}
+        outLabel={t.product.stockOut}
+        srSuffix={`, ${p.name} ${weight}`}
+        icon
+        class="card-add"
+      />
+    </div>
+  </div>
+</article>
+
+<style>
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border-radius: var(--radius-m);
+    container-type: inline-size;
+  }
+  .card-media {
+    position: relative;
+  }
+  .card-media :global(img) {
+    object-position: 50% 60%;
+  }
+  .card-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: var(--cream);
+    box-shadow: var(--shadow-soft);
+  }
+  .card-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 6px;
+    padding: var(--space-4) 2px 2px;
+  }
+  .card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 6px;
+    color: var(--ink-2);
+    font-size: var(--fs--1);
+    letter-spacing: 0.01em;
+  }
+  .card-title {
+    font-size: clamp(1.125rem, 1.05rem + 0.35vw, 1.3125rem);
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  .card-title a {
+    color: var(--forest);
+    text-decoration: none;
+  }
+  /* The name's link covers the card; the add button sits above it. */
+  .card-title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: var(--radius-m);
+  }
+  .card-title a:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+  .card-title a:focus-visible::after {
+    outline: 3px solid var(--hibiscus);
+    outline-offset: 4px;
+  }
+  .card:hover .card-title a {
+    text-decoration: underline;
+    text-decoration-color: var(--kraft);
+  }
+  .card-foot {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+    margin-top: auto;
+    padding-top: var(--space-2);
+  }
+  .card-price {
+    font-size: var(--fs-2);
+    line-height: 1.2;
+  }
+  .card-foot :global(.card-add) {
+    position: relative;
+    z-index: 2;
+    min-height: 44px;
+    padding-inline: var(--space-4);
+    font-size: 0.9375rem;
+  }
+  .card-foot :global(.card-add svg) {
+    width: 18px;
+    height: 18px;
+  }
+  @container (min-width: 230px) {
+    .card-foot {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+</style>

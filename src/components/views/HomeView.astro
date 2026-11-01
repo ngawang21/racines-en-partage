@@ -1,0 +1,99 @@
+---
+// Home page, both locales (spec 5.4).
+import duoMoringa from '../../assets/brand/duo-moringa.webp';
+import type { Locale } from '../../consts';
+import Base from '../../layouts/Base.astro';
+import {
+  loadCategories,
+  loadLocale,
+  loadPage,
+  loadProducts,
+  loadSettings,
+} from '../../i18n/locale';
+import { routePath } from '../../i18n/routing';
+import CategoryTiles from '../CategoryTiles.astro';
+import Commitment from '../Commitment.astro';
+import Hero from '../Hero.astro';
+import Ornament from '../Ornament.astro';
+import ProductGrid from '../ProductGrid.astro';
+import Reassurance from '../Reassurance.astro';
+import RecipeCards from '../RecipeCards.astro';
+import SectionHead from '../SectionHead.astro';
+import StoryBand from '../StoryBand.astro';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const [t, home, products, categories, settings] = await Promise.all([
+  loadLocale(locale),
+  loadPage(locale, 'home'),
+  loadProducts(locale),
+  loadCategories(locale),
+  loadSettings(),
+]);
+const featured = products.filter((p) => p.featured).slice(0, 4);
+const bySlug = new Map(products.map((p) => [p.slug, p]));
+const recipeProducts = home.recipeProducts
+  .map((slug) => bySlug.get(slug))
+  .filter((p): p is NonNullable<typeof p> => p !== undefined);
+const counts: Record<string, number> = {};
+for (const p of products) counts[p.category] = (counts[p.category] ?? 0) + 1;
+const shopHref = routePath('shop', locale);
+const aboutHref = routePath('about', locale);
+---
+
+<Base {locale} routeKey="home" title={home.seoTitle} description={home.seoDescription}>
+  <Hero hero={home.hero} primaryHref={shopHref} secondaryHref={aboutHref} />
+  <div class="kente" aria-hidden="true"></div>
+  <Reassurance items={home.reassurance} />
+
+  <section class="container section" aria-labelledby="featured-title">
+    <SectionHead
+      id="featured-title"
+      title={home.featuredTitle}
+      eyebrow={t.nav.shop}
+      link={{ href: shopHref, label: t.shop.viewAll }}
+    />
+    <ProductGrid
+      products={featured}
+      {locale}
+      {t}
+      shopOpen={settings.shop.open}
+      class="featured-grid"
+    />
+  </section>
+
+  <StoryBand
+    eyebrow={t.nav.about}
+    title={home.storyTitle}
+    body={home.storyBody}
+    lands={home.storyLands}
+    fromLabel={t.shop.landsFrom}
+    toLabel={t.shop.landsTo}
+    image={duoMoringa}
+    imageAlt=""
+    link={{ href: aboutHref, label: home.hero.cta.secondary }}
+  />
+
+  <section class="container section" aria-labelledby="categories-title">
+    <SectionHead id="categories-title" title={home.categoriesTitle} eyebrow={t.nav.shop} />
+    <CategoryTiles {categories} {counts} {locale} {t} />
+  </section>
+
+  <div class="container">
+    <Ornament />
+  </div>
+
+  <section class="container section" aria-labelledby="recipes-title">
+    <SectionHead id="recipes-title" title={home.recipesTitle} eyebrow={t.product.recipe} />
+    <RecipeCards products={recipeProducts} {locale} {t} />
+  </section>
+
+  <Commitment
+    title={home.commitmentTitle}
+    body={home.commitmentBody}
+    medallionAlt={t.a11y.medallionAlt}
+    link={{ href: aboutHref, label: home.hero.cta.secondary }}
+  />
+</Base>

@@ -117,6 +117,10 @@ const year = new Date().getFullYear();
     background: var(--forest);
     color: var(--cream);
   }
+  /* A page that ends on a coloured band meets the kente strip directly. */
+  :global(main:has(> :last-child:is(.band-paper, .band-forest))) + .site-footer {
+    margin-top: 0;
+  }
   .grid {
     display: grid;
     gap: var(--space-8);

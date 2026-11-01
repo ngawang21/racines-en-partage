@@ -1,0 +1,46 @@
+---
+// The add-to-cart button of the wave 2 contract: the cart script (wave 2B)
+// delegates clicks on [data-add-to-cart] and reads data-sku. Stock "out"
+// renders it disabled with data-stock="out"; a paused shop renders every
+// button disabled with data-shop-closed. No script here.
+import type { Stock } from '../content/schemas';
+import Icon from './Icon.astro';
+
+interface Props {
+  sku: string;
+  stock: Stock;
+  shopOpen: boolean;
+  label: string;
+  /** Label shown instead when the product is out of stock. */
+  outLabel: string;
+  /** Visually hidden suffix that names the product for screen readers. */
+  srSuffix?: string;
+  icon?: boolean;
+  class?: string;
+}
+const {
+  sku,
+  stock,
+  shopOpen,
+  label,
+  outLabel,
+  srSuffix,
+  icon = false,
+  class: className,
+} = Astro.props;
+const out = stock === 'out';
+---
+
+<button
+  type="button"
+  class:list={['btn', 'btn-primary', className]}
+  data-add-to-cart
+  data-sku={sku}
+  data-stock={stock}
+  data-shop-closed={shopOpen ? undefined : ''}
+  disabled={out || !shopOpen}
+>
+  {icon && !out && <Icon name="plus" />}
+  <span>{out ? outLabel : label}</span>
+  {srSuffix && <span class="visually-hidden">{srSuffix}</span>}
+</button>

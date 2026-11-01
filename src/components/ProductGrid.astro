@@ -1,0 +1,27 @@
+---
+import type { Locale } from '../consts';
+import type { LocaleContent } from '../content/locale-schema';
+import type { Product } from '../content/schemas';
+import ProductCard from './ProductCard.astro';
+
+interface Props {
+  products: Product[];
+  locale: Locale;
+  t: LocaleContent;
+  shopOpen: boolean;
+  headingLevel?: 'h2' | 'h3';
+  id?: string;
+  class?: string;
+}
+const { products, locale, t, shopOpen, headingLevel, id, class: className } = Astro.props;
+---
+
+<ul class:list={['product-grid', className]} role="list" {id} data-product-grid>
+  {
+    products.map((product, index) => (
+      <li data-product-item>
+        <ProductCard {product} {locale} {t} {shopOpen} {index} {headingLevel} />
+      </li>
+    ))
+  }
+</ul>

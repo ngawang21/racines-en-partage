@@ -1,0 +1,23 @@
+// Cloudflare Worker: static assets from dist/ plus the API in worker/ on /api/*.
+// Secrets (never in this file): STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
+// RESEND_API_KEY (optional), ORDER_EMAIL_TO. Local values go in .dev.vars.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "racines-en-partage",
+  "main": "worker/index.ts",
+  // Newest date the workerd bundled with wrangler 4.156 supports (dev refuses later ones).
+  "compatibility_date": "2026-10-30",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*"],
+  },
+  "vars": {
+    "SITE_URL": "https://racinesenpartage.fr",
+    "ORDER_EMAIL_FROM": "Racines en Partage <commandes@racinesenpartage.fr>",
+  },
+  "observability": { "enabled": true },
+}

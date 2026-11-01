@@ -1,0 +1,27 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+  title: string;
+  eyebrow?: string;
+  id?: string;
+  link?: { href: string; label: string };
+  centered?: boolean;
+}
+const { title, eyebrow, id, link, centered = false } = Astro.props;
+---
+
+<div class:list={['section-head', { centered }]}>
+  <div>
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    <h2 {id}>{title}</h2>
+  </div>
+  {
+    link && (
+      <a class="link-arrow" href={link.href}>
+        {link.label}
+        <Icon name="chevron" />
+      </a>
+    )
+  }
+</div>

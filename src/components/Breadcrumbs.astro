@@ -1,0 +1,28 @@
+---
+// Visible breadcrumb trail. The structured BreadcrumbList comes from Base's
+// graph prop; this is the same list for people.
+interface Props {
+  label: string;
+  items: Array<{ name: string; href?: string }>;
+  class?: string;
+}
+const { label, items, class: className } = Astro.props;
+---
+
+<nav class:list={['crumbs', className]} aria-label={label}>
+  <ol>
+    {
+      items.map((item, i) =>
+        i === items.length - 1 || !item.href ? (
+          <li>
+            <span aria-current="page">{item.name}</span>
+          </li>
+        ) : (
+          <li>
+            <a href={item.href}>{item.name}</a>
+          </li>
+        ),
+      )
+    }
+  </ol>
+</nav>

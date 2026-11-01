@@ -265,7 +265,8 @@ export const settingsSchema = z.object({
     open: z.boolean(),
     currency: z.literal('eur'),
     vat: z.object({ mode: z.enum(['franchise', 'included']), rate: z.number().nonnegative() }),
-    freeShippingFrom: z.number().positive().nullable(),
+    // nullish: the CMS omits an emptied number instead of writing null.
+    freeShippingFrom: z.number().positive().nullish(),
     maxQuantityPerLine: z.number().int().min(1).max(99),
     announcement: optionalLabel,
   }),

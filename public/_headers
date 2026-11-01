@@ -1,0 +1,55 @@
+# GLOBAL (wave 2A): every route. Strict CSP: scripts, styles, fonts and data
+# from this origin only; inline styles allowed (Astro scoped styles), no
+# inline script (JSON-LD and JSON data blocks are not executed). Route blocks
+# below detach the CSP with "! Content-Security-Policy" before relaxing it.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()
+  Strict-Transport-Security: max-age=31536000
+  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
+
+# Fingerprinted build assets never change.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Social cards and icons: regenerated rarely, keep a week.
+/og/*
+  Cache-Control: public, max-age=604800
+
+/icons/*
+  Cache-Control: public, max-age=604800
+
+/site.webmanifest
+  Content-Type: application/manifest+json; charset=utf-8
+
+# checkout and admin route blocks are appended by other workers
+
+# checkout routes (wave 2B)
+# The Mondial Relay Parcel Shop Picker loads on demand when the relay method
+# is chosen: jQuery 2.2.4 (ajax.googleapis.com), Leaflet (unpkg.com), the
+# plugin and its versioned script, styles, JSONP results and marker images
+# (widget.mondialrelay.com, one image from www.mondialrelay.com), its font
+# (fonts.googleapis.com, fonts.gstatic.com) and the OpenStreetMap tiles.
+# Hosts captured from the network log of the widget in headless Chromium
+# (2026-11-01). Everything else stays as strict as the global block.
+/commande/*
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://ajax.googleapis.com https://unpkg.com https://widget.mondialrelay.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://widget.mondialrelay.com https://fonts.googleapis.com; img-src 'self' data: https://widget.mondialrelay.com https://www.mondialrelay.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://widget.mondialrelay.com; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
+
+/en/checkout/*
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://ajax.googleapis.com https://unpkg.com https://widget.mondialrelay.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://widget.mondialrelay.com https://fonts.googleapis.com; img-src 'self' data: https://widget.mondialrelay.com https://www.mondialrelay.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://widget.mondialrelay.com; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
+
+# admin route
+# Sveltia CMS at /admin/: the script comes from unpkg, the content from the
+# GitHub API (and its status page), sign-in through the Authenticator Worker
+# on workers.dev, the interface fonts from cdn.jsdelivr.net. The "!" lines
+# detach the global headers first: Cloudflare would otherwise send both CSP
+# headers and the browser would enforce the stricter one.
+/admin/*
+  ! Content-Security-Policy
+  ! X-Robots-Tag
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.githubusercontent.com https://avatars.githubusercontent.com; connect-src 'self' data: blob: https://api.github.com https://github.com https://www.githubstatus.com https://*.workers.dev https://unpkg.com https://api.openai.com https://api.anthropic.com; font-src 'self' https://cdn.jsdelivr.net; frame-src 'self' https://*.workers.dev; worker-src 'self' blob:; frame-ancestors 'self'
+  X-Robots-Tag: noindex

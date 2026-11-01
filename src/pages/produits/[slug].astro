@@ -1,87 +1,12 @@
 ---
 import type { GetStaticPaths } from 'astro';
-import { getImage } from 'astro:assets';
-import { SITE } from '../../consts';
-import Base from '../../layouts/Base.astro';
-import { formatPrice, formatWeight, toCents } from '../../i18n/format';
-import {
-  loadCategories,
-  loadLocale,
-  loadProduct,
-  loadProducts,
-  loadSettings,
-} from '../../i18n/locale';
-import { routeUrl } from '../../i18n/routing';
-import { resolveAsset } from '../../images';
-import { productGraphInput } from '../../seo/graph';
+import ProductView from '../../components/views/ProductView.astro';
+import { loadProducts } from '../../i18n/locale';
 
 export const getStaticPaths = (async () =>
-  (await loadProducts('fr')).map((p) => ({ params: { slug: p.slug } }))) satisfies GetStaticPaths;
-
-const locale = 'fr' as const;
-const slug = String(Astro.params.slug);
-const [t, product, settings, categories] = await Promise.all([
-  loadLocale(locale),
-  loadProduct(locale, slug),
-  loadSettings(),
-  loadCategories(locale),
-]);
-const category = categories.find((c) => c.slug === product.category);
-const images = product.images.map(resolveAsset);
-const imageUrls = await Promise.all(
-  images.map(
-    async (src) =>
-      new URL(
-        (await getImage({ src, width: Math.min(1200, src.width), format: 'webp' })).src,
-        SITE.url,
-      ).href,
-  ),
-);
-const stockLabel = {
-  in_stock: t.product.stockIn,
-  low: t.product.stockLow,
-  out: t.product.stockOut,
-}[product.stock];
+  (await loadProducts('fr')).map((item) => ({
+    params: { slug: item.slug },
+  }))) satisfies GetStaticPaths;
 ---
 
-<Base
-  {locale}
-  routeKey="product"
-  {slug}
-  title={product.seoTitle ?? product.name}
-  description={product.seoDescription ?? product.tagline}
-  image={images[0] && { src: images[0], alt: product.name }}
-  graph={{
-    breadcrumbs: [
-      { name: t.nav.home, url: routeUrl('home', locale) },
-      { name: t.nav.shop, url: routeUrl('shop', locale) },
-      ...(category
-        ? [{ name: category.name, url: routeUrl('category', locale, category.slug) }]
-        : []),
-      { name: product.name, url: routeUrl('product', locale, slug) },
-    ],
-    product: productGraphInput(product, settings, imageUrls, category?.name),
-  }}
->
-  <article class="container section">
-    <h1>{product.name}</h1>
-    <p class="lead">{product.tagline}</p>
-    <p>
-      <span class="price">{formatPrice(toCents(product.price), locale)}</span>{' '}
-      <span>{formatWeight(product.weightGrams, locale)}</span>{' '}
-      <span class:list={['badge', `badge-stock-${product.stock.replace('_stock', '')}`]}
-        >{stockLabel}</span
-      >
-    </p>
-    <button
-      type="button"
-      class="btn btn-primary"
-      data-add-to-cart
-      data-sku={product.sku}
-      data-stock={product.stock}
-      disabled={product.stock === 'out'}
-    >
-      {t.product.addToCart}
-    </button>
-  </article>
-</Base>
+<ProductView locale="fr" slug={String(Astro.params.slug)} />

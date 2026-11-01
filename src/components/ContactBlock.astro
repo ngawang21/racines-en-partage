@@ -1,0 +1,181 @@
+---
+// Contact details (spec 5.4): address with a Google Maps link (no embed),
+// phone, e-mail, Instagram when set, and the hours text.
+import type { Locale } from '../consts';
+import type { LocaleContent } from '../content/locale-schema';
+import type { ContactPage, Settings } from '../content/schemas';
+import { formatPhone, phoneE164 } from '../i18n/format';
+import Icon from './Icon.astro';
+
+interface Props {
+  page: ContactPage;
+  settings: Settings;
+  t: LocaleContent;
+  locale: Locale;
+}
+const { page, settings, t } = Astro.props;
+const { brand } = settings;
+const street = brand.address.street;
+const city = `${brand.address.postcode} ${brand.address.city}`;
+const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+  `${brand.name}, ${street}, ${city}, France`,
+)}`;
+---
+
+<div class="contact">
+  <dl class="cards">
+    <div class="card">
+      <dt><Icon name="phone" size={20} />{t.footer.phone}</dt>
+      <dd>
+        <a class="big" href={`tel:${phoneE164(brand.phone)}`}>{formatPhone(brand.phone)}</a>
+      </dd>
+    </div>
+    <div class="card">
+      <dt><Icon name="mail" size={20} />{t.footer.email}</dt>
+      <dd>
+        <a class="big email" href={`mailto:${brand.email}`}>{brand.email}</a>
+      </dd>
+    </div>
+    <div class="card card-wide">
+      <dt><Icon name="pin" size={20} />{t.footer.address}</dt>
+      <dd>
+        <address>
+          {brand.name}<br />{street}<br />{city}
+        </address>
+        <a class="link-arrow" href={mapsUrl} rel="noopener" target="_blank">
+          {page.mapsLabel}
+          <span class="visually-hidden">{t.a11y.newTab}</span>
+          <Icon name="chevron" />
+        </a>
+      </dd>
+    </div>
+    {
+      brand.instagram && (
+        <div class="card">
+          <dt>
+            <Icon name="instagram" size={20} />
+            {t.footer.instagram}
+          </dt>
+          <dd>
+            <a class="link-arrow" href={brand.instagram} rel="noopener" target="_blank">
+              {brand.instagram.replace(/^https?:\/\/(www\.)?/, '')}
+              <span class="visually-hidden">{t.a11y.newTab}</span>
+            </a>
+          </dd>
+        </div>
+      )
+    }
+  </dl>
+
+  <aside class="hours" aria-labelledby="contact-hours">
+    <h2 id="contact-hours">{t.footer.hours}</h2>
+    <p>{page.hours}</p>
+    <p class="packed">
+      <Icon name="leaf" size={20} />
+      <span>{t.footer.packagedBy}</span>
+    </p>
+  </aside>
+</div>
+
+<style>
+  .contact {
+    display: grid;
+    gap: var(--space-6);
+    align-items: start;
+  }
+  @media (min-width: 960px) {
+    .contact {
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: var(--space-12);
+    }
+  }
+  .cards {
+    display: grid;
+    gap: var(--space-4);
+    margin: 0;
+  }
+  @media (min-width: 640px) {
+    .cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 640px) {
+    .card-wide {
+      grid-column: 1 / -1;
+    }
+  }
+  .card {
+    padding: var(--space-6);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+    background: rgba(255, 255, 255, 0.45);
+  }
+  dt {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--ink-2);
+    font-size: var(--fs--1);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  dt :global(svg) {
+    color: var(--leaf);
+  }
+  dd {
+    margin: var(--space-3) 0 0;
+  }
+  .big {
+    color: var(--forest);
+    font-family: var(--font-display);
+    font-size: var(--fs-3);
+    font-weight: 600;
+    text-decoration: none;
+    font-variant-numeric: lining-nums;
+  }
+  .big:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--kraft);
+  }
+  .email {
+    font-size: var(--fs-1);
+    overflow-wrap: anywhere;
+  }
+  address {
+    font-style: normal;
+    font-size: var(--fs-1);
+    line-height: 1.5;
+  }
+  .card .link-arrow {
+    margin-top: var(--space-2);
+  }
+  .hours {
+    padding: var(--space-8);
+    border-radius: var(--radius-l);
+    background: var(--forest);
+    color: var(--cream);
+  }
+  .hours h2 {
+    color: var(--cream);
+    font-size: var(--fs-3);
+  }
+  .hours p {
+    margin-top: var(--space-3);
+    color: var(--cream-muted);
+    font-size: var(--fs-1);
+    line-height: 1.6;
+  }
+  .hours .packed {
+    display: flex;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+    padding-top: var(--space-6);
+    border-top: 1px solid rgba(251, 246, 234, 0.16);
+    font-size: 0.9375rem;
+  }
+  .hours :global(svg) {
+    flex: none;
+    color: var(--gold);
+  }
+</style>

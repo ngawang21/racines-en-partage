@@ -1,0 +1,85 @@
+---
+// Commitment band on paper: the medallion, the ESAT partnership, origins and
+// plain ingredients (spec 5.4).
+import { Image } from 'astro:assets';
+import medallion from '../assets/brand/medallion.webp';
+import Icon from './Icon.astro';
+
+interface Props {
+  title: string;
+  body: string;
+  medallionAlt: string;
+  link: { href: string; label: string };
+}
+const { title, body, medallionAlt, link } = Astro.props;
+---
+
+<section class="band-paper commitment" aria-labelledby="commitment-title">
+  <div class="container section inner">
+    <Image
+      src={medallion}
+      alt={medallionAlt}
+      width={132}
+      height={132}
+      densities={[1, 2]}
+      class="medallion"
+    />
+    <div class="copy">
+      <h2 id="commitment-title">{title}</h2>
+      <p class="body">{body}</p>
+      <a class="link-arrow" href={link.href}>
+        {link.label}
+        <Icon name="chevron" />
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .commitment {
+    border-top: 1px solid var(--kraft);
+  }
+  .inner {
+    display: grid;
+    gap: var(--space-8);
+    justify-items: center;
+    text-align: center;
+  }
+  @media (min-width: 820px) {
+    .inner {
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: var(--space-12);
+      justify-items: start;
+      align-items: center;
+      text-align: left;
+      max-width: 1000px;
+    }
+  }
+  .inner :global(.medallion) {
+    width: 112px;
+    height: 112px;
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 6px var(--cream),
+      0 0 0 7px var(--gold);
+  }
+  @media (min-width: 820px) {
+    .inner :global(.medallion) {
+      width: 132px;
+      height: 132px;
+    }
+  }
+  h2 {
+    font-size: var(--fs-4);
+  }
+  .body {
+    margin-top: var(--space-4);
+    max-width: 62ch;
+    color: var(--ink-2);
+    font-size: var(--fs-1);
+    line-height: 1.65;
+  }
+  .link-arrow {
+    margin-top: var(--space-4);
+  }
+</style>

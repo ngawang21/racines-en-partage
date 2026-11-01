@@ -1,0 +1,17 @@
+# Copy to .dev.vars (git ignored) for `pnpm dev:worker`. Test-mode values only.
+
+# Stripe secret key, test mode first (Dashboard, Developers, API keys).
+STRIPE_SECRET_KEY=sk_test_replace_me
+
+# Signing secret of the webhook endpoint. Locally: `stripe listen --forward-to
+# localhost:8787/api/webhooks/stripe` prints a whsec_ value.
+STRIPE_WEBHOOK_SECRET=whsec_replace_me
+
+# Optional. Without it the Worker logs a redacted summary instead of sending e-mails.
+RESEND_API_KEY=
+
+# Owner inbox for order e-mails (also the reply-to of customer e-mails).
+ORDER_EMAIL_TO=racinesenpartage@outlook.com
+
+# Overrides the wrangler.jsonc value so Stripe redirects back to the local server.
+SITE_URL=http://localhost:8787

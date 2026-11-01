@@ -1,0 +1,154 @@
+---
+// Home hero (spec 5.4): copy on the left, the trio photo in a soft frame on
+// the right with the medallion resting on its corner. The photo is the LCP
+// element: eager, fetchpriority high.
+import { Image } from 'astro:assets';
+import heroTrio from '../assets/brand/hero-trio.webp';
+import medallion from '../assets/brand/medallion.webp';
+import type { HomePage } from '../content/schemas';
+import Picture from './Picture.astro';
+
+interface Props {
+  hero: HomePage['hero'];
+  primaryHref: string;
+  secondaryHref: string;
+}
+const { hero, primaryHref, secondaryHref } = Astro.props;
+---
+
+<section class="hero" aria-labelledby="hero-title">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow hero-eyebrow">{hero.eyebrow}</p>
+      <h1 id="hero-title">
+        <span class="hero-title-main">{hero.title}</span>{' '}
+        <span class="accent hero-accent">{hero.titleAccent}</span>
+      </h1>
+      <p class="lead hero-lead">{hero.lead}</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href={primaryHref}>{hero.cta.primary}</a>
+        <a class="btn btn-secondary" href={secondaryHref}>{hero.cta.secondary}</a>
+      </div>
+    </div>
+    <div class="hero-media">
+      <div class="hero-frame">
+        <Picture
+          src={heroTrio}
+          alt={hero.imageAlt}
+          preset="hero"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </div>
+      <Image
+        src={medallion}
+        alt=""
+        width={96}
+        height={96}
+        densities={[1, 2]}
+        class="hero-medallion"
+        loading="eager"
+      />
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding-block: clamp(2rem, 1rem + 4vw, 4.5rem) clamp(2.5rem, 1.5rem + 4vw, 5rem);
+  }
+  .hero-grid {
+    display: grid;
+    gap: clamp(2rem, 1rem + 3vw, 4rem);
+    align-items: center;
+  }
+  @media (min-width: 960px) {
+    .hero-grid {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    }
+  }
+  .hero-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--kraft-deep);
+    color: var(--ink-2);
+  }
+  .hero-eyebrow::before {
+    content: '';
+    width: 28px;
+    height: 1px;
+    background: var(--gold);
+  }
+  h1 {
+    margin-top: var(--space-4);
+    font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4.25rem);
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+  }
+  .hero-title-main,
+  .hero-accent {
+    display: block;
+  }
+  .hero-accent {
+    margin-top: 0.08em;
+    color: var(--hibiscus-deep);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .hero-lead {
+    margin-top: var(--space-6);
+    max-width: 44ch;
+  }
+  .hero-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+  }
+  @media (max-width: 479px) {
+    .hero-ctas .btn {
+      flex: 1 1 100%;
+    }
+  }
+  .hero-media {
+    position: relative;
+  }
+  .hero-frame {
+    overflow: hidden;
+    aspect-ratio: 3 / 2;
+    border: 1px solid var(--kraft);
+    border-radius: var(--radius-l);
+    background: var(--paper);
+  }
+  .hero-frame :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .hero-media :global(.hero-medallion) {
+    position: absolute;
+    left: -18px;
+    bottom: -26px;
+    width: 76px;
+    height: 76px;
+    border: 4px solid var(--cream);
+    border-radius: 50%;
+    background: var(--cream);
+    box-shadow: var(--shadow-soft);
+  }
+  @media (min-width: 960px) {
+    .hero-media :global(.hero-medallion) {
+      left: -40px;
+      bottom: -36px;
+      width: 96px;
+      height: 96px;
+    }
+  }
+  @media (max-width: 959px) {
+    .hero-media :global(.hero-medallion) {
+      left: auto;
+      right: 14px;
+    }
+  }
+</style>

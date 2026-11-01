@@ -88,7 +88,7 @@ function shippingRows(settings: Settings) {
 
 function freeShippingFrom(settings: Settings): number | null {
   const v = settings.shop.freeShippingFrom;
-  return v === null ? null : toCents(v);
+  return v == null ? null : toCents(v);
 }
 
 function imageFor(imageUrlBySku: Record<string, string>, sku: string): string {

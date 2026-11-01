@@ -1,14 +1,5 @@
 ---
-import Base from '../layouts/Base.astro';
-import { loadPage } from '../i18n/locale';
-
-const locale = 'fr' as const;
-const page = await loadPage(locale, 'contact');
+import ContactView from '../components/views/ContactView.astro';
 ---
 
-<Base {locale} routeKey="contact" title={page.seoTitle} description={page.seoDescription}>
-  <section class="container section">
-    <h1>{page.title}</h1>
-    <p class="lead">{page.lead}</p>
-  </section>
-</Base>
+<ContactView locale="fr" />

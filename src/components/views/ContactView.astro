@@ -1,0 +1,39 @@
+---
+// Contact page, both locales (spec 5.4).
+import type { Locale } from '../../consts';
+import Base from '../../layouts/Base.astro';
+import { loadLocale, loadPage, loadSettings } from '../../i18n/locale';
+import { routePath } from '../../i18n/routing';
+import Breadcrumbs from '../Breadcrumbs.astro';
+import ContactBlock from '../ContactBlock.astro';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const [t, page, settings] = await Promise.all([
+  loadLocale(locale),
+  loadPage(locale, 'contact'),
+  loadSettings(),
+]);
+---
+
+<Base {locale} routeKey="contact" title={page.seoTitle} description={page.seoDescription}>
+  <div class="container contact-page">
+    <div class="page-head">
+      <Breadcrumbs
+        label={t.a11y.breadcrumb}
+        items={[{ name: t.nav.home, href: routePath('home', locale) }, { name: page.title }]}
+      />
+      <h1>{page.title}</h1>
+      <p class="lead">{page.lead}</p>
+    </div>
+    <ContactBlock {page} {settings} {t} {locale} />
+  </div>
+</Base>
+
+<style>
+  .contact-page {
+    padding-bottom: clamp(3rem, 2rem + 4.5vw, 6rem);
+  }
+</style>

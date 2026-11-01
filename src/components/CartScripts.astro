@@ -1,10 +1,21 @@
 ---
-// PLACEHOLDER (owner: wave 2B). Will embed the client catalogue
-// (`<script type="application/json" id="rep-catalog">`, see src/cart/catalog.ts)
-// and load the cart script. Base.astro mounts it after <CartDrawer />.
+// Embeds the client catalogue and the cart strings as JSON data blocks (not
+// executable, so the strict CSP allows them inline) and loads the cart
+// client as an external module. Base.astro mounts it after <CartDrawer />.
 import type { Locale } from '../consts';
+import { getClientCatalog, serializeForScript } from '../cart/catalog';
+import { cartStrings, serializeStrings } from '../cart/strings';
+import { loadLocale } from '../i18n/locale';
 
 interface Props {
   locale: Locale;
 }
+const { locale } = Astro.props;
+const [catalog, t] = await Promise.all([getClientCatalog(locale), loadLocale(locale)]);
 ---
+
+<script type="application/json" id="rep-catalog" set:html={serializeForScript(catalog)} />
+<script type="application/json" id="rep-strings" set:html={serializeStrings(cartStrings(t))} />
+<script>
+  import '../cart/ui.ts';
+</script>

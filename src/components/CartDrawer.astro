@@ -1,14 +1,82 @@
 ---
-// PLACEHOLDER (owner: wave 2B). Keeps the contract of the header cart button
-// (`aria-controls="cart-drawer"`) resolvable until the real drawer lands.
-// Base.astro mounts it right before </body> with the same props.
+// Cart drawer (spec 5.5). Server-rendered shell; src/cart/drawer.ts fills the
+// lines and totals from the browser cart. Keeps id="cart-drawer" for the
+// header button's aria-controls. The page-level live region sits outside the
+// dialog, which makes the rest of the page inert while it is open.
+import '../styles/cart.css';
 import type { Locale } from '../consts';
-import { loadLocale } from '../i18n/locale';
+import { loadLocale, loadSettings } from '../i18n/locale';
+import { routePath } from '../i18n/routing';
+import Icon from './Icon.astro';
 
 interface Props {
   locale: Locale;
 }
-const t = await loadLocale(Astro.props.locale);
+const { locale } = Astro.props;
+const [t, settings] = await Promise.all([loadLocale(locale), loadSettings()]);
+const shopOpen = settings.shop.open;
 ---
 
-<dialog id="cart-drawer" class="cart-drawer" aria-label={t.cart.title}></dialog>
+<dialog id="cart-drawer" class="cart-drawer" aria-labelledby="cart-drawer-title">
+  <div class="cd-panel">
+    <header class="cd-head">
+      <h2 id="cart-drawer-title" class="cd-title" tabindex="-1" data-drawer-title>
+        {t.cart.title}
+        <span class="cd-count" data-drawer-count></span>
+      </h2>
+      <button type="button" class="cd-close" data-drawer-close aria-label={t.cart.close}>
+        <Icon name="close" />
+      </button>
+    </header>
+
+    <div class="free-shipping cd-free" data-free-shipping hidden>
+      <p class="free-shipping-text" data-free-text></p>
+      <div
+        class="free-shipping-bar"
+        role="progressbar"
+        aria-label={t.cart.freeShippingProgress}
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+        data-free-bar
+      >
+        <span class="free-shipping-fill" data-free-fill></span>
+      </div>
+    </div>
+
+    <div class="cd-body">
+      <ul class="cart-lines" role="list" data-drawer-lines hidden></ul>
+      <div class="cart-empty cd-empty" data-drawer-empty>
+        <span class="cart-empty-mark" aria-hidden="true"><Icon name="flower" size={28} /></span>
+        <p class="cart-empty-title">{t.cart.empty}</p>
+        <p class="cart-empty-lead">{t.cart.emptyLead}</p>
+        <a class="btn btn-secondary" href={routePath('shop', locale)}>{t.cart.continue}</a>
+      </div>
+    </div>
+
+    <footer class="cd-foot" data-drawer-foot hidden>
+      <div class="cd-row">
+        <span class="cd-row-label">{t.cart.subtotal}</span>
+        <span class="cd-subtotal price" data-drawer-subtotal></span>
+      </div>
+      <p class="cd-note">{t.cart.shipping} · {t.cart.shippingNextStep}</p>
+      {!shopOpen && <p class="cd-closed">{t.shop.closedNotice}</p>}
+      <div class="cd-actions">
+        <a class="btn btn-secondary" href={routePath('cart', locale)}>{t.cart.viewCart}</a>
+        {
+          shopOpen ? (
+            <a class="btn btn-primary" href={routePath('checkout', locale)}>
+              {t.cart.checkout}
+            </a>
+          ) : (
+            <span class="btn btn-primary" aria-disabled="true">
+              {t.cart.checkout}
+            </span>
+          )
+        }
+      </div>
+    </footer>
+    <div class="visually-hidden" aria-live="polite" aria-atomic="true" data-cart-live></div>
+  </div>
+</dialog>
+<div class="visually-hidden" aria-live="polite" aria-atomic="true" data-cart-live-page></div>

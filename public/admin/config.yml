@@ -1,0 +1,815 @@
+# yaml-language-server: $schema=https://unpkg.com/@sveltia/cms/schema/sveltia-cms.json
+#
+# Sveltia CMS configuration of racinesenpartage.fr/admin/.
+# Field names mirror src/content/schemas.ts one to one; tests/unit/cms-config.test.ts
+# fails when the two drift apart. Developer notes: docs/content.md.
+# Owner guide (French): docs/guide-proprietaire.md.
+
+backend:
+  name: github
+  repo: ngawang21/racines-en-partage
+  branch: main
+  # Sveltia CMS Authenticator Worker in Marie's Cloudflare account (docs/deployment.md, section 10).
+  base_url: https://REPLACE-ME.workers.dev
+  commit_messages:
+    create: 'content: add {{collection}} {{slug}}'
+    update: 'content: update {{collection}} {{slug}}'
+    delete: 'content: delete {{collection}} {{slug}}'
+    uploadMedia: 'content: upload {{path}}'
+    deleteMedia: 'content: delete {{path}}'
+
+# Each save is a commit on main, built and deployed in about two minutes.
+publish_mode: simple
+
+app_title: Racines en Partage, administration
+site_url: https://racinesenpartage.fr
+display_url: https://racinesenpartage.fr
+logo:
+  src: /icons/icon-192.png
+  show_in_header: true
+
+# Product photos. Paths are stored as /src/assets/products/<file>.webp, which the
+# Astro build resolves (src/images.ts). Category and page images override this
+# with /src/assets/brand at field level.
+media_folder: /src/assets/products
+public_folder: /src/assets/products
+media_libraries:
+  default:
+    config:
+      transformations:
+        raster_image:
+          format: webp
+          quality: 85
+          width: 2048
+          height: 2048
+      slugify_filename: true
+      max_file_size: 2097152
+
+# Entry slugs and uploaded file names: lower case ASCII, no accents, dashes.
+slug:
+  encoding: ascii
+  clean_accents: true
+  sanitize_replacement: '-'
+
+output:
+  # Required: the French schemas refuse an empty string where a field is
+  # optional (seoTitle, howMade, originCountryCode...), so empty optional
+  # fields must be left out of the files instead of written as ''.
+  omit_empty_optional_fields: true
+
+editor:
+  preview: false
+
+i18n:
+  structure: multiple_folders
+  locales: [fr, en]
+  default_locale: fr
+  initial_locales: all
+
+collections:
+  # ------------------------------------------------------------------ products
+  - name: products
+    label: Produits
+    label_singular: Produit
+    description: >-
+      Une fiche par sachet. Les champs communs (prix, poids, photos, stock...) se
+      remplissent en français ; l'onglet anglais ne demande que les textes.
+    icon: inventory_2
+    folder: src/content/products
+    format: yml
+    extension: yml
+    i18n: true
+    create: true
+    delete: true
+    identifier_field: name
+    slug:
+      template: '{{name}}-{{weightGrams}}g'
+      editable: [create]
+      hint: >-
+        Adresse de la page du produit (racinesenpartage.fr/produits/...). Proposée à partir du nom
+        et du poids, modifiable seulement à la création.
+      pattern: ['^[a-z0-9]+(-[a-z0-9]+)*$', 'Lettres minuscules sans accent, chiffres et tirets']
+    aliases_field: false
+    summary: '{{name}} ({{weightGrams}} g)'
+    sortable_fields: [name, price, stock, weightGrams]
+    thumbnail: images
+    preview_path: /produits/{{slug}}/
+    view_filters:
+      - { label: En stock, field: stock, pattern: '^in_stock$' }
+      - { label: Plus que quelques sachets, field: stock, pattern: '^low$' }
+      - { label: Rupture, field: stock, pattern: out }
+      - { label: Mis en avant, field: featured, pattern: true }
+      - { label: Valeurs nutritionnelles masquées, field: nutritionVerified, pattern: false }
+      - { label: 'Catégorie : poudres', field: category, pattern: '^poudres$' }
+      - { label: 'Catégorie : tisanes', field: category, pattern: '^infusions$' }
+      - { label: 'Catégorie : graines', field: category, pattern: '^graines$' }
+      - { label: 'Catégorie : cacao', field: category, pattern: '^cacao$' }
+    view_groups:
+      - { label: Catégorie, field: category }
+      - { label: Stock, field: stock }
+    fields:
+      - name: name
+        label: Nom du produit
+        widget: string
+        i18n: true
+        required: [fr]
+        hint: Tel qu'il est écrit sur le sachet, sans le poids. Par exemple "Poudre de moringa".
+      - name: tagline
+        label: Phrase d'accroche
+        widget: string
+        i18n: true
+        required: [fr]
+        hint: Une seule phrase, affichée sous le nom du produit.
+      - name: category
+        label: Catégorie
+        widget: relation
+        collection: categories
+        value_field: '{{slug}}'
+        display_fields: [name]
+        search_fields: [name]
+        i18n: duplicate
+      - name: sku
+        label: Référence (SKU)
+        widget: string
+        i18n: duplicate
+        unique: true
+        pattern: ['^[A-Z0-9][A-Z0-9-]*$', 'Majuscules, chiffres et tirets, par exemple REP-MOR-100']
+        hint: >-
+          Code unique du sachet, par exemple REP-MOR-100. Ne le changez plus une fois le produit
+          vendu : il apparaît dans Stripe et dans les e-mails de commande.
+      - name: price
+        label: Prix TTC
+        widget: number
+        value_type: float
+        min: 0.01
+        step: 0.1
+        after_input: €
+        i18n: duplicate
+        hint: Prix de vente TTC en euros, par exemple 8.90 (avec un point, deux chiffres après le point au plus).
+      - name: weightGrams
+        label: Poids net
+        widget: number
+        value_type: int
+        min: 1
+        step: 50
+        after_input: g
+        i18n: duplicate
+        hint: Poids du contenu en grammes, par exemple 100.
+      - name: stock
+        label: Disponibilité
+        widget: select
+        i18n: duplicate
+        default: in_stock
+        options:
+          - { label: En stock, value: in_stock }
+          - { label: Plus que quelques sachets, value: low }
+          - { label: Rupture, value: out }
+        hint: >-
+          "Rupture" laisse la fiche visible mais empêche l'achat. "Plus que quelques sachets"
+          affiche un badge et laisse acheter.
+      - name: images
+        label: Photos
+        widget: image
+        multiple: true
+        min: 1
+        max: 8
+        i18n: duplicate
+        hint: >-
+          La première photo est la photo principale. JPEG, PNG ou WebP, 2 Mo au plus ; elles sont
+          converties automatiquement en WebP de 2048 pixels au plus.
+      - name: description
+        label: Description
+        widget: richtext
+        minimal: true
+        buttons: [bold, italic, link, bulleted-list, numbered-list]
+        editor_components: []
+        i18n: true
+        required: [fr]
+        hint: Deux à quatre phrases sur le goût et l'usage. Pas d'allégation santé au-delà de l'étiquette.
+      - name: ingredients
+        label: Ingrédients
+        widget: text
+        i18n: true
+        required: [fr]
+        hint: Recopiez la liste de l'étiquette, mot pour mot.
+      - name: usage
+        label: Conseils d'utilisation
+        label_singular: conseil
+        widget: list
+        min: 1
+        i18n: true
+        required: [fr]
+        field: { name: item, label: Conseil, widget: text, i18n: true }
+        hint: Un conseil par ligne, comme sur l'étiquette.
+      - name: benefits
+        label: Les bienfaits (mots de l'étiquette)
+        label_singular: bienfait
+        widget: list
+        required: false
+        i18n: true
+        field: { name: item, label: Bienfait, widget: string, i18n: true }
+        hint: >-
+          Uniquement les phrases imprimées sur l'étiquette, sans en ajouter : la loi encadre ces
+          mentions.
+      - name: howMade
+        label: Comment est-il obtenu ?
+        widget: text
+        required: false
+        i18n: true
+        hint: Facultatif. Quelques phrases sur la fabrication.
+      - name: recipe
+        label: Petite recette
+        widget: object
+        required: false
+        collapsed: auto
+        i18n: true
+        summary: '{{fields.title}}'
+        hint: Facultatif. Laissez vide s'il n'y a pas de recette.
+        fields:
+          - { name: title, label: Titre de la recette, widget: string, i18n: true, required: [fr] }
+          - name: ingredients
+            label: Ingrédients de la recette
+            label_singular: ingrédient
+            widget: list
+            required: false
+            i18n: true
+            field: { name: item, label: Ingrédient, widget: string, i18n: true }
+          - name: steps
+            label: Étapes
+            label_singular: étape
+            widget: list
+            min: 1
+            i18n: true
+            required: [fr]
+            field: { name: item, label: Étape, widget: text, i18n: true }
+      - name: storage
+        label: Conservation
+        widget: text
+        i18n: true
+        required: [fr]
+        hint: Comme sur l'étiquette, par exemple "Conserver dans un endroit sec...".
+      - name: origin
+        label: Origine
+        widget: string
+        i18n: duplicate
+        hint: Telle qu'elle est imprimée sur l'étiquette, par exemple "Niger".
+      - name: originCountryCode
+        label: Pays d'origine (pour Google)
+        widget: select
+        required: false
+        i18n: duplicate
+        options:
+          - { label: Afrique du Sud, value: ZA }
+          - { label: Allemagne, value: DE }
+          - { label: Bénin, value: BJ }
+          - { label: Burkina Faso, value: BF }
+          - { label: Cameroun, value: CM }
+          - { label: "Côte d'Ivoire", value: CI }
+          - { label: Égypte, value: EG }
+          - { label: France, value: FR }
+          - { label: Ghana, value: GH }
+          - { label: Guinée, value: GN }
+          - { label: Inde, value: IN }
+          - { label: Madagascar, value: MG }
+          - { label: Mali, value: ML }
+          - { label: Maroc, value: MA }
+          - { label: Niger, value: NE }
+          - { label: Nigeria, value: NG }
+          - { label: Pérou, value: PE }
+          - { label: Sénégal, value: SN }
+          - { label: Togo, value: TG }
+        hint: Facultatif. Laissez vide si l'origine n'est pas un seul pays (par exemple "Afrique de l'Ouest").
+      - name: free_from
+        label: Mentions "sans"
+        widget: select
+        multiple: true
+        required: false
+        i18n: duplicate
+        options:
+          - { label: Sans additifs, value: additifs }
+          - { label: Sans conservateurs, value: conservateurs }
+          - { label: Sans colorants, value: colorants }
+          - { label: Sans gluten, value: gluten }
+        hint: >-
+          Cochez seulement ce que l'étiquette affirme et qui est vrai. L'orge contient du gluten :
+          jamais "sans gluten" pour elle.
+      - name: nutritionVerified
+        label: Afficher les valeurs nutritionnelles
+        widget: boolean
+        default: false
+        i18n: duplicate
+        hint: >-
+          À cocher seulement quand le tableau ci-dessous est vérifié. Décoché, le tableau reste
+          enregistré mais n'est pas affiché sur le site.
+      - name: nutrition
+        label: Valeurs nutritionnelles pour 100 g
+        widget: object
+        required: false
+        collapsed: true
+        i18n: duplicate
+        hint: Recopiez le tableau de l'étiquette, unités comprises, par exemple "3,0 g" ou "< 0,03 g".
+        fields:
+          - { name: energy, label: Énergie, widget: string, i18n: duplicate, hint: 'Par exemple 1290 kJ / 308 kcal' }
+          - { name: fat, label: Matières grasses, widget: string, i18n: duplicate }
+          - { name: saturates, label: dont acides gras saturés, widget: string, i18n: duplicate }
+          - { name: carbs, label: Glucides, widget: string, i18n: duplicate }
+          - { name: sugars, label: dont sucres, widget: string, i18n: duplicate }
+          - { name: fibre, label: Fibres alimentaires, widget: string, i18n: duplicate }
+          - { name: protein, label: Protéines, widget: string, i18n: duplicate }
+          - { name: salt, label: Sel, widget: string, i18n: duplicate }
+      - name: featured
+        label: Mettre en avant sur l'accueil
+        widget: boolean
+        default: false
+        i18n: duplicate
+        hint: Les produits cochés apparaissent dans "Nos incontournables". Trois ou quatre suffisent.
+      - name: related
+        label: Produits associés
+        widget: relation
+        collection: products
+        value_field: '{{slug}}'
+        display_fields: ['{{name}} ({{weightGrams}} g)']
+        search_fields: [name, sku]
+        multiple: true
+        max: 4
+        required: false
+        i18n: duplicate
+        hint: Deux ou trois produits proposés en bas de la fiche. Pas le produit lui-même.
+      - name: seoTitle
+        label: Titre pour Google
+        widget: string
+        required: false
+        maxlength: 70
+        i18n: true
+        hint: Facultatif. Le titre de l'onglet et du résultat Google. Sinon, le nom du produit.
+      - name: seoDescription
+        label: Description pour Google
+        widget: text
+        required: false
+        maxlength: 170
+        i18n: true
+        hint: Facultatif. Une ou deux phrases, 160 caractères environ.
+
+  # ---------------------------------------------------------------- categories
+  - name: categories
+    label: Catégories
+    label_singular: Catégorie
+    description: Les familles de la boutique. Une catégorie qui contient des produits ne peut pas être supprimée ici.
+    icon: category
+    folder: src/content/categories
+    format: yml
+    extension: yml
+    i18n: true
+    create: true
+    delete: false
+    identifier_field: name
+    slug:
+      template: '{{name}}'
+      editable: [create]
+      hint: >-
+        Adresse de la catégorie (racinesenpartage.fr/boutique/...). Un mot court sans accent,
+        par exemple "infusions". Modifiable seulement à la création.
+      pattern: ['^[a-z0-9]+(-[a-z0-9]+)*$', 'Lettres minuscules sans accent, chiffres et tirets']
+    aliases_field: false
+    summary: '{{order}}. {{name}}'
+    sortable_fields: [order, name]
+    thumbnail: image
+    preview_path: /boutique/{{slug}}/
+    fields:
+      - name: name
+        label: Nom
+        widget: string
+        i18n: true
+        required: [fr]
+      - name: intro
+        label: Introduction
+        widget: text
+        i18n: true
+        required: [fr]
+        hint: Deux phrases affichées en haut de la page de la catégorie.
+      - name: order
+        label: Ordre d'affichage
+        widget: number
+        value_type: int
+        min: 0
+        i18n: duplicate
+        hint: 1 pour la première catégorie, 2 pour la suivante...
+      - name: image
+        label: Image
+        widget: image
+        media_folder: /src/assets/brand
+        public_folder: /src/assets/brand
+        i18n: duplicate
+        hint: Photo de la catégorie, dans le dossier des images de la marque.
+      - name: seoTitle
+        label: Titre pour Google
+        widget: string
+        required: false
+        maxlength: 70
+        i18n: true
+      - name: seoDescription
+        label: Description pour Google
+        widget: text
+        required: false
+        maxlength: 170
+        i18n: true
+
+  # --------------------------------------------------------------------- pages
+  - name: pages
+    label: Pages
+    label_singular: Page
+    description: Les textes de l'accueil, de "Notre histoire", de la FAQ et de la page Contact.
+    icon: article
+    i18n: true
+    files:
+      - name: home
+        label: Accueil
+        file: src/content/pages/{{locale}}/home.yml
+        i18n: true
+        preview_path: /
+        fields:
+          - name: hero
+            label: Grand bandeau du haut
+            widget: object
+            i18n: true
+            fields:
+              - { name: eyebrow, label: Petit titre au-dessus, widget: string, i18n: true, required: [fr] }
+              - { name: title, label: Titre, widget: string, i18n: true, required: [fr] }
+              - { name: titleAccent, label: Suite du titre (en couleur), widget: string, i18n: true, required: [fr] }
+              - { name: lead, label: Texte, widget: text, i18n: true, required: [fr] }
+              - name: cta
+                label: Boutons
+                widget: object
+                i18n: true
+                fields:
+                  - { name: primary, label: Bouton principal (vers la boutique), widget: string, i18n: true, required: [fr] }
+                  - { name: secondary, label: Second bouton (vers Notre histoire), widget: string, i18n: true, required: [fr] }
+              - name: imageAlt
+                label: Description de la photo
+                widget: text
+                i18n: true
+                required: [fr]
+                hint: Pour les personnes malvoyantes et pour Google. Décrivez ce que montre la photo.
+          - name: reassurance
+            label: Les quatre engagements sous le bandeau
+            label_singular: engagement
+            widget: list
+            min: 4
+            max: 4
+            allow_add: false
+            allow_remove: false
+            i18n: true
+            summary: '{{fields.text}}'
+            fields:
+              - name: icon
+                label: Pictogramme
+                widget: select
+                i18n: duplicate
+                options:
+                  - { label: Feuille, value: leaf }
+                  - { label: Camion, value: truck }
+                  - { label: Repère sur une carte, value: pin }
+                  - { label: Cadenas, value: lock }
+                  - { label: Bouclier, value: shield }
+                  - { label: Fleur, value: flower }
+              - { name: text, label: Texte, widget: string, i18n: true, required: [fr] }
+          - { name: featuredTitle, label: Titre des produits mis en avant, widget: string, i18n: true, required: [fr] }
+          - { name: storyTitle, label: Titre de l'histoire, widget: string, i18n: true, required: [fr] }
+          - { name: storyBody, label: Texte de l'histoire, widget: text, i18n: true, required: [fr] }
+          - name: storyLands
+            label: Les deux terres
+            widget: object
+            i18n: true
+            fields:
+              - name: from
+                label: Pays d'origine des produits
+                label_singular: pays
+                widget: list
+                min: 1
+                i18n: true
+                required: [fr]
+                field: { name: item, label: Pays, widget: string, i18n: true }
+              - { name: to, label: Ville d'arrivée, widget: string, i18n: true, required: [fr] }
+          - { name: categoriesTitle, label: Titre des catégories, widget: string, i18n: true, required: [fr] }
+          - { name: recipesTitle, label: Titre des recettes, widget: string, i18n: true, required: [fr] }
+          - name: recipeProducts
+            label: Les trois produits dont la recette est montrée
+            widget: relation
+            collection: products
+            value_field: '{{slug}}'
+            display_fields: ['{{name}} ({{weightGrams}} g)']
+            search_fields: [name]
+            multiple: true
+            min: 3
+            max: 3
+            i18n: duplicate
+            hint: Choisissez des produits qui ont une "Petite recette".
+          - { name: commitmentTitle, label: Titre des engagements, widget: string, i18n: true, required: [fr] }
+          - { name: commitmentBody, label: Texte des engagements, widget: text, i18n: true, required: [fr] }
+          - { name: seoTitle, label: Titre pour Google, widget: string, i18n: true, required: [fr] }
+          - { name: seoDescription, label: Description pour Google, widget: text, i18n: true, required: [fr] }
+
+      - name: about
+        label: Notre histoire
+        file: src/content/pages/{{locale}}/about.yml
+        i18n: true
+        preview_path: /notre-histoire/
+        fields:
+          - { name: title, label: Titre, widget: string, i18n: true, required: [fr] }
+          - { name: lead, label: Introduction, widget: text, i18n: true, required: [fr] }
+          - name: sections
+            label: Sections
+            label_singular: section
+            widget: list
+            min: 1
+            i18n: true
+            collapsed: true
+            summary: '{{fields.title}}'
+            hint: Ajoutez ou retirez une section dans les deux langues, dans le même ordre.
+            fields:
+              - { name: title, label: Titre, widget: string, i18n: true, required: [fr] }
+              - { name: body, label: Texte, widget: text, i18n: true, required: [fr] }
+              - name: image
+                label: Photo (facultative)
+                widget: image
+                required: false
+                media_folder: /src/assets/brand
+                public_folder: /src/assets/brand
+                i18n: duplicate
+              - name: imageAlt
+                label: Description de la photo
+                widget: string
+                required: false
+                i18n: true
+                hint: À remplir quand la section a une photo.
+          - { name: seoTitle, label: Titre pour Google, widget: string, i18n: true, required: [fr] }
+          - { name: seoDescription, label: Description pour Google, widget: text, i18n: true, required: [fr] }
+
+      - name: faq
+        label: Questions fréquentes
+        file: src/content/pages/{{locale}}/faq.yml
+        i18n: true
+        preview_path: /faq/
+        fields:
+          - { name: title, label: Titre, widget: string, i18n: true, required: [fr] }
+          - { name: lead, label: Introduction, widget: text, i18n: true, required: [fr] }
+          - name: items
+            label: Questions
+            label_singular: question
+            widget: list
+            min: 1
+            i18n: true
+            collapsed: true
+            summary: '{{fields.question}}'
+            hint: Ajoutez ou retirez une question dans les deux langues, dans le même ordre.
+            fields:
+              - { name: question, label: Question, widget: string, i18n: true, required: [fr] }
+              - { name: answer, label: Réponse, widget: text, i18n: true, required: [fr] }
+          - { name: seoTitle, label: Titre pour Google, widget: string, i18n: true, required: [fr] }
+          - { name: seoDescription, label: Description pour Google, widget: text, i18n: true, required: [fr] }
+
+      - name: contact
+        label: Contact
+        file: src/content/pages/{{locale}}/contact.yml
+        i18n: true
+        preview_path: /contact/
+        fields:
+          - { name: title, label: Titre, widget: string, i18n: true, required: [fr] }
+          - { name: lead, label: Introduction, widget: text, i18n: true, required: [fr] }
+          - name: hours
+            label: Horaires
+            widget: text
+            i18n: true
+            required: [fr]
+            hint: L'adresse, le téléphone et l'e-mail se changent dans les Réglages de la boutique.
+          - { name: mapsLabel, label: Texte du lien vers Google Maps, widget: string, i18n: true, required: [fr] }
+          - { name: seoTitle, label: Titre pour Google, widget: string, i18n: true, required: [fr] }
+          - { name: seoDescription, label: Description pour Google, widget: text, i18n: true, required: [fr] }
+
+  # --------------------------------------------------------------------- legal
+  - name: legal
+    label: Textes légaux
+    label_singular: Texte légal
+    description: >-
+      Mentions légales, CGV et confidentialité. Les mots entre accolades, comme {company} ou
+      {siren}, sont remplacés automatiquement par les informations des Réglages : ne les traduisez
+      pas et ne les supprimez pas.
+    icon: gavel
+    i18n: true
+    format: frontmatter
+    files:
+      - name: legal
+        label: Mentions légales
+        file: src/content/legal/{{locale}}/legal.md
+        i18n: true
+        preview_path: /mentions-legales/
+        fields: &legalFields
+          - { name: title, label: Titre, widget: string, i18n: true }
+          - name: description
+            label: Résumé pour Google
+            widget: string
+            i18n: true
+            hint: Une phrase qui résume la page.
+          - name: updated
+            label: Dernière mise à jour
+            widget: datetime
+            type: date
+            format: YYYY-MM-DD
+            auto_now: true
+            i18n: true
+            hint: Mise à jour automatiquement à chaque enregistrement.
+          - name: body
+            label: Texte
+            widget: richtext
+            i18n: true
+            hint: >-
+              Les lignes qui commencent par TODO sont à compléter avant l'ouverture de la boutique.
+              Gardez les mots entre accolades tels quels.
+      - name: terms
+        label: Conditions générales de vente
+        file: src/content/legal/{{locale}}/terms.md
+        i18n: true
+        preview_path: /cgv/
+        fields: *legalFields
+      - name: privacy
+        label: Politique de confidentialité
+        file: src/content/legal/{{locale}}/privacy.md
+        i18n: true
+        preview_path: /confidentialite/
+        fields: *legalFields
+
+# ------------------------------------------------------------------- settings
+singletons:
+  - name: shop
+    label: Réglages de la boutique
+    icon: settings
+    file: src/content/settings/shop.yml
+    fields:
+      - name: brand
+        label: Entreprise et coordonnées
+        widget: object
+        fields:
+          - { name: name, label: Nom de la boutique, widget: string }
+          - name: tagline
+            label: Devise
+            widget: object
+            fields:
+              - { name: fr, label: En français, widget: string }
+              - { name: en, label: En anglais, widget: string, required: false }
+          - name: email
+            label: E-mail de contact
+            widget: string
+            type: email
+            hint: Affiché sur le site et utilisé comme adresse de réponse des e-mails de commande.
+          - name: phone
+            label: Téléphone
+            widget: string
+            pattern: ['^0\d{9}$', '10 chiffres collés, commençant par 0, par exemple 0775689108']
+            hint: 10 chiffres sans espace. Le site l'affiche ensuite joliment (07 75 68 91 08).
+          - name: address
+            label: Adresse
+            widget: object
+            fields:
+              - { name: street, label: Rue, widget: string }
+              - name: postcode
+                label: Code postal
+                widget: string
+                pattern: ['^\d{5}$', '5 chiffres']
+              - { name: city, label: Ville, widget: string }
+              - name: country
+                label: Pays
+                widget: select
+                default: FR
+                options:
+                  - { label: France, value: FR }
+          - name: instagram
+            label: Lien Instagram
+            widget: string
+            type: url
+            required: false
+            hint: L'adresse complète, par exemple https://www.instagram.com/racinesenpartage/. Vide si pas de compte.
+          - name: siren
+            label: Numéro SIREN
+            widget: string
+            required: false
+            pattern: ['^(\d{9}|\d{3} \d{3} \d{3})?$', '9 chiffres, par exemple 123456789 ou 123 456 789']
+            hint: >-
+              Obligatoire avant l'ouverture : tant qu'il est vide, les mentions légales indiquent
+              "en cours d'immatriculation".
+          - name: packagedBy
+            label: Conditionné par
+            widget: string
+            hint: Nom et ville de l'atelier qui conditionne les sachets.
+      - name: shop
+        label: Boutique
+        widget: object
+        fields:
+          - name: open
+            label: Boutique ouverte
+            widget: boolean
+            hint: >-
+              Décochez pour une pause (vacances) : le site reste visible, un message l'annonce et le
+              paiement est désactivé. Recochez au retour.
+          - { name: currency, label: Devise, widget: hidden, default: eur }
+          - name: vat
+            label: TVA
+            widget: object
+            hint: À régler une seule fois, avec votre comptable. En franchise, les CGV indiquent "TVA non applicable".
+            fields:
+              - name: mode
+                label: Régime
+                widget: select
+                options:
+                  - { label: 'Franchise en base (TVA non applicable, art. 293 B du CGI)', value: franchise }
+                  - { label: Prix TTC avec TVA, value: included }
+              - name: rate
+                label: Taux de TVA (si TVA facturée)
+                widget: number
+                value_type: float
+                min: 0
+                step: 0.1
+                after_input: '%'
+                hint: 5.5 pour les produits alimentaires. Ignoré en franchise.
+          - name: freeShippingFrom
+            label: Livraison offerte à partir de
+            widget: number
+            value_type: float
+            min: 1
+            step: 1
+            after_input: €
+            hint: Montant du panier (produits seuls) à partir duquel la livraison est offerte, par exemple 49.
+          - name: maxQuantityPerLine
+            label: Quantité maximale par produit
+            widget: number
+            value_type: int
+            min: 1
+            max: 99
+            hint: Nombre de sachets d'un même produit qu'une cliente peut mettre dans son panier.
+          - name: announcement
+            label: Bandeau d'annonce
+            widget: object
+            hint: Message affiché tout en haut du site, par exemple une promotion. Vide, le bandeau disparaît.
+            fields:
+              - { name: fr, label: En français, widget: string, required: false }
+              - { name: en, label: En anglais, widget: string, required: false, hint: 'Vide, le texte français est affiché.' }
+      - name: shipping
+        label: Modes de livraison
+        label_singular: mode de livraison
+        widget: list
+        min: 1
+        allow_add: false
+        allow_remove: false
+        collapsed: true
+        summary: '{{fields.label.fr}} : {{fields.price}} €'
+        hint: Pour ajouter un mode ou un pays de livraison, demandez à votre développeur.
+        fields:
+          - name: id
+            label: Mode
+            widget: select
+            readonly: true
+            options:
+              - { label: Point Relais Mondial Relay, value: relay }
+              - { label: Livraison à domicile, value: home }
+              - { label: Retrait à Arnouville, value: pickup }
+          - name: enabled
+            label: Proposé aux clients
+            widget: boolean
+          - name: price
+            label: Prix
+            widget: number
+            value_type: float
+            min: 0
+            step: 0.1
+            after_input: €
+            hint: Prix TTC payé par le client, 0 pour gratuit.
+          - name: countries
+            label: Pays desservis
+            widget: select
+            multiple: true
+            min: 1
+            options:
+              - { label: France, value: FR }
+              - { label: Belgique, value: BE }
+              - { label: Luxembourg, value: LU }
+          - name: label
+            label: Nom affiché
+            widget: object
+            fields:
+              - { name: fr, label: En français, widget: string }
+              - { name: en, label: En anglais, widget: string, required: false }
+          - name: estimate
+            label: Délai affiché
+            widget: object
+            fields:
+              - { name: fr, label: En français, widget: string }
+              - { name: en, label: En anglais, widget: string, required: false }
+      - name: launch
+        label: Lancement
+        widget: object
+        fields:
+          - name: pricesConfirmed
+            label: Prix confirmés
+            widget: boolean
+            hint: >-
+              Cochez quand tous les prix des produits sont les prix définitifs. Tant que cette case
+              n'est pas cochée, la vérification d'ouverture de la boutique échoue.

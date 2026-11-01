@@ -17,26 +17,33 @@
     "format": "prettier --write .",
     "test": "vitest run tests/unit",
     "test:build": "vitest run tests/build",
-    "test:worker": "echo 'test:worker: not configured yet (wave 2C)'",
-    "e2e": "echo 'e2e: not configured yet (wave 2B)'",
-    "dev:worker": "echo 'dev:worker: not configured yet (wave 2C)'",
-    "launch-check": "node scripts/launch-check.mjs"
+    "test:worker": "vitest run --config vitest.worker.config.ts",
+    "e2e": "playwright test",
+    "dev:worker": "astro build && wrangler dev",
+    "launch-check": "node scripts/launch-check.mjs",
+    "og": "node scripts/generate-og.mjs",
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
     "@fontsource-variable/figtree": "^5.3.0",
     "@fontsource-variable/fraunces": "^5.3.0",
     "astro": "^7.4.1",
+    "hono": "^4.13",
+    "stripe": "^23",
     "zod": "^4.6.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
+    "@cloudflare/workers-types": "^5.20261101.1",
+    "@playwright/test": "1.62.1",
     "node-html-parser": "^9.0.3",
     "prettier": "^3.9.6",
     "prettier-plugin-astro": "^0.14.1",
     "sharp": "^0.35.4",
     "typescript": "~5.9.0",
     "vitest": "^5.0.0",
+    "wrangler": "^4.156",
     "yaml": "^2.9.0"
   }
 }

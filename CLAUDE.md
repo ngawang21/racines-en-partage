@@ -18,8 +18,11 @@ Build order, file ownership and the contracts between parallel workers:
 
 `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm preview`, `pnpm check`
 (astro check and prettier), `pnpm format`, `pnpm test` (unit),
-`pnpm test:build` (after a build), `pnpm launch-check`. `pnpm test:worker`,
-`pnpm e2e` and `pnpm dev:worker` are placeholders until waves 2B and 2C.
+`pnpm test:build` (after a build), `pnpm test:worker` (Worker API tests),
+`pnpm e2e` (Playwright, builds and previews first), `pnpm dev:worker`
+(`astro build` then `wrangler dev`, needs `.dev.vars`), `pnpm deploy`,
+`pnpm og` (regenerate the Open Graph images after a product change),
+`pnpm launch-check`.
 Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
 
 ## Layout
@@ -158,3 +161,24 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
 - Nutrition values are shared, typed as printed in French; English pages
   pass them through `localiseNutrition`.
 - `pnpm test:build` needs a fresh `pnpm build`.
+- `pnpm e2e` builds, then serves `dist/` on port 4323 with
+  `astro preview --ignore-lock` (astro preview otherwise refuses a second
+  server per project). `E2E_SKIP_BUILD=1 pnpm e2e` reuses an existing build.
+  `@playwright/test` is pinned to 1.62.1, whose Chromium (revision 1234) is
+  the one installed on the development machine; CI runs
+  `pnpm exec playwright install --with-deps chromium`. This machine needs
+  `LD_LIBRARY_PATH=$HOME/.local/lib` for Chromium (libasound):
+  `playwright.config.ts` adds it to the browser and server environment when
+  the folder exists. `/api/*` is route-mocked per test.
+- Cart client: `src/cart/ui.ts` (every page, about 7 KB gzipped) reads
+  `#rep-catalog` and `#rep-strings`; `page-cart`, `page-checkout`,
+  `page-thanks` and `relay-widget` are dynamic chunks. Strings with
+  `{token}` placeholders are embedded with `serializeStrings`, which writes
+  the brace as `{` so no raw token reaches the HTML (build test).
+- The Mondial Relay widget runs under the checkout CSP without
+  `'unsafe-eval'` or `'unsafe-inline'`: `relay-widget.ts` replaces
+  `jQuery.globalEval` (the widget injects one inline script, reproduced
+  natively) and strips the widget's inline `onclick` attributes, replaying
+  the known `MR_jQuery(...).trigger(...)` shapes via `parseInlineHandler`.
+  A widget update that changes those shapes shows up as list items that no
+  longer select a point: re-run the headless capture and extend the parser.

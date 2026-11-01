@@ -1,0 +1,87 @@
+---
+// Mondial Relay pickup point picker (spec 6.4). Static shell only: the
+// checkout client (src/cart/page-checkout.ts) loads jQuery, Leaflet and the
+// Parcel Shop Picker plugin on demand when the relay method is chosen
+// (src/cart/relay-widget.ts), mounts the widget in #rep-relay-widget and
+// shows the chosen point in [data-relay-chosen].
+import type { Locale } from '../consts';
+import type { LocaleContent } from '../content/locale-schema';
+import { formatPhone, phoneE164 } from '../i18n/format';
+import Icon from './Icon.astro';
+
+interface Props {
+  locale: Locale;
+  t: LocaleContent;
+  /** ISO codes the relay method ships to, first one is the default country. */
+  countries: string[];
+  email: string;
+  phone: string;
+}
+const { locale, t, countries, email, phone } = Astro.props;
+const brand = import.meta.env.PUBLIC_MONDIAL_RELAY_BRAND || 'BDTEST';
+const regionNames = new Intl.DisplayNames([locale === 'fr' ? 'fr-FR' : 'en-GB'], {
+  type: 'region',
+});
+---
+
+<div class="relay" data-relay data-brand={brand} data-countries={countries.join(',')}>
+  <div class="relay-chosen" data-relay-chosen hidden>
+    <span class="relay-chosen-icon" aria-hidden="true"><Icon name="pin" /></span>
+    <div class="relay-chosen-body">
+      <p class="eyebrow">{t.checkout.relayChosen}</p>
+      <p class="relay-name" data-relay-name></p>
+      <p class="relay-address" data-relay-address></p>
+      <details class="relay-hours" data-relay-hours hidden>
+        <summary>{t.checkout.relayHours}</summary>
+        <table class="relay-hours-table" data-relay-hours-table></table>
+      </details>
+    </div>
+    <button type="button" class="btn btn-ghost relay-change" data-relay-change>
+      {t.checkout.relayChange}
+    </button>
+  </div>
+
+  <div class="relay-search" data-relay-search>
+    <div class="relay-fields">
+      <div class="field relay-postcode">
+        <label for="rep-relay-postcode">{t.checkout.relayPostcode}</label>
+        <input
+          id="rep-relay-postcode"
+          type="text"
+          inputmode="numeric"
+          autocomplete="postal-code"
+          maxlength="10"
+          data-relay-postcode
+        />
+      </div>
+      {
+        countries.length > 1 ? (
+          <div class="field relay-country">
+            <label for="rep-relay-country">{t.checkout.relayCountry}</label>
+            <select id="rep-relay-country" data-relay-country>
+              {countries.map((c) => (
+                <option value={c}>{regionNames.of(c) ?? c}</option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <input type="hidden" id="rep-relay-country" value={countries[0]} data-relay-country />
+        )
+      }
+      <button type="button" class="btn btn-secondary relay-go" data-relay-go>
+        {t.checkout.relaySearch}
+      </button>
+    </div>
+    <p class="relay-status" role="status" data-relay-status></p>
+    <div class="relay-widget-frame" data-relay-frame hidden>
+      <div id="rep-relay-widget" class="relay-widget"></div>
+    </div>
+    <input type="hidden" id="rep-relay-id" data-relay-target />
+    <p class="relay-fallback">
+      {t.checkout.relayFallback}{' '}
+      <a href={`mailto:${email}`}>{email}</a>
+      {' · '}
+      <a href={`tel:${phoneE164(phone)}`}>{formatPhone(phone)}</a>
+    </p>
+  </div>
+</div>

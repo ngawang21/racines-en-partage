@@ -19,4 +19,5 @@ jobs:
       - run: pnpm test:worker
       - run: pnpm build
       - run: pnpm test:build
-      - run: pnpm e2e
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: E2E_SKIP_BUILD=1 pnpm e2e

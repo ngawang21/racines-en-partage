@@ -1,4 +1,5 @@
 ---
+import ThanksView from '../cart/views/ThanksView.astro';
 import Base from '../layouts/Base.astro';
 import { loadLocale } from '../i18n/locale';
 
@@ -7,7 +8,5 @@ const t = await loadLocale(locale);
 ---
 
 <Base {locale} routeKey="thanks" title={t.thanks.metaTitle} description={t.thanks.metaDescription}>
-  <section class="container section">
-    <h1>{t.thanks.title}</h1>
-  </section>
+  <ThanksView {locale} {t} />
 </Base>

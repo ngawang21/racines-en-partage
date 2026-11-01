@@ -1,0 +1,159 @@
+---
+// Legal notice, terms of sale and privacy policy, both locales: the Markdown
+// from the CMS rendered with its tokens replaced, and the last update date.
+import type { Locale } from '../consts';
+import type { LegalKey } from '../content/schemas';
+import Base from '../layouts/Base.astro';
+import { interpolate } from '../i18n/fallback';
+import { formatDate } from '../i18n/format';
+import { loadLegal, loadLocale } from '../i18n/locale';
+import { routePath, type RouteKey } from '../i18n/routing';
+import Breadcrumbs from './Breadcrumbs.astro';
+
+interface Props {
+  locale: Locale;
+  routeKey: Extract<RouteKey, 'legal' | 'terms' | 'privacy'>;
+  legalKey: LegalKey;
+}
+const { locale, routeKey, legalKey } = Astro.props;
+const [t, legal] = await Promise.all([loadLocale(locale), loadLegal(locale, legalKey)]);
+const siblings = (['legal', 'terms', 'privacy'] as const).map((key) => ({
+  key,
+  href: routePath(key, locale),
+  label: { legal: t.footer.legal, terms: t.footer.terms, privacy: t.footer.privacy }[key],
+}));
+---
+
+<Base {locale} {routeKey} title={legal.title} description={legal.description}>
+  <div class="container legal">
+    <div class="page-head legal-head">
+      <Breadcrumbs
+        label={t.a11y.breadcrumb}
+        items={[{ name: t.nav.home, href: routePath('home', locale) }, { name: legal.title }]}
+      />
+      <p class="eyebrow">{t.footer.infoTitle}</p>
+      <h1>{legal.title}</h1>
+      <p class="updated">
+        {interpolate(t.legal.updated, { date: formatDate(legal.updated, locale) })}
+      </p>
+    </div>
+
+    <div class="legal-layout">
+      <nav class="legal-nav" aria-label={t.footer.infoTitle}>
+        <ul role="list">
+          {
+            siblings.map((s) => (
+              <li>
+                <a href={s.href} aria-current={s.key === routeKey ? 'page' : undefined}>
+                  {s.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+      <article class="prose legal-text">
+        <Fragment set:html={legal.html} />
+      </article>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .legal {
+    padding-bottom: clamp(3rem, 2rem + 4.5vw, 6rem);
+  }
+  .legal-head .eyebrow {
+    margin-bottom: var(--space-3);
+  }
+  .legal-head h1 {
+    font-size: var(--fs-5);
+  }
+  .updated {
+    margin-top: var(--space-4);
+    color: var(--ink-2);
+    font-size: var(--fs--1);
+  }
+  .legal-layout {
+    display: grid;
+    gap: var(--space-8);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--gold);
+  }
+  @media (min-width: 960px) {
+    .legal-layout {
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: var(--space-16);
+    }
+    .legal-nav {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-6));
+      align-self: start;
+    }
+  }
+  .legal-nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+  }
+  @media (min-width: 960px) {
+    .legal-nav ul {
+      flex-direction: column;
+      gap: 0;
+      border-left: 1px solid var(--line);
+    }
+  }
+  .legal-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  @media (min-width: 960px) {
+    .legal-nav a {
+      margin-left: -1px;
+      padding: 6px var(--space-4);
+      border: 0;
+      border-left: 2px solid transparent;
+      border-radius: 0;
+    }
+  }
+  .legal-nav a:hover {
+    color: var(--forest);
+  }
+  .legal-nav a[aria-current] {
+    border-color: var(--forest);
+    color: var(--forest);
+    font-weight: 600;
+  }
+  @media (min-width: 960px) {
+    .legal-nav a[aria-current] {
+      border-left-color: var(--gold);
+    }
+  }
+  .legal-text {
+    max-width: 72ch;
+    line-height: 1.7;
+  }
+  .legal-text :global(h2) {
+    padding-top: var(--space-2);
+  }
+  .legal-text :global(h2:first-child) {
+    margin-top: 0;
+  }
+  .legal-text :global(a) {
+    color: var(--forest);
+    text-decoration-color: var(--kraft-deep);
+    overflow-wrap: anywhere;
+  }
+  .legal-text :global(strong) {
+    font-weight: 600;
+  }
+</style>

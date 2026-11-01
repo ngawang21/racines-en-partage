@@ -1,0 +1,76 @@
+---
+import type { HomePage } from '../content/schemas';
+import Icon from './Icon.astro';
+
+interface Props {
+  items: HomePage['reassurance'];
+}
+const { items } = Astro.props;
+---
+
+<div class="reassurance">
+  <div class="container">
+    <ul class="list" role="list">
+      {
+        items.map((item) => (
+          <li>
+            <span class="icon">
+              <Icon name={item.icon} size={22} />
+            </span>
+            <span class="text">{item.text}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</div>
+
+<style>
+  .reassurance {
+    border-bottom: 1px solid var(--line);
+  }
+  .list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6) var(--space-4);
+    margin: 0;
+    padding-block: var(--space-8);
+  }
+  @media (min-width: 900px) {
+    .list {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      padding-block: var(--space-12);
+    }
+    li + li {
+      border-left: 1px solid var(--line);
+      padding-left: var(--space-6);
+    }
+  }
+  li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .icon {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(201, 162, 74, 0.55);
+    border-radius: 50%;
+    background: var(--paper);
+    color: var(--forest);
+  }
+  .text {
+    color: var(--forest);
+    font-size: var(--fs--1);
+    font-weight: 500;
+    line-height: 1.35;
+  }
+  @media (min-width: 900px) {
+    .text {
+      font-size: 0.9375rem;
+    }
+  }
+</style>

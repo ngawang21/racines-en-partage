@@ -19,7 +19,13 @@
     "packagedBy": "Packed in France by ESAT Les Oliviers",
     "copyright": "© {year} Racines en Partage. All rights reserved.",
     "instagram": "Instagram",
-    "maps": "View on Google Maps"
+    "maps": "View on Google Maps",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "E-mail",
+    "hours": "Hours",
+    "moreQuestions": "Another question?",
+    "writeUs": "Write to us or give us a call, we answer personally."
   },
   "shop": {
     "title": "The shop",
@@ -39,7 +45,13 @@
     "add": "Add",
     "view": "View product",
     "closedNotice": "The shop is taking a short break. You can still browse our products; orders will resume very soon.",
-    "categoryKicker": "Category"
+    "categoryKicker": "Category",
+    "viewAll": "Browse the whole shop",
+    "explore": "Explore",
+    "landsFrom": "Where it grows",
+    "landsTo": "Our home",
+    "recipeCta": "See the recipe",
+    "otherCategories": "Our other ranges"
   },
   "product": {
     "addToCart": "Add to basket",
@@ -83,7 +95,8 @@
     "disclaimer": "To be consumed as part of a varied, balanced diet and a healthy lifestyle. Keep out of the reach of young children.",
     "packagedBy": "Packed in France by ESAT Les Oliviers (Gennevilliers, 92)",
     "gallery": "Product photos",
-    "imageOf": "Photo {n} of {total}"
+    "imageOf": "Photo {n} of {total}",
+    "galleryDuo": "{name}, shown with another product from the range"
   },
   "cart": {
     "title": "Your basket",
@@ -106,7 +119,18 @@
     "added": "{name} added to your basket",
     "updated": "Basket updated",
     "removed": "{name} removed from your basket",
-    "close": "Close the basket"
+    "close": "Close the basket",
+    "unavailable": "This product is no longer available.",
+    "maxReached": "Up to {max} per product",
+    "decreaseOf": "Decrease quantity: {name}",
+    "increaseOf": "Increase quantity: {name}",
+    "quantityOf": "Quantity: {name}",
+    "removeOf": "Remove {name} from your basket",
+    "freeShippingProgress": "Progress towards free delivery",
+    "deliveryNote": "Pickup point, home delivery or free pickup in Arnouville: you choose at the next step.",
+    "emptyLead": "Our powders, herbal teas, seeds and cacao are waiting for you.",
+    "unitPrice": "{price} each",
+    "secureNote": "Secure payment by Stripe"
   },
   "checkout": {
     "title": "Your order",
@@ -134,7 +158,14 @@
     "chooseRelay": "Please choose a pickup point.",
     "acceptRequired": "Please accept the terms of sale to continue.",
     "processing": "Redirecting to payment…",
-    "emptyCart": "Your basket is empty: add a product to place an order."
+    "emptyCart": "Your basket is empty: add a product to place an order.",
+    "editCart": "Edit basket",
+    "methodLegend": "Choose your delivery method",
+    "freeFrom": "Free from {threshold}",
+    "relayLoading": "Loading the pickup point map…",
+    "relayCountries": "Pickup points in: {countries}",
+    "pickupTitle": "Pickup address",
+    "unavailableLines": "Remove the unavailable products to continue."
   },
   "thanks": {
     "title": "Thank you for your order",
@@ -152,7 +183,14 @@
     "nextHome": "Colissimo will send you a tracking link once the parcel ships.",
     "nextPickup": "We will call you to arrange a time at 9 Rue du Marché, Arnouville.",
     "nextContact": "Any question? Write to {email} or call {phone}.",
-    "backToShop": "Back to the shop"
+    "backToShop": "Back to the shop",
+    "loading": "Retrieving your order…",
+    "unpaid": "The payment did not go through. Your basket is waiting if you would like to try again.",
+    "backToCart": "Back to your basket",
+    "emailSent": "A summary has been sent to {email}.",
+    "statusPaid": "Paid",
+    "statusPending": "Awaiting confirmation",
+    "statusUnpaid": "Unpaid"
   },
   "errors": {
     "notFoundTitle": "Page not found",

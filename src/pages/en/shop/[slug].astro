@@ -1,55 +1,12 @@
 ---
 import type { GetStaticPaths } from 'astro';
-import Base from '../../../layouts/Base.astro';
-import { formatPrice, toCents } from '../../../i18n/format';
-import { loadCategories, loadLocale, loadProducts } from '../../../i18n/locale';
-import { routePath, routeUrl } from '../../../i18n/routing';
-import { resolveAsset } from '../../../images';
+import CategoryView from '../../../components/views/CategoryView.astro';
+import { loadCategories } from '../../../i18n/locale';
 
 export const getStaticPaths = (async () =>
-  (await loadCategories('fr')).map((c) => ({ params: { slug: c.slug } }))) satisfies GetStaticPaths;
-
-const locale = 'en' as const;
-const slug = String(Astro.params.slug);
-const [t, categories, products] = await Promise.all([
-  loadLocale(locale),
-  loadCategories(locale),
-  loadProducts(locale),
-]);
-const category = categories.find((c) => c.slug === slug);
-if (!category) throw new Error(`unknown category ${slug}`);
-const listed = products.filter((p) => p.category === slug);
+  (await loadCategories('fr')).map((item) => ({
+    params: { slug: item.slug },
+  }))) satisfies GetStaticPaths;
 ---
 
-<Base
-  {locale}
-  routeKey="category"
-  {slug}
-  title={category.seoTitle ?? category.name}
-  description={category.seoDescription ?? category.intro}
-  image={{ src: resolveAsset(category.image), alt: category.name }}
-  graph={{
-    breadcrumbs: [
-      { name: t.nav.home, url: routeUrl('home', locale) },
-      { name: t.nav.shop, url: routeUrl('shop', locale) },
-      { name: category.name, url: routeUrl('category', locale, slug) },
-    ],
-    items: listed.map((p) => ({ name: p.name, url: routeUrl('product', locale, p.slug) })),
-  }}
->
-  <section class="container section">
-    <p class="eyebrow">{t.shop.categoryKicker}</p>
-    <h1>{category.name}</h1>
-    <p class="lead">{category.intro}</p>
-    <ul>
-      {
-        listed.map((p) => (
-          <li>
-            <a href={routePath('product', locale, p.slug)}>{p.name}</a>{' '}
-            <span class="price">{formatPrice(toCents(p.price), locale)}</span>
-          </li>
-        ))
-      }
-    </ul>
-  </section>
-</Base>
+<CategoryView locale="en" slug={String(Astro.params.slug)} />

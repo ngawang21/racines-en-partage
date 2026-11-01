@@ -1,0 +1,159 @@
+---
+// "Petites recettes": three recipes printed on the labels, each linking to
+// its product page (the recipe accordion carries id="recipe").
+import type { Locale } from '../consts';
+import type { LocaleContent } from '../content/locale-schema';
+import type { Product } from '../content/schemas';
+import { routePath } from '../i18n/routing';
+import Icon from './Icon.astro';
+import Picture from './Picture.astro';
+
+interface Props {
+  products: Product[];
+  locale: Locale;
+  t: LocaleContent;
+}
+const { products, locale, t } = Astro.props;
+const withRecipe = products.filter((p) => p.recipe);
+---
+
+<ul class="recipes" role="list">
+  {
+    withRecipe.map((p) => {
+      const r = p.recipe!;
+      const lines = (r.ingredients?.length ? r.ingredients : r.steps).slice(0, 3);
+      return (
+        <li>
+          <article class="recipe lift">
+            <div class="recipe-media">
+              <Picture
+                src={p.images[0]!}
+                alt=""
+                preset="card"
+                sizes="(min-width: 960px) 380px, 100vw"
+              />
+            </div>
+            <div class="recipe-body">
+              <p class="recipe-kicker">{p.name}</p>
+              <h3 class="recipe-title">
+                <a href={`${routePath('product', locale, p.slug)}#recipe`}>{r.title}</a>
+              </h3>
+              <ul class="recipe-lines">
+                {lines.map((l) => (
+                  <li>{l}</li>
+                ))}
+              </ul>
+              <span class="link-arrow recipe-cta" aria-hidden="true">
+                {t.shop.recipeCta}
+                <Icon name="chevron" />
+              </span>
+            </div>
+          </article>
+        </li>
+      );
+    })
+  }
+</ul>
+
+<style>
+  .recipes {
+    display: grid;
+    gap: var(--space-6);
+    margin: 0;
+  }
+  @media (min-width: 760px) {
+    .recipes {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .recipe {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    border: 1px solid var(--kraft);
+    border-radius: var(--radius-m);
+    background: var(--cream);
+  }
+  .recipe-media {
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: var(--paper);
+    border-bottom: 1px solid var(--kraft);
+  }
+  .recipe-media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 66%;
+  }
+  .recipe-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: var(--space-6);
+  }
+  .recipe-kicker {
+    color: var(--ink-2);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .recipe-title {
+    margin-top: var(--space-2);
+    font-size: var(--fs-3);
+  }
+  .recipe-title a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .recipe-title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .recipe-title a:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+  .recipe:has(a:focus-visible) {
+    outline: 3px solid var(--hibiscus);
+    outline-offset: 2px;
+  }
+  .recipe-lines {
+    margin: var(--space-4) 0 var(--space-6);
+    padding: 0;
+    list-style: none;
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+  }
+  .recipe-lines li {
+    position: relative;
+    padding-left: 18px;
+  }
+  .recipe-lines li + li {
+    margin-top: 6px;
+  }
+  .recipe-lines li::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 0.62em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+  }
+  .recipe-cta {
+    margin-top: auto;
+    min-height: 0;
+  }
+  .recipe:hover .recipe-title {
+    text-decoration: underline;
+    text-decoration-color: var(--kraft);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+  }
+</style>

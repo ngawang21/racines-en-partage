@@ -1,0 +1,139 @@
+---
+// FAQ, both locales (spec 5.4): a list of <details>, the FAQPage graph from
+// Base, and a contact card for anything else.
+import type { Locale } from '../../consts';
+import Base from '../../layouts/Base.astro';
+import { formatPhone, phoneE164 } from '../../i18n/format';
+import { loadLocale, loadPage, loadSettings } from '../../i18n/locale';
+import { routePath } from '../../i18n/routing';
+import Accordion from '../Accordion.astro';
+import Breadcrumbs from '../Breadcrumbs.astro';
+import Icon from '../Icon.astro';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const [t, page, settings] = await Promise.all([
+  loadLocale(locale),
+  loadPage(locale, 'faq'),
+  loadSettings(),
+]);
+const { brand } = settings;
+---
+
+<Base
+  {locale}
+  routeKey="faq"
+  title={page.seoTitle}
+  description={page.seoDescription}
+  graph={{ faq: page.items }}
+>
+  <div class="container faq">
+    <div class="page-head">
+      <Breadcrumbs
+        label={t.a11y.breadcrumb}
+        items={[{ name: t.nav.home, href: routePath('home', locale) }, { name: page.title }]}
+      />
+      <h1>{page.title}</h1>
+      <p class="lead">{page.lead}</p>
+    </div>
+
+    <div class="faq-layout">
+      <div class="faq-list">
+        {
+          page.items.map((item, i) => (
+            <Accordion title={item.question} level="h2" open={i === 0}>
+              <p class="answer">{item.answer}</p>
+            </Accordion>
+          ))
+        }
+      </div>
+
+      <aside class="ask" aria-labelledby="faq-ask">
+        <h2 id="faq-ask">{t.footer.moreQuestions}</h2>
+        <p>{t.footer.writeUs}</p>
+        <ul role="list">
+          <li>
+            <a href={`mailto:${brand.email}`}>
+              <Icon name="mail" size={20} />
+              <span>{brand.email}</span>
+            </a>
+          </li>
+          <li>
+            <a href={`tel:${phoneE164(brand.phone)}`}>
+              <Icon name="phone" size={20} />
+              <span>{formatPhone(brand.phone)}</span>
+            </a>
+          </li>
+        </ul>
+        <a class="btn btn-secondary" href={routePath('contact', locale)}>{t.nav.contact}</a>
+      </aside>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .faq {
+    padding-bottom: clamp(3rem, 2rem + 4.5vw, 6rem);
+  }
+  .faq-layout {
+    display: grid;
+    gap: var(--space-12);
+    align-items: start;
+  }
+  @media (min-width: 960px) {
+    .faq-layout {
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: var(--space-16);
+    }
+    .ask {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-6));
+    }
+  }
+  .faq-list {
+    max-width: 760px;
+    border-top: 1px solid var(--line);
+  }
+  .answer {
+    max-width: 64ch;
+    color: var(--ink-2);
+    line-height: 1.7;
+  }
+  .ask {
+    padding: var(--space-8);
+    border: 1px solid var(--kraft);
+    border-radius: var(--radius-l);
+    background: var(--paper);
+  }
+  .ask h2 {
+    font-size: var(--fs-3);
+  }
+  .ask p {
+    margin-top: var(--space-3);
+    color: var(--ink-2);
+  }
+  .ask ul {
+    display: grid;
+    gap: var(--space-1);
+    margin: var(--space-6) 0;
+  }
+  .ask ul a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 44px;
+    color: var(--forest);
+    font-weight: 500;
+    font-size: 0.9375rem;
+    text-decoration: none;
+  }
+  .ask ul a:hover {
+    text-decoration: underline;
+  }
+  .ask :global(svg) {
+    flex: none;
+    color: var(--leaf);
+  }
+</style>
