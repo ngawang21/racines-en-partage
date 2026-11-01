@@ -1,0 +1,72 @@
+---
+import { LOCALES, type Locale } from '../consts';
+import { routePath, type RouteKey } from '../i18n/routing';
+
+interface Props {
+  locale: Locale;
+  routeKey: RouteKey;
+  slug?: string;
+  label: string;
+  class?: string;
+}
+const { locale, routeKey, slug, label, class: className } = Astro.props;
+const short: Record<Locale, string> = { fr: 'FR', en: 'EN' };
+const full: Record<Locale, string> = { fr: 'Français', en: 'English' };
+// The bilingual 404 and the admin page have no localised twin: point at the homes.
+const key: RouteKey = routeKey === 'notFound' || routeKey === 'admin' ? 'home' : routeKey;
+---
+
+<nav class:list={['pill', className]} aria-label={label}>
+  {
+    LOCALES.map((l) => (
+      <a
+        href={routePath(key, l, slug)}
+        lang={l}
+        hreflang={l}
+        aria-label={full[l]}
+        aria-current={l === locale ? 'true' : undefined}
+        class:list={{ on: l === locale }}
+      >
+        {short[l]}
+      </a>
+    ))
+  }
+</nav>
+
+<style>
+  .pill {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: rgba(255, 255, 255, 0.45);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .pill a {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 12px;
+    border-radius: var(--radius-pill);
+    color: var(--ink-2);
+    text-decoration: none;
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  /* Grow the hit area to 44 px without growing the pill. */
+  .pill a::after {
+    content: '';
+    position: absolute;
+    inset: -4px 0;
+  }
+  .pill a:hover:not(.on) {
+    color: var(--forest);
+  }
+  .pill a.on {
+    background: var(--forest);
+    color: var(--cream);
+  }
+</style>

@@ -1,0 +1,42 @@
+{
+  "name": "racines-en-partage",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "description": "Racines en Partage: bilingual online shop for West-African botanical powders, infusions, seeds and cacao.",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview --host 127.0.0.1 --port 4321",
+    "check": "astro check && prettier --check .",
+    "format": "prettier --write .",
+    "test": "vitest run tests/unit",
+    "test:build": "vitest run tests/build",
+    "test:worker": "echo 'test:worker: not configured yet (wave 2C)'",
+    "e2e": "echo 'e2e: not configured yet (wave 2B)'",
+    "dev:worker": "echo 'dev:worker: not configured yet (wave 2C)'",
+    "launch-check": "node scripts/launch-check.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "@fontsource-variable/figtree": "^5.3.0",
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "astro": "^7.4.1",
+    "zod": "^4.6.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "node-html-parser": "^9.0.3",
+    "prettier": "^3.9.6",
+    "prettier-plugin-astro": "^0.14.1",
+    "sharp": "^0.35.4",
+    "typescript": "~5.9.0",
+    "vitest": "^5.0.0",
+    "yaml": "^2.9.0"
+  }
+}

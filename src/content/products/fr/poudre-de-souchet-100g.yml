@@ -1,0 +1,34 @@
+sku: REP-SOU-P100
+category: poudres
+price: 6.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
+weightGrams: 100
+origin: Niger
+originCountryCode: NE
+images:
+  - /src/assets/products/souchet-poudre-100.webp
+stock: in_stock
+featured: false
+nutritionVerified: false # no table printed on the label
+free_from: [gluten]
+related: [tubercules-de-souchet-200g, poudre-de-cacao-100g]
+name: Poudre de souchet
+tagline: La douceur naturelle du souchet, prête à mélanger.
+description: >-
+  Le souchet est un petit tubercule au goût doux de noisette et d'amande. Broyé
+  en poudre, il se mélange aux boissons, aux pâtes à gâteaux et aux porridges,
+  et apporte une rondeur naturellement sucrée.
+ingredients: Produit 100 % végétal, sans gluten. Poudre obtenue après broyage des tubercules de souchet.
+usage:
+  - À incorporer dans vos boissons, préparations crues ou cuites ou recettes selon vos envies.
+howMade: La poudre de souchet est obtenue après broyage des tubercules de souchet.
+benefits:
+  - Sans gluten
+  - Riche en vitamine E
+  - Apporte des minéraux (fer, magnésium, phosphore, potassium)
+  - Des protéines végétales
+  - Et des fibres alimentaires
+storage: Conserver dans un endroit sec, à l'abri de la chaleur et de l'humidité. Bien refermer après ouverture.
+seoTitle: Poudre de souchet du Niger 100 g
+seoDescription: >-
+  Poudre de tubercules de souchet du Niger, 100 % végétale. Goût doux de
+  noisette pour vos boissons, pâtisseries et porridges.

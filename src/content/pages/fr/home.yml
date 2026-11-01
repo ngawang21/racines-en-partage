@@ -1,0 +1,54 @@
+seoTitle: "Racines en Partage : poudres, tisanes et cacao d'Afrique de l'Ouest"
+seoDescription: >-
+  Moringa, baobab, bissap, souchet, cacao ivoirien : des produits simples, sans
+  additifs, conditionnés en France par l'ESAT Les Oliviers. Livraison en Point
+  Relais Mondial Relay.
+hero:
+  eyebrow: Tisanes botaniques & poudres alimentaires
+  title: Deux terres. Un rituel.
+  titleAccent: Un bien-être à partager.
+  lead: >-
+    Des feuilles, des fleurs, des graines et du cacao d'Afrique de l'Ouest,
+    choisis pour leur goût et leur simplicité. Un seul ingrédient par sachet,
+    conditionné en France.
+  cta:
+    primary: Découvrir la boutique
+    secondary: Notre histoire
+  imageAlt: >-
+    Trois sachets kraft Racines en Partage, orge grillée, hibiscus et moringa,
+    posés sur le sable entre des feuilles de palmier
+reassurance:
+  - icon: pin
+    text: Conditionné en France par l'ESAT Les Oliviers
+  - icon: leaf
+    text: Sans additifs ni conservateurs
+  - icon: truck
+    text: Livraison en Point Relais
+  - icon: lock
+    text: Paiement sécurisé
+featuredTitle: Nos incontournables
+storyTitle: Deux terres
+# Owner to validate (Marie's own words welcome).
+storyBody: >-
+  Racines en Partage est née entre deux terres : l'Afrique de l'Ouest, où le
+  moringa, le bissap et le souchet font partie du quotidien, et la France, où
+  nous vivons. Nous choisissons des produits du Niger, du Sénégal, de Côte
+  d'Ivoire et d'Inde, puis nous les faisons conditionner en Île-de-France. Notre
+  philosophie : prendre soin de soi en partageant le goût et les bienfaits de nos
+  terroirs.
+storyLands:
+  from: [Niger, Sénégal, Côte d'Ivoire, Inde]
+  to: Arnouville
+categoriesTitle: Nos univers
+recipesTitle: Petites recettes
+recipeProducts:
+  - fleurs-d-hibiscus-bissap-100g
+  - tubercules-de-souchet-200g
+  - poudre-de-cacao-100g
+commitmentTitle: Nos engagements
+commitmentBody: >-
+  Nos sachets sont conditionnés par l'ESAT Les Oliviers, à Gennevilliers, un
+  établissement qui accompagne par le travail des personnes en situation de
+  handicap. Nous indiquons l'origine de chaque produit, nous gardons des listes
+  d'ingrédients courtes, et nous n'ajoutons ni additif, ni conservateur, ni
+  colorant.

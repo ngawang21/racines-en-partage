@@ -1,0 +1,48 @@
+sku: REP-CAC-P100
+category: cacao
+price: 6.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
+weightGrams: 100
+origin: Côte d'Ivoire
+originCountryCode: CI
+images:
+  - /src/assets/products/cacao-poudre-100.webp
+stock: in_stock
+featured: false
+nutritionVerified: true
+nutrition:
+  energy: 1489 kJ / 357 kcal
+  fat: 22,6 g
+  saturates: 13,5 g
+  carbs: 17,1 g
+  sugars: 0,7 g
+  fibre: 24,0 g
+  protein: 13 g
+  salt: < 0,03 g
+free_from: []
+related: [grues-de-cacao-100g, tubercules-de-souchet-200g]
+name: Poudre de cacao
+tagline: Un cacao ivoirien pur, à l'arôme intense.
+description: >-
+  Un cacao 100 % ivoirien, non sucré, dont on a extrait le beurre pour garder
+  une poudre dense et aromatique. Pour un chocolat chaud qui a du caractère,
+  des gâteaux plus profonds, ou un voile sur un dessert.
+ingredients: 100 % cacao ivoirien. Poudre obtenue après extraction du beurre de cacao avec un arôme intense.
+usage:
+  - Idéal pour vos boissons chaudes (chocolat, lait végétal).
+  - Pour vos pâtisseries, desserts et yaourts.
+  - À saupoudrer sur vos plats favoris.
+howMade: La poudre de cacao est obtenue après extraction du beurre de cacao des fèves.
+recipe:
+  title: Chocolat chaud maison
+  steps:
+    - Faites chauffer 1 litre de lait végétal (amande, avoine ou autre).
+    - Ajoutez 2 à 3 cuillères à soupe de poudre de cacao.
+    - Sucrez selon votre goût et mélangez bien.
+    - Laissez frémir 10 minutes en remuant.
+    - Dégustez bien chaud.
+benefits: []
+storage: Conserver dans un endroit sec, à l'abri de la chaleur et de l'humidité. Bien refermer après ouverture.
+seoTitle: Poudre de cacao pur de Côte d'Ivoire 100 g
+seoDescription: >-
+  Poudre de cacao 100 % ivoirien, non sucrée, à l'arôme intense. Pour vos
+  chocolats chauds et pâtisseries. Recette de chocolat chaud incluse.

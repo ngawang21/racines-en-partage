@@ -1,0 +1,53 @@
+---
+import { OG_LOCALE, SITE, type Locale } from '../consts';
+import { alternatesFor, routeUrl, type RouteKey } from '../i18n/routing';
+import { buildGraph, robotsContent, serializeGraph, type GraphInput } from '../seo/graph';
+
+export interface OgImage {
+  /** Absolute URL. */
+  url: string;
+  width: number;
+  height: number;
+  alt: string;
+}
+
+interface Props {
+  locale: Locale;
+  routeKey: RouteKey;
+  slug?: string;
+  /** Full document title, brand included. */
+  title: string;
+  description: string;
+  noindex: boolean;
+  image: OgImage;
+  graph: Omit<GraphInput, 'canonical' | 'locale' | 'title' | 'description'>;
+}
+const { locale, routeKey, slug, title, description, noindex, image, graph } = Astro.props;
+const canonical = routeUrl(routeKey, locale, slug);
+// A noindex page is not part of the indexable language set: no alternates.
+const alternates = noindex ? [] : alternatesFor(routeKey, slug);
+const jsonLd = buildGraph({ ...graph, canonical, locale, title, description });
+const isProduct = graph.kind === 'product';
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+<meta name="robots" content={robotsContent(noindex)} />
+{alternates.map((a) => <link rel="alternate" hreflang={a.hreflang} href={a.href} />)}
+<meta property="og:type" content={isProduct ? 'product' : 'website'} />
+<meta property="og:site_name" content={SITE.name} />
+<meta property="og:locale" content={OG_LOCALE[locale]} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={image.url} />
+<meta property="og:image:width" content={String(image.width)} />
+<meta property="og:image:height" content={String(image.height)} />
+<meta property="og:image:alt" content={image.alt} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={image.url} />
+<meta name="twitter:image:alt" content={image.alt} />
+<script type="application/ld+json" set:html={serializeGraph(jsonLd)} />

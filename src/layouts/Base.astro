@@ -1,0 +1,172 @@
+---
+import '@fontsource-variable/fraunces/full.css';
+import '@fontsource-variable/fraunces/full-italic.css';
+import '@fontsource-variable/figtree';
+import '../styles/global.css';
+import frauncesLatin from '@fontsource-variable/fraunces/files/fraunces-latin-full-normal.woff2?url';
+import figtreeLatin from '@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url';
+import type { ImageMetadata } from 'astro';
+import { getImage } from 'astro:assets';
+import heroTrio from '../assets/brand/hero-trio.webp';
+import CartDrawer from '../components/CartDrawer.astro';
+import CartScripts from '../components/CartScripts.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import Seo from '../components/Seo.astro';
+import { SITE, type Locale } from '../consts';
+import { loadLocale, loadPage, loadSettings, pickLabel } from '../i18n/locale';
+import { phoneE164 } from '../i18n/format';
+import { isIndexable, routeUrl, type RouteKey } from '../i18n/routing';
+import type { Crumb, GraphInput, PageKind, StoreInfo } from '../seo/graph';
+
+interface Props {
+  locale: Locale;
+  routeKey: RouteKey;
+  /** Category or product slug, so canonical, hreflang and the pill point at the same item. */
+  slug?: string;
+  /** Page title; " · Racines en Partage" is appended unless it already names the shop. */
+  title: string;
+  description: string;
+  /** Defaults to the route's status (cart, checkout, thanks, 404 and admin are noindex). */
+  noindex?: boolean;
+  /** Social image; defaults to the hero photo. */
+  image?: { src: ImageMetadata; alt: string };
+  /** Extra graph input: breadcrumbs, product, listed items, FAQ. */
+  graph?: Partial<Pick<GraphInput, 'kind' | 'breadcrumbs' | 'product' | 'items' | 'faq'>>;
+}
+
+const {
+  locale,
+  routeKey,
+  slug,
+  title,
+  description,
+  noindex = !isIndexable(routeKey),
+  image,
+  graph = {},
+} = Astro.props;
+
+const [t, settings, home] = await Promise.all([
+  loadLocale(locale),
+  loadSettings(),
+  loadPage(locale, 'home'),
+]);
+
+const fullTitle = title.includes(SITE.name) ? title : `${title} · ${SITE.name}`;
+
+const og = image ?? { src: heroTrio, alt: home.hero.imageAlt };
+const ogRendered = await getImage({
+  src: og.src,
+  width: Math.min(1200, og.src.width),
+  format: 'jpg',
+});
+const ogImage = {
+  url: new URL(ogRendered.src, SITE.url).href,
+  width: Number(ogRendered.attributes.width ?? og.src.width),
+  height: Number(ogRendered.attributes.height ?? og.src.height),
+  alt: og.alt,
+};
+
+const KIND: Partial<Record<RouteKey, PageKind>> = {
+  home: 'home',
+  shop: 'shop',
+  category: 'category',
+  product: 'product',
+  faq: 'faq',
+};
+const store: StoreInfo = {
+  name: settings.brand.name,
+  description: home.seoDescription,
+  slogan: pickLabel(settings.brand.tagline, locale),
+  email: settings.brand.email,
+  telephone: phoneE164(settings.brand.phone),
+  address: settings.brand.address,
+  logo: `${SITE.url}/icons/icon-512.png`,
+  image: ogImage.url,
+  sameAs: settings.brand.instagram ? [settings.brand.instagram] : [],
+};
+const defaultCrumbs: Crumb[] | undefined =
+  routeKey === 'shop'
+    ? [
+        { name: t.nav.home, url: routeUrl('home', locale) },
+        { name: t.nav.shop, url: routeUrl('shop', locale) },
+      ]
+    : undefined;
+
+const announcement = pickLabel(settings.shop.announcement, locale).trim();
+const shopOpen = settings.shop.open;
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <link rel="preload" href={frauncesLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={figtreeLatin} as="font" type="font/woff2" crossorigin />
+    <Seo
+      {locale}
+      {routeKey}
+      {slug}
+      title={fullTitle}
+      {description}
+      {noindex}
+      image={ogImage}
+      graph={{
+        kind: graph.kind ?? KIND[routeKey] ?? 'page',
+        store,
+        breadcrumbs: graph.breadcrumbs ?? defaultCrumbs,
+        product: graph.product,
+        items: graph.items,
+        faq: graph.faq,
+      }}
+    />
+    <link rel="icon" href="/icons/icon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="/icons/icon-16.png" type="image/png" sizes="16x16" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#163a1c" />
+  </head>
+  <body data-locale={locale} data-shop-open={String(shopOpen)}>
+    <a class="skip-link" href="#main">{t.a11y.skip}</a>
+    {
+      announcement && (
+        <div class="announcement" role="region" aria-label={t.a11y.announcement}>
+          <p class="container">{announcement}</p>
+        </div>
+      )
+    }
+    {
+      !shopOpen && (
+        <div class="shop-closed" role="status">
+          <p class="container">{t.shop.closedNotice}</p>
+        </div>
+      )
+    }
+    <Header {locale} {routeKey} {slug} {t} />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <Footer {locale} {t} {settings} />
+    <CartDrawer {locale} />
+    <CartScripts {locale} />
+  </body>
+</html>
+
+<style>
+  .announcement,
+  .shop-closed {
+    padding-block: var(--space-2);
+    font-size: var(--fs--1);
+    font-weight: 500;
+    text-align: center;
+  }
+  .announcement {
+    background: var(--forest);
+    color: var(--cream);
+  }
+  .shop-closed {
+    background: var(--paper);
+    color: var(--forest);
+    border-bottom: 1px solid var(--kraft);
+  }
+</style>

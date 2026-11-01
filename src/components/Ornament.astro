@@ -1,0 +1,18 @@
+---
+// Gold hairline with a centred hibiscus glyph, placed between home sections.
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<div class:list={['hairline', className]} role="presentation">
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+    {
+      [0, 72, 144, 216, 288].map((deg) => (
+        <ellipse cx="12" cy="6.4" rx="3.1" ry="4.4" transform={`rotate(${deg} 12 12)`} />
+      ))
+    }
+    <circle cx="12" cy="12" r="1.8" fill="var(--gold)"></circle>
+  </svg>
+</div>

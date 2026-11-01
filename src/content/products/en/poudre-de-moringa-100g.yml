@@ -1,0 +1,36 @@
+# Translated fields only: shared fields (sku, price, images...) come from the French file.
+name: Moringa powder
+tagline: The bright green of Nigerien leaves, in a fine powder.
+description: >-
+  Moringa leaves, dried then ground, and nothing else. Its green, gently grassy
+  flavour slips into a smoothie, a yoghurt or a sauce. The 100 g pouch is the
+  perfect way to get acquainted.
+ingredients: >-
+  100% Moringa leaves (Moringa oleifera), dried and ground. No additive. No
+  colouring. No preservative.
+usage:
+  - Stir into smoothies, fruit juices, yoghurts and compotes, sauces and everyday cooking.
+  - Start with a small amount and adjust to taste.
+howMade: >-
+  Moringa powder is made from the dried leaves, carefully ground into a fine,
+  natural powder.
+recipe:
+  title: Moringa smoothie
+  ingredients:
+    - 1 teaspoon of moringa powder
+    - 1 very ripe banana
+    - 1 apple or a few pieces of pineapple
+    - 200 ml of water or plant milk
+    - 1 teaspoon of honey, to taste
+    - A few ice cubes
+  steps:
+    - Put all the ingredients in a blender.
+    - Blend until smooth and creamy.
+    - Serve chilled.
+benefits:
+  - Naturally a source of protein, iron, calcium, polyphenols
+storage: Store in a dry place, away from heat and moisture. Close tightly after opening.
+seoTitle: Moringa powder from Niger, 100 g
+seoDescription: >-
+  Moringa leaf powder from Niger, 100% dried and ground leaves, no additive.
+  Smoothie idea included. Packed in France by ESAT Les Oliviers.

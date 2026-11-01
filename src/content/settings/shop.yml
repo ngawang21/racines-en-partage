@@ -1,0 +1,41 @@
+brand:
+  name: Racines en Partage
+  tagline:
+    {
+      fr: 'Deux terres. Un rituel. Un bien-être à partager.',
+      en: 'Two lands. One ritual. Well-being to share.',
+    }
+  email: racinesenpartage@outlook.com
+  phone: '0775689108'
+  address: { street: 9 Rue du Marché, postcode: '95400', city: Arnouville, country: FR }
+  instagram: '' # URL or empty
+  siren: '' # owner placeholder, launch-check fails while empty
+  packagedBy: 'ESAT Les Oliviers (Gennevilliers, 92)'
+shop:
+  open: true # false shows a "boutique en pause" notice and disables checkout
+  currency: eur
+  vat: { mode: franchise, rate: 5.5 }
+  freeShippingFrom: 49 # EUR, null disables
+  maxQuantityPerLine: 10
+  announcement: { fr: '', en: '' }
+shipping:
+  - id: relay
+    enabled: true
+    price: 4.90
+    countries: [FR, BE, LU]
+    label: { fr: 'Point Relais Mondial Relay', en: 'Mondial Relay pickup point' }
+    estimate: { fr: '3 à 5 jours ouvrés', en: '3 to 5 working days' }
+  - id: home
+    enabled: true
+    price: 6.90
+    countries: [FR]
+    label: { fr: 'Livraison à domicile (Colissimo)', en: 'Home delivery (Colissimo)' }
+    estimate: { fr: '2 à 4 jours ouvrés', en: '2 to 4 working days' }
+  - id: pickup
+    enabled: true
+    price: 0
+    countries: [FR]
+    label: { fr: 'Retrait gratuit à Arnouville', en: 'Free pickup in Arnouville' }
+    estimate: { fr: 'sur rendez-vous, 9 Rue du Marché', en: 'by appointment, 9 Rue du Marché' }
+launch:
+  pricesConfirmed: false # launch-check fails while false

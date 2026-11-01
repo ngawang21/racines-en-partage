@@ -1,0 +1,10 @@
+dist/
+.astro/
+out/
+pnpm-lock.yaml
+public/
+docs/branding/
+docs/superpowers/
+src/assets/
+test-results/
+playwright-report/

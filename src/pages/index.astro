@@ -1,0 +1,29 @@
+---
+import Base from '../layouts/Base.astro';
+import { formatPrice, toCents } from '../i18n/format';
+import { loadPage, loadProducts } from '../i18n/locale';
+import { routePath } from '../i18n/routing';
+
+const locale = 'fr' as const;
+const home = await loadPage(locale, 'home');
+const featured = (await loadProducts(locale)).filter((p) => p.featured);
+---
+
+<Base {locale} routeKey="home" title={home.seoTitle} description={home.seoDescription}>
+  <section class="container section">
+    <p class="eyebrow">{home.hero.eyebrow}</p>
+    <h1>{home.hero.title} <span class="accent">{home.hero.titleAccent}</span></h1>
+    <p class="lead">{home.hero.lead}</p>
+    <h2>{home.featuredTitle}</h2>
+    <ul>
+      {
+        featured.map((p) => (
+          <li>
+            <a href={routePath('product', locale, p.slug)}>{p.name}</a>{' '}
+            <span class="price">{formatPrice(toCents(p.price), locale)}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Base>

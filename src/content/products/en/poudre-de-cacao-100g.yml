@@ -1,0 +1,26 @@
+# Translated fields only: shared fields (sku, price, images...) come from the French file.
+name: Cocoa powder
+tagline: Pure Ivorian cocoa with an intense aroma.
+description: >-
+  A 100% Ivorian, unsweetened cocoa, with the butter pressed out to leave a
+  dense, aromatic powder. For a hot chocolate with character, deeper cakes, or a
+  dusting over a dessert.
+ingredients: 100% Ivorian cocoa. Powder obtained after extracting the cocoa butter, with an intense aroma.
+usage:
+  - Ideal for hot drinks (chocolate, plant milk).
+  - For your bakes, desserts and yoghurts.
+  - Sprinkle over your favourite dishes.
+howMade: Cocoa powder is made by pressing the cocoa butter out of the beans.
+recipe:
+  title: Homemade hot chocolate
+  steps:
+    - Heat 1 litre of plant milk (almond, oat or other).
+    - Add 2 to 3 tablespoons of cocoa powder.
+    - Sweeten to taste and stir well.
+    - Simmer for 10 minutes, stirring.
+    - Enjoy piping hot.
+storage: Store in a dry place, away from heat and moisture. Close tightly after opening.
+seoTitle: Pure cocoa powder from Côte d'Ivoire, 100 g
+seoDescription: >-
+  100% Ivorian unsweetened cocoa powder with an intense aroma. For hot
+  chocolates and bakes. Hot chocolate recipe included.

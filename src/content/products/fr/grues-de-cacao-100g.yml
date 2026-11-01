@@ -1,0 +1,46 @@
+sku: REP-CAC-G100
+category: cacao
+price: 7.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
+weightGrams: 100
+origin: Côte d'Ivoire
+originCountryCode: CI
+images:
+  - /src/assets/products/cacao-grues-100.webp
+stock: in_stock
+featured: false
+# The table printed on the label repeats the moringa values (3,0 g of fat is
+# not plausible for cacao nibs): kept as printed, hidden until the owner
+# confirms the real values.
+nutritionVerified: false
+nutrition:
+  energy: 1290 kJ / 308 kcal
+  fat: 3,0 g
+  saturates: 0,7 g
+  carbs: 64 g
+  sugars: < 2,5 g
+  fibre: 13 g
+  protein: 13 g
+  salt: < 0,03 g
+free_from: []
+related: [poudre-de-cacao-100g, poudre-de-baobab-100g]
+name: Grués de cacao
+tagline: Des éclats de fèves de cacao ivoirien, croquants et intenses.
+description: >-
+  Les grués sont des éclats de fèves de cacao, concassées et débarrassées de
+  leur coque. Croquants, légèrement amers, ils parfument un
+  yaourt, un porridge ou une pâte à cookies.
+ingredients: 100 % grué de cacao ivoirien.
+usage:
+  - À consommer tel quel, en encas.
+  - À ajouter dans vos yaourts, smoothies, porridges, céréales ou desserts.
+  - À utiliser en pâtisserie (cookies, muffins, gâteaux).
+benefits:
+  - Riche en antioxydants
+  - Source de magnésium, fer, phosphore et potassium
+  - Contribue à une bonne énergie
+  - Goût intense et naturel
+storage: Conserver dans un endroit sec, à l'abri de la chaleur et de l'humidité. Bien refermer après ouverture.
+seoTitle: Grués de cacao de Côte d'Ivoire 100 g
+seoDescription: >-
+  Éclats de fèves de cacao ivoirien, croquants et intenses. À croquer, à
+  parsemer sur un yaourt ou à glisser dans vos cookies.

@@ -1,0 +1,45 @@
+sku: REP-BAO-100
+category: poudres
+price: 7.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
+weightGrams: 100
+origin: Sénégal
+originCountryCode: SN
+images:
+  - /src/assets/products/baobab-100.webp
+stock: in_stock
+featured: true
+nutritionVerified: false # no table printed on the label
+free_from: [additifs, conservateurs, colorants]
+related: [fleurs-d-hibiscus-bissap-100g, poudre-de-moringa-100g]
+name: Poudre de baobab
+tagline: La pulpe acidulée du fruit du baobab, du Sénégal.
+description: >-
+  La pulpe du fruit du baobab sèche naturellement dans sa coque. Séparée des
+  graines et des fibres, elle devient une poudre claire au goût acidulé,
+  presque d'agrume. Délicieuse dans une boisson fraîche, un porridge ou une
+  compote.
+ingredients: 100 % pulpe de fruit de baobab en poudre. Sans additif. Sans colorant. Sans conservateur.
+usage:
+  - À incorporer dans les boissons et jus de fruits, les smoothies, les yaourts et compotes, les céréales et porridges, les préparations et desserts.
+  - Bien mélanger avant consommation.
+howMade: >-
+  La poudre de baobab est obtenue à partir de la pulpe séchée du fruit du
+  baobab. Après récolte, la pulpe naturellement sèche est séparée des graines et
+  des fibres, puis réduite en une poudre fine.
+recipe:
+  title: Boisson fraîche au baobab
+  ingredients:
+    - 1 à 2 cuillères à café de poudre de baobab
+    - 250 ml d'eau fraîche
+    - 1 cuillère à café de miel ou de sucre selon votre goût
+    - Quelques glaçons
+  steps:
+    - Mélanger la poudre de baobab avec un peu d'eau, puis ajouter progressivement le reste de l'eau.
+    - Sucrer selon votre goût et servir bien frais.
+benefits:
+  - Naturellement source de fibres alimentaires, vitamine C, calcium, potassium, magnésium
+storage: Conserver dans un endroit sec, à l'abri de la chaleur et de l'humidité. Bien refermer après ouverture.
+seoTitle: Poudre de baobab du Sénégal 100 g
+seoDescription: >-
+  Poudre de pulpe de fruit de baobab du Sénégal, sans additif ni conservateur.
+  Goût acidulé, recette de boisson fraîche incluse.

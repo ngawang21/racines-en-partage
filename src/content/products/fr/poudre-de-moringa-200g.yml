@@ -1,0 +1,48 @@
+sku: REP-MOR-200
+category: poudres
+price: 15.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
+weightGrams: 200
+origin: Niger
+originCountryCode: NE
+images:
+  - /src/assets/products/moringa-200.webp
+stock: in_stock
+featured: false
+nutritionVerified: true
+nutrition:
+  energy: 1290 kJ / 308 kcal
+  fat: 3,0 g
+  saturates: 0,7 g
+  carbs: 64 g
+  sugars: < 2,5 g
+  fibre: 13 g
+  protein: 13 g
+  salt: < 0,03 g
+free_from: [additifs, conservateurs, colorants, gluten]
+related: [poudre-de-moringa-100g, poudre-d-orge-grillee-100g]
+name: Poudre de moringa
+tagline: Le grand format pour un rituel de chaque jour.
+description: >-
+  La même poudre de feuilles de moringa du Niger, en sachet de 200 g pour celles
+  et ceux qui en ont fait une habitude. Un verre d'eau le matin, un smoothie,
+  une soupe : elle trouve sa place partout.
+ingredients: >-
+  100 % feuilles de moringa séchées, broyées. Produit fini vendu en poudre (non
+  en feuilles entières). Sans additifs, sans conservateur, sans colorant, sans
+  gluten.
+usage:
+  - À incorporer dans vos boissons, préparations culinaires (soupes, sauces, plats), smoothies ou jus.
+  - Dans un verre d'eau, le matin ou avant un repas.
+  - Dans vos smoothies.
+  - Dans vos yaourts, soupes ou desserts.
+benefits:
+  - Riche en vitamines (A, C, E, K)
+  - Source de minéraux (fer, calcium, magnésium, potassium)
+  - Riche en protéines végétales
+  - Antioxydant naturel
+  - Contribue à la vitalité et au bien-être
+storage: Conserver dans un endroit sec, à l'abri de la chaleur et de l'humidité. Bien refermer après ouverture.
+seoTitle: Poudre de moringa du Niger 200 g
+seoDescription: >-
+  Poudre de feuilles de moringa du Niger en grand format 200 g, sans additifs ni
+  conservateur. Conditionnée en France par l'ESAT Les Oliviers.

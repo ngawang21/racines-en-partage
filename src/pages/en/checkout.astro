@@ -1,0 +1,18 @@
+---
+import Base from '../../layouts/Base.astro';
+import { loadLocale } from '../../i18n/locale';
+
+const locale = 'en' as const;
+const t = await loadLocale(locale);
+---
+
+<Base
+  {locale}
+  routeKey="checkout"
+  title={t.checkout.metaTitle}
+  description={t.checkout.metaDescription}
+>
+  <section class="container section">
+    <h1>{t.checkout.title}</h1>
+  </section>
+</Base>

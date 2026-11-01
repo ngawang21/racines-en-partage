@@ -1,0 +1,244 @@
+---
+// Site header (spec 5.5). Markup contract with wave 2B: the cart button is
+// `button[data-cart-toggle][aria-controls="cart-drawer"]` holding
+// `span[data-cart-count]`. No script here: the mobile menu is a <details>.
+import { Image } from 'astro:assets';
+import medallion from '../assets/brand/medallion.webp';
+import { SITE, type Locale } from '../consts';
+import type { LocaleContent } from '../content/locale-schema';
+import { routePath, type RouteKey } from '../i18n/routing';
+import Icon from './Icon.astro';
+import LanguagePill from './LanguagePill.astro';
+
+interface Props {
+  locale: Locale;
+  routeKey: RouteKey;
+  slug?: string;
+  t: LocaleContent;
+}
+const { locale, routeKey, slug, t } = Astro.props;
+const home = routePath('home', locale);
+const active = (keys: RouteKey[]): 'page' | undefined =>
+  keys.includes(routeKey) ? 'page' : undefined;
+const links = [
+  { href: routePath('shop', locale), label: t.nav.shop, current: active(['shop', 'category']) },
+  { href: routePath('about', locale), label: t.nav.about, current: active(['about']) },
+  { href: routePath('faq', locale), label: t.nav.faq, current: active(['faq']) },
+  { href: routePath('contact', locale), label: t.nav.contact, current: active(['contact']) },
+];
+---
+
+<header class="site-header">
+  <div class="container bar">
+    <details class="mobile-menu">
+      <summary class="icon-btn">
+        <Icon name="menu" class="when-closed" />
+        <Icon name="close" class="when-open" />
+        <span class="visually-hidden">{t.a11y.openMenu}</span>
+      </summary>
+      <nav class="mobile-nav" aria-label={t.nav.menu}>
+        <ul role="list">
+          {
+            links.map((l) => (
+              <li>
+                <a href={l.href} aria-current={l.current}>
+                  {l.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <LanguagePill {locale} {routeKey} {slug} label={t.a11y.language} class="mobile-pill" />
+      </nav>
+    </details>
+
+    <a class="brand" href={home} aria-current={routeKey === 'home' ? 'page' : undefined}>
+      <Image src={medallion} alt="" width={40} height={40} densities={[1, 2]} loading="eager" />
+      <span class="wordmark">{SITE.name}</span>
+    </a>
+
+    <nav class="desktop-nav" aria-label={t.nav.primary}>
+      <ul role="list">
+        {
+          links.map((l) => (
+            <li>
+              <a href={l.href} aria-current={l.current}>
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="tools">
+      <LanguagePill {locale} {routeKey} {slug} label={t.a11y.language} class="desktop-pill" />
+      <button
+        type="button"
+        class="icon-btn cart-toggle"
+        data-cart-toggle
+        aria-controls="cart-drawer"
+      >
+        <Icon name="cart" />
+        <span class="visually-hidden">{t.a11y.openCart}</span>
+        <span class="cart-count" data-cart-count>0</span>
+        <span class="visually-hidden">{t.a11y.cartCount}</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(251, 246, 234, 0.94);
+    backdrop-filter: saturate(1.2) blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--header-h);
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    margin-right: auto;
+    color: var(--forest);
+    text-decoration: none;
+  }
+  .brand img {
+    width: 40px;
+    height: 40px;
+  }
+  .wordmark {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-variation-settings: 'SOFT' 50;
+    font-size: 1.1875rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  .desktop-nav ul {
+    display: flex;
+    gap: var(--space-6);
+    margin: 0;
+  }
+  .desktop-nav a,
+  .mobile-nav a {
+    color: var(--ink-2);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .desktop-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    border-bottom: 2px solid transparent;
+  }
+  .desktop-nav a:hover,
+  .desktop-nav a[aria-current] {
+    color: var(--forest);
+    border-bottom-color: var(--gold);
+  }
+  .tools {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .icon-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--forest);
+    list-style: none;
+  }
+  .icon-btn:hover {
+    background: rgba(22, 58, 28, 0.06);
+  }
+  .icon-btn::-webkit-details-marker {
+    display: none;
+  }
+  .cart-count {
+    position: absolute;
+    top: 4px;
+    right: 2px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: var(--radius-pill);
+    background: var(--forest);
+    color: var(--cream);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .mobile-menu {
+    order: -1;
+  }
+  .mobile-menu summary {
+    cursor: pointer;
+  }
+  .mobile-menu :global(.when-open),
+  .mobile-menu[open] :global(.when-closed) {
+    display: none;
+  }
+  .mobile-menu[open] :global(.when-open) {
+    display: block;
+  }
+  .mobile-nav {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    padding: var(--space-4) var(--gutter) var(--space-6);
+    background: var(--cream);
+    border-bottom: 1px solid var(--line);
+    box-shadow: var(--shadow-float);
+  }
+  .mobile-nav ul {
+    margin: 0 0 var(--space-4);
+  }
+  .mobile-nav a {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    font-size: var(--fs-1);
+    border-bottom: 1px solid var(--line);
+  }
+  .mobile-nav a[aria-current] {
+    color: var(--forest);
+    font-weight: 600;
+  }
+  .desktop-nav,
+  .tools :global(.desktop-pill) {
+    display: none;
+  }
+  @media (min-width: 900px) {
+    .mobile-menu {
+      display: none;
+    }
+    .desktop-nav {
+      display: block;
+      margin-right: var(--space-6);
+    }
+    .tools :global(.desktop-pill) {
+      display: inline-flex;
+    }
+  }
+</style>

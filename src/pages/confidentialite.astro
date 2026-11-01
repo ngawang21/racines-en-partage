@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import { interpolate } from '../i18n/fallback';
+import { formatDate } from '../i18n/format';
+import { loadLegal, loadLocale } from '../i18n/locale';
+
+const locale = 'fr' as const;
+const [t, legal] = await Promise.all([loadLocale(locale), loadLegal(locale, 'privacy')]);
+---
+
+<Base {locale} routeKey="privacy" title={legal.title} description={legal.description}>
+  <article class="container section prose">
+    <h1>{legal.title}</h1>
+    <p class="muted">{interpolate(t.legal.updated, { date: formatDate(legal.updated, locale) })}</p>
+    <Fragment set:html={legal.html} />
+  </article>
+</Base>

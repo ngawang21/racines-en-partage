@@ -1,0 +1,416 @@
+/* Base styles (spec 5.1 to 5.3). Owner: foundation; wave 2A may append utilities. */
+@import './tokens.css';
+
+/* ------------------------------------------------------------------ reset */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-h) + var(--space-4));
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--cream);
+  color: var(--forest);
+  font-family: var(--font-body);
+  font-size: var(--fs-0);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+main {
+  flex: 1;
+}
+main:focus {
+  outline: none;
+}
+img,
+picture,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+img {
+  height: auto;
+}
+input,
+button,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+}
+a {
+  color: inherit;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+p,
+ul,
+ol,
+dl,
+dd,
+blockquote,
+figure {
+  margin: 0;
+}
+ul[role='list'],
+ol[role='list'] {
+  list-style: none;
+  padding: 0;
+}
+table {
+  border-collapse: collapse;
+}
+
+/* ------------------------------------------------------------- typography */
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-variation-settings: 'SOFT' 50;
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+  color: var(--forest);
+  text-wrap: balance;
+}
+h1 {
+  font-size: var(--fs-6);
+  font-weight: 600;
+}
+h2 {
+  font-size: var(--fs-5);
+}
+h3 {
+  font-size: var(--fs-3);
+  line-height: var(--lh-snug);
+}
+h4 {
+  font-size: var(--fs-2);
+  line-height: var(--lh-snug);
+}
+p {
+  text-wrap: pretty;
+}
+.display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-variation-settings: 'SOFT' 50;
+}
+.accent {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+}
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: var(--fs--1);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.lead {
+  font-size: var(--fs-1);
+  color: var(--ink-2);
+  max-width: 60ch;
+}
+.muted {
+  color: var(--ink-2);
+}
+.price {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-variation-settings: 'SOFT' 50;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+.prose {
+  max-width: 70ch;
+}
+.prose > * + * {
+  margin-top: var(--space-4);
+}
+.prose h2 {
+  font-size: var(--fs-3);
+  margin-top: var(--space-12);
+}
+.prose h3 {
+  font-size: var(--fs-2);
+  margin-top: var(--space-8);
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.25em;
+}
+.prose li + li {
+  margin-top: var(--space-2);
+}
+
+/* --------------------------------------------------------------- layout */
+
+.container {
+  width: 100%;
+  max-width: calc(var(--container) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+.section {
+  padding-block: var(--space-16);
+}
+@media (min-width: 900px) {
+  .section {
+    padding-block: var(--space-24);
+  }
+}
+.band-paper {
+  background: var(--paper);
+}
+.band-forest {
+  background: var(--forest);
+  color: var(--cream);
+}
+.band-forest :is(h1, h2, h3, h4) {
+  color: var(--cream);
+}
+
+/* -------------------------------------------------------------- buttons */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: 0 var(--space-6);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: var(--fs-0);
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+.btn svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: var(--cream);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--forest-2);
+  border-color: var(--forest-2);
+}
+.btn-secondary {
+  background: transparent;
+  border-color: var(--forest);
+  color: var(--forest);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--paper);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--forest);
+  padding-inline: var(--space-3);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: rgba(22, 58, 28, 0.06);
+}
+.band-forest .btn-primary {
+  background: var(--cream);
+  border-color: var(--cream);
+  color: var(--forest);
+}
+.band-forest .btn-secondary {
+  border-color: var(--cream);
+  color: var(--cream);
+}
+.band-forest .btn-secondary:hover:not(:disabled) {
+  background: rgba(251, 246, 234, 0.1);
+}
+
+/* --------------------------------------------------------------- badges */
+
+/* Text always carries the meaning; the dot colour only reinforces it. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--forest);
+  font-size: var(--fs--1);
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.badge-stock-in {
+  background: rgba(62, 122, 42, 0.12);
+}
+.badge-stock-in::before {
+  background: var(--leaf);
+}
+.badge-stock-low {
+  background: rgba(201, 162, 74, 0.2);
+}
+.badge-stock-low::before {
+  background: var(--terracotta);
+}
+.badge-stock-out {
+  background: rgba(224, 58, 58, 0.1);
+  color: var(--ink-2);
+}
+.badge-stock-out::before {
+  background: var(--hibiscus);
+}
+
+/* --------------------------------------------------------------- motifs */
+
+/* Gold hairline with a centred hibiscus glyph (Ornament.astro). */
+.hairline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--gold);
+}
+.hairline::before,
+.hairline::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--gold);
+}
+.hairline svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  color: var(--hibiscus);
+}
+
+/* Kente divider: 6 px of chevrons in terracotta, gold and leaf, gradients only. */
+.kente {
+  --k: 6px;
+  display: block;
+  height: var(--k);
+  border: 0;
+  margin: 0;
+  background:
+    linear-gradient(135deg, var(--terracotta) 25%, transparent 25%) calc(var(--k) * -1) 0 /
+      calc(var(--k) * 2) var(--k) repeat-x,
+    linear-gradient(225deg, var(--terracotta) 25%, transparent 25%) calc(var(--k) * -1) 0 /
+      calc(var(--k) * 2) var(--k) repeat-x,
+    linear-gradient(315deg, var(--leaf) 25%, transparent 25%) 0 0 / calc(var(--k) * 2) var(--k)
+      repeat-x,
+    linear-gradient(45deg, var(--leaf) 25%, transparent 25%) 0 0 / calc(var(--k) * 2) var(--k)
+      repeat-x,
+    var(--gold);
+}
+
+/* Product frame: 4:5, 1 px kraft border on paper so the sand backdrop blends in. */
+.frame {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: 1px solid var(--kraft);
+  border-radius: var(--radius-m);
+  background: var(--paper);
+}
+.frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---------------------------------------------------------- accessibility */
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+.skip-link {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 100;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-s);
+  background: var(--forest);
+  color: var(--cream);
+  font-weight: 600;
+  transform: translateY(-200%);
+}
+.skip-link:focus {
+  transform: none;
+}
+/* 3 px hibiscus ring with a 2 px cream gap, on every background. */
+:focus-visible {
+  outline: 3px solid var(--hibiscus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--cream);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

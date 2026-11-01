@@ -1,0 +1,380 @@
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { parse as parseYaml } from 'yaml';
+import { localeSchema } from '../../src/content/locale-schema';
+import { mergeCategory, mergePage, mergeProduct } from '../../src/content/merge';
+import {
+  LEGAL_KEYS,
+  PAGE_SCHEMAS,
+  categorySchema,
+  legalFrontmatterSchema,
+  productSchema,
+  productTranslationSchema,
+  settingsSchema,
+  validateCatalog,
+  type PageKey,
+  type Product,
+} from '../../src/content/schemas';
+import { CONTENT, ROOT, assetExists, readJson, readYaml, strings, yamlFolder } from './helpers';
+
+const frProducts = yamlFolder('products', 'fr');
+const enProducts = yamlFolder('products', 'en');
+const frCategories = yamlFolder('categories', 'fr');
+const enCategories = yamlFolder('categories', 'en');
+const productsFr: Product[] = [...frProducts].map(([slug, raw]) => mergeProduct(slug, raw));
+const productsEn: Product[] = [...frProducts].map(([slug, raw]) =>
+  mergeProduct(slug, raw, enProducts.get(slug) ?? {}),
+);
+const bySlug = new Map(productsFr.map((p) => [p.slug, p]));
+
+const validProduct = () => structuredClone(frProducts.get('poudre-de-moringa-100g')) as any;
+
+describe('settings', () => {
+  const settings = settingsSchema.parse(readYaml(join(CONTENT, 'settings/shop.yml')));
+  it('match spec 4.4', () => {
+    expect(settings.brand.email).toBe('racinesenpartage@outlook.com');
+    expect(settings.brand.phone).toBe('0775689108');
+    expect(settings.brand.address).toEqual({
+      street: '9 Rue du Marché',
+      postcode: '95400',
+      city: 'Arnouville',
+      country: 'FR',
+    });
+    expect(settings.shop).toMatchObject({
+      open: true,
+      currency: 'eur',
+      vat: { mode: 'franchise', rate: 5.5 },
+      freeShippingFrom: 49,
+      maxQuantityPerLine: 10,
+    });
+    expect(settings.shipping.map((s) => [s.id, s.price, s.countries])).toEqual([
+      ['relay', 4.9, ['FR', 'BE', 'LU']],
+      ['home', 6.9, ['FR']],
+      ['pickup', 0, ['FR']],
+    ]);
+    expect(settings.launch.pricesConfirmed).toBe(false);
+    expect(settings.brand.siren).toBe('');
+  });
+  it('rejects a malformed SIREN, phone or duplicate method', () => {
+    const raw = readYaml(join(CONTENT, 'settings/shop.yml')) as any;
+    expect(() =>
+      settingsSchema.parse({ ...raw, brand: { ...raw.brand, siren: '12345' } }),
+    ).toThrow();
+    expect(() =>
+      settingsSchema.parse({ ...raw, brand: { ...raw.brand, phone: '+33775689108' } }),
+    ).toThrow();
+    expect(() =>
+      settingsSchema.parse({ ...raw, shipping: [raw.shipping[0], raw.shipping[0]] }),
+    ).toThrow();
+    expect(
+      settingsSchema.parse({ ...raw, brand: { ...raw.brand, siren: '123 456 789' } }).brand.siren,
+    ).toBe('123 456 789');
+  });
+});
+
+describe('product schema', () => {
+  it('every French file is valid and has an English twin', () => {
+    expect(frProducts.size).toBe(10);
+    for (const [slug, raw] of frProducts)
+      expect(() => productSchema.parse(raw), slug).not.toThrow();
+    expect([...enProducts.keys()]).toEqual([...frProducts.keys()]);
+    for (const [slug, raw] of enProducts)
+      expect(() => productTranslationSchema.parse(raw), slug).not.toThrow();
+  });
+  it('rejects a zero price, three decimals, an empty or foreign image list', () => {
+    expect(() => productSchema.parse({ ...validProduct(), price: 0 })).toThrow();
+    expect(() => productSchema.parse({ ...validProduct(), price: 8.999 })).toThrow();
+    expect(() => productSchema.parse({ ...validProduct(), weightGrams: 0 })).toThrow();
+    expect(() => productSchema.parse({ ...validProduct(), images: [] })).toThrow();
+    expect(() =>
+      productSchema.parse({ ...validProduct(), images: ['/src/assets/brand/hero-trio.webp'] }),
+    ).toThrow();
+    expect(() => productSchema.parse({ ...validProduct(), stock: 'soon' })).toThrow();
+  });
+  it('refuses a verified nutrition flag without a table', () => {
+    const { nutrition: _n, ...rest } = validProduct();
+    expect(() => productSchema.parse({ ...rest, nutritionVerified: true })).toThrow(/nutrition/);
+    expect(() => productSchema.parse({ ...rest, nutritionVerified: false })).not.toThrow();
+  });
+});
+
+describe('catalogue cross checks', () => {
+  const categorySlugs = [...frCategories.keys()];
+  it('the seed catalogue passes: unique sku, known category, related and images', () => {
+    expect(validateCatalog({ products: productsFr, categorySlugs, assetExists })).toEqual([]);
+  });
+  it('every product image exists under src/assets/products', () => {
+    for (const p of productsFr) {
+      for (const img of p.images) {
+        expect(img.startsWith('/src/assets/products/'), p.slug).toBe(true);
+        expect(assetExists(img), img).toBe(true);
+      }
+    }
+  });
+  it('reports a duplicate sku, unknown category, unknown related and a missing image', () => {
+    const [a, b] = productsFr as [Product, Product];
+    const problems = validateCatalog({
+      products: [
+        { ...a, related: ['nope', a.slug] },
+        { ...b, sku: a.sku, category: 'thé', images: ['/src/assets/products/missing.webp'] },
+      ],
+      categorySlugs,
+      assetExists,
+    });
+    expect(problems.join('\n')).toMatch(/already used/);
+    expect(problems.join('\n')).toMatch(/unknown category "thé"/);
+    expect(problems.join('\n')).toMatch(/unknown related product "nope"/);
+    expect(problems.join('\n')).toMatch(/related to itself/);
+    expect(problems.join('\n')).toMatch(/missing image/);
+  });
+});
+
+describe('seed catalogue (spec appendix A)', () => {
+  it('carries the ten SKUs, prices and weights', () => {
+    const rows = Object.fromEntries(productsFr.map((p) => [p.sku, [p.price, p.weightGrams]]));
+    expect(rows).toEqual({
+      'REP-MOR-100': [8.9, 100],
+      'REP-MOR-200': [15.9, 200],
+      'REP-BAO-100': [7.9, 100],
+      'REP-SOU-P100': [6.9, 100],
+      'REP-SOU-T200': [7.9, 200],
+      'REP-ORG-100': [5.9, 100],
+      'REP-HIB-100': [6.5, 100],
+      'REP-PSY-200': [9.9, 200],
+      'REP-CAC-P100': [6.9, 100],
+      'REP-CAC-G100': [7.9, 100],
+    });
+  });
+  it('features moringa 100 g, baobab, souchet tubercules and hibiscus', () => {
+    expect(
+      productsFr
+        .filter((p) => p.featured)
+        .map((p) => p.slug)
+        .sort(),
+    ).toEqual([
+      'fleurs-d-hibiscus-bissap-100g',
+      'poudre-de-baobab-100g',
+      'poudre-de-moringa-100g',
+      'tubercules-de-souchet-200g',
+    ]);
+  });
+  it('hides the unverified nutrition tables', () => {
+    const unverified = productsFr.filter((p) => !p.nutritionVerified).map((p) => p.slug);
+    expect(unverified.sort()).toEqual([
+      'grues-de-cacao-100g',
+      'poudre-de-baobab-100g',
+      'poudre-de-souchet-100g',
+      'teguments-de-psyllium-200g',
+    ]);
+  });
+  it('pairs the related products both ways', () => {
+    const pairs = [
+      ['poudre-de-moringa-100g', 'poudre-de-moringa-200g'],
+      ['poudre-de-cacao-100g', 'grues-de-cacao-100g'],
+      ['poudre-de-souchet-100g', 'tubercules-de-souchet-200g'],
+      ['fleurs-d-hibiscus-bissap-100g', 'poudre-de-baobab-100g'],
+      ['poudre-d-orge-grillee-100g', 'teguments-de-psyllium-200g'],
+    ];
+    for (const [a, b] of pairs) {
+      expect(bySlug.get(a!)?.related, a).toContain(b);
+      expect(bySlug.get(b!)?.related, b).toContain(a);
+    }
+  });
+  it('never lists gluten as absent from barley', () => {
+    const orge = bySlug.get('poudre-d-orge-grillee-100g');
+    expect(orge?.free_from).not.toContain('gluten');
+    expect(orge?.ingredients.toLowerCase()).not.toContain('sans gluten');
+  });
+  it('is translated: every English name differs, shared fields come from French', () => {
+    for (const p of productsEn) {
+      const fr = bySlug.get(p.slug)!;
+      expect(p.name, p.slug).not.toBe(fr.name);
+      expect(p.description, p.slug).not.toBe(fr.description);
+      expect(p.price).toBe(fr.price);
+      expect(p.images).toEqual(fr.images);
+      expect(p.benefits.length, p.slug).toBe(fr.benefits.length);
+    }
+  });
+  it('keeps the label bullets one to one in English', () => {
+    for (const p of productsEn) {
+      const fr = bySlug.get(p.slug)!;
+      expect(p.usage.length, p.slug).toBe(fr.usage.length);
+      expect(p.recipe?.steps.length, p.slug).toBe(fr.recipe?.steps.length);
+    }
+  });
+});
+
+describe('merge', () => {
+  it('ignores shared fields written in the English file', () => {
+    const fr = frProducts.get('poudre-de-baobab-100g');
+    const merged = mergeProduct('poudre-de-baobab-100g', fr, { price: 1, name: 'Baobab' });
+    expect(merged.price).toBe(7.9);
+    expect(merged.name).toBe('Baobab');
+  });
+  it('fills empty or missing English fields from French', () => {
+    const fr = frProducts.get('poudre-de-moringa-100g');
+    const merged = mergeProduct('poudre-de-moringa-100g', fr, { name: '', tagline: null });
+    expect(merged.name).toBe('Poudre de moringa');
+    expect(merged.tagline).toBe((fr as any).tagline);
+    expect(merged.recipe?.title).toBe('Smoothie au Moringa');
+  });
+  it('names the file in a validation error', () => {
+    expect(() => mergeProduct('x', { ...validProduct(), price: -1 })).toThrow(
+      /products\/fr\/x\.yml/,
+    );
+  });
+});
+
+describe('categories', () => {
+  it('four categories with existing images, translated', () => {
+    expect([...frCategories.keys()].sort()).toEqual(['cacao', 'graines', 'infusions', 'poudres']);
+    for (const [slug, raw] of frCategories) {
+      const c = categorySchema.parse(raw);
+      expect(assetExists(c.image), slug).toBe(true);
+      const en = mergeCategory(slug, raw, enCategories.get(slug));
+      expect(en.order).toBe(c.order);
+    }
+    expect(
+      mergeCategory('poudres', frCategories.get('poudres'), enCategories.get('poudres')).name,
+    ).toBe('Powders & superfoods');
+  });
+  it('every category holds at least one product', () => {
+    for (const slug of frCategories.keys()) {
+      expect(
+        productsFr.some((p) => p.category === slug),
+        slug,
+      ).toBe(true);
+    }
+  });
+});
+
+describe('pages', () => {
+  const keys = Object.keys(PAGE_SCHEMAS) as PageKey[];
+  const pages = (locale: string) => yamlFolder('pages', locale);
+  it('home, about, faq and contact are valid in both locales', () => {
+    expect([...pages('fr').keys()].sort()).toEqual([...keys].sort());
+    for (const key of keys) {
+      expect(() => mergePage(key, pages('fr').get(key)), key).not.toThrow();
+      expect(() => mergePage(key, pages('fr').get(key), pages('en').get(key)), key).not.toThrow();
+    }
+  });
+  it('the English pages are translated', () => {
+    const fr = mergePage('home', pages('fr').get('home'));
+    const en = mergePage('home', pages('fr').get('home'), pages('en').get('home'));
+    expect(en.hero.title).not.toBe(fr.hero.title);
+    expect(en.storyBody).not.toBe(fr.storyBody);
+  });
+  it('the home recipes point at products that carry a recipe', () => {
+    const home = mergePage('home', pages('fr').get('home'));
+    for (const slug of home.recipeProducts) expect(bySlug.get(slug)?.recipe, slug).toBeDefined();
+  });
+  it('the about images exist', () => {
+    for (const s of mergePage('about', pages('fr').get('about')).sections) {
+      if (s.image) expect(assetExists(s.image), s.image).toBe(true);
+    }
+  });
+});
+
+describe('legal texts', () => {
+  const TOKENS = new Set(['company', 'siren', 'address', 'email', 'phone', 'host', 'vat']);
+  const read = (locale: string, key: string) =>
+    readFileSync(join(CONTENT, 'legal', locale, `${key}.md`), 'utf8');
+  const frontmatter = (src: string) => readYamlFrontmatter(src);
+  it('legal, terms and privacy exist in both locales with a valid frontmatter', () => {
+    for (const locale of ['fr', 'en']) {
+      for (const key of LEGAL_KEYS) {
+        expect(
+          () => legalFrontmatterSchema.parse(frontmatter(read(locale, key))),
+          key,
+        ).not.toThrow();
+      }
+    }
+  });
+  it('use only the known placeholders', () => {
+    for (const locale of ['fr', 'en']) {
+      for (const key of LEGAL_KEYS) {
+        for (const [, name] of read(locale, key).matchAll(/\{([a-zA-Z]+)\}/g)) {
+          expect(TOKENS.has(name!), `${locale}/${key}: {${name}}`).toBe(true);
+        }
+      }
+    }
+    expect(read('fr', 'legal')).toContain('{siren}');
+    expect(read('fr', 'legal')).toContain('{host}');
+  });
+  it('the CGV flag the missing mediator', () => {
+    expect(read('fr', 'terms')).toContain('TODO médiateur');
+  });
+  it('the privacy policy lists the processors and the local cart', () => {
+    for (const locale of ['fr', 'en']) {
+      const text = read(locale, 'privacy');
+      for (const name of [
+        'Stripe',
+        'Cloudflare',
+        'Resend',
+        'Mondial Relay',
+        'GitHub',
+        'localStorage',
+      ])
+        expect(text, `${locale}: ${name}`).toContain(name);
+    }
+  });
+});
+
+function readYamlFrontmatter(src: string): unknown {
+  const match = src.match(/^---\n([\s\S]*?)\n---/);
+  if (!match) throw new Error('no frontmatter');
+  return parseYaml(match[1]!);
+}
+
+describe('ui strings', () => {
+  const fr = readJson(join(CONTENT, 'locales/fr.json'));
+  const en = readJson(join(CONTENT, 'locales/en.json'));
+  const NAMESPACES = [
+    'nav',
+    'footer',
+    'shop',
+    'product',
+    'cart',
+    'checkout',
+    'thanks',
+    'errors',
+    'legal',
+    'a11y',
+  ];
+  it('both files match the schema and carry exactly the namespaces of the contract', () => {
+    expect(Object.keys(localeSchema.parse(fr)).sort()).toEqual([...NAMESPACES].sort());
+    expect(() => localeSchema.parse(en)).not.toThrow();
+    expect(Object.keys(fr as object).sort()).toEqual([...NAMESPACES].sort());
+  });
+  it('french is complete (it is the fallback) and english is complete too', () => {
+    expect(strings(localeSchema.parse(fr)).filter(([, v]) => v.trim() === '')).toEqual([]);
+    expect(strings(localeSchema.parse(en)).filter(([, v]) => v.trim() === '')).toEqual([]);
+  });
+  it('the two files have the same keys', () => {
+    const keys = (v: unknown) =>
+      strings(v)
+        .map(([k]) => k)
+        .sort();
+    expect(keys(en)).toEqual(keys(fr));
+  });
+  it('english is translated', () => {
+    expect((en as any).nav.shop).not.toBe((fr as any).nav.shop);
+    expect((en as any).product.disclaimer).not.toBe((fr as any).product.disclaimer);
+  });
+});
+
+describe('writing rules', () => {
+  const files = (dir: string, ext: RegExp): string[] =>
+    readdirSync(dir, { withFileTypes: true, recursive: true })
+      .filter((d) => d.isFile() && ext.test(d.name))
+      .map((d) => join(d.parentPath, d.name));
+  it('no em dash in content or Markdown', () => {
+    const targets = [
+      ...files(CONTENT, /\.(yml|md|json)$/),
+      ...['README.md', 'CLAUDE.md'].map((f) => join(ROOT, f)),
+    ];
+    const emDash = String.fromCharCode(0x2014);
+    for (const f of targets) expect(readFileSync(f, 'utf8'), f).not.toContain(emDash);
+  });
+});

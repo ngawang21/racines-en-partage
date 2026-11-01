@@ -1,0 +1,57 @@
+sku: REP-MOR-100
+category: poudres
+price: 8.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
+weightGrams: 100
+origin: Niger
+originCountryCode: NE
+images:
+  - /src/assets/products/moringa-100.webp
+stock: in_stock
+featured: true
+nutritionVerified: true
+nutrition:
+  energy: 1290 kJ / 308 kcal
+  fat: 3,0 g
+  saturates: 0,7 g
+  carbs: 64 g
+  sugars: < 2,5 g
+  fibre: 13 g
+  protein: 13 g
+  salt: < 0,03 g
+free_from: [additifs, conservateurs, colorants, gluten]
+related: [poudre-de-moringa-200g, poudre-de-baobab-100g]
+name: Poudre de moringa
+tagline: Le vert franc des feuilles du Niger, dans une poudre fine.
+description: >-
+  Des feuilles de moringa séchées puis broyées, rien d'autre. Sa saveur
+  végétale, légèrement herbacée, se glisse dans un smoothie, un yaourt ou une
+  sauce. Le format 100 g, idéal pour faire connaissance.
+ingredients: >-
+  100 % feuilles de Moringa (Moringa oleifera) séchées et broyées. Sans
+  additif. Sans colorant. Sans conservateur.
+usage:
+  - À incorporer dans les smoothies, les jus de fruits, les yaourts et compotes, les sauces et les préparations culinaires.
+  - Commencer par une petite quantité et ajuster selon vos envies.
+howMade: >-
+  La poudre de Moringa est obtenue à partir des feuilles séchées, qui sont
+  soigneusement broyées pour obtenir une poudre fine et naturelle.
+recipe:
+  title: Smoothie au Moringa
+  ingredients:
+    - 1 cuillère à café de poudre de Moringa
+    - 1 banane bien mûre
+    - 1 pomme ou quelques morceaux d'ananas
+    - 200 ml d'eau ou de lait végétal
+    - 1 cuillère à café de miel selon votre goût
+    - Quelques glaçons
+  steps:
+    - Mettre tous les ingrédients dans un mixeur.
+    - Mixer jusqu'à obtenir une préparation homogène et onctueuse.
+    - Servir frais.
+benefits:
+  - Naturellement source de protéines, fer, calcium, polyphénols
+storage: Conserver dans un endroit sec, à l'abri de la chaleur et de l'humidité. Bien refermer après ouverture.
+seoTitle: Poudre de moringa du Niger 100 g
+seoDescription: >-
+  Poudre de feuilles de moringa du Niger, 100 % feuilles séchées et broyées,
+  sans additif. Idée smoothie incluse. Conditionnée en France par l'ESAT Les Oliviers.

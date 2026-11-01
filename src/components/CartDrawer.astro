@@ -1,0 +1,14 @@
+---
+// PLACEHOLDER (owner: wave 2B). Keeps the contract of the header cart button
+// (`aria-controls="cart-drawer"`) resolvable until the real drawer lands.
+// Base.astro mounts it right before </body> with the same props.
+import type { Locale } from '../consts';
+import { loadLocale } from '../i18n/locale';
+
+interface Props {
+  locale: Locale;
+}
+const t = await loadLocale(Astro.props.locale);
+---
+
+<dialog id="cart-drawer" class="cart-drawer" aria-label={t.cart.title}></dialog>

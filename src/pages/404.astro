@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import { loadLocale } from '../i18n/locale';
+import { routePath } from '../i18n/routing';
+
+// Bilingual: French first, English under it (spec 3, `/404.html`, noindex).
+const [fr, en] = await Promise.all([loadLocale('fr'), loadLocale('en')]);
+---
+
+<Base
+  locale="fr"
+  routeKey="notFound"
+  title={`${fr.errors.notFoundTitle} / ${en.errors.notFoundTitle}`}
+  description={fr.errors.notFoundText}
+>
+  <section class="container section">
+    <p class="eyebrow">404</p>
+    <h1>{fr.errors.notFoundTitle}</h1>
+    <p class="lead">{fr.errors.notFoundText}</p>
+    <p class="lead" lang="en">{en.errors.notFoundTitle}. {en.errors.notFoundText}</p>
+    <p>
+      <a class="btn btn-primary" href={routePath('home', 'fr')}>{fr.errors.backHome}</a>{' '}
+      <a class="btn btn-secondary" href={routePath('shop', 'fr')}>{fr.errors.toShop}</a>{' '}
+      <a class="btn btn-ghost" href={routePath('home', 'en')} lang="en">{en.errors.backHome}</a>{
+        ' '
+      }
+      <a class="btn btn-ghost" href={routePath('shop', 'en')} lang="en">{en.errors.toShop}</a>
+    </p>
+  </section>
+</Base>

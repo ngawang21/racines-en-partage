@@ -1,0 +1,202 @@
+---
+import { Image } from 'astro:assets';
+import medallion from '../assets/brand/medallion.webp';
+import { SITE, type Locale } from '../consts';
+import type { LocaleContent } from '../content/locale-schema';
+import type { Settings } from '../content/schemas';
+import { interpolate, pickLabel } from '../i18n/fallback';
+import { formatPhone, phoneE164 } from '../i18n/format';
+import { routePath } from '../i18n/routing';
+import Icon from './Icon.astro';
+
+interface Props {
+  locale: Locale;
+  t: LocaleContent;
+  settings: Settings;
+}
+const { locale, t, settings } = Astro.props;
+const { brand } = settings;
+const addressLine = `${brand.address.street}, ${brand.address.postcode} ${brand.address.city}`;
+const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressLine)}`;
+const shopLinks = [
+  { href: routePath('shop', locale), label: t.nav.shop },
+  { href: routePath('about', locale), label: t.nav.about },
+  { href: routePath('faq', locale), label: t.nav.faq },
+  { href: routePath('contact', locale), label: t.nav.contact },
+];
+const legalLinks = [
+  { href: routePath('legal', locale), label: t.footer.legal },
+  { href: routePath('terms', locale), label: t.footer.terms },
+  { href: routePath('privacy', locale), label: t.footer.privacy },
+];
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="kente" aria-hidden="true"></div>
+  <div class="container grid">
+    <div class="brand-block">
+      <a class="brand" href={routePath('home', locale)}>
+        <Image src={medallion} alt="" width={56} height={56} densities={[1, 2]} />
+        <span class="wordmark">{SITE.name}</span>
+      </a>
+      <p class="tagline">{pickLabel(brand.tagline, locale)}</p>
+      <p class="packed">{t.footer.packagedBy}</p>
+    </div>
+
+    <div>
+      <h2 class="col-title">{t.footer.contactTitle}</h2>
+      <ul role="list" class="links contact">
+        <li>
+          <a href={mapsUrl} rel="noopener" target="_blank">
+            <Icon name="pin" size={18} />
+            <span>{addressLine}</span>
+            <span class="visually-hidden">{t.a11y.newTab}</span>
+          </a>
+        </li>
+        <li>
+          <a href={`tel:${phoneE164(brand.phone)}`}>
+            <Icon name="phone" size={18} />
+            <span>{formatPhone(brand.phone)}</span>
+          </a>
+        </li>
+        <li>
+          <a href={`mailto:${brand.email}`}>
+            <Icon name="mail" size={18} />
+            <span>{brand.email}</span>
+          </a>
+        </li>
+        {
+          brand.instagram && (
+            <li>
+              <a href={brand.instagram} rel="noopener" target="_blank">
+                <Icon name="instagram" size={18} />
+                <span>{t.footer.instagram}</span>
+                <span class="visually-hidden">{t.a11y.newTab}</span>
+              </a>
+            </li>
+          )
+        }
+      </ul>
+    </div>
+
+    <nav aria-label={t.footer.shopTitle}>
+      <h2 class="col-title">{t.footer.shopTitle}</h2>
+      <ul role="list" class="links">
+        {
+          shopLinks.map((l) => (
+            <li>
+              <a href={l.href}>{l.label}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <nav aria-label={t.footer.infoTitle}>
+      <h2 class="col-title">{t.footer.infoTitle}</h2>
+      <ul role="list" class="links">
+        {
+          legalLinks.map((l) => (
+            <li>
+              <a href={l.href}>{l.label}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+  <div class="container bottom">
+    <p>{interpolate(t.footer.copyright, { year })}</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: var(--space-16);
+    background: var(--forest);
+    color: var(--cream);
+  }
+  .grid {
+    display: grid;
+    gap: var(--space-8);
+    padding-block: var(--space-12);
+  }
+  @media (min-width: 700px) {
+    .grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (min-width: 1000px) {
+    .grid {
+      grid-template-columns: 1.4fr 1.2fr 1fr 1fr;
+    }
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--cream);
+    text-decoration: none;
+  }
+  .brand img {
+    width: 56px;
+    height: 56px;
+  }
+  .wordmark {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-variation-settings: 'SOFT' 50;
+    font-size: 1.375rem;
+    font-weight: 600;
+  }
+  .tagline {
+    margin-top: var(--space-4);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: var(--fs-1);
+    max-width: 28ch;
+  }
+  .packed {
+    margin-top: var(--space-3);
+    color: var(--cream-muted);
+    font-size: var(--fs--1);
+  }
+  .col-title {
+    margin-bottom: var(--space-3);
+    color: var(--cream);
+    font-family: var(--font-body);
+    font-size: var(--fs--1);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .links {
+    margin: 0;
+  }
+  .links a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 40px;
+    color: var(--cream-muted);
+    text-decoration: none;
+  }
+  .links a:hover {
+    color: var(--cream);
+    text-decoration: underline;
+  }
+  .contact :global(svg) {
+    flex: none;
+    color: var(--gold);
+  }
+  .bottom {
+    padding-block: var(--space-6);
+    border-top: 1px solid rgba(251, 246, 234, 0.14);
+    color: var(--cream-muted);
+    font-size: var(--fs--1);
+  }
+  .site-footer :focus-visible {
+    box-shadow: 0 0 0 2px var(--forest);
+  }
+</style>

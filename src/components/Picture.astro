@@ -1,0 +1,59 @@
+---
+// astro:assets <Picture> with the shop's size presets: AVIF and WebP,
+// responsive widths, explicit dimensions, lazy unless told otherwise.
+import type { ImageMetadata } from 'astro';
+import { Picture as AstroPicture } from 'astro:assets';
+import { resolveAsset } from '../images';
+
+export type PicturePreset = 'card' | 'hero' | 'gallery' | 'thumb';
+
+interface Props {
+  /** A content path ("/src/assets/products/moringa-100.webp") or an imported image. */
+  src: string | ImageMetadata;
+  alt: string;
+  preset: PicturePreset;
+  /** Overrides the preset's sizes attribute. */
+  sizes?: string;
+  loading?: 'lazy' | 'eager';
+  fetchpriority?: 'high' | 'low' | 'auto';
+  class?: string;
+}
+
+const PRESETS: Record<PicturePreset, { widths: number[]; sizes: string }> = {
+  // Product grid: 2 columns on phones, 3 then 4 on wider screens.
+  card: {
+    widths: [240, 360, 480, 640, 800],
+    sizes: '(min-width: 1200px) 280px, (min-width: 900px) 30vw, (min-width: 600px) 33vw, 50vw',
+  },
+  hero: {
+    widths: [640, 960, 1280, 1600, 2000, 2400],
+    sizes: '(min-width: 900px) 55vw, 100vw',
+  },
+  gallery: {
+    widths: [480, 720, 960, 1200, 1600],
+    sizes: '(min-width: 900px) 560px, 100vw',
+  },
+  thumb: {
+    widths: [80, 120, 160, 240],
+    sizes: '80px',
+  },
+};
+
+const { src, alt, preset, sizes, loading = 'lazy', fetchpriority, class: className } = Astro.props;
+const image = typeof src === 'string' ? resolveAsset(src) : src;
+const config = PRESETS[preset];
+const fitting = config.widths.filter((w) => w <= image.width);
+const widths = fitting.length > 0 ? fitting : [image.width];
+---
+
+<AstroPicture
+  src={image}
+  {alt}
+  {widths}
+  sizes={sizes ?? config.sizes}
+  formats={['avif', 'webp']}
+  {loading}
+  decoding="async"
+  {fetchpriority}
+  class={className}
+/>
