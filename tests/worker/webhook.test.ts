@@ -116,7 +116,7 @@ describe('POST /api/webhooks/stripe', () => {
       to: 'awa.diallo@example.com',
       replyTo: 'racinesenpartage@outlook.com',
       idempotencyKey: 'evt_test_1:customer',
-      subject: 'Merci pour votre commande E5F6G7H8',
+      subject: fr('Votre commande n° E5F6G7H8 est confirmée'),
     });
     // Both e-mails out: the session is marked, metadata merged by Stripe.
     expect(fake.update).toHaveBeenCalledExactlyOnceWith(SESSION_ID, {
@@ -395,7 +395,7 @@ describe('POST /api/webhooks/stripe', () => {
     const payload = eventPayload();
     await post(app, payload, await signed(payload));
     expect(mail.sent[0]!.subject).toBe(fr('Nouvelle commande E5F6G7H8 : 30,60 €'));
-    expect(mail.sent[1]!.subject).toBe('Thank you for your order E5F6G7H8');
+    expect(mail.sent[1]!.subject).toBe('Your Racines en Partage order no. E5F6G7H8');
   });
 
   it('without a customer e-mail, only the owner is notified', async () => {

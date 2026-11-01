@@ -4,7 +4,7 @@ exports[`order e-mails > EN customer e-mail (home, discount, free shipping) matc
 "<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Thank you for your order E5F6G7H8</title></head>
+<title>Your Racines en Partage order no. E5F6G7H8</title></head>
 <body style="margin:0;padding:0;background:#fbf6ea;color:#163a1c;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;">
 <div style="display:none;max-height:0;overflow:hidden;">We have received your order no. E5F6G7H8 and your payment. We are preparing it with care.</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbf6ea;">
@@ -20,10 +20,10 @@ exports[`order e-mails > EN customer e-mail (home, discount, free shipping) matc
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px;margin-top:8px;"><tr><td style="padding:6px 0;">Subtotal</td><td style="padding:6px 0;text-align:right;white-space:nowrap;">€53.40</td></tr><tr><td style="padding:6px 0;">Delivery</td><td style="padding:6px 0;text-align:right;white-space:nowrap;">Free</td></tr><tr><td style="padding:6px 0;">Discount</td><td style="padding:6px 0;text-align:right;white-space:nowrap;">−€5.34</td></tr><tr><td style="padding:6px 0;font-weight:bold;font-size:16px;border-top:1px solid #d8b98e;">Total paid</td><td style="padding:6px 0;text-align:right;white-space:nowrap;font-weight:bold;font-size:16px;border-top:1px solid #d8b98e;">€48.06</td></tr></table>
 <h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Delivery: Home delivery (Colissimo)</h2>
 <p style="margin:0 0 12px;padding:12px 16px;background:#fbf6ea;border-left:3px solid #e03a3a;">John Smith<br>1 Place de la Mairie<br>Bât. B<br>75001 Paris<br>France</p>
-<h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">What happens next</h2><p style="margin:0 0 12px;">We prepare your parcel and ship it with Colissimo. You will receive the tracking number as soon as it leaves.</p>
-<h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">A question?</h2>
-<p style="margin:0 0 12px;">Simply reply to this e-mail, or write to us at <a href="mailto:racinesenpartage@outlook.com" style="color:#163a1c;">racinesenpartage@outlook.com</a> · 07 75 68 91 08</p>
-<p style="margin:0 0 12px;">See you soon,<br>Racines en Partage</p></td></tr>
+<h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">What happens next?</h2><p style="margin:0 0 12px;">We prepare your parcel and ship it with Colissimo. You will receive the tracking number as soon as it has been dispatched.</p>
+<h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Any questions?</h2>
+<p style="margin:0 0 12px;">Simply reply to this e-mail, write to <a href="mailto:racinesenpartage@outlook.com" style="color:#163a1c;">racinesenpartage@outlook.com</a> or call us on 07 75 68 91 08.</p>
+<p style="margin:0 0 12px;">Warm wishes,<br>Racines en Partage</p></td></tr>
 <tr><td style="background:#d8b98e;color:#163a1c;padding:16px 28px;font-size:12px;line-height:1.5;">Racines en Partage · 9 Rue du Marché, 95400 Arnouville · <a href="mailto:racinesenpartage@outlook.com" style="color:#163a1c;">racinesenpartage@outlook.com</a></td></tr>
 </table></td></tr></table></body></html>"
 `;
@@ -49,13 +49,13 @@ Bât. B
 75001 Paris
 France
 
-What happens next
-We prepare your parcel and ship it with Colissimo. You will receive the tracking number as soon as it leaves.
+What happens next?
+We prepare your parcel and ship it with Colissimo. You will receive the tracking number as soon as it has been dispatched.
 
-A question?
-Simply reply to this e-mail, or write to us at racinesenpartage@outlook.com · 07 75 68 91 08
+Any questions?
+Simply reply to this e-mail, write to racinesenpartage@outlook.com or call us on 07 75 68 91 08.
 
-See you soon,
+Warm wishes,
 Racines en Partage
 "
 `;
@@ -64,7 +64,7 @@ exports[`order e-mails > FR customer e-mail (relay) matches the snapshot > custo
 "<!doctype html>
 <html lang="fr">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Merci pour votre commande E5F6G7H8</title></head>
+<title>Votre commande n° E5F6G7H8 est confirmée</title></head>
 <body style="margin:0;padding:0;background:#fbf6ea;color:#163a1c;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;">
 <div style="display:none;max-height:0;overflow:hidden;">Nous avons bien reçu votre commande n° E5F6G7H8 et votre paiement. Nous la préparons avec soin.</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbf6ea;">
@@ -76,13 +76,13 @@ exports[`order e-mails > FR customer e-mail (relay) matches the snapshot > custo
 <p style="margin:0 0 12px;">Bonjour Awa Diallo,</p>
 <p style="margin:0 0 12px;">Nous avons bien reçu votre commande n° E5F6G7H8 et votre paiement. Nous la préparons avec soin.</p>
 <h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Votre commande</h2>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px;"><tr><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;">Poudre de moringa 100 g</td><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;text-align:center;white-space:nowrap;">× 2</td><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;text-align:right;white-space:nowrap;">17,80 €</td></tr><tr><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;">Poudre de baobab 100 g</td><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;text-align:center;white-space:nowrap;">× 1</td><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;text-align:right;white-space:nowrap;">7,90 €</td></tr></table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px;"><tr><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;">Poudre de moringa 100 g</td><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;text-align:center;white-space:nowrap;">× 2</td><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;text-align:right;white-space:nowrap;">17,80 €</td></tr><tr><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;">Poudre de baobab 100 g</td><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;text-align:center;white-space:nowrap;">× 1</td><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;text-align:right;white-space:nowrap;">7,90 €</td></tr></table>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px;margin-top:8px;"><tr><td style="padding:6px 0;">Sous-total</td><td style="padding:6px 0;text-align:right;white-space:nowrap;">25,70 €</td></tr><tr><td style="padding:6px 0;">Livraison</td><td style="padding:6px 0;text-align:right;white-space:nowrap;">4,90 €</td></tr><tr><td style="padding:6px 0;font-weight:bold;font-size:16px;border-top:1px solid #d8b98e;">Total payé</td><td style="padding:6px 0;text-align:right;white-space:nowrap;font-weight:bold;font-size:16px;border-top:1px solid #d8b98e;">30,60 €</td></tr></table>
-<h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Livraison : Point Relais Mondial Relay</h2>
+<h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Livraison : Point Relais Mondial Relay</h2>
 <p style="margin:0 0 12px;padding:12px 16px;background:#fbf6ea;border-left:3px solid #e03a3a;">Tabac de la Gare<br>12 Avenue de la Gare, Galerie marchande<br>95400 Arnouville<br>France</p>
-<h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Et maintenant ?</h2><p style="margin:0 0 12px;">Nous préparons votre colis et le confions à Mondial Relay. Vous recevrez un SMS et un e-mail de Mondial Relay dès qu’il vous attend dans votre Point Relais. Pensez à une pièce d’identité pour le retirer.</p>
-<h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Une question ?</h2>
-<p style="margin:0 0 12px;">Répondez simplement à cet e-mail, ou écrivez-nous à <a href="mailto:racinesenpartage@outlook.com" style="color:#163a1c;">racinesenpartage@outlook.com</a> · 07 75 68 91 08</p>
+<h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Et maintenant ?</h2><p style="margin:0 0 12px;">Nous préparons votre colis et le confions à Mondial Relay. Vous recevrez un SMS et un e-mail de Mondial Relay dès qu’il vous attend dans votre Point Relais. Pensez à vous munir d’une pièce d’identité pour le retirer.</p>
+<h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Une question ?</h2>
+<p style="margin:0 0 12px;">Répondez simplement à cet e-mail, écrivez-nous à <a href="mailto:racinesenpartage@outlook.com" style="color:#163a1c;">racinesenpartage@outlook.com</a> ou appelez-nous au 07 75 68 91 08.</p>
 <p style="margin:0 0 12px;">À très bientôt,<br>Racines en Partage</p></td></tr>
 <tr><td style="background:#d8b98e;color:#163a1c;padding:16px 28px;font-size:12px;line-height:1.5;">Racines en Partage · 9 Rue du Marché, 95400 Arnouville · <a href="mailto:racinesenpartage@outlook.com" style="color:#163a1c;">racinesenpartage@outlook.com</a></td></tr>
 </table></td></tr></table></body></html>"
@@ -95,24 +95,24 @@ Bonjour Awa Diallo,
 Nous avons bien reçu votre commande n° E5F6G7H8 et votre paiement. Nous la préparons avec soin.
 
 Votre commande
-- 2 × Poudre de moringa 100 g : 17,80 €
-- 1 × Poudre de baobab 100 g : 7,90 €
+- 2 × Poudre de moringa 100 g : 17,80 €
+- 1 × Poudre de baobab 100 g : 7,90 €
 
-Sous-total : 25,70 €
-Livraison : 4,90 €
-Total payé : 30,60 €
+Sous-total : 25,70 €
+Livraison : 4,90 €
+Total payé : 30,60 €
 
-Livraison : Point Relais Mondial Relay
+Livraison : Point Relais Mondial Relay
 Tabac de la Gare
 12 Avenue de la Gare, Galerie marchande
 95400 Arnouville
 France
 
-Et maintenant ?
-Nous préparons votre colis et le confions à Mondial Relay. Vous recevrez un SMS et un e-mail de Mondial Relay dès qu’il vous attend dans votre Point Relais. Pensez à une pièce d’identité pour le retirer.
+Et maintenant ?
+Nous préparons votre colis et le confions à Mondial Relay. Vous recevrez un SMS et un e-mail de Mondial Relay dès qu’il vous attend dans votre Point Relais. Pensez à vous munir d’une pièce d’identité pour le retirer.
 
-Une question ?
-Répondez simplement à cet e-mail, ou écrivez-nous à racinesenpartage@outlook.com · 07 75 68 91 08
+Une question ?
+Répondez simplement à cet e-mail, écrivez-nous à racinesenpartage@outlook.com ou appelez-nous au 07 75 68 91 08.
 
 À très bientôt,
 Racines en Partage
@@ -123,25 +123,25 @@ exports[`order e-mails > FR owner e-mail (relay) matches the snapshot > owner-fr
 "<!doctype html>
 <html lang="fr">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nouvelle commande E5F6G7H8 : 30,60 €</title></head>
+<title>Nouvelle commande E5F6G7H8 : 30,60 €</title></head>
 <body style="margin:0;padding:0;background:#fbf6ea;color:#163a1c;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;">
-<div style="display:none;max-height:0;overflow:hidden;">2 article(s), 30,60 €</div>
+<div style="display:none;max-height:0;overflow:hidden;">3 produits, 30,60 €</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbf6ea;">
 <tr><td align="center" style="padding:24px 12px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #d8b98e;border-radius:8px;overflow:hidden;">
 <tr><td style="background:#163a1c;color:#fbf6ea;padding:20px 28px;font-family:Georgia, 'Times New Roman', serif;font-size:22px;letter-spacing:0.5px;">Racines en Partage</td></tr>
 <tr><td style="height:4px;line-height:4px;font-size:0;background:#e03a3a;">&nbsp;</td></tr>
 <tr><td style="padding:28px;font-size:15px;line-height:1.55;color:#163a1c;"><h1 style="margin:0 0 12px;font-family:Georgia, 'Times New Roman', serif;font-size:24px;font-weight:normal;color:#163a1c;">Nouvelle commande E5F6G7H8</h1>
-<p style="margin:0 0 12px;">1 novembre 2026 à 18:30<br>Langue du client : français</p>
+<p style="margin:0 0 12px;">1 novembre 2026 à 18:30<br>Langue du client : français</p>
 <p style="margin:20px 0;"><a href="https://dashboard.stripe.com/test/payments/pi_3TestPaymentIntent" style="display:inline-block;background:#e03a3a;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:999px;font-weight:bold;">Voir le paiement dans Stripe</a></p>
 <h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Articles</h2>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px;"><tr><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;">Poudre de moringa 100 g<br><span style="color:#4a5d4c;font-size:12px;">REP-MOR-100</span></td><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;text-align:center;white-space:nowrap;">× 2</td><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;text-align:right;white-space:nowrap;">17,80 €</td></tr><tr><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;">Poudre de baobab 100 g<br><span style="color:#4a5d4c;font-size:12px;">REP-BAO-100</span></td><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;text-align:center;white-space:nowrap;">× 1</td><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;text-align:right;white-space:nowrap;">7,90 €</td></tr></table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px;"><tr><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;">Poudre de moringa 100 g<br><span style="color:#4a5d4c;font-size:12px;">REP-MOR-100</span></td><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;text-align:center;white-space:nowrap;">× 2</td><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;text-align:right;white-space:nowrap;">17,80 €</td></tr><tr><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;">Poudre de baobab 100 g<br><span style="color:#4a5d4c;font-size:12px;">REP-BAO-100</span></td><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;text-align:center;white-space:nowrap;">× 1</td><td style="padding:8px 0;border-bottom:1px solid #eee3cf;vertical-align:top;text-align:right;white-space:nowrap;">7,90 €</td></tr></table>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px;margin-top:8px;"><tr><td style="padding:6px 0;">Sous-total</td><td style="padding:6px 0;text-align:right;white-space:nowrap;">25,70 €</td></tr><tr><td style="padding:6px 0;">Livraison</td><td style="padding:6px 0;text-align:right;white-space:nowrap;">4,90 €</td></tr><tr><td style="padding:6px 0;font-weight:bold;font-size:16px;border-top:1px solid #d8b98e;">Total payé</td><td style="padding:6px 0;text-align:right;white-space:nowrap;font-weight:bold;font-size:16px;border-top:1px solid #d8b98e;">30,60 €</td></tr></table>
 <h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Client</h2>
 <p style="margin:0 0 12px;padding:12px 16px;background:#fbf6ea;border-left:3px solid #e03a3a;">Awa Diallo<br>awa.diallo@example.com<br>06 12 34 56 78</p>
 <p style="margin:0 0 12px;"><strong>Adresse de facturation</strong></p><p style="margin:0 0 12px;padding:12px 16px;background:#fbf6ea;border-left:3px solid #e03a3a;">3 Rue des Lilas<br>95400 Arnouville<br>France</p>
-<h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Livraison : Point Relais Mondial Relay</h2>
-<p style="margin:0 0 12px;padding:12px 16px;border:2px solid #163a1c;border-radius:6px;font-size:13px;line-height:1.4;">ID Point Relais<br><strong style="font-family:Georgia, 'Times New Roman', serif;font-size:26px;letter-spacing:1px;color:#163a1c;">FR-012345</strong></p>
+<h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Livraison : Point Relais Mondial Relay</h2>
+<p style="margin:0 0 12px;padding:12px 16px;border:2px solid #163a1c;border-radius:6px;font-size:13px;line-height:1.4;">N° du Point Relais<br><strong style="font-family:Georgia, 'Times New Roman', serif;font-size:26px;letter-spacing:1px;color:#163a1c;">FR-012345</strong></p>
 <p style="margin:0 0 12px;padding:12px 16px;background:#fbf6ea;border-left:3px solid #e03a3a;">Tabac de la Gare<br>12 Avenue de la Gare, Galerie marchande<br>95400 Arnouville<br>France</p>
 <p style="margin:0 0 12px;">Avant d’imprimer l’étiquette, vérifiez ce Point Relais avec son ID dans votre espace Mondial Relay.</p></td></tr>
 <tr><td style="background:#d8b98e;color:#163a1c;padding:16px 28px;font-size:12px;line-height:1.5;">Racines en Partage · 9 Rue du Marché, 95400 Arnouville · <a href="mailto:racinesenpartage@outlook.com" style="color:#163a1c;">racinesenpartage@outlook.com</a></td></tr>
@@ -151,15 +151,15 @@ exports[`order e-mails > FR owner e-mail (relay) matches the snapshot > owner-fr
 exports[`order e-mails > FR owner e-mail (relay) matches the snapshot > owner-fr.txt 1`] = `
 "Nouvelle commande E5F6G7H8
 1 novembre 2026 à 18:30
-Langue du client : français
+Langue du client : français
 
 Articles
-- 2 × Poudre de moringa 100 g (REP-MOR-100) : 17,80 €
-- 1 × Poudre de baobab 100 g (REP-BAO-100) : 7,90 €
+- 2 × Poudre de moringa 100 g (REP-MOR-100) : 17,80 €
+- 1 × Poudre de baobab 100 g (REP-BAO-100) : 7,90 €
 
-Sous-total : 25,70 €
-Livraison : 4,90 €
-Total payé : 30,60 €
+Sous-total : 25,70 €
+Livraison : 4,90 €
+Total payé : 30,60 €
 
 Client
 Awa Diallo
@@ -171,8 +171,8 @@ Adresse de facturation
 95400 Arnouville
 France
 
-Livraison : Point Relais Mondial Relay
-ID POINT RELAIS : FR-012345
+Livraison : Point Relais Mondial Relay
+N° DU POINT RELAIS : FR-012345
 
 Tabac de la Gare
 12 Avenue de la Gare, Galerie marchande
@@ -180,6 +180,6 @@ Tabac de la Gare
 France
 Avant d’imprimer l’étiquette, vérifiez ce Point Relais avec son ID dans votre espace Mondial Relay.
 
-Paiement dans Stripe : https://dashboard.stripe.com/test/payments/pi_3TestPaymentIntent
+Paiement dans Stripe : https://dashboard.stripe.com/test/payments/pi_3TestPaymentIntent
 "
 `;

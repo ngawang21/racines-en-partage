@@ -3,6 +3,7 @@
 import { INTL_LOCALE } from '../../src/consts';
 import { escapeHtml } from '../../src/i18n/fallback';
 import { formatPhone, formatPrice } from '../../src/i18n/format';
+import { frenchTypographyHtml, frenchTypographyText } from '../../src/i18n/typography';
 import type { OrderSummary, PostalAddress } from '../orders';
 import { SHOP, STRIPE_DASHBOARD_PAYMENT_URL } from '../shop';
 import type { Delivery, Locale } from '../types';
@@ -155,7 +156,7 @@ function totalsTable(rows: Array<[string, string]>): string {
 
 /** The relay point ID, large, above the point's details: what the label needs. */
 function relayIdBox(id: string): string {
-  return `<p style="margin:0 0 12px;padding:12px 16px;border:2px solid ${C.forest};border-radius:6px;font-size:13px;line-height:1.4;">ID Point Relais<br><strong style="font-family:${SERIF};font-size:26px;letter-spacing:1px;color:${C.forest};">${esc(id)}</strong></p>`;
+  return `<p style="margin:0 0 12px;padding:12px 16px;border:2px solid ${C.forest};border-radius:6px;font-size:13px;line-height:1.4;">N° du Point Relais<br><strong style="font-family:${SERIF};font-size:26px;letter-spacing:1px;color:${C.forest};">${esc(id)}</strong></p>`;
 }
 
 function button(href: string, label: string): string {
@@ -164,7 +165,7 @@ function button(href: string, label: string): string {
 
 // Plain-text building blocks -------------------------------------------------
 
-const colon = (locale: Locale) => (locale === 'fr' ? ' : ' : ': ');
+const colon = (locale: Locale) => (locale === 'fr' ? '\u00a0: ' : ': ');
 
 function textLines(summary: OrderSummary, locale: Locale, withSku: boolean): string[] {
   return summary.lines.map((l) => {
@@ -175,6 +176,16 @@ function textLines(summary: OrderSummary, locale: Locale, withSku: boolean): str
 
 function textTotals(rows: Array<[string, string]>, locale: Locale): string[] {
   return rows.map(([label, value]) => `${label}${colon(locale)}${value}`);
+}
+
+/** French no-break spaces on the final strings; English is returned as is. */
+function typeset(locale: Locale, email: RenderedEmail): RenderedEmail {
+  if (locale !== 'fr') return email;
+  return {
+    subject: frenchTypographyText(email.subject),
+    html: frenchTypographyHtml(email.html),
+    text: frenchTypographyText(email.text),
+  };
 }
 
 /** Dashboard link of the payment; test-mode sessions open the test dashboard. */
@@ -220,6 +231,7 @@ export function renderOwnerEmail(summary: OrderSummary): RenderedEmail {
   const languageLine = `Langue du client : ${summary.locale === 'en' ? 'anglais' : 'français'}`;
   const paymentUrl = stripePaymentUrl(summary);
   const totals = totalsRows(summary, locale, FR_TOTALS);
+  const units = summary.lines.reduce((n, l) => n + l.quantity, 0);
 
   const customerLines = [
     c.name ?? 'Nom non communiqué',
@@ -243,10 +255,10 @@ export function renderOwnerEmail(summary: OrderSummary): RenderedEmail {
     deliveryLines = c.shipping
       ? [c.shipping.name, ...addressLines(c.shipping.address, locale)]
       : [];
-    deliveryNote = 'Expédier en Colissimo à cette adresse.';
+    deliveryNote = 'Expédiez en Colissimo à cette adresse.';
   } else if (d?.method === 'pickup') {
     deliveryLines = SHOP_ADDRESS_LINES;
-    deliveryNote = 'Contacter le client pour convenir du rendez-vous de retrait.';
+    deliveryNote = 'Contactez la cliente ou le client pour convenir du rendez-vous de retrait.';
   } else {
     deliveryTitle = 'Livraison : non précisée';
   }
@@ -254,7 +266,7 @@ export function renderOwnerEmail(summary: OrderSummary): RenderedEmail {
   const html = layout(
     locale,
     subject,
-    `${summary.lines.length} article(s), ${total}`,
+    `${units} ${units > 1 ? 'produits' : 'produit'}, ${total}`,
     [
       heading(`Nouvelle commande ${summary.number}`),
       paragraph(`${esc(date)}<br>${esc(languageLine)}`),
@@ -287,14 +299,14 @@ export function renderOwnerEmail(summary: OrderSummary): RenderedEmail {
     ...(billing.length ? ['', 'Adresse de facturation', ...billing] : []),
     '',
     deliveryTitle,
-    ...(relayId ? [`ID POINT RELAIS : ${relayId}`, ''] : []),
+    ...(relayId ? [`N° DU POINT RELAIS : ${relayId}`, ''] : []),
     ...deliveryLines,
     ...(deliveryNote ? [deliveryNote] : []),
     ...(paymentUrl ? ['', `Paiement dans Stripe : ${paymentUrl}`] : []),
     '',
   ].join('\n');
 
-  return { subject, html, text };
+  return typeset(locale, { subject, html, text });
 }
 
 // Customer e-mail (FR or EN) -------------------------------------------------
@@ -311,13 +323,14 @@ interface CustomerStrings {
   next: string;
   nextBy: Record<Delivery['method'], string>;
   contactTitle: string;
-  contact: string;
+  /** Around the e-mail link and the phone number: "{before}{email}{between}{phone}{after}". */
+  contact: { before: string; between: string; after: string };
   signature: string;
 }
 
 const CUSTOMER: Record<Locale, CustomerStrings> = {
   fr: {
-    subject: (n) => `Merci pour votre commande ${n}`,
+    subject: (n) => `Votre commande n° ${n} est confirmée`,
     heading: 'Merci pour votre commande',
     greeting: (name) => (name ? `Bonjour ${name},` : 'Bonjour,'),
     intro: (n) =>
@@ -333,17 +346,21 @@ const CUSTOMER: Record<Locale, CustomerStrings> = {
     next: 'Et maintenant ?',
     nextBy: {
       relay:
-        'Nous préparons votre colis et le confions à Mondial Relay. Vous recevrez un SMS et un e-mail de Mondial Relay dès qu’il vous attend dans votre Point Relais. Pensez à une pièce d’identité pour le retirer.',
-      home: 'Nous préparons votre colis et l’expédions en Colissimo. Vous recevrez le numéro de suivi dès son départ.',
+        'Nous préparons votre colis et le confions à Mondial Relay. Vous recevrez un SMS et un e-mail de Mondial Relay dès qu’il vous attend dans votre Point Relais. Pensez à vous munir d’une pièce d’identité pour le retirer.',
+      home: 'Nous préparons votre colis et l’expédions en Colissimo. Vous recevrez le numéro de suivi dès son expédition.',
       pickup:
         'Nous vous contactons très vite par téléphone ou par e-mail pour convenir d’un rendez-vous de retrait.',
     },
     contactTitle: 'Une question ?',
-    contact: 'Répondez simplement à cet e-mail, ou écrivez-nous à',
+    contact: {
+      before: 'Répondez simplement à cet e-mail, écrivez-nous à ',
+      between: ' ou appelez-nous au ',
+      after: '.',
+    },
     signature: 'À très bientôt,\nRacines en Partage',
   },
   en: {
-    subject: (n) => `Thank you for your order ${n}`,
+    subject: (n) => `Your Racines en Partage order no. ${n}`,
     heading: 'Thank you for your order',
     greeting: (name) => (name ? `Hello ${name},` : 'Hello,'),
     intro: (n) =>
@@ -354,18 +371,22 @@ const CUSTOMER: Record<Locale, CustomerStrings> = {
     method: {
       relay: 'Mondial Relay pickup point',
       home: 'Home delivery (Colissimo)',
-      pickup: 'Free pickup in Arnouville',
+      pickup: 'Free collection in Arnouville',
     },
-    next: 'What happens next',
+    next: 'What happens next?',
     nextBy: {
       relay:
-        'We prepare your parcel and hand it to Mondial Relay. Mondial Relay will send you a text message and an e-mail as soon as it is waiting at your pickup point. Please bring an ID to collect it.',
-      home: 'We prepare your parcel and ship it with Colissimo. You will receive the tracking number as soon as it leaves.',
-      pickup: 'We will contact you shortly by phone or e-mail to arrange a pickup appointment.',
+        'We prepare your parcel and hand it to Mondial Relay. Mondial Relay will send you a text message and an e-mail as soon as it is waiting at your pickup point. Please bring photo ID when you collect it.',
+      home: 'We prepare your parcel and ship it with Colissimo. You will receive the tracking number as soon as it has been dispatched.',
+      pickup: 'We will contact you shortly by phone or e-mail to arrange a collection time.',
     },
-    contactTitle: 'A question?',
-    contact: 'Simply reply to this e-mail, or write to us at',
-    signature: 'See you soon,\nRacines en Partage',
+    contactTitle: 'Any questions?',
+    contact: {
+      before: 'Simply reply to this e-mail, write to ',
+      between: ' or call us on ',
+      after: '.',
+    },
+    signature: 'Warm wishes,\nRacines en Partage',
   },
 };
 
@@ -402,7 +423,7 @@ export function renderCustomerEmail(summary: OrderSummary): RenderedEmail {
       next ? subheading(t.next) + paragraph(esc(next)) : '',
       subheading(t.contactTitle),
       paragraph(
-        `${esc(t.contact)} <a href="mailto:${esc(SHOP.email)}" style="color:${C.forest};">${esc(SHOP.email)}</a> · ${esc(phone)}`,
+        `${esc(t.contact.before)}<a href="mailto:${esc(SHOP.email)}" style="color:${C.forest};">${esc(SHOP.email)}</a>${esc(t.contact.between)}${esc(phone)}${esc(t.contact.after)}`,
       ),
       paragraph(esc(t.signature).replace('\n', '<br>')),
     ].join('\n'),
@@ -424,11 +445,11 @@ export function renderCustomerEmail(summary: OrderSummary): RenderedEmail {
     ...(next ? ['', t.next, next] : []),
     '',
     t.contactTitle,
-    `${t.contact} ${SHOP.email} · ${phone}`,
+    `${t.contact.before}${SHOP.email}${t.contact.between}${phone}${t.contact.after}`,
     '',
     t.signature,
     '',
   ].join('\n');
 
-  return { subject, html, text };
+  return typeset(locale, { subject, html, text });
 }

@@ -1,4 +1,5 @@
 // Fixture catalogue (mirrors dist/catalog.json), fake Stripe, fake mailer.
+import { frenchTypographyText } from '../../src/i18n/typography';
 import type Stripe from 'stripe';
 import { vi } from 'vitest';
 import { createApp, type AppDeps } from '../../worker/app';
@@ -264,4 +265,5 @@ export interface ErrorJson {
 }
 
 /** French prices use a narrow no-break space before the euro sign: write " €" in tests. */
-export const fr = (text: string) => text.replaceAll(' €', '\u202f€');
+/** French typography as the e-mails print it: no-break spaces before € and the colon. */
+export const fr = (text: string) => frenchTypographyText(text);

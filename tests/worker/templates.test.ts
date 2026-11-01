@@ -69,14 +69,14 @@ describe('order e-mails', () => {
 
   it('FR customer e-mail (relay) matches the snapshot', () => {
     const email = renderCustomerEmail(relayOrder());
-    expect(email.subject).toBe('Merci pour votre commande E5F6G7H8');
+    expect(email.subject).toBe(fr('Votre commande n° E5F6G7H8 est confirmée'));
     expect(email.html).toMatchSnapshot('customer-fr.html');
     expect(email.text).toMatchSnapshot('customer-fr.txt');
   });
 
   it('EN customer e-mail (home, discount, free shipping) matches the snapshot', () => {
     const email = renderCustomerEmail(homeOrderEn());
-    expect(email.subject).toBe('Thank you for your order E5F6G7H8');
+    expect(email.subject).toBe('Your Racines en Partage order no. E5F6G7H8');
     expect(email.html).toMatchSnapshot('customer-en.html');
     expect(email.text).toMatchSnapshot('customer-en.txt');
   });
@@ -90,7 +90,7 @@ describe('order e-mails', () => {
       'Tabac de la Gare',
       '12 Avenue de la Gare, Galerie marchande',
       '95400 Arnouville',
-      'ID POINT RELAIS : FR-012345',
+      fr('N° DU POINT RELAIS : FR-012345'),
       'vérifiez ce Point Relais avec son ID dans votre espace Mondial Relay',
       'REP-MOR-100',
       'https://dashboard.stripe.com/test/payments/pi_3TestPaymentIntent',
@@ -110,8 +110,8 @@ describe('order e-mails', () => {
 
   it('owner e-mail (EN home order) stays in French and shows the shipping address', () => {
     const { text } = renderOwnerEmail(homeOrderEn());
-    expect(text).toContain('Livraison : Livraison à domicile (Colissimo)');
-    expect(text).toContain('Langue du client : anglais');
+    expect(text).toContain(fr('Livraison : Livraison à domicile (Colissimo)'));
+    expect(text).toContain(fr('Langue du client : anglais'));
     expect(text).toContain('John Smith\n1 Place de la Mairie\nBât. B\n75001 Paris\nFrance');
     expect(text).toContain(fr('Remise : −5,34 €'));
   });
@@ -161,7 +161,7 @@ describe('order e-mails', () => {
     );
     expect(renderCustomerEmail(summary).text).toContain('9 Rue du Marché\n95400 Arnouville');
     expect(renderOwnerEmail(summary).text).toContain(
-      'Contacter le client pour convenir du rendez-vous',
+      'Contactez la cliente ou le client pour convenir du rendez-vous',
     );
   });
 });
