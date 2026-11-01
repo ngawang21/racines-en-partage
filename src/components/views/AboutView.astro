@@ -150,8 +150,9 @@ const [t, page, home] = await Promise.all([
   .story.flip .story-media {
     aspect-ratio: 5 / 4;
   }
+  /* The duo photo is a 2:3 portrait with the pouches in its middle half. */
   .story.flip .story-media :global(img) {
-    object-position: 50% 82%;
+    object-position: 50% 48%;
   }
   .story-media :global(img) {
     width: 100%;

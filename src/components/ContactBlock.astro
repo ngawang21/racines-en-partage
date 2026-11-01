@@ -15,6 +15,8 @@ interface Props {
 }
 const { page, settings, t } = Astro.props;
 const { brand } = settings;
+// Break the address before the "@" on narrow screens, never inside a word.
+const [emailUser, emailHost] = brand.email.split('@');
 const street = brand.address.street;
 const city = `${brand.address.postcode} ${brand.address.city}`;
 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -33,7 +35,16 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
     <div class="card">
       <dt><Icon name="mail" size={20} />{t.footer.email}</dt>
       <dd>
-        <a class="big email" href={`mailto:${brand.email}`}>{brand.email}</a>
+        <a class="big email" href={`mailto:${brand.email}`}>
+          {emailUser}
+          {
+            emailHost && (
+              <>
+                <wbr />@{emailHost}
+              </>
+            )
+          }
+        </a>
       </dd>
     </div>
     <div class="card card-wide">
@@ -105,7 +116,7 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
     }
   }
   .card {
-    padding: var(--space-6);
+    padding: clamp(var(--space-4), 3.5vw, var(--space-6));
     border: 1px solid var(--line);
     border-radius: var(--radius-m);
     background: rgba(255, 255, 255, 0.45);
@@ -127,20 +138,30 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
     margin: var(--space-3) 0 0;
   }
   .big {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    min-height: 44px;
     color: var(--forest);
     font-family: var(--font-display);
     font-size: var(--fs-3);
     font-weight: 600;
-    text-decoration: none;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
     font-variant-numeric: lining-nums;
+    transition: text-decoration-color var(--dur-fast) ease;
   }
   .big:hover {
-    text-decoration: underline;
-    text-decoration-color: var(--kraft);
+    text-decoration-color: var(--kraft-deep);
   }
+  /* Inline-block so it wraps at the <wbr> before "@" yet keeps a 44 px target. */
   .email {
-    font-size: var(--fs-1);
-    overflow-wrap: anywhere;
+    display: inline-block;
+    padding-block: 10px;
+    font-size: clamp(1rem, 0.86rem + 0.7vw, 1.25rem);
+    line-height: 1.4;
   }
   address {
     font-style: normal;
@@ -151,7 +172,7 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
     margin-top: var(--space-2);
   }
   .hours {
-    padding: var(--space-8);
+    padding: clamp(var(--space-6), 4vw, var(--space-8));
     border-radius: var(--radius-l);
     background: var(--forest);
     color: var(--cream);

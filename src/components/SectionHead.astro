@@ -7,11 +7,13 @@ interface Props {
   id?: string;
   link?: { href: string; label: string };
   centered?: boolean;
+  /** Fade up on scroll (home page, reveal.ts). */
+  reveal?: boolean;
 }
-const { title, eyebrow, id, link, centered = false } = Astro.props;
+const { title, eyebrow, id, link, centered = false, reveal = false } = Astro.props;
 ---
 
-<div class:list={['section-head', { centered }]}>
+<div class:list={['section-head', { centered }]} data-reveal={reveal ? '' : undefined}>
   <div>
     {eyebrow && <p class="eyebrow">{eyebrow}</p>}
     <h2 {id}>{title}</h2>

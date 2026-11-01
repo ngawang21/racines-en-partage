@@ -12,8 +12,10 @@ interface Props {
   products: Product[];
   locale: Locale;
   t: LocaleContent;
+  /** Fade the cards up on scroll, staggered (home page, reveal.ts). */
+  reveal?: boolean;
 }
-const { products, locale, t } = Astro.props;
+const { products, locale, t, reveal = false } = Astro.props;
 const withRecipe = products.filter((p) => p.recipe);
 ---
 
@@ -23,14 +25,14 @@ const withRecipe = products.filter((p) => p.recipe);
       const r = p.recipe!;
       const lines = (r.ingredients?.length ? r.ingredients : r.steps).slice(0, 3);
       return (
-        <li>
+        <li data-reveal={reveal ? '' : undefined}>
           <article class="recipe lift">
             <div class="recipe-media">
               <Picture
                 src={p.images[0]!}
                 alt=""
                 preset="card"
-                sizes="(min-width: 960px) 380px, 100vw"
+                sizes="(min-width: 960px) 380px, (min-width: 760px) 32vw, 82vw"
               />
             </div>
             <div class="recipe-body">
@@ -56,14 +58,36 @@ const withRecipe = products.filter((p) => p.recipe);
 </ul>
 
 <style>
+  /* Phones: a swipeable row with the next card peeking in, rather than three
+     tall cards stacked. From 760 px: three columns. */
   .recipes {
     display: grid;
-    gap: var(--space-6);
-    margin: 0;
+    grid-auto-columns: min(82%, 340px);
+    grid-auto-flow: column;
+    gap: var(--space-4);
+    margin: 0 calc(var(--gutter) * -1);
+    /* Room for the focus ring inside the scroller. */
+    padding: var(--space-2) var(--gutter);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: var(--gutter);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .recipes::-webkit-scrollbar {
+    display: none;
+  }
+  .recipes > li {
+    scroll-snap-align: start;
   }
   @media (min-width: 760px) {
     .recipes {
       grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-auto-flow: row;
+      gap: var(--space-6);
+      margin: 0;
+      padding: 0;
+      overflow: visible;
     }
   }
   .recipe {
@@ -76,9 +100,12 @@ const withRecipe = products.filter((p) => p.recipe);
     border-radius: var(--radius-m);
     background: var(--cream);
   }
+  /* Square: the least a 2:3 portrait can be cropped to while keeping the
+     whole pouch and what it holds. */
   .recipe-media {
     aspect-ratio: 1 / 1;
     overflow: hidden;
+    isolation: isolate;
     background: var(--paper);
     border-bottom: 1px solid var(--kraft);
   }
@@ -86,13 +113,30 @@ const withRecipe = products.filter((p) => p.recipe);
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 50% 66%;
+    object-position: 50% 70%;
+    transition: transform 600ms var(--ease-out-strong);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .recipe.lift:hover {
+      box-shadow: var(--shadow-float);
+    }
+    .recipe:hover .recipe-media :global(img) {
+      transform: scale(1.04);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .recipe-media :global(img) {
+      transition: none;
+    }
+    .recipe:hover .recipe-media :global(img) {
+      transform: none;
+    }
   }
   .recipe-body {
     display: flex;
     flex: 1;
     flex-direction: column;
-    padding: var(--space-6);
+    padding: clamp(var(--space-4), 1rem + 1vw, var(--space-6));
   }
   .recipe-kicker {
     color: var(--ink-2);
@@ -121,6 +165,7 @@ const withRecipe = products.filter((p) => p.recipe);
   .recipe:has(a:focus-visible) {
     outline: 3px solid var(--hibiscus);
     outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--cream);
   }
   .recipe-lines {
     margin: var(--space-4) 0 var(--space-6);
@@ -150,10 +195,17 @@ const withRecipe = products.filter((p) => p.recipe);
     margin-top: auto;
     min-height: 0;
   }
-  .recipe:hover .recipe-title {
+  .recipe-title {
     text-decoration: underline;
-    text-decoration-color: var(--kraft);
+    text-decoration-color: transparent;
     text-decoration-thickness: 1px;
     text-underline-offset: 5px;
+    transition: text-decoration-color 200ms ease;
+  }
+  .recipe:hover .recipe-title {
+    text-decoration-color: var(--kraft-deep);
+  }
+  .recipe:hover .recipe-cta :global(svg) {
+    transform: translateX(3px);
   }
 </style>

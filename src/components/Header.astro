@@ -1,7 +1,8 @@
 ---
 // Site header (spec 5.5). Markup contract with wave 2B: the cart button is
 // `button[data-cart-toggle][aria-controls="cart-drawer"]` holding
-// `span[data-cart-count]`. No script here: the mobile menu is a <details>.
+// `span[data-cart-count]`. The mobile menu is a <details>: it works without
+// script; header-menu.ts adds Escape, close on navigation and bfcache.
 import { Image } from 'astro:assets';
 import medallion from '../assets/brand/medallion.webp';
 import { SITE, type Locale } from '../consts';
@@ -88,6 +89,10 @@ const links = [
   </div>
 </header>
 
+<script>
+  import './header-menu';
+</script>
+
 <style>
   .site-header {
     position: sticky;
@@ -96,34 +101,54 @@ const links = [
     background: rgba(251, 246, 234, 0.94);
     backdrop-filter: saturate(1.2) blur(8px);
     border-bottom: 1px solid var(--line);
+    /* Held still while the rest of the page crossfades (global.css). */
+    view-transition-name: site-header;
   }
   .bar {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--space-2);
     min-height: var(--header-h);
+  }
+  @media (min-width: 400px) {
+    .bar {
+      gap: var(--space-3);
+    }
   }
   .brand {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    min-width: 0;
     min-height: 44px;
     margin-right: auto;
+    border-radius: var(--radius-s);
     color: var(--forest);
     text-decoration: none;
   }
   .brand img {
+    flex: none;
     width: 40px;
     height: 40px;
+    transition: transform var(--dur-base) var(--ease-out-strong);
   }
+  @media (hover: hover) {
+    .brand:hover img {
+      transform: rotate(-8deg);
+    }
+  }
+  /* One line at every width: 17 px on a 360 px phone, 19 px from 400 px. */
   .wordmark {
+    overflow: hidden;
     font-family: var(--font-display);
     font-optical-sizing: auto;
     font-variation-settings: 'SOFT' 50;
-    font-size: 1.1875rem;
+    font-size: clamp(1.0625rem, 0.75rem + 1.6vw, 1.1875rem);
     font-weight: 600;
     letter-spacing: -0.01em;
-    line-height: 1;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .desktop-nav ul {
     display: flex;
@@ -141,11 +166,17 @@ const links = [
     align-items: center;
     min-height: 44px;
     border-bottom: 2px solid transparent;
+    transition:
+      color var(--dur-fast) ease,
+      border-color var(--dur-fast) ease;
   }
   .desktop-nav a:hover,
   .desktop-nav a[aria-current] {
     color: var(--forest);
     border-bottom-color: var(--gold);
+  }
+  .desktop-nav a:hover:not([aria-current]) {
+    border-bottom-color: rgba(201, 162, 74, 0.55);
   }
   .tools {
     display: flex;
@@ -165,9 +196,18 @@ const links = [
     background: transparent;
     color: var(--forest);
     list-style: none;
+    touch-action: manipulation;
+    transition:
+      background-color var(--dur-fast) ease,
+      transform var(--dur-press) var(--ease-out-strong);
   }
-  .icon-btn:hover {
-    background: rgba(22, 58, 28, 0.06);
+  @media (hover: hover) {
+    .icon-btn:hover {
+      background: rgba(22, 58, 28, 0.06);
+    }
+  }
+  .icon-btn:active {
+    transform: scale(0.94);
   }
   .icon-btn::-webkit-details-marker {
     display: none;
@@ -192,7 +232,28 @@ const links = [
     order: -1;
   }
   .mobile-menu summary {
+    position: static;
     cursor: pointer;
+  }
+  .mobile-menu[open] summary {
+    background: rgba(22, 58, 28, 0.06);
+  }
+  /* Scrim under the panel. It belongs to the summary, so a tap on it closes
+     the menu natively; it is positioned against the sticky header. */
+  .mobile-menu[open] > summary::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 100dvh;
+    background: rgba(22, 58, 28, 0.28);
+    cursor: default;
+  }
+  @media (max-width: 899px) {
+    :global(html:has(.mobile-menu[open])) {
+      overflow: hidden;
+    }
   }
   .mobile-menu :global(.when-open),
   .mobile-menu[open] :global(.when-closed) {
@@ -211,15 +272,48 @@ const links = [
     border-bottom: 1px solid var(--line);
     box-shadow: var(--shadow-float);
   }
+  @media (prefers-reduced-motion: no-preference) {
+    .mobile-menu[open] .mobile-nav {
+      animation: rep-menu-in 240ms var(--ease-out-strong);
+    }
+    .mobile-menu[open] > summary::before {
+      animation: rep-scrim-in 240ms ease;
+    }
+  }
+  @keyframes rep-menu-in {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+  @keyframes rep-scrim-in {
+    from {
+      opacity: 0;
+    }
+  }
   .mobile-nav ul {
     margin: 0 0 var(--space-4);
   }
   .mobile-nav a {
     display: flex;
     align-items: center;
-    min-height: 48px;
+    justify-content: space-between;
+    min-height: 52px;
     font-size: var(--fs-1);
     border-bottom: 1px solid var(--line);
+    transition: color var(--dur-fast) ease;
+  }
+  .mobile-nav a::after {
+    content: '';
+    width: 7px;
+    height: 7px;
+    margin-right: 6px;
+    border-top: 1.5px solid var(--kraft-deep);
+    border-right: 1.5px solid var(--kraft-deep);
+    transform: rotate(45deg);
+  }
+  .mobile-nav a:active {
+    color: var(--forest);
   }
   .mobile-nav a[aria-current] {
     color: var(--forest);

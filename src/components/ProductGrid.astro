@@ -12,14 +12,25 @@ interface Props {
   headingLevel?: 'h2' | 'h3';
   id?: string;
   class?: string;
+  /** Fade the cards up on scroll, staggered (home page, reveal.ts). */
+  reveal?: boolean;
 }
-const { products, locale, t, shopOpen, headingLevel, id, class: className } = Astro.props;
+const {
+  products,
+  locale,
+  t,
+  shopOpen,
+  headingLevel,
+  id,
+  class: className,
+  reveal = false,
+} = Astro.props;
 ---
 
 <ul class:list={['product-grid', className]} role="list" {id} data-product-grid>
   {
     products.map((product, index) => (
-      <li data-product-item>
+      <li data-product-item data-reveal={reveal ? '' : undefined}>
         <ProductCard {product} {locale} {t} {shopOpen} {index} {headingLevel} />
       </li>
     ))

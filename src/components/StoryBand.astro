@@ -21,7 +21,7 @@ const { eyebrow, title, body, lands, fromLabel, toLabel, image, imageAlt, link }
 
 <section class="band-forest story" aria-labelledby="story-title">
   <div class="container story-grid section">
-    <div class="story-media">
+    <div class="story-media" data-reveal>
       <div class="story-frame">
         <Picture
           src={image}
@@ -31,7 +31,7 @@ const { eyebrow, title, body, lands, fromLabel, toLabel, image, imageAlt, link }
         />
       </div>
     </div>
-    <div class="story-copy">
+    <div class="story-copy" data-reveal>
       <p class="eyebrow story-eyebrow">{eyebrow}</p>
       <h2 id="story-title">{title}</h2>
       <p class="story-body">{body}</p>
@@ -97,7 +97,8 @@ const { eyebrow, title, body, lands, fromLabel, toLabel, image, imageAlt, link }
       max-width: none;
     }
     .story-frame :global(img) {
-      object-position: 50% 82% !important;
+      /* The pouches fill the middle half of the portrait photo. */
+      object-position: 50% 50% !important;
     }
   }
   .story-frame :global(img) {
@@ -146,10 +147,11 @@ const { eyebrow, title, body, lands, fromLabel, toLabel, image, imageAlt, link }
   }
   .land-list li {
     font-family: var(--font-display);
-    font-size: var(--fs-1);
+    /* Four lands on one line from a 390 px phone. */
+    font-size: clamp(1rem, 0.86rem + 0.6vw, 1.25rem);
   }
   .land-list {
-    gap: 4px 18px;
+    gap: 4px 14px;
   }
   .land-list li {
     display: inline-flex;

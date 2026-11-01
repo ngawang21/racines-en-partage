@@ -23,8 +23,9 @@ const { title, body, medallionAlt, link } = Astro.props;
       height={132}
       densities={[1, 2]}
       class="medallion"
+      data-reveal
     />
-    <div class="copy">
+    <div class="copy" data-reveal>
       <h2 id="commitment-title">{title}</h2>
       <p class="body">{body}</p>
       <a class="link-arrow" href={link.href}>

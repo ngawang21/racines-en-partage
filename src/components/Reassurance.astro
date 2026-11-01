@@ -29,12 +29,18 @@ const { items } = Astro.props;
   .reassurance {
     border-bottom: 1px solid var(--line);
   }
+  /* One column on small phones, where two would wrap each line in four. */
   .list {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-6) var(--space-4);
+    gap: var(--space-3);
     margin: 0;
     padding-block: var(--space-8);
+  }
+  @media (min-width: 420px) {
+    .list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-6) var(--space-4);
+    }
   }
   @media (min-width: 900px) {
     .list {

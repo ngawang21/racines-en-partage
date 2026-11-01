@@ -123,13 +123,22 @@ const sorts = [
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
   }
+  /* Phones: one scrolling row bleeding to the screen edges, faded at the
+     right edge so the row reads as scrollable. */
   .chips {
     display: flex;
     gap: var(--space-2);
     margin-inline: calc(var(--gutter) * -1);
-    padding-inline: var(--gutter);
+    padding-inline: var(--gutter) calc(var(--gutter) + 24px);
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: var(--gutter);
+    scroll-snap-type: x proximity;
     scrollbar-width: none;
+    mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+  }
+  .chips > * {
+    scroll-snap-align: start;
   }
   .chips::-webkit-scrollbar {
     display: none;
@@ -140,6 +149,7 @@ const sorts = [
       margin-inline: 0;
       padding-inline: 0;
       overflow: visible;
+      mask-image: none;
     }
   }
   .chip {
@@ -156,12 +166,21 @@ const sorts = [
     font-size: 0.9375rem;
     font-weight: 500;
     white-space: nowrap;
+    touch-action: manipulation;
     transition:
-      background-color var(--dur-fast) var(--ease-out),
-      border-color var(--dur-fast) var(--ease-out);
+      background-color var(--dur-fast) ease,
+      border-color var(--dur-fast) ease,
+      color var(--dur-fast) ease,
+      transform var(--dur-press) var(--ease-out-strong);
   }
-  .chip:hover {
-    border-color: var(--kraft-deep);
+  @media (hover: hover) {
+    .chip:hover:not([aria-pressed='true']) {
+      border-color: var(--kraft-deep);
+      background: var(--cream);
+    }
+  }
+  .chip:active {
+    transform: scale(0.97);
   }
   .chip[aria-pressed='true'] {
     border-color: var(--forest);
@@ -221,6 +240,9 @@ const sorts = [
     appearance: none;
     cursor: pointer;
   }
+  select {
+    transition: border-color var(--dur-fast) ease;
+  }
   select:hover {
     border-color: var(--kraft-deep);
   }
@@ -232,6 +254,9 @@ const sorts = [
   .empty {
     padding-block: var(--space-12);
     color: var(--ink-2);
+    font-family: var(--font-display);
+    font-size: var(--fs-2);
+    font-style: italic;
     text-align: center;
   }
   :global([data-product-item][hidden]) {

@@ -127,6 +127,7 @@ const shopOpen = settings.shop.open;
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#163a1c" />
+    <meta name="color-scheme" content="only light" />
   </head>
   <body data-locale={locale} data-shop-open={String(shopOpen)}>
     <a class="skip-link" href="#main">{t.a11y.skip}</a>
@@ -160,7 +161,9 @@ const shopOpen = settings.shop.open;
     padding-block: var(--space-2);
     font-size: var(--fs--1);
     font-weight: 500;
+    line-height: 1.45;
     text-align: center;
+    text-wrap: balance;
   }
   .announcement {
     background: var(--forest);

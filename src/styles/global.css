@@ -1,6 +1,27 @@
 /* Base styles (spec 5.1 to 5.3). Owner: foundation; wave 2A may append utilities. */
 @import './tokens.css';
 
+/* Metric-matched fallbacks: until the web fonts arrive, Georgia and Arial are
+   scaled to the width and vertical metrics of Fraunces (weight 600) and
+   Figtree (weight 400), so the swap does not rewrap lines or shift layout.
+   Values from the font files (capsize unpack) and measured weight ratios. */
+@font-face {
+  font-family: 'Fraunces Fallback';
+  src: local('Georgia');
+  size-adjust: 105%;
+  ascent-override: 93%;
+  descent-override: 24.3%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Figtree Fallback';
+  src: local('Arial'), local('Helvetica'), local('Roboto');
+  size-adjust: 102.5%;
+  ascent-override: 92.7%;
+  descent-override: 24.4%;
+  line-gap-override: 0%;
+}
+
 /* ------------------------------------------------------------------ reset */
 
 *,
@@ -29,6 +50,17 @@ body {
 }
 main {
   flex: 1;
+}
+::selection {
+  background: rgba(201, 162, 74, 0.32);
+  color: var(--forest);
+}
+/* Every control has its own pressed state: no grey tap flash on touch screens. */
+a,
+button,
+summary,
+label {
+  -webkit-tap-highlight-color: transparent;
 }
 main:focus {
   outline: none;
@@ -107,7 +139,11 @@ h4 {
   font-size: var(--fs-2);
   line-height: var(--lh-snug);
 }
-p {
+p,
+li,
+dd,
+figcaption,
+blockquote {
   text-wrap: pretty;
 }
 .display {
@@ -212,19 +248,22 @@ p {
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
   transition:
-    background-color var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out),
-    transform var(--dur-base) var(--ease-out);
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    transform var(--dur-press) var(--ease-out-strong);
 }
 .btn svg {
   width: 20px;
   height: 20px;
   flex: none;
 }
-.btn:active:not(:disabled) {
-  transform: translateY(1px);
+/* Press feedback: a slight scale, instant on the way down, eased back up. */
+.btn:active:not(:disabled, [aria-disabled='true']) {
+  transform: scale(0.97);
 }
 .btn:disabled,
 .btn[aria-disabled='true'] {
@@ -236,37 +275,64 @@ p {
   border-color: var(--forest);
   color: var(--cream);
 }
-.btn-primary:hover:not(:disabled) {
-  background: var(--forest-2);
-  border-color: var(--forest-2);
+@media (hover: hover) {
+  .btn-primary:hover:not(:disabled) {
+    background: var(--forest-2);
+    border-color: var(--forest-2);
+  }
 }
 .btn-secondary {
   background: transparent;
   border-color: var(--forest);
   color: var(--forest);
 }
-.btn-secondary:hover:not(:disabled) {
-  background: var(--paper);
+@media (hover: hover) {
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--paper);
+  }
 }
 .btn-ghost {
   background: transparent;
   color: var(--forest);
   padding-inline: var(--space-3);
 }
-.btn-ghost:hover:not(:disabled) {
-  background: rgba(22, 58, 28, 0.06);
+@media (hover: hover) {
+  .btn-ghost:hover:not(:disabled) {
+    background: rgba(22, 58, 28, 0.06);
+  }
 }
 .band-forest .btn-primary {
   background: var(--cream);
   border-color: var(--cream);
   color: var(--forest);
 }
+@media (hover: hover) {
+  .band-forest .btn-primary:hover:not(:disabled) {
+    background: var(--paper);
+    border-color: var(--paper);
+  }
+}
+/* Add-to-cart confirmation: src/cart/ui.ts sets .is-added for 1.2 s. The
+   button turns leaf green and its plus turns a quarter, then settles back. */
+.btn[data-add-to-cart].is-added {
+  background: var(--leaf-ink);
+  border-color: var(--leaf-ink);
+  color: var(--cream);
+}
+.btn[data-add-to-cart] svg {
+  transition: transform var(--dur-base) var(--ease-out-strong);
+}
+.btn[data-add-to-cart].is-added svg {
+  transform: rotate(90deg);
+}
 .band-forest .btn-secondary {
   border-color: var(--cream);
   color: var(--cream);
 }
-.band-forest .btn-secondary:hover:not(:disabled) {
-  background: rgba(251, 246, 234, 0.1);
+@media (hover: hover) {
+  .band-forest .btn-secondary:hover:not(:disabled) {
+    background: rgba(251, 246, 234, 0.1);
+  }
 }
 
 /* --------------------------------------------------------------- badges */
@@ -344,13 +410,13 @@ p {
   border: 0;
   margin: 0;
   background:
-    linear-gradient(135deg, var(--terracotta) 25%, transparent 25%) calc(var(--k) * -1) 0 /
+    linear-gradient(135deg, var(--terracotta) 25%, transparent 25%) calc(50% - var(--k)) 0 /
       calc(var(--k) * 2) var(--k) repeat-x,
-    linear-gradient(225deg, var(--terracotta) 25%, transparent 25%) calc(var(--k) * -1) 0 /
+    linear-gradient(225deg, var(--terracotta) 25%, transparent 25%) calc(50% - var(--k)) 0 /
       calc(var(--k) * 2) var(--k) repeat-x,
-    linear-gradient(315deg, var(--leaf) 25%, transparent 25%) 0 0 / calc(var(--k) * 2) var(--k)
+    linear-gradient(315deg, var(--leaf) 25%, transparent 25%) 50% 0 / calc(var(--k) * 2) var(--k)
       repeat-x,
-    linear-gradient(45deg, var(--leaf) 25%, transparent 25%) 0 0 / calc(var(--k) * 2) var(--k)
+    linear-gradient(45deg, var(--leaf) 25%, transparent 25%) 50% 0 / calc(var(--k) * 2) var(--k)
       repeat-x,
     var(--gold);
 }
@@ -367,6 +433,13 @@ p {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+/* The <picture> wrapper of astro:assets must fill its frame too: with an
+   auto-height wrapper, the image's height: 100% falls back to auto and its
+   object-fit and object-position are silently ignored (the frame then shows
+   the top of the photo). Covers every framed photo of the storefront. */
+:is(.frame, [class*='-frame'], [class*='-media'], .gallery-slide, .thumb) > picture {
+  height: 100%;
 }
 
 /* ---------------------------------------------------------- accessibility */
@@ -612,5 +685,115 @@ p {
   }
   .link-arrow:hover svg {
     transform: none;
+  }
+}
+
+/* ======================================================================
+   Launch polish (review 4): motion, page transitions, print.
+   ====================================================================== */
+
+/* Scroll reveal for the home sections (src/components/reveal.ts). The script
+   marks only what starts below the fold, and only when motion is welcome:
+   without it, or under reduced motion, everything is simply visible. */
+/* Eased on the way in only: hiding at load is instant and unseen. */
+[data-reveal]:not(.is-pending) {
+  transition:
+    opacity 640ms var(--ease-out-strong) var(--reveal-delay, 0ms),
+    transform 640ms var(--ease-out-strong) var(--reveal-delay, 0ms);
+}
+[data-reveal].is-pending {
+  opacity: 0;
+  transform: translateY(16px);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal],
+  [data-reveal].is-pending {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Cross-document view transitions: a short crossfade between pages, the
+   header held still. Pure CSS, each page still loads its own scripts; the
+   browsers without support navigate as before. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+  animation-timing-function: ease;
+}
+::view-transition-group(site-header) {
+  animation: none;
+}
+
+/* Print: an order confirmation, a recipe or a legal page on plain paper. */
+@media print {
+  @page {
+    margin: 14mm 12mm;
+  }
+  body {
+    display: block;
+    min-height: 0;
+    background: none;
+    font-size: 11pt;
+  }
+  .skip-link,
+  .announcement,
+  .shop-closed,
+  .site-header :is(.mobile-menu, .desktop-nav, .tools),
+  .site-footer,
+  .cart-drawer,
+  .kente,
+  .hairline,
+  .btn,
+  .link-arrow,
+  .crumbs {
+    display: none !important;
+  }
+  .site-header {
+    position: static !important;
+    background: none !important;
+    backdrop-filter: none !important;
+    border-bottom: 1px solid var(--line);
+  }
+  .band-forest,
+  .band-paper {
+    background: none !important;
+    color: var(--forest) !important;
+  }
+  .band-forest :is(h1, h2, h3, h4, p) {
+    color: var(--forest) !important;
+  }
+  *,
+  *::before,
+  *::after {
+    box-shadow: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+  /* Small blocks only: a section taller than the page would leave a blank one. */
+  article,
+  li,
+  tr,
+  dl,
+  .summary-card {
+    break-inside: avoid;
+  }
+  main a {
+    text-decoration: none;
   }
 }

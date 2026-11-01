@@ -5,6 +5,9 @@
 // resting on its corner. The photo is the LCP element: eager, fetchpriority
 // high. The 3:2 photo is cropped to 4:3 by object-fit, so the rendered image
 // is about 1.125 times the frame width: `sizes` accounts for it.
+// Entrance: the copy rises in a short stagger, the photo settles from a
+// slight zoom (transform only, so the LCP image is never transparent) and the
+// medallion lands last. All of it is off under prefers-reduced-motion.
 import { Image } from 'astro:assets';
 import heroTrio from '../assets/brand/hero-trio.webp';
 import medallion from '../assets/brand/medallion.webp';
@@ -159,6 +162,51 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
     .hero-media :global(.hero-medallion) {
       left: auto;
       right: 14px;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-eyebrow,
+    .hero-title-main,
+    .hero-accent,
+    .hero-lead,
+    .hero-ctas {
+      animation: rep-hero-rise 560ms var(--ease-out-strong) both;
+    }
+    .hero-title-main {
+      animation-delay: 50ms;
+    }
+    .hero-accent {
+      animation-delay: 130ms;
+    }
+    .hero-lead {
+      animation-delay: 200ms;
+    }
+    .hero-ctas {
+      animation-delay: 260ms;
+    }
+    .hero-frame :global(img) {
+      animation: rep-hero-settle 600ms var(--ease-out-strong) both;
+    }
+    .hero-media :global(.hero-medallion) {
+      animation: rep-hero-land 520ms var(--ease-out-strong) 300ms both;
+    }
+  }
+  @keyframes rep-hero-rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+  @keyframes rep-hero-settle {
+    from {
+      transform: scale(1.04);
+    }
+  }
+  @keyframes rep-hero-land {
+    from {
+      opacity: 0;
+      transform: translateY(6px) scale(0.9);
     }
   }
 </style>

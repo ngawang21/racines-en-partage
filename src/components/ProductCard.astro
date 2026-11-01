@@ -49,9 +49,9 @@ const weight = formatWeight(p.weightGrams, locale);
   </div>
   <div class="card-body">
     <p class="card-meta">
-      <span>{weight}</span>
+      <span class="card-weight">{weight}</span>
       <span aria-hidden="true">·</span>
-      <span>{p.origin}</span>
+      <span class="card-origin">{p.origin}</span>
     </p>
     <Heading class="card-title">
       <a href={href}>{p.name}</a>
@@ -81,11 +81,38 @@ const weight = formatWeight(p.weightGrams, locale);
     border-radius: var(--radius-m);
     container-type: inline-size;
   }
+  /* Hover: the card rises 2 px, the frame takes the shadow and a deeper
+     kraft edge, and the photo eases up a few percent inside its frame. */
   .card-media {
     position: relative;
+    isolation: isolate;
+    transition:
+      box-shadow 320ms var(--ease-out-strong),
+      border-color 200ms ease;
   }
   .card-media :global(img) {
     object-position: 50% 60%;
+    transition: transform 600ms var(--ease-out-strong);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .card.lift:hover {
+      box-shadow: none;
+    }
+    .card:hover .card-media {
+      border-color: var(--kraft-deep);
+      box-shadow: var(--shadow-float);
+    }
+    .card:hover .card-media :global(img) {
+      transform: scale(1.04);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card-media :global(img) {
+      transition: none;
+    }
+    .card:hover .card-media :global(img) {
+      transform: none;
+    }
   }
   .card-badge {
     position: absolute;
@@ -101,22 +128,40 @@ const weight = formatWeight(p.weightGrams, locale);
     gap: 6px;
     padding: var(--space-4) 2px 2px;
   }
+  /* One line: a long origin is shortened rather than stranding the dot. The
+     product page carries it in full. */
   .card-meta {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0 6px;
+    gap: 6px;
+    min-width: 0;
     color: var(--ink-2);
     font-size: var(--fs--1);
     letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  .card-meta > * {
+    flex: none;
+  }
+  .card-meta .card-origin {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* Narrow cards (two columns on phones): weight and origin on two lines. */
+  @container (max-width: 199px) {
+    .card-meta {
+      flex-direction: column;
+      gap: 0;
+    }
+    .card-meta > [aria-hidden] {
+      display: none;
+    }
   }
   .card-title {
     font-size: clamp(1.125rem, 1.05rem + 0.35vw, 1.3125rem);
     font-weight: 600;
     line-height: 1.25;
-  }
-  .card-title a {
-    color: var(--forest);
-    text-decoration: none;
   }
   /* The name's link covers the card; the add button sits above it. */
   .card-title a::after {
@@ -134,9 +179,16 @@ const weight = formatWeight(p.weightGrams, locale);
     outline: 3px solid var(--hibiscus);
     outline-offset: 4px;
   }
-  .card:hover .card-title a {
+  .card-title a {
+    color: var(--forest);
     text-decoration: underline;
-    text-decoration-color: var(--kraft);
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    transition: text-decoration-color 200ms ease;
+  }
+  .card:hover .card-title a {
+    text-decoration-color: var(--kraft-deep);
   }
   .card-foot {
     display: flex;

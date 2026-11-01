@@ -14,15 +14,17 @@ interface Props {
   locale: Locale;
   t: LocaleContent;
   headingLevel?: 'h2' | 'h3';
+  /** Fade the tiles up on scroll, staggered (home page, reveal.ts). */
+  reveal?: boolean;
 }
-const { categories, counts, locale, t, headingLevel = 'h3' } = Astro.props;
+const { categories, counts, locale, t, headingLevel = 'h3', reveal = false } = Astro.props;
 const Heading = headingLevel;
 ---
 
 <ul class="tiles" role="list">
   {
     categories.map((c) => (
-      <li>
+      <li data-reveal={reveal ? '' : undefined}>
         <a class="tile lift" href={routePath('category', locale, c.slug)}>
           <span class="frame tile-media">
             <Picture
@@ -66,8 +68,27 @@ const Heading = headingLevel;
     color: var(--forest);
     text-decoration: none;
   }
+  .tile-media {
+    isolation: isolate;
+    transition:
+      box-shadow 320ms var(--ease-out-strong),
+      border-color 200ms ease;
+  }
   .tile-media :global(img) {
     object-position: 50% 58%;
+    transition: transform 600ms var(--ease-out-strong);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .tile.lift:hover {
+      box-shadow: none;
+    }
+    .tile:hover .tile-media {
+      border-color: var(--kraft-deep);
+      box-shadow: var(--shadow-float);
+    }
+    .tile:hover .tile-media :global(img) {
+      transform: scale(1.04);
+    }
   }
   .tile-body {
     display: flex;
@@ -99,8 +120,12 @@ const Heading = headingLevel;
     transform: translateX(3px);
   }
   @media (prefers-reduced-motion: reduce) {
-    .tile-count :global(svg) {
+    .tile-count :global(svg),
+    .tile-media :global(img) {
       transition: none;
+    }
+    .tile:hover .tile-media :global(img) {
+      transform: none;
     }
     .tile:hover .tile-count :global(svg) {
       transform: none;

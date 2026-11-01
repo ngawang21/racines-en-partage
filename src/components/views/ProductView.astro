@@ -415,8 +415,23 @@ const shopHref = routePath('shop', locale);
     background: transparent;
     color: var(--forest);
   }
-  .stepper button:hover:not(:disabled) {
-    background: rgba(22, 58, 28, 0.06);
+  .stepper button {
+    touch-action: manipulation;
+    transition:
+      background-color var(--dur-fast) ease,
+      transform var(--dur-press) var(--ease-out-strong);
+  }
+  @media (hover: hover) {
+    .stepper button:hover:not(:disabled) {
+      background: rgba(22, 58, 28, 0.06);
+    }
+  }
+  .stepper button:active:not(:disabled, [aria-disabled='true']) {
+    transform: scale(0.92);
+  }
+  .stepper button[aria-disabled='true'] {
+    color: var(--ink-2);
+    cursor: default;
   }
   .stepper button:disabled,
   .stepper input:disabled {

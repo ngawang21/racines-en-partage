@@ -54,6 +54,7 @@ const aboutHref = routePath('about', locale);
       title={home.featuredTitle}
       eyebrow={t.nav.shop}
       link={{ href: shopHref, label: t.shop.viewAll }}
+      reveal
     />
     <ProductGrid
       products={featured}
@@ -61,6 +62,7 @@ const aboutHref = routePath('about', locale);
       {t}
       shopOpen={settings.shop.open}
       class="featured-grid"
+      reveal
     />
   </section>
 
@@ -77,8 +79,8 @@ const aboutHref = routePath('about', locale);
   />
 
   <section class="container section" aria-labelledby="categories-title">
-    <SectionHead id="categories-title" title={home.categoriesTitle} eyebrow={t.nav.shop} />
-    <CategoryTiles {categories} {counts} {locale} {t} />
+    <SectionHead id="categories-title" title={home.categoriesTitle} eyebrow={t.nav.shop} reveal />
+    <CategoryTiles {categories} {counts} {locale} {t} reveal />
   </section>
 
   <div class="container">
@@ -86,8 +88,13 @@ const aboutHref = routePath('about', locale);
   </div>
 
   <section class="container section" aria-labelledby="recipes-title">
-    <SectionHead id="recipes-title" title={home.recipesTitle} eyebrow={t.product.recipe} />
-    <RecipeCards products={recipeProducts} {locale} {t} />
+    <SectionHead
+      id="recipes-title"
+      title={home.recipesTitle}
+      eyebrow={t.shop.recipesKicker}
+      reveal
+    />
+    <RecipeCards products={recipeProducts} {locale} {t} reveal />
   </section>
 
   <Commitment
@@ -97,3 +104,7 @@ const aboutHref = routePath('about', locale);
     link={{ href: aboutHref, label: home.hero.cta.secondary }}
   />
 </Base>
+
+<script>
+  import '../reveal';
+</script>
