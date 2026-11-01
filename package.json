@@ -22,6 +22,7 @@
     "dev:worker": "astro build && wrangler dev",
     "launch-check": "node scripts/launch-check.mjs",
     "og": "node scripts/generate-og.mjs",
+    "brand": "node scripts/brand-assets.mjs",
     "deploy": "wrangler deploy"
   },
   "dependencies": {
