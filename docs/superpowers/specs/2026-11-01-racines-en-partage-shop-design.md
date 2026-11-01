@@ -405,7 +405,7 @@ so tests inject fakes. Every error body is `{ "error": { "code", "message", "det
 
 | Method and path | Request | Response | Errors |
 | --- | --- | --- | --- |
-| `POST /api/checkout` | `{ locale: 'fr'\|'en', items: [{ sku, quantity: 1..max }], delivery: Delivery, acceptedTerms: true }` | `200 { url }` (Stripe Checkout URL) | `400 VALIDATION_ERROR`, `403 FORBIDDEN_ORIGIN`, `409 UNKNOWN_SKU`, `409 OUT_OF_STOCK` (`details.skus`), `409 SHIPPING_UNAVAILABLE`, `413 PAYLOAD_TOO_LARGE` (over 32 KB), `415 UNSUPPORTED_MEDIA_TYPE`, `429 RATE_LIMITED` (`Retry-After: 60`), `502 PAYMENT_PROVIDER_ERROR`, `503 SHOP_CLOSED`, `503 CATALOG_UNAVAILABLE` |
+| `POST /api/checkout` | `{ locale: 'fr'\|'en', items: [{ sku, quantity: 1..max, unitAmount? }], delivery: Delivery, acceptedTerms: true }` | `200 { url }` (Stripe Checkout URL) | `400 VALIDATION_ERROR`, `403 FORBIDDEN_ORIGIN`, `409 UNKNOWN_SKU`, `409 OUT_OF_STOCK` (`details.skus`), `409 PRICE_CHANGED` (`details.skus`), `409 SHIPPING_UNAVAILABLE`, `413 PAYLOAD_TOO_LARGE` (over 32 KB), `415 UNSUPPORTED_MEDIA_TYPE`, `429 RATE_LIMITED` (`Retry-After: 60`), `502 PAYMENT_PROVIDER_ERROR`, `503 SHOP_CLOSED`, `503 CATALOG_UNAVAILABLE` |
 | `GET /api/orders/:sessionId` | | `200 { status: 'paid'\|'pending'\|'unpaid', number, lines: [{ name, quantity, unitAmount }], amounts: { subtotal, shipping, discount, total, currency }, delivery: Delivery, email (masked, "m***@***.com") }` | `400 VALIDATION_ERROR`, `404 NOT_FOUND` (also for a session without this shop's metadata or created more than 48 hours ago), `429 RATE_LIMITED`, `502 PAYMENT_PROVIDER_ERROR` |
 | `POST /api/webhooks/stripe` | Stripe event, `Stripe-Signature` header | `200 { received: true }` | `400 INVALID_SIGNATURE`, `413 PAYLOAD_TOO_LARGE` (over 512 KB), `500 EMAIL_FAILED` (Stripe retries), `502 PAYMENT_PROVIDER_ERROR` |
 | `GET /api/health` | | `200 { ok: true, version, catalogGeneratedAt }` | `503 CATALOG_UNAVAILABLE` |
@@ -413,7 +413,16 @@ so tests inject fakes. Every error body is `{ "error": { "code", "message", "det
 Any route: `404 NOT_FOUND` for an unknown `/api` path, `405 METHOD_NOT_ALLOWED`
 (with `Allow`) for a wrong method, `500 INTERNAL_ERROR` for an unexpected
 error (logged, never detailed). Amounts are integer cents; `discount` is the
-promotion code discount (0 without one).
+promotion code discount (0 without one). The storefront maps every code to a
+translated message (`ERROR_KEY` in `src/cart/api.ts`; a Worker test checks
+that no code is missing); codes a customer cannot act on share the generic
+one.
+
+`unitAmount` is the price in cents the page showed for the line. When it is
+sent and differs from `/catalog.json` (a tab opened before a price change, or
+a deploy window), the order is refused with `409 PRICE_CHANGED` instead of
+charging a price the customer did not see; unknown and out-of-stock lines are
+reported first.
 
 Rate limiting: Workers rate limiting bindings `CHECKOUT_LIMITER` (10 requests
 per 60 s) and `ORDERS_LIMITER` (30 per 60 s), keyed on `CF-Connecting-IP`;
@@ -422,13 +431,15 @@ skipped when the binding is absent.
 Relay validation: `name`, `address1`, `address2`, `city` accept letters
 (accents included), digits, space and `' - . , / & ( )` only, at most 80, 120,
 120 and 60 characters; `postcode` is 3 to 10 letters or digits; the `id`
-prefix equals `country`.
+prefix equals `country`. The cart folds any other character of the widget's
+payload to a space (and cuts to these lengths) before it stores the point, so
+a real Mondial Relay point is never refused.
 
 Checkout session construction: `mode: 'payment'`, `locale`, `line_items` from
-the catalog (`price_data` with `unit_amount`, `product_data.name`, `images`,
-`metadata.sku`), `shipping_options: [one shipping_rate_data]` for the chosen
+the catalog (`metadata.sku` on the line item, `price_data` with `unit_amount`,
+`product_data.name`, `images`, `metadata.sku`), `shipping_options: [one shipping_rate_data]` for the chosen
 method (amount 0 when the subtotal reaches `freeShippingFrom`, display name
-localised, delivery estimate), `shipping_address_collection` only for `home`
+localised and cut at Stripe's 100 characters, delivery estimate), `shipping_address_collection` only for `home`
 (allowed countries from settings), `billing_address_collection: 'required'`
 and `phone_number_collection.enabled: true` always (Mondial Relay notifies by
 SMS), `customer_creation: 'if_required'`, `allow_promotion_codes: true`,
@@ -437,8 +448,12 @@ name and city only (no address, no free text), or the pickup address,
 `metadata`: `locale`, `delivery_method`, `relay_id`, `relay_name`,
 `relay_address`, `relay_postcode`, `relay_city`, `relay_country`, `skus`
 (comma list), `success_url` to the locale's thanks page with
-`?session_id={CHECKOUT_SESSION_ID}`, `cancel_url` to the locale's cart page,
-`expires_at` 2 hours. Stock `out` lines are refused; `low` passes.
+`?session_id={CHECKOUT_SESSION_ID}`, `cancel_url` to the locale's cart page
+(both on `SITE_URL`, or on the `*.workers.dev` host when the checkout started
+there, so a preview test returns to the preview), `expires_at` 2 hours. Stock
+`out` lines are refused; `low` passes. Free shipping is decided on the
+subtotal before any promotion code (Stripe applies the code on the Checkout
+page, after the shipping option is fixed).
 
 Webhook: `constructEventAsync` with the SubtleCrypto provider; on
 `checkout.session.completed` and `checkout.session.async_payment_succeeded`
@@ -452,13 +467,17 @@ address, delivery method, relay point ID printed large with a line asking to
 confirm the point in her Mondial Relay space before printing the label, relay
 point block, link to the Stripe payment) and the customer e-mail in
 `metadata.locale` (thanks, lines, totals, delivery method, relay point, what
-happens next, contact). Resend `Idempotency-Key: <event.id>:<recipient>`.
+happens next, contact). Resend `Idempotency-Key: <event.id>:owner` and
+`<event.id>:customer` (by role: the owner testing with her own address must
+not get one key for two different e-mails).
 Once both are out, `metadata.emails_sent = 'true'` is set on the session
 (Stripe merges metadata). A Resend 4xx other than 409 and 429 is permanent
 (logged, counted as sent for that recipient); 429, 409, 5xx and network
 errors answer `500 EMAIL_FAILED` so Stripe retries. When `RESEND_API_KEY` is
 unset the Worker logs the order summary and returns 200 (Stripe's receipt and
-dashboard still cover the owner).
+dashboard still cover the owner). `checkout.session.async_payment_failed`
+for a session of this shop is logged (`order.payment_failed`) and answered
+200: no e-mail went out while the payment was pending.
 
 Bindings and variables: `ASSETS`, `CHECKOUT_LIMITER`, `ORDERS_LIMITER`; vars `SITE_URL`, `ORDER_EMAIL_FROM`; secrets
 `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY` (optional),

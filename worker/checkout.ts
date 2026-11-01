@@ -16,6 +16,8 @@ export const SESSION_TTL_SECONDS = 2 * 60 * 60;
 const METADATA_MAX = 500;
 /** `custom_text.*.message` is capped at 1200 characters. */
 const CUSTOM_TEXT_MAX = 1200;
+/** `shipping_rate_data.display_name` is capped at 100 characters. */
+const DISPLAY_NAME_MAX = 100;
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 
@@ -66,6 +68,12 @@ export const checkoutRequestSchema = z.object({
       z.object({
         sku: text(64),
         quantity: z.number().int().min(1).max(999),
+        /**
+         * Cents the page showed. Optional; when present it must equal the
+         * catalogue price, so a stale page never sends the customer to a
+         * different price on Stripe (409 PRICE_CHANGED).
+         */
+        unitAmount: z.number().int().nonnegative().optional(),
       }),
     )
     .min(1)
@@ -218,6 +226,14 @@ export function checkAgainstCatalog(
   if (out.length > 0) {
     throw new ApiError(409, 'OUT_OF_STOCK', 'Some products are out of stock', { skus: out });
   }
+  const changed = request.items
+    .filter((i) => i.unitAmount !== undefined && i.unitAmount !== bySku.get(i.sku)!.unitAmount)
+    .map((i) => i.sku);
+  if (changed.length > 0) {
+    throw new ApiError(409, 'PRICE_CHANGED', 'Prices changed since the page was loaded', {
+      skus: changed,
+    });
+  }
 
   const methodId = request.delivery.method;
   const method = catalog.shipping.find((s) => s.id === methodId);
@@ -277,16 +293,29 @@ function sessionMetadata(request: CheckoutRequest, lines: CheckedLine[]): Record
 const THANKS_PATH: Record<Locale, string> = { fr: '/merci/', en: '/en/thank-you/' };
 const CART_PATH: Record<Locale, string> = { fr: '/panier/', en: '/en/cart/' };
 
+/**
+ * Where Stripe sends the customer back. `SITE_URL`, except for a checkout
+ * started on a `*.workers.dev` preview, which returns to that preview host
+ * (the request has already passed the same-origin check).
+ */
+export function returnBase(siteUrl: string, requestUrl?: string): string {
+  const site = siteUrl.replace(/\/+$/, '');
+  if (!requestUrl) return site;
+  const from = new URL(requestUrl);
+  return from.protocol === 'https:' && from.hostname.endsWith('.workers.dev') ? from.origin : site;
+}
+
 /** The full `checkout.sessions.create` payload. Pure: unit tested field by field. */
 export function buildSessionParams(
   request: CheckoutRequest,
   catalog: WorkerCatalog,
   env: Pick<AppEnv, 'SITE_URL'>,
   now: Date,
+  requestUrl?: string,
 ): Stripe.Checkout.SessionCreateParams {
   const { lines, method } = checkAgainstCatalog(request, catalog);
   const locale = request.locale;
-  const site = env.SITE_URL.replace(/\/+$/, '');
+  const site = returnBase(env.SITE_URL, requestUrl);
   const subtotal = subtotalOf(lines);
   const estimate =
     parseDeliveryEstimate(method.estimate[locale]) ??
@@ -298,6 +327,8 @@ export function buildSessionParams(
     locale,
     line_items: lines.map((l) => ({
       quantity: l.quantity,
+      // Read back by the webhook and the orders endpoint (no product expansion needed).
+      metadata: { sku: l.product.sku },
       price_data: {
         currency: catalog.currency,
         unit_amount: l.product.unitAmount,
@@ -316,7 +347,7 @@ export function buildSessionParams(
             amount: shippingAmount(method, subtotal, catalog),
             currency: catalog.currency,
           },
-          display_name: method.label[locale],
+          display_name: truncate(method.label[locale], DISPLAY_NAME_MAX),
           ...(estimate ? { delivery_estimate: estimate } : {}),
         },
       },

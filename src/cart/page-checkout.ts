@@ -361,12 +361,26 @@ export function initCheckout(ctx: CartContext): void {
       if (relay && !relay.search.hidden) relay.postcode.focus();
       return;
     }
+    // A point remembered from an earlier visit, in a country the relay method
+    // no longer serves: ask for a new one rather than send a refused request.
+    const relayMethod = ctx.catalog.shipping.find((s) => s.id === 'relay');
+    if (
+      cart.delivery?.method === 'relay' &&
+      relayMethod &&
+      !relayMethod.countries.includes(cart.delivery.relay.country)
+    ) {
+      lastRelay = null;
+      ctx.store.setDelivery(undefined);
+      showFieldError(deliveryError, tc.chooseRelay);
+      relay?.postcode.focus();
+      return;
+    }
     if (!terms.checked) {
       showFieldError(termsError, tc.acceptRequired);
       terms.focus();
       return;
     }
-    const body = buildCheckoutRequest(cart, ctx.locale);
+    const body = buildCheckoutRequest(cart, ctx.locale, ctx.catalog.products);
     if (!body) {
       showFieldError(deliveryError, tc.chooseMethod);
       return;

@@ -112,8 +112,8 @@ for (const locale of ['fr', 'en'] as const satisfies readonly Locale[]) {
     expect(body).toEqual({
       locale,
       items: [
-        { sku: first, quantity: 2 },
-        { sku: second, quantity: 1 },
+        { sku: first, quantity: 2, unitAmount: catalog.products[first]!.unitAmount },
+        { sku: second, quantity: 1, unitAmount: catalog.products[second]!.unitAmount },
       ],
       delivery: { method: 'pickup' },
       acceptedTerms: true,
@@ -197,6 +197,61 @@ test('thanks page stays neutral without a session or when the order lookup fails
   await expect(page.locator('[data-thanks-lead]')).toContainText('Merci de votre visite');
   await expect(page.locator('[data-thanks-order]')).toBeHidden();
 });
+
+test('a revisit of the thanks page never empties a cart filled since', async ({ page }) => {
+  const order = orderFixture([{ name: 'Poudre de moringa 100 g', quantity: 1, unitAmount: 890 }]);
+  await page.route(`**/api/orders/${SESSION_ID}`, (route) => json(route, 200, order));
+  await page.goto(PATHS.fr.shop);
+  await page.locator('button[data-add-to-cart]:not([disabled])').first().click();
+  await page.goto(`${PATHS.fr.thanks}?session_id=${SESSION_ID}`);
+  await expect(page.locator('[data-thanks-order]')).toBeVisible();
+  await expect(page.locator('[data-cart-count]').first()).toHaveText('0');
+
+  // A new cart, then the same thanks link again (history, reload).
+  await page.goto(PATHS.fr.shop);
+  await page.locator('button[data-add-to-cart]:not([disabled])').first().click();
+  await page.goto(`${PATHS.fr.thanks}?session_id=${SESSION_ID}`);
+  await expect(page.locator('[data-thanks-order]')).toBeVisible();
+  await expect(page.locator('[data-cart-count]').first()).toHaveText('1');
+});
+
+test('thanks page retries a failing lookup, then says the order cannot be shown', async ({
+  page,
+}) => {
+  let calls = 0;
+  await page.route('**/api/orders/**', (route) => {
+    calls += 1;
+    return json(route, 502, { error: { code: 'PAYMENT_PROVIDER_ERROR', message: 'x' } });
+  });
+  await page.goto(`${PATHS.fr.thanks}?session_id=${SESSION_ID}`);
+  await expect(page.locator('[data-thanks-lead]')).toContainText('confirmation', {
+    timeout: 15_000,
+  });
+  await expect(page.locator('[data-thanks]')).not.toHaveAttribute('aria-busy', 'true');
+  expect(calls).toBe(3);
+  await expect(page.locator('[data-thanks-order]')).toBeHidden();
+});
+
+for (const [code, status, text] of [
+  ['PRICE_CHANGED', 409, /prix a changé/],
+  ['RATE_LIMITED', 429, /Patientez une minute/],
+  ['CATALOG_UNAVAILABLE', 503, /momentanément indisponible/],
+  ['FORBIDDEN_ORIGIN', 403, /Une erreur est survenue/],
+] as const) {
+  test(`checkout shows a message for ${code} and the button works again`, async ({ page }) => {
+    await page.goto(PATHS.fr.shop);
+    await page.locator('button[data-add-to-cart]:not([disabled])').first().click();
+    await page.goto(PATHS.fr.checkout);
+    await page.locator('.method-card', { hasText: 'Retrait' }).click();
+    await page.locator('[data-co-terms]').check();
+    await page.route('**/api/checkout', (route) =>
+      json(route, status, { error: { code, message: 'x' } }),
+    );
+    await page.locator('[data-co-pay]').click();
+    await expect(page.locator('[data-co-error]')).toHaveText(text);
+    await expect(page.locator('[data-co-pay]')).toBeEnabled();
+  });
+}
 
 test('thanks page shows the promotion code discount', async ({ page }) => {
   const order = {

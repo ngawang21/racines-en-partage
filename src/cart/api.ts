@@ -1,25 +1,39 @@
 // Client side of the Worker contract (spec 6.3). Pure helpers plus two thin
 // fetch wrappers; the request and error shapes are unit tested.
 import type { Locale } from '../consts';
-import type { CartState, Delivery } from './store';
+import type { CartState, Delivery, StorageLike } from './store';
 
 export interface CheckoutRequest {
   locale: Locale;
-  items: Array<{ sku: string; quantity: number }>;
+  /** `unitAmount`: the cents this page showed; the Worker refuses a stale price (PRICE_CHANGED). */
+  items: Array<{ sku: string; quantity: number; unitAmount?: number }>;
   delivery: Delivery;
   acceptedTerms: true;
 }
 
-export type ApiErrorCode =
-  | 'VALIDATION_ERROR'
-  | 'UNKNOWN_SKU'
-  | 'OUT_OF_STOCK'
-  | 'SHIPPING_UNAVAILABLE'
-  | 'SHOP_CLOSED'
-  | 'PAYMENT_PROVIDER_ERROR'
-  | 'NOT_FOUND'
-  | 'NETWORK'
-  | 'UNKNOWN';
+/** Every code of worker/errors.ts (ERROR_CODES; a Worker test keeps them in step). */
+const KNOWN_CODES = [
+  'VALIDATION_ERROR',
+  'FORBIDDEN_ORIGIN',
+  'UNSUPPORTED_MEDIA_TYPE',
+  'PAYLOAD_TOO_LARGE',
+  'UNKNOWN_SKU',
+  'OUT_OF_STOCK',
+  'PRICE_CHANGED',
+  'SHIPPING_UNAVAILABLE',
+  'SHOP_CLOSED',
+  'PAYMENT_PROVIDER_ERROR',
+  'NOT_FOUND',
+  'METHOD_NOT_ALLOWED',
+  'INVALID_SIGNATURE',
+  'CATALOG_UNAVAILABLE',
+  'EMAIL_FAILED',
+  'RATE_LIMITED',
+  'INTERNAL_ERROR',
+] as const;
+
+/** A Worker code, `NETWORK` (no response) or `UNKNOWN` (anything else, an HTML 5xx page). */
+export type ApiErrorCode = (typeof KNOWN_CODES)[number] | 'NETWORK' | 'UNKNOWN';
 
 export interface ApiError {
   code: ApiErrorCode;
@@ -43,22 +57,18 @@ export interface OrderSummary {
   email?: string;
 }
 
-const KNOWN_CODES: readonly ApiErrorCode[] = [
-  'VALIDATION_ERROR',
-  'UNKNOWN_SKU',
-  'OUT_OF_STOCK',
-  'SHIPPING_UNAVAILABLE',
-  'SHOP_CLOSED',
-  'PAYMENT_PROVIDER_ERROR',
-  'NOT_FOUND',
-];
-
 /**
  * The POST /api/checkout body. Returns null when the cart cannot be ordered
  * as it stands (no line or no delivery). The relay point is sent without its
- * opening hours, which the Worker does not need.
+ * opening hours, which the Worker does not need. With the page catalogue,
+ * each line carries the unit price shown, so a page older than the live
+ * catalogue gets PRICE_CHANGED instead of a different price on Stripe.
  */
-export function buildCheckoutRequest(cart: CartState, locale: Locale): CheckoutRequest | null {
+export function buildCheckoutRequest(
+  cart: CartState,
+  locale: Locale,
+  products: Record<string, { unitAmount: number } | undefined> = {},
+): CheckoutRequest | null {
   if (cart.lines.length === 0 || !cart.delivery) return null;
   const delivery: Delivery =
     cart.delivery.method === 'relay'
@@ -69,7 +79,12 @@ export function buildCheckoutRequest(cart: CartState, locale: Locale): CheckoutR
       : { method: cart.delivery.method };
   return {
     locale,
-    items: cart.lines.map((l) => ({ sku: l.sku, quantity: l.quantity })),
+    items: cart.lines.map((l) => {
+      const shown = products[l.sku]?.unitAmount;
+      return shown === undefined
+        ? { sku: l.sku, quantity: l.quantity }
+        : { sku: l.sku, quantity: l.quantity, unitAmount: shown };
+    }),
     delivery,
     acceptedTerms: true,
   };
@@ -91,15 +106,28 @@ export function parseApiError(status: number, body: unknown): ApiError {
   return { code, status, skus };
 }
 
-/** Keys of the `errors` locale namespace for each code. */
+/**
+ * Key of the `errors` locale namespace for each code. Codes a customer cannot
+ * act on (a refused origin, a webhook code) share the generic message.
+ */
 export const ERROR_KEY: Record<ApiErrorCode, string> = {
   VALIDATION_ERROR: 'validation',
+  FORBIDDEN_ORIGIN: 'generic',
+  UNSUPPORTED_MEDIA_TYPE: 'generic',
+  PAYLOAD_TOO_LARGE: 'validation',
   UNKNOWN_SKU: 'unknownSku',
   OUT_OF_STOCK: 'outOfStock',
+  PRICE_CHANGED: 'priceChanged',
   SHIPPING_UNAVAILABLE: 'shippingUnavailable',
   SHOP_CLOSED: 'shopClosed',
   PAYMENT_PROVIDER_ERROR: 'payment',
   NOT_FOUND: 'generic',
+  METHOD_NOT_ALLOWED: 'generic',
+  INVALID_SIGNATURE: 'generic',
+  CATALOG_UNAVAILABLE: 'unavailable',
+  EMAIL_FAILED: 'generic',
+  RATE_LIMITED: 'rateLimited',
+  INTERNAL_ERROR: 'generic',
   NETWORK: 'network',
   UNKNOWN: 'generic',
 };
@@ -181,18 +209,57 @@ export function isSessionId(value: string | null): value is string {
   return !!value && /^cs_(test|live)_[A-Za-z0-9]{1,250}$/.test(value);
 }
 
+/**
+ * `found`; `missing` (404 or 400: no such order for this shop, or older than
+ * 48 hours); `failed` (network, 429, 5xx, a malformed body): worth a retry.
+ */
+export type OrderLookup =
+  { status: 'found'; order: OrderSummary } | { status: 'missing' } | { status: 'failed' };
+
 export async function getOrder(
   sessionId: string,
   fetchImpl: typeof fetch = fetch,
-): Promise<OrderSummary | null> {
+): Promise<OrderLookup> {
   try {
     const response = await fetchImpl(`/api/orders/${encodeURIComponent(sessionId)}`, {
       headers: { Accept: 'application/json' },
       credentials: 'same-origin',
     });
-    if (!response.ok) return null;
-    return parseOrder(await response.json());
+    if (response.status === 404 || response.status === 400) return { status: 'missing' };
+    if (!response.ok) return { status: 'failed' };
+    const order = parseOrder(await response.json());
+    return order ? { status: 'found', order } : { status: 'failed' };
   } catch {
-    return null;
+    return { status: 'failed' };
   }
+}
+
+/** localStorage key: the recent orders whose thanks page emptied the cart. */
+export const CLEARED_ORDERS_KEY = 'rep.cart.cleared';
+const CLEARED_ORDERS_KEPT = 20;
+
+/**
+ * True the first time an order's thanks page asks to empty the cart, false on
+ * any later visit (a reload, the link in the history), so a new cart filled
+ * since is never wiped. Without storage it always answers true.
+ */
+export function claimOrderClear(storage: StorageLike | null, sessionId: string): boolean {
+  try {
+    if (!storage) return true;
+    let seen: unknown = [];
+    try {
+      seen = JSON.parse(storage.getItem(CLEARED_ORDERS_KEY) ?? '[]');
+    } catch {
+      // Corrupt value: start over.
+    }
+    const ids = Array.isArray(seen) ? seen.filter((v): v is string => typeof v === 'string') : [];
+    if (ids.includes(sessionId)) return false;
+    storage.setItem(
+      CLEARED_ORDERS_KEY,
+      JSON.stringify([...ids, sessionId].slice(-CLEARED_ORDERS_KEPT)),
+    );
+  } catch {
+    // Storage refused: clear, as before.
+  }
+  return true;
 }

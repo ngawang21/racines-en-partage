@@ -109,13 +109,13 @@ describe('POST /api/webhooks/stripe', () => {
     expect(owner).toMatchObject({
       to: 'racinesenpartage@outlook.com',
       replyTo: 'awa.diallo@example.com',
-      idempotencyKey: 'evt_test_1:racinesenpartage@outlook.com',
+      idempotencyKey: 'evt_test_1:owner',
       subject: fr('Nouvelle commande E5F6G7H8 : 30,60 €'),
     });
     expect(customer).toMatchObject({
       to: 'awa.diallo@example.com',
       replyTo: 'racinesenpartage@outlook.com',
-      idempotencyKey: 'evt_test_1:awa.diallo@example.com',
+      idempotencyKey: 'evt_test_1:customer',
       subject: 'Merci pour votre commande E5F6G7H8',
     });
     // Both e-mails out: the session is marked, metadata merged by Stripe.
@@ -157,9 +157,47 @@ describe('POST /api/webhooks/stripe', () => {
     const res = await post(app, payload, await signed(payload));
     expect(res.status).toBe(200);
     expect(mail.sent.map((m) => m.idempotencyKey)).toEqual([
-      'evt_async:racinesenpartage@outlook.com',
-      'evt_async:awa.diallo@example.com',
+      'evt_async:owner',
+      'evt_async:customer',
     ]);
+  });
+
+  it('the owner ordering with her own address: two distinct idempotency keys', async () => {
+    // One key for both would make Resend refuse the second e-mail (409, a
+    // different payload under the same key) on every Stripe retry.
+    const fake = stripeWithRealWebhooks();
+    fake.retrieve.mockResolvedValueOnce({
+      ...sessionFixture({
+        customer_details: {
+          ...sessionFixture().customer_details,
+          email: 'racinesenpartage@outlook.com',
+        },
+      }),
+      line_items: undefined,
+    } as never);
+    const { app, mail } = makeApp({ stripe: fake.stripe });
+    const payload = eventPayload();
+    const res = await post(app, payload, await signed(payload));
+    expect(res.status).toBe(200);
+    const keys = mail.sent.map((m) => m.idempotencyKey);
+    expect(keys).toHaveLength(2);
+    expect(new Set(keys).size).toBe(2);
+  });
+
+  it('async_payment_failed: 200, logged for the shop, no e-mail', async () => {
+    const fake = stripeWithRealWebhooks();
+    const { app, mail } = makeApp({ stripe: fake.stripe });
+    const payload = eventPayload('checkout.session.async_payment_failed', {
+      id: SESSION_ID,
+      object: 'checkout.session',
+      payment_status: 'unpaid',
+      metadata: { delivery_method: 'home' },
+    });
+    const res = await post(app, payload, await signed(payload));
+    expect(res.status).toBe(200);
+    expect(mail.send).not.toHaveBeenCalled();
+    const line = errors.map((l) => JSON.parse(l)).find((l) => l.msg === 'order.payment_failed');
+    expect(line).toMatchObject({ sessionId: SESSION_ID, eventId: 'evt_test_1' });
   });
 
   it('completed but unpaid (async payment pending): 200, no e-mail yet', async () => {

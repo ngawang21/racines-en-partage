@@ -1,10 +1,23 @@
-// Thanks page: GET /api/orders/:sessionId, render, clear the cart when paid.
-// Without a valid session id, or on any error, the neutral shell stays.
-import { getOrder, isSessionId, type OrderSummary } from './api';
+// Thanks page: GET /api/orders/:sessionId, render, clear the cart once the
+// order is placed. Without a valid session id, or for an order the API does
+// not know, the neutral shell stays; a lookup that fails (network, 429, 5xx)
+// is retried, then says so.
+import { claimOrderClear, getOrder, isSessionId, type OrderSummary } from './api';
 import type { CartContext } from './context';
 import { nowrapWeight } from '../i18n/format';
 import { h } from './dom';
 import { displayCase } from './relay';
+
+/** Waits before each retry of a failed lookup (ms). */
+export const ORDER_RETRY_DELAYS = [1500, 4000];
+
+function localStorageOrNull(): Storage | null {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
 
 export async function initThanks(ctx: CartContext): Promise<void> {
   const root = document.querySelector<HTMLElement>('[data-thanks]');
@@ -23,11 +36,25 @@ export async function initThanks(ctx: CartContext): Promise<void> {
     return;
   }
   if (loading) loading.textContent = tt.loading;
-  const order = await getOrder(sessionId);
+  let lookup = await getOrder(sessionId);
+  for (const delay of ORDER_RETRY_DELAYS) {
+    if (lookup.status !== 'failed') break;
+    await new Promise((resolve) => window.setTimeout(resolve, delay));
+    lookup = await getOrder(sessionId);
+  }
   done();
-  if (!order) return;
+  if (lookup.status === 'missing') return;
+  if (lookup.status === 'failed') {
+    const lead = q<HTMLElement>('[data-thanks-lead]');
+    if (lead) lead.textContent = tt.loadFailed;
+    return;
+  }
+  const { order } = lookup;
   renderOrder(root, order, ctx);
-  if (order.status === 'paid') ctx.store.clear();
+  // Paid, or placed with a payment still clearing: the cart has become this
+  // order. Only on the first visit, so a cart filled since is never wiped.
+  if (order.status !== 'unpaid' && claimOrderClear(localStorageOrNull(), sessionId))
+    ctx.store.clear();
 }
 
 function renderOrder(root: HTMLElement, order: OrderSummary, ctx: CartContext): void {

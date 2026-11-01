@@ -31,7 +31,7 @@ contract is spec section 6.3.
 | `GET /api/health`            | `200 { ok: true, version, catalogGeneratedAt }`           |
 
 `POST /api/checkout` takes
-`{ locale: 'fr' | 'en', items: [{ sku, quantity }], delivery, acceptedTerms: true }`
+`{ locale: 'fr' | 'en', items: [{ sku, quantity, unitAmount? }], delivery, acceptedTerms: true }`
 with `delivery` one of `{ method: 'relay', relay: { id, name, address1, address2?, postcode, city, country, hoursHtml? } }`,
 `{ method: 'home' }` or `{ method: 'pickup' }`. The relay `id` is `<CC>-<6 digits>`
 and its prefix must equal `relay.country`. `name`, `address1`, `address2` and
@@ -46,7 +46,15 @@ The request must come from the same origin (Origin, else Referer: the
 `SITE_URL` host or the host serving the request; any localhost origin only
 when `SITE_URL` is itself a localhost URL, as in `.dev.vars`), with
 `Content-Type: application/json` and at most 32 KB. Prices, stock and
-shipping come from `/catalog.json`, never from the browser.
+shipping come from `/catalog.json`, never from the browser. `unitAmount` is
+the price in cents the page showed; when it differs from the catalogue (a
+stale tab, a deploy window, the 60 s catalogue cache) the answer is
+`409 PRICE_CHANGED` with the SKUs, never a session at another price.
+Stripe returns the customer to `SITE_URL`, or to the `*.workers.dev` host
+when the checkout started there (a preview test stays on the preview).
+Free shipping is decided on the subtotal before a promotion code: Stripe
+applies the code after the shipping option is fixed. Each line item carries
+`metadata.sku`, read back by the webhook and the orders endpoint.
 
 `GET /api/orders/:sessionId`: `status` is `paid` (also for a 100 % promotion
 code), `pending` (completed, asynchronous payment still processing) or
@@ -65,7 +73,8 @@ when `metadata.emails_sent` is `'true'` (already notified). Otherwise it lists
 the lines (`listLineItems`, limit 100), sends the owner e-mail (French, to
 `ORDER_EMAIL_TO`, reply-to the customer) and the customer e-mail (checkout
 language, reply-to `ORDER_EMAIL_TO`), each with
-`Idempotency-Key: <event id>:<recipient>`, then sets
+`Idempotency-Key: <event id>:owner` or `<event id>:customer` (by role, so the
+owner ordering with her own address still gets two keys), then sets
 `metadata.emails_sent = 'true'` on the session (Stripe merges metadata, the
 other keys stay). Mailer errors:
 
@@ -78,7 +87,10 @@ other keys stay). Mailer errors:
   sent under the same key.
 
 A failure to mark the session is logged (`order.mark_failed`) and the event
-still answers 200: the e-mails are out. Other event types get 200 without work.
+still answers 200: the e-mails are out.
+`checkout.session.async_payment_failed` (a bank debit that bounced) is logged
+as `order.payment_failed` for this shop's sessions and answered 200: nothing
+was sent while it was pending. Other event types get 200 without work.
 
 ## Rate limiting
 
@@ -101,7 +113,9 @@ Every API response carries `Cache-Control: no-store`,
 ## Errors
 
 Body: `{ "error": { "code", "message", "details?" } }`. The storefront
-localises by `code`; `message` is for developers.
+localises by `code` (`ERROR_KEY` in `src/cart/api.ts`, every code of
+`ERROR_CODES` in `errors.ts` mapped, `tests/worker/error-contract.test.ts`);
+`message` is for developers.
 
 | Status | Code                     | When                                                                   |
 | ------ | ------------------------ | ---------------------------------------------------------------------- |
@@ -112,6 +126,7 @@ localises by `code`; `message` is for developers.
 | 405    | `METHOD_NOT_ALLOWED`     | Wrong method (`Allow` header set)                                      |
 | 409    | `UNKNOWN_SKU`            | `details.skus`                                                         |
 | 409    | `OUT_OF_STOCK`           | `details.skus` (stock `out`; `low` passes)                             |
+| 409    | `PRICE_CHANGED`          | `details.skus` (the page showed another `unitAmount`)                  |
 | 409    | `SHIPPING_UNAVAILABLE`   | `details: { method, reason: 'disabled' \| 'no_country' \| 'country' }` |
 | 413    | `PAYLOAD_TOO_LARGE`      | Checkout body over 32 KB (webhook: 512 KB)                             |
 | 415    | `UNSUPPORTED_MEDIA_TYPE` | Checkout body not `application/json`                                   |
@@ -124,17 +139,17 @@ localises by `code`; `message` is for developers.
 
 ## Environment
 
-| Name                    | Kind             | Notes                                                 |
-| ----------------------- | ---------------- | ----------------------------------------------------- |
-| `ASSETS`                | binding          | `dist/`                                               |
-| `CHECKOUT_LIMITER`      | binding          | Rate limit of `POST /api/checkout`, optional          |
-| `ORDERS_LIMITER`        | binding          | Rate limit of `GET /api/orders/:id`, optional         |
-| `SITE_URL`              | var              | Success and cancel URLs, allowed origin               |
-| `ORDER_EMAIL_FROM`      | var              | `Racines en Partage <commandes@racinesenpartage.fr>`  |
-| `STRIPE_SECRET_KEY`     | secret           | Without it, Stripe calls fail as 502                  |
-| `STRIPE_WEBHOOK_SECRET` | secret           | Without it, every webhook is 400                      |
-| `RESEND_API_KEY`        | secret, optional | Without it, `NullMailer` logs a redacted line instead |
-| `ORDER_EMAIL_TO`        | secret           | Owner inbox                                           |
+| Name                    | Kind             | Notes                                                            |
+| ----------------------- | ---------------- | ---------------------------------------------------------------- |
+| `ASSETS`                | binding          | `dist/`                                                          |
+| `CHECKOUT_LIMITER`      | binding          | Rate limit of `POST /api/checkout`, optional                     |
+| `ORDERS_LIMITER`        | binding          | Rate limit of `GET /api/orders/:id`, optional                    |
+| `SITE_URL`              | var              | Success and cancel URLs (not on `*.workers.dev`), allowed origin |
+| `ORDER_EMAIL_FROM`      | var              | `Racines en Partage <commandes@racinesenpartage.fr>`             |
+| `STRIPE_SECRET_KEY`     | secret           | Without it, Stripe calls fail as 502                             |
+| `STRIPE_WEBHOOK_SECRET` | secret           | Without it, every webhook is 400                                 |
+| `RESEND_API_KEY`        | secret, optional | Without it, `NullMailer` logs a redacted line instead            |
+| `ORDER_EMAIL_TO`        | secret           | Owner inbox                                                      |
 
 Stripe API version: `2026-10-28.endive` (the version stripe 23.1.0 is
 generated for; see `stripe.ts`). Update it together with the SDK.

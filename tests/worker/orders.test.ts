@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { describeError, maskEmail } from '../../worker/log';
-import { orderNumber } from '../../worker/orders';
+import { orderNumber, summariseSession } from '../../worker/orders';
 import { NOW, SESSION_ID, makeApp, sessionFixture, type ErrorJson } from './fixtures';
 
 const HOUR = 60 * 60;
@@ -172,6 +172,49 @@ describe('GET /api/orders/:sessionId', () => {
 });
 
 describe('helpers', () => {
+  it('reads the SKU from the line item metadata, and the product name when the description is empty', () => {
+    const summary = summariseSession(
+      sessionFixture({
+        line_items: {
+          object: 'list',
+          has_more: false,
+          url: '/v1/checkout/sessions/x/line_items',
+          data: [
+            {
+              id: 'li_1',
+              description: null,
+              quantity: 3,
+              amount_subtotal: 2670,
+              amount_total: 2670,
+              metadata: { sku: 'REP-MOR-100' },
+              price: { unit_amount: 890, product: 'prod_1' },
+            },
+            {
+              id: 'li_2',
+              description: null,
+              quantity: 1,
+              amount_subtotal: 790,
+              amount_total: 790,
+              metadata: {},
+              price: {
+                unit_amount: 790,
+                product: {
+                  id: 'prod_2',
+                  name: 'Poudre de baobab 100 g',
+                  metadata: { sku: 'REP-BAO-100' },
+                },
+              },
+            },
+          ],
+        },
+      }),
+    );
+    expect(summary.lines.map((l) => [l.sku, l.name, l.quantity])).toEqual([
+      ['REP-MOR-100', '', 3],
+      ['REP-BAO-100', 'Poudre de baobab 100 g', 1],
+    ]);
+  });
+
   it('orderNumber takes the last 8 characters upper-cased', () => {
     expect(orderNumber('cs_test_a1B2c3D4e5F6g7H8')).toBe('E5F6G7H8');
   });

@@ -68,7 +68,7 @@ export interface MailMessage {
   html: string;
   text: string;
   replyTo?: string;
-  /** Sent as the `Idempotency-Key` header, `<event id>:<recipient>`. */
+  /** Sent as the `Idempotency-Key` header, `<event id>:owner` or `<event id>:customer`. */
   idempotencyKey: string;
 }
 

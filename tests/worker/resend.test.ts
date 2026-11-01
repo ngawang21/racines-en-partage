@@ -8,7 +8,7 @@ const message: MailMessage = {
   html: '<p>Merci</p>',
   text: 'Merci',
   replyTo: 'racinesenpartage@outlook.com',
-  idempotencyKey: 'evt_1:awa.diallo@example.com',
+  idempotencyKey: 'evt_1:customer',
 };
 
 afterEach(() => vi.restoreAllMocks());
@@ -29,7 +29,7 @@ describe('ResendMailer', () => {
     expect(init?.headers).toEqual({
       Authorization: 'Bearer re_secret',
       'Content-Type': 'application/json',
-      'Idempotency-Key': 'evt_1:awa.diallo@example.com',
+      'Idempotency-Key': 'evt_1:customer',
     });
     expect(init?.signal).toBeInstanceOf(AbortSignal);
     expect(JSON.parse(String(init?.body))).toEqual({

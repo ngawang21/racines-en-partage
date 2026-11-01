@@ -53,7 +53,12 @@ export async function verifyEvent(
   }
 }
 
-/** The two e-mails of a paid order, keyed for Resend idempotency. */
+/**
+ * The two e-mails of a paid order, keyed for Resend idempotency by event and
+ * role (`<event id>:owner`, `<event id>:customer`). Keying by address would
+ * give both e-mails one key when the owner orders with her own address, and
+ * Resend would refuse the second one (409) on every retry.
+ */
 export function orderEmails(
   session: Stripe.Checkout.Session,
   eventId: string,
@@ -68,7 +73,7 @@ export function orderEmails(
       to: env.ORDER_EMAIL_TO,
       ...owner,
       ...(customerEmail ? { replyTo: customerEmail } : {}),
-      idempotencyKey: `${eventId}:${env.ORDER_EMAIL_TO}`,
+      idempotencyKey: `${eventId}:owner`,
     });
   }
   if (customerEmail) {
@@ -77,7 +82,7 @@ export function orderEmails(
       to: customerEmail,
       ...customer,
       ...(env.ORDER_EMAIL_TO ? { replyTo: env.ORDER_EMAIL_TO } : {}),
-      idempotencyKey: `${eventId}:${customerEmail}`,
+      idempotencyKey: `${eventId}:customer`,
     });
   }
   return messages;
@@ -90,12 +95,21 @@ export function orderEmails(
  * Idempotency without storage: once both e-mails are out, the session gets
  * `metadata.emails_sent = 'true'`; a redelivered or second event finds it and
  * sends nothing. Between a send and that mark, Resend's `Idempotency-Key`
- * (`<event id>:<recipient>`) drops a duplicate of the same event.
+ * (`<event id>:<role>`) drops a duplicate of the same event.
  */
 export async function handleEvent(
   event: Stripe.Event,
   deps: { stripe: StripeLike; mailer: Mailer; env: AppEnv },
 ): Promise<void> {
+  if (event.type === 'checkout.session.async_payment_failed') {
+    // A delayed payment (bank debit) failed: no order e-mail was sent while it
+    // was pending, so there is nothing to undo. Logged for the dashboard.
+    const failed = event.data.object;
+    if (failed.metadata?.delivery_method) {
+      logError('order.payment_failed', { sessionId: failed.id, eventId: event.id });
+    }
+    return;
+  }
   if (
     event.type !== 'checkout.session.completed' &&
     event.type !== 'checkout.session.async_payment_succeeded'

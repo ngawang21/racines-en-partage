@@ -128,7 +128,7 @@ export function createApp(deps: AppDeps) {
         throw new ApiError(400, 'VALIDATION_ERROR', 'Body is not valid JSON');
       }
       const request = parseCheckoutRequest(body);
-      const params = buildSessionParams(request, await catalog(), env, deps.now());
+      const params = buildSessionParams(request, await catalog(), env, deps.now(), c.req.url);
 
       let url: string | null;
       try {

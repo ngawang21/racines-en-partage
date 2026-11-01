@@ -202,6 +202,7 @@ export const localeSchema = z.object({
     statusPending: text,
     statusUnpaid: text,
     discount: text,
+    loadFailed: text,
   }),
   errors: ns({
     notFoundTitle: text,
@@ -216,6 +217,9 @@ export const localeSchema = z.object({
     shippingUnavailable: text,
     shopClosed: text,
     payment: text,
+    priceChanged: text,
+    rateLimited: text,
+    unavailable: text,
   }),
   legal: ns({
     updated: text,

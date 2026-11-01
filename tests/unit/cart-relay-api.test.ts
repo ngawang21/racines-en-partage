@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  ERROR_KEY,
   buildCheckoutRequest,
+  claimOrderClear,
   getOrder,
   isSessionId,
   parseApiError,
@@ -59,6 +61,24 @@ describe('relay payload mapping', () => {
         '<tr><th>Mar</th><td>09:00-12:30</td><td></td></tr>' +
         '<tr><th>Dim</th><td>Fermé</td><td>-</td></tr></table>',
     );
+  });
+
+  it('folds characters the Worker refuses, so a real point is never rejected', () => {
+    const point = mapParcelShop({
+      ...payload,
+      Nom: 'RELAIS N°12 "CHEZ PAUL" + LOTO!',
+      Adresse1: '4 RUE DU 8 MAI 1945 ; BAT. C',
+      Adresse2: 'C/O SARL D’ICI',
+      Ville: 'SAINT-BRICE-SOUS-FORÊT',
+    })!;
+    expect(point.name).toBe('RELAIS N 12 CHEZ PAUL LOTO');
+    expect(point.address1).toBe('4 RUE DU 8 MAI 1945 BAT. C');
+    expect(point.address2).toBe("C/O SARL D'ICI");
+    expect(point.city).toBe('SAINT-BRICE-SOUS-FORÊT');
+    // Within the Worker's limits (name 80, address 120, city 60).
+    const long = mapParcelShop({ ...payload, Nom: 'A'.repeat(100), Ville: 'B'.repeat(70) })!;
+    expect(long.name).toHaveLength(80);
+    expect(long.city).toHaveLength(60);
   });
 
   it('keeps address2 when present and rejects unusable payloads', () => {
@@ -190,6 +210,28 @@ describe('checkout request (spec 6.3)', () => {
     });
   });
 
+  it('sends the unit price the page showed, so the Worker can refuse a stale page', () => {
+    const products = {
+      'REP-MOR-100': { unitAmount: 890 },
+      'REP-BAO-100': { unitAmount: 790 },
+    };
+    const body = buildCheckoutRequest(
+      cart({
+        lines: [
+          { sku: 'REP-MOR-100', quantity: 2 },
+          { sku: 'REP-GONE-1', quantity: 1 },
+        ],
+        delivery: { method: 'home' },
+      }),
+      'fr',
+      products,
+    )!;
+    expect(body.items).toEqual([
+      { sku: 'REP-MOR-100', quantity: 2, unitAmount: 890 },
+      { sku: 'REP-GONE-1', quantity: 1 },
+    ]);
+  });
+
   it('returns null without lines or delivery', () => {
     expect(buildCheckoutRequest(cart({ delivery: { method: 'home' } }), 'fr')).toBeNull();
     expect(
@@ -208,6 +250,20 @@ describe('API errors and responses', () => {
     expect(parseApiError(503, { error: { code: 'SHOP_CLOSED' } }).code).toBe('SHOP_CLOSED');
     expect(parseApiError(500, 'Internal')).toEqual({ code: 'UNKNOWN', status: 500, skus: [] });
     expect(parseApiError(418, { error: { code: 'TEAPOT' } }).code).toBe('UNKNOWN');
+    expect(
+      parseApiError(409, { error: { code: 'PRICE_CHANGED', details: { skus: ['REP-MOR-100'] } } }),
+    ).toEqual({ code: 'PRICE_CHANGED', status: 409, skus: ['REP-MOR-100'] });
+    expect(parseApiError(429, { error: { code: 'RATE_LIMITED' } }).code).toBe('RATE_LIMITED');
+    expect(parseApiError(503, { error: { code: 'CATALOG_UNAVAILABLE' } }).code).toBe(
+      'CATALOG_UNAVAILABLE',
+    );
+  });
+
+  it('gives the codes a customer can act on their own message', () => {
+    expect(ERROR_KEY.RATE_LIMITED).toBe('rateLimited');
+    expect(ERROR_KEY.CATALOG_UNAVAILABLE).toBe('unavailable');
+    expect(ERROR_KEY.PRICE_CHANGED).toBe('priceChanged');
+    expect(ERROR_KEY.INTERNAL_ERROR).toBe('generic');
   });
 
   it('postCheckout returns the url on 200, the parsed error otherwise, NETWORK on failure', async () => {
@@ -293,17 +349,59 @@ describe('API errors and responses', () => {
     ).toEqual(order.lines);
   });
 
-  it('getOrder fetches the encoded id and returns null on 404 or network error', async () => {
+  it('getOrder tells a missing order from a lookup that may succeed later', async () => {
     const ok = vi.fn(async () => Response.json(order));
-    expect(await getOrder('cs_test_123', ok as unknown as typeof fetch)).toEqual(order);
+    expect(await getOrder('cs_test_123', ok as unknown as typeof fetch)).toEqual({
+      status: 'found',
+      order,
+    });
     expect((ok.mock.calls[0] as unknown as [string])[0]).toBe('/api/orders/cs_test_123');
-    const missing = vi.fn(async () =>
-      Response.json({ error: { code: 'NOT_FOUND' } }, { status: 404 }),
-    );
-    expect(await getOrder('cs_test_123', missing as unknown as typeof fetch)).toBeNull();
+    const respond = (status: number, code: string) =>
+      vi.fn(async () => Response.json({ error: { code } }, { status })) as unknown as typeof fetch;
+    expect(await getOrder('cs_test_123', respond(404, 'NOT_FOUND'))).toEqual({ status: 'missing' });
+    expect(await getOrder('cs_test_123', respond(400, 'VALIDATION_ERROR'))).toEqual({
+      status: 'missing',
+    });
+    expect(await getOrder('cs_test_123', respond(429, 'RATE_LIMITED'))).toEqual({
+      status: 'failed',
+    });
+    expect(await getOrder('cs_test_123', respond(502, 'PAYMENT_PROVIDER_ERROR'))).toEqual({
+      status: 'failed',
+    });
     const down = vi.fn(async () => {
       throw new TypeError('offline');
     });
-    expect(await getOrder('cs_test_123', down as unknown as typeof fetch)).toBeNull();
+    expect(await getOrder('cs_test_123', down as unknown as typeof fetch)).toEqual({
+      status: 'failed',
+    });
+    const junk = vi.fn(async () => Response.json({ status: 'refunded' }));
+    expect(await getOrder('cs_test_123', junk as unknown as typeof fetch)).toEqual({
+      status: 'failed',
+    });
+  });
+
+  it('claimOrderClear empties the cart once per order, never on a later visit', () => {
+    const map = new Map<string, string>();
+    const storage = {
+      getItem: (k: string) => map.get(k) ?? null,
+      setItem: (k: string, v: string) => void map.set(k, v),
+      removeItem: (k: string) => void map.delete(k),
+    };
+    expect(claimOrderClear(storage, 'cs_test_1')).toBe(true);
+    expect(claimOrderClear(storage, 'cs_test_1')).toBe(false);
+    expect(claimOrderClear(storage, 'cs_test_2')).toBe(true);
+    expect(claimOrderClear(storage, 'cs_test_1')).toBe(false);
+    // Without storage the cart is still emptied (the order page cannot remember).
+    expect(claimOrderClear(null, 'cs_test_3')).toBe(true);
+    const broken = {
+      getItem: () => {
+        throw new Error('denied');
+      },
+      setItem: () => {
+        throw new Error('denied');
+      },
+      removeItem: () => {},
+    };
+    expect(claimOrderClear(broken, 'cs_test_4')).toBe(true);
   });
 });

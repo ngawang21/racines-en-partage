@@ -193,7 +193,8 @@
     "statusPaid": "Paid",
     "statusPending": "Awaiting confirmation",
     "statusUnpaid": "Unpaid",
-    "discount": "Discount"
+    "discount": "Discount",
+    "loadFailed": "We cannot show your order right now. If your payment went through, you will receive a confirmation e-mail. You can also reload this page in a few minutes."
   },
   "errors": {
     "notFoundTitle": "Page not found",
@@ -207,7 +208,10 @@
     "outOfStock": "Sold out for now: {names}. Remove it from your basket to continue.",
     "shippingUnavailable": "This delivery method is not available at the moment.",
     "shopClosed": "The shop is taking a break; orders will resume very soon.",
-    "payment": "The payment service is not responding. Please try again in a few minutes."
+    "payment": "The payment service is not responding. Please try again in a few minutes.",
+    "priceChanged": "A price has changed since this page was opened. Reload the page to see the current price, then confirm again.",
+    "rateLimited": "Too many attempts in a short time. Please wait a minute, then try again.",
+    "unavailable": "The shop is briefly unavailable. Please try again in a few minutes."
   },
   "legal": {
     "updated": "Last updated: {date}",

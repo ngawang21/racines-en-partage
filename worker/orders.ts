@@ -142,19 +142,24 @@ export function deliveryFromMetadata(metadata: Stripe.Metadata | null): Delivery
   }
 }
 
-function lineSku(item: Stripe.LineItem): string | null {
+/** The expanded product of a line, when the expansion came back (not deleted). */
+function lineProduct(item: Stripe.LineItem): Stripe.Product | null {
   const product = item.price?.product;
-  if (product && typeof product === 'object' && 'metadata' in product) {
-    return product.metadata.sku ?? null;
-  }
-  return null;
+  return product && typeof product === 'object' && !('deleted' in product && product.deleted)
+    ? (product as Stripe.Product)
+    : null;
+}
+
+/** The SKU: line item metadata first (set at checkout), then the product's. */
+function lineSku(item: Stripe.LineItem): string | null {
+  return item.metadata?.sku || lineProduct(item)?.metadata?.sku || null;
 }
 
 function toLine(item: Stripe.LineItem): OrderLine {
   const quantity = item.quantity ?? 1;
   const amount = item.amount_subtotal;
   return {
-    name: item.description ?? '',
+    name: item.description || lineProduct(item)?.name || '',
     quantity,
     unitAmount: item.price?.unit_amount ?? Math.round(amount / quantity),
     amount,

@@ -193,7 +193,8 @@
     "statusPaid": "Payée",
     "statusPending": "En attente de confirmation",
     "statusUnpaid": "Non payée",
-    "discount": "Remise"
+    "discount": "Remise",
+    "loadFailed": "Nous n’arrivons pas à afficher votre commande pour le moment. Si votre paiement a abouti, vous recevrez un e-mail de confirmation. Vous pouvez aussi recharger cette page dans quelques minutes."
   },
   "errors": {
     "notFoundTitle": "Page introuvable",
@@ -207,7 +208,10 @@
     "outOfStock": "Victime de son succès : {names}. Retirez-le de votre panier pour continuer.",
     "shippingUnavailable": "Ce mode de livraison n’est pas disponible pour le moment.",
     "shopClosed": "La boutique est en pause, les commandes reprendront très bientôt.",
-    "payment": "Le service de paiement ne répond pas. Merci de réessayer dans quelques minutes."
+    "payment": "Le service de paiement ne répond pas. Merci de réessayer dans quelques minutes.",
+    "priceChanged": "Un prix a changé depuis l’ouverture de cette page. Rechargez la page pour voir le prix à jour, puis validez à nouveau.",
+    "rateLimited": "Trop de tentatives en peu de temps. Patientez une minute, puis réessayez.",
+    "unavailable": "La boutique est momentanément indisponible. Merci de réessayer dans quelques minutes."
   },
   "legal": {
     "updated": "Dernière mise à jour : {date}",

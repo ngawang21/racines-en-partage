@@ -4,23 +4,28 @@ import { HTTPException } from 'hono/http-exception';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { describeError, logError } from './log';
 
-export type ErrorCode =
-  | 'VALIDATION_ERROR'
-  | 'FORBIDDEN_ORIGIN'
-  | 'UNSUPPORTED_MEDIA_TYPE'
-  | 'PAYLOAD_TOO_LARGE'
-  | 'UNKNOWN_SKU'
-  | 'OUT_OF_STOCK'
-  | 'SHIPPING_UNAVAILABLE'
-  | 'SHOP_CLOSED'
-  | 'PAYMENT_PROVIDER_ERROR'
-  | 'NOT_FOUND'
-  | 'METHOD_NOT_ALLOWED'
-  | 'INVALID_SIGNATURE'
-  | 'CATALOG_UNAVAILABLE'
-  | 'EMAIL_FAILED'
-  | 'RATE_LIMITED'
-  | 'INTERNAL_ERROR';
+/** Every code the API can answer; the storefront maps each one to a message (a test checks). */
+export const ERROR_CODES = [
+  'VALIDATION_ERROR',
+  'FORBIDDEN_ORIGIN',
+  'UNSUPPORTED_MEDIA_TYPE',
+  'PAYLOAD_TOO_LARGE',
+  'UNKNOWN_SKU',
+  'OUT_OF_STOCK',
+  'PRICE_CHANGED',
+  'SHIPPING_UNAVAILABLE',
+  'SHOP_CLOSED',
+  'PAYMENT_PROVIDER_ERROR',
+  'NOT_FOUND',
+  'METHOD_NOT_ALLOWED',
+  'INVALID_SIGNATURE',
+  'CATALOG_UNAVAILABLE',
+  'EMAIL_FAILED',
+  'RATE_LIMITED',
+  'INTERNAL_ERROR',
+] as const;
+
+export type ErrorCode = (typeof ERROR_CODES)[number];
 
 export type ErrorDetails = Record<string, unknown>;
 

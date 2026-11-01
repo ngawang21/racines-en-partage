@@ -22,6 +22,24 @@ export interface ParcelShopPayload {
 const clean = (v: unknown): string =>
   typeof v === 'string' || typeof v === 'number' ? String(v).replace(/\s+/g, ' ').trim() : '';
 
+/**
+ * Text the Worker accepts for a relay point (worker/checkout.ts, RELAY_TEXT):
+ * letters, digits, spaces and ' - . , / & ( ). Anything else ("N°", quotes,
+ * "+") becomes a space, so a real point is never refused; the ID is what the
+ * label uses.
+ */
+const RELAY_REFUSED = /[^\p{L}\p{M}\d '\-.,/&()]/gu;
+export const RELAY_TEXT_LIMITS = { name: 80, address: 120, city: 60 } as const;
+
+const relayText = (v: unknown, max: number): string =>
+  clean(
+    clean(v)
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(RELAY_REFUSED, ' '),
+  )
+    .slice(0, max)
+    .trim();
+
 const ENTITIES: Record<string, string> = {
   amp: '&',
   lt: '<',
@@ -108,14 +126,14 @@ export function relayId(rawId: unknown, rawCountry: unknown): string | null {
 export function mapParcelShop(payload: ParcelShopPayload | null | undefined): RelayPoint | null {
   if (!payload || typeof payload !== 'object') return null;
   const id = relayId(payload.ID, payload.Pays);
-  const name = clean(payload.Nom);
-  const address1 = clean(payload.Adresse1);
+  const name = relayText(payload.Nom, RELAY_TEXT_LIMITS.name);
+  const address1 = relayText(payload.Adresse1, RELAY_TEXT_LIMITS.address);
   const postcode = clean(payload.CP);
-  const city = clean(payload.Ville);
+  const city = relayText(payload.Ville, RELAY_TEXT_LIMITS.city);
   const country = clean(payload.Pays).toUpperCase() || id?.slice(0, 2) || '';
   if (!id || !name || !address1 || !postcode || !city || !/^[A-Z]{2}$/.test(country)) return null;
   const point: RelayPoint = { id, name, address1, postcode, city, country };
-  const address2 = clean(payload.Adresse2);
+  const address2 = relayText(payload.Adresse2, RELAY_TEXT_LIMITS.address);
   if (address2) point.address2 = address2;
   const hours =
     typeof payload.HoursHtmlTable === 'string' ? sanitizeHoursHtml(payload.HoursHtmlTable) : '';

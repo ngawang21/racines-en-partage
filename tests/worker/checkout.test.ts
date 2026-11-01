@@ -46,6 +46,7 @@ describe('POST /api/checkout: happy paths', () => {
       line_items: [
         {
           quantity: 2,
+          metadata: { sku: 'REP-MOR-100' },
           price_data: {
             currency: 'eur',
             unit_amount: 890,
@@ -58,6 +59,7 @@ describe('POST /api/checkout: happy paths', () => {
         },
         {
           quantity: 1,
+          metadata: { sku: 'REP-BAO-100' },
           price_data: {
             currency: 'eur',
             unit_amount: 790,
@@ -604,5 +606,111 @@ describe('parseDeliveryEstimate', () => {
   it('returns undefined when no day count parses', () => {
     expect(parseDeliveryEstimate('sur rendez-vous, 9 Rue du Marché')).toBeUndefined();
     expect(parseDeliveryEstimate('5 à 3 jours')).toBeUndefined();
+  });
+});
+
+describe('POST /api/checkout: audit fixes', () => {
+  it('409 PRICE_CHANGED when the page showed another price (stale tab, deploy window)', async () => {
+    const { app, stripe } = makeApp();
+    const res = await postJson(
+      app,
+      '/api/checkout',
+      relayBody({
+        items: [
+          { sku: 'REP-MOR-100', quantity: 2, unitAmount: 850 },
+          { sku: 'REP-BAO-100', quantity: 1, unitAmount: 790 },
+        ],
+      }),
+    );
+    expect(res.status).toBe(409);
+    const error = await errorOf(res);
+    expect(error.code).toBe('PRICE_CHANGED');
+    expect(error.details).toEqual({ skus: ['REP-MOR-100'] });
+    expect(stripe.create).not.toHaveBeenCalled();
+  });
+
+  it('passes when the page prices match the catalogue, or when none are sent', async () => {
+    const { app, stripe } = makeApp();
+    const matching = await postJson(
+      app,
+      '/api/checkout',
+      relayBody({
+        items: [
+          { sku: 'REP-MOR-100', quantity: 2, unitAmount: 890 },
+          { sku: 'REP-BAO-100', quantity: 1, unitAmount: 790 },
+        ],
+      }),
+    );
+    expect(matching.status).toBe(200);
+    expect(stripe.create.mock.calls[0]![0].line_items![0]!.price_data!.unit_amount).toBe(890);
+    expect((await postJson(app, '/api/checkout', relayBody())).status).toBe(200);
+  });
+
+  it('400 VALIDATION_ERROR for a non-integer page price', async () => {
+    const { app } = makeApp();
+    const res = await postJson(
+      app,
+      '/api/checkout',
+      relayBody({ items: [{ sku: 'REP-MOR-100', quantity: 1, unitAmount: 8.9 }] }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('unknown SKUs and out-of-stock lines are reported before a price change', async () => {
+    const { app } = makeApp();
+    const res = await postJson(
+      app,
+      '/api/checkout',
+      relayBody({
+        items: [
+          { sku: 'REP-MOR-100', quantity: 1, unitAmount: 1 },
+          { sku: 'REP-ORG-100', quantity: 1, unitAmount: 590 },
+        ],
+      }),
+    );
+    expect((await errorOf(res)).code).toBe('OUT_OF_STOCK');
+  });
+
+  it('keeps the shipping rate display name within 100 characters', async () => {
+    const catalog = catalogFixture();
+    catalog.shipping[0]!.label.fr = 'Point Relais '.repeat(12);
+    const { app, stripe } = makeApp({}, catalog);
+    await postJson(app, '/api/checkout', relayBody());
+    const name =
+      stripe.create.mock.calls[0]![0].shipping_options![0]!.shipping_rate_data!.display_name;
+    expect(name.length).toBeLessThanOrEqual(100);
+    expect(name.startsWith('Point Relais Point Relais')).toBe(true);
+  });
+
+  it('tags each line item with its SKU (read back without the product expansion)', async () => {
+    const { app, stripe } = makeApp();
+    await postJson(app, '/api/checkout', relayBody());
+    const items = stripe.create.mock.calls[0]![0].line_items!;
+    expect(items.map((i) => i.metadata)).toEqual([{ sku: 'REP-MOR-100' }, { sku: 'REP-BAO-100' }]);
+  });
+
+  it('a checkout from the workers.dev preview returns to that host, not to production', async () => {
+    const { app, stripe } = makeApp();
+    const preview = 'https://racines-en-partage.marie.workers.dev';
+    const res = await app.request(`${preview}/api/checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: preview },
+      body: JSON.stringify(relayBody()),
+    });
+    expect(res.status).toBe(200);
+    const params = stripe.create.mock.calls[0]![0];
+    expect(params.success_url).toBe(`${preview}/merci/?session_id={CHECKOUT_SESSION_ID}`);
+    expect(params.cancel_url).toBe(`${preview}/panier/`);
+  });
+
+  it('the custom domain keeps SITE_URL for the return URLs', async () => {
+    const { app, stripe } = makeApp();
+    const res = await app.request('https://www.racinesenpartage.fr/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: 'https://www.racinesenpartage.fr' },
+      body: JSON.stringify(relayBody()),
+    });
+    expect(res.status).toBe(200);
+    expect(stripe.create.mock.calls[0]![0].cancel_url).toBe('https://racinesenpartage.fr/panier/');
   });
 });

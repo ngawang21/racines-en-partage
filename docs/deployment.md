@@ -74,15 +74,15 @@ Analytics, add the site. It needs no cookie banner.
 Set in Workers & Pages, `racines-en-partage`, Settings, Variables and
 Secrets. Saving a secret deploys a new version of the Worker.
 
-| Name                         | Kind             | Value                                                                                                              | Comes from |
-| ---------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------ | ---------- |
-| `STRIPE_SECRET_KEY`          | secret           | `sk_test_...` first, then `sk_live_...`                                                                            | Section 8  |
-| `STRIPE_WEBHOOK_SECRET`      | secret           | `whsec_...` of the endpoint in the same mode as the key                                                            | Section 8  |
-| `RESEND_API_KEY`             | secret, optional | `re_...`                                                                                                           | Section 6  |
-| `ORDER_EMAIL_TO`             | secret           | `racinesenpartage@outlook.com`                                                                                     | Marie      |
-| `SITE_URL`                   | variable         | `https://racinesenpartage.fr`                                                                                      | Fixed      |
-| `ORDER_EMAIL_FROM`           | variable         | `commandes@racinesenpartage.fr` (check in `worker/` whether a display name `Racines en Partage <...>` is expected) | Section 6  |
-| `PUBLIC_MONDIAL_RELAY_BRAND` | build variable   | `BDTEST`, then Marie's client code                                                                                 | Section 9  |
+| Name                         | Kind             | Value                                                                                                   | Comes from |
+| ---------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------- | ---------- |
+| `STRIPE_SECRET_KEY`          | secret           | `sk_test_...` first, then `sk_live_...`                                                                 | Section 8  |
+| `STRIPE_WEBHOOK_SECRET`      | secret           | `whsec_...` of the endpoint in the same mode as the key                                                 | Section 8  |
+| `RESEND_API_KEY`             | secret, optional | `re_...`                                                                                                | Section 6  |
+| `ORDER_EMAIL_TO`             | secret           | `racinesenpartage@outlook.com`                                                                          | Marie      |
+| `SITE_URL`                   | variable         | `https://racinesenpartage.fr`                                                                           | Fixed      |
+| `ORDER_EMAIL_FROM`           | variable         | `Racines en Partage <commandes@racinesenpartage.fr>` (display name and address, as in `wrangler.jsonc`) | Section 6  |
+| `PUBLIC_MONDIAL_RELAY_BRAND` | build variable   | `BDTEST`, then Marie's client code                                                                      | Section 9  |
 
 Notes:
 
@@ -217,8 +217,10 @@ stripe.com/fr/pricing.
    endpoint:
    - URL: `https://racinesenpartage.fr/api/webhooks/stripe` (before the
      domain is live, use the `workers.dev` URL and change it later)
-   - Events: `checkout.session.completed` and
-     `checkout.session.async_payment_succeeded`
+   - Events: `checkout.session.completed`,
+     `checkout.session.async_payment_succeeded` and
+     `checkout.session.async_payment_failed` (the last one only writes a
+     log line, `order.payment_failed`, should a bank debit ever be enabled)
 3. Reveal the signing secret `whsec_...` and paste it into
    `STRIPE_WEBHOOK_SECRET`.
 4. Test checklist, on the deployed site:
@@ -245,7 +247,7 @@ stripe.com/fr/pricing.
 1. Account activated by Marie (Stripe shows "payments enabled").
 2. Live mode, Developers, API keys: copy `sk_live_...` into
    `STRIPE_SECRET_KEY`.
-3. Create the live webhook endpoint with the same URL and the same two
+3. Create the live webhook endpoint with the same URL and the same three
    events; paste its own `whsec_...` into `STRIPE_WEBHOOK_SECRET`. Test and
    live endpoints have different secrets.
 4. Place one real order with a small product, check section 8.2, step 4, items 2
@@ -256,7 +258,9 @@ stripe.com/fr/pricing.
 - Orders: Payments. Each payment links to the Checkout session with the
   delivery metadata.
 - Promo codes: Product catalogue, Coupons, create a coupon, then a customer
-  facing code. The checkout accepts codes (`allow_promotion_codes`).
+  facing code. The checkout accepts codes (`allow_promotion_codes`). Free
+  shipping is decided on the basket before the code: a 50 EUR basket with a
+  10 % code still ships free. Codes never reduce the shipping fee itself.
 - Refunds: open the payment, Refund, full or partial.
 
 ## 9. Mondial Relay
@@ -534,6 +538,11 @@ Repeat with `/en/checkout/`. Two lines on one route mean a missing
   `STRIPE_WEBHOOK_SECRET` does not belong to this endpoint or this mode
   (test and live differ), or it was pasted with a space. Copy it again from
   the endpoint page. Then, in Stripe, resend the failed events.
+- **A customer sees "un prix a changé".** The Worker refused an order
+  because the page showed another price than `/catalog.json`
+  (`409 PRICE_CHANGED`): a tab opened before a price change, or the minute
+  after a deploy while the Worker's catalogue cache refreshes. Reloading the
+  page fixes it; nothing was charged.
 - **Webhook 200 but no e-mail.** Check `RESEND_API_KEY`, the domain status
   in Resend (Verified), the Resend logs, the 100 per day limit, then
   Outlook's junk folder. Workers & Pages, the Worker, Logs shows the order
