@@ -70,8 +70,7 @@ const contactParts = t.thanks.nextContact.split(/(\{email\}|\{phone\})/);
         <address class="pickup-address" data-thanks-pickup hidden>
           {address.street}
           <br />
-          {address.postcode}
-          {address.city}
+          {address.postcode}{' '}{address.city}
         </address>
       </section>
 

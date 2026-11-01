@@ -64,7 +64,6 @@ export const productSharedSchema = z.object({
   category: text,
   price: euros,
   weightGrams: z.number().int().positive(),
-  origin: text,
   originCountryCode: z
     .string()
     .regex(/^[A-Z]{2}$/, 'ISO 3166-1 alpha-2')
@@ -82,6 +81,8 @@ export const productSharedSchema = z.object({
 export const productTranslatedSchema = z.object({
   name: text,
   tagline: text,
+  /** As printed on the label ("Niger", "Afrique de l'Ouest"), translated in English. */
+  origin: text,
   description: text,
   ingredients: text,
   usage: textList.min(1),
@@ -112,6 +113,7 @@ export type Product = ProductFile & { slug: string };
 export const productTranslationSchema = z.object({
   name: optText,
   tagline: optText,
+  origin: optText,
   description: optText,
   ingredients: optText,
   usage: optList,

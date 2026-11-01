@@ -312,8 +312,9 @@ collections:
       - name: origin
         label: Origine
         widget: string
-        i18n: false
-        hint: Telle qu'elle est imprimée sur l'étiquette, par exemple « Niger » ou « Afrique de l'Ouest ».
+        i18n: true
+        required: [fr]
+        hint: Telle qu'elle est imprimée sur l'étiquette, par exemple « Niger » ou « Afrique de l'Ouest ». En anglais, traduisez-la (« West Africa »).
       - name: originCountryCode
         label: Pays d'origine (pour Google)
         widget: select

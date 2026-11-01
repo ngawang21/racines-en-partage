@@ -38,6 +38,15 @@ describe('frenchTypographyText', () => {
   });
 });
 
+describe('frenchTypographyText hyphens', () => {
+  it('writes e-mail with a non-breaking hyphen unless told otherwise', () => {
+    expect(frenchTypographyText('un e-mail, deux e-mails, email')).toBe(
+      'un e\u2011mail, deux e\u2011mails, email',
+    );
+    expect(frenchTypographyText('un e-mail', { nonBreakingHyphens: false })).toBe('un e-mail');
+  });
+});
+
 describe('frenchTypographyHtml', () => {
   it('touches text nodes only', () => {
     expect(frenchTypographyHtml('<a href="/x?y=1" title="Note :">Note : « oui » !</a>')).toBe(

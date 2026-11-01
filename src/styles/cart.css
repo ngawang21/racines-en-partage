@@ -312,7 +312,9 @@ a.cart-line-name:hover {
   margin-top: var(--space-2);
 }
 .cart-line-remove {
-  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   padding: 0;
   border: 0;
   background: none;
@@ -915,6 +917,8 @@ a.cart-line-name:hover {
   cursor: pointer;
 }
 .terms-label a {
+  display: inline-block;
+  padding-block: 6px;
   color: var(--forest);
   font-weight: 600;
   text-decoration-color: var(--gold);

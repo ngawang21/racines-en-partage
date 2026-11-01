@@ -5,39 +5,50 @@
 
 const NBSP = ' ';
 const NNBSP = ' ';
+const NB_HYPHEN = '\u2011';
 
 const UNITS = '(?:k?g|mg|m?l|cl|€|%|h|min|s|kcal|kJ|cm|mm|km|j|jours?|ans?|mois)';
 
+export interface TypographyOptions {
+  /**
+   * Write "e-mail" with a non-breaking hyphen (U+2011) so it never splits at a
+   * line end. On by default for the pages; the e-mails pass false because some
+   * mail clients lack the glyph.
+   */
+  nonBreakingHyphens?: boolean;
+}
+
 /** Typography rules for one run of plain text (no HTML tags inside). */
-export function frenchTypographyText(text: string): string {
-  return (
-    text
-      // Narrow no-break space before ; ! ? and the percent sign.
-      .replace(/ ([;!?%])/g, `${NNBSP}$1`)
-      // Ordinary no-break space before the colon.
-      .replace(/ :/g, `${NBSP}:`)
-      // Guillemets hug their content.
-      .replace(/« /g, `«${NBSP}`)
-      .replace(/ »/g, `${NBSP}»`)
-      // "n° 12" and "art. 12".
-      .replace(/(n°|N°|art\.) (?=\d)/g, `$1${NBSP}`)
-      // A number and its unit ("100 g", "12 h", "4,90 €", "3 à 5 jours" stays).
-      .replace(new RegExp(`(\\d) ${UNITS}(?![\\p{L}\\d])`, 'gu'), (m, d: string) =>
-        m.replace(`${d} `, `${d}${NNBSP}`),
-      )
-      // Digit grouping "3 000".
-      .replace(/(\d) (?=\d{3}(?!\d))/g, `$1${NNBSP}`)
-  );
+export function frenchTypographyText(text: string, options: TypographyOptions = {}): string {
+  const out = text
+    // Narrow no-break space before ; ! ? and the percent sign.
+    .replace(/ ([;!?%])/g, `${NNBSP}$1`)
+    // Ordinary no-break space before the colon.
+    .replace(/ :/g, `${NBSP}:`)
+    // Guillemets hug their content.
+    .replace(/« /g, `«${NBSP}`)
+    .replace(/ »/g, `${NBSP}»`)
+    // "n° 12" and "art. 12".
+    .replace(/(n°|N°|art\.) (?=\d)/g, `$1${NBSP}`)
+    // A number and its unit ("100 g", "12 h", "4,90 €", "3 à 5 jours" stays).
+    .replace(new RegExp(`(\\d) ${UNITS}(?![\\p{L}\\d])`, 'gu'), (m, d: string) =>
+      m.replace(`${d} `, `${d}${NNBSP}`),
+    )
+    // Digit grouping "3 000".
+    .replace(/(\d) (?=\d{3}(?!\d))/g, `$1${NNBSP}`);
+  return options.nonBreakingHyphens === false
+    ? out
+    : out.replace(/\be-mails?\b/g, (m) => m.replace('-', NB_HYPHEN));
 }
 
 /**
  * The same rules over an HTML fragment, touching text nodes only: tags,
  * attributes and entities are left alone.
  */
-export function frenchTypographyHtml(html: string): string {
+export function frenchTypographyHtml(html: string, options: TypographyOptions = {}): string {
   return html
     .split(/(<[^>]+>)/)
-    .map((part) => (part.startsWith('<') ? part : frenchTypographyText(part)))
+    .map((part) => (part.startsWith('<') ? part : frenchTypographyText(part, options)))
     .join('');
 }
 

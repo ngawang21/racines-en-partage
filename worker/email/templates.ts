@@ -182,9 +182,9 @@ function textTotals(rows: Array<[string, string]>, locale: Locale): string[] {
 function typeset(locale: Locale, email: RenderedEmail): RenderedEmail {
   if (locale !== 'fr') return email;
   return {
-    subject: frenchTypographyText(email.subject),
-    html: frenchTypographyHtml(email.html),
-    text: frenchTypographyText(email.text),
+    subject: frenchTypographyText(email.subject, { nonBreakingHyphens: false }),
+    html: frenchTypographyHtml(email.html, { nonBreakingHyphens: false }),
+    text: frenchTypographyText(email.text, { nonBreakingHyphens: false }),
   };
 }
 

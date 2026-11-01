@@ -20,8 +20,9 @@ const [t, categories, loaded, settings] = await Promise.all([
   loadProducts(locale),
   loadSettings(),
 ]);
-// Default order: featured first, then the catalogue order (category, name).
-const products = [...loaded].sort((a, b) => Number(b.featured) - Number(a.featured));
+// Default order: the catalogue order (category, then the owner's "Réorganiser"
+// position, then name). `featured` only picks the home page selection.
+const products = [...loaded];
 const counts: Record<string, number> = {};
 for (const p of products) counts[p.category] = (counts[p.category] ?? 0) + 1;
 const chips = [
