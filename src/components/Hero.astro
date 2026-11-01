@@ -1,7 +1,10 @@
 ---
-// Home hero (spec 5.4): copy on the left, the trio photo in a soft frame on
-// the right with the medallion resting on its corner. The photo is the LCP
-// element: eager, fetchpriority high.
+// Home hero (spec 5.4): copy on the left, vertically centred; the trio photo
+// in a tall 4:3 soft frame on the right (about 58 percent of the row on
+// desktop), under the copy at full width on phones, with the medallion
+// resting on its corner. The photo is the LCP element: eager, fetchpriority
+// high. The 3:2 photo is cropped to 4:3 by object-fit, so the rendered image
+// is about 1.125 times the frame width: `sizes` accounts for it.
 import { Image } from 'astro:assets';
 import heroTrio from '../assets/brand/hero-trio.webp';
 import medallion from '../assets/brand/medallion.webp';
@@ -36,6 +39,7 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
           src={heroTrio}
           alt={hero.imageAlt}
           preset="hero"
+          sizes="(min-width: 1240px) 780px, (min-width: 960px) 64vw, 112vw"
           loading="eager"
           fetchpriority="high"
         />
@@ -65,13 +69,13 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
   @media (min-width: 960px) {
     .hero-grid {
       grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: clamp(2.5rem, 1rem + 4vw, 5rem);
     }
   }
   .hero-eyebrow {
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    color: var(--kraft-deep);
     color: var(--ink-2);
   }
   .hero-eyebrow::before {
@@ -116,15 +120,21 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
   }
   .hero-frame {
     overflow: hidden;
-    aspect-ratio: 3 / 2;
+    aspect-ratio: 4 / 3;
     border: 1px solid var(--kraft);
-    border-radius: var(--radius-l);
+    border-radius: 24px;
     background: var(--paper);
+    box-shadow: var(--shadow-soft);
   }
+  .hero-frame :global(picture),
   .hero-frame :global(img) {
+    display: block;
     width: 100%;
     height: 100%;
+  }
+  .hero-frame :global(img) {
     object-fit: cover;
+    object-position: 50% 55%;
   }
   .hero-media :global(.hero-medallion) {
     position: absolute;

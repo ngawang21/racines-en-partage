@@ -318,23 +318,118 @@ deploy: the change is live after about 2 minutes.
 
 ## 11. CSP
 
-`public/_headers` keeps the strict policy (`script-src 'self'`,
-`connect-src 'self'`) on every route, with two relaxations:
+`public/_headers` is the only place the Content-Security-Policy is set
+(Cloudflare applies it to the static assets; `astro preview` and
+`wrangler dev` ignore it). Three policies exist:
 
-- `/admin/*`: the Sveltia script and the GitHub APIs.
-- `/commande/*` and `/en/checkout/*`: the Mondial Relay widget and its
-  dependencies (jQuery, Leaflet, map tiles).
+- **Global** (`/*`, every page): `default-src 'self'`, `script-src 'self'`,
+  `style-src 'self' 'unsafe-inline'` (Astro scoped styles),
+  `img-src 'self' data:`, `font-src 'self'`, `connect-src 'self'`,
+  `base-uri 'self'`, `form-action 'none'`, `frame-ancestors 'self'`. No
+  inline script runs anywhere: the JSON-LD and the `application/json` data
+  blocks are not executed, and a build test fails if any other inline script
+  appears.
+- **Checkout** (`/commande/*` and `/en/checkout/*`, two identical blocks):
+  the global policy plus the Mondial Relay Parcel Shop Picker, which loads
+  only when the customer picks the relay method.
+- **Admin** (`/admin/*`): the Sveltia CMS policy (below).
 
-Hosts allowed on the checkout routes (captured from the widget's network
-requests in headless Chromium; the source of truth is `public/_headers`):
+Each route block starts with `! Content-Security-Policy`, which detaches the
+global header before the route's own is added. Without it Cloudflare sends
+both headers and the browser enforces the stricter of the two, so the widget
+or the CMS would be blocked.
 
-<!-- Filled by the checkout implementer. One line per host and directive. -->
+### 11.1 Checkout hosts
 
-- To be filled.
+Captured from the widget's network log in headless Chromium (widget 4.0.11,
+2026-11-01). One line per host and directive:
 
-After any change to the widget or a "refused to load" error in the browser
-console on `/commande/`, capture the requests again and update both
-`public/_headers` and this list.
+| Host                                                                               | Directives                                          | What                                                                  |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------- |
+| `widget.mondialrelay.com`                                                          | `script-src`, `style-src`, `img-src`, `connect-src` | plugin and its versioned script, styles, marker images, JSONP results |
+| `unpkg.com`                                                                        | `script-src`, `style-src`                           | Leaflet script and stylesheet                                         |
+| `ajax.googleapis.com`                                                              | `script-src`                                        | jQuery 2.2.4                                                          |
+| `fonts.googleapis.com`                                                             | `style-src`                                         | the widget's font stylesheet                                          |
+| `fonts.gstatic.com`                                                                | `font-src`                                          | the widget's font files                                               |
+| `www.mondialrelay.com`                                                             | `img-src`                                           | one image loaded by the widget                                        |
+| `a.tile.openstreetmap.org`, `b.tile.openstreetmap.org`, `c.tile.openstreetmap.org` | `img-src`                                           | map tiles                                                             |
+
+Every other directive is the global one. The checkout policy has neither
+`'unsafe-eval'` nor `'unsafe-inline'` in `script-src`, although the widget
+was written for both:
+
+- The widget appends server-sent HTML that holds one inline script, which
+  jQuery would run through `eval`. `src/cart/relay-widget.ts`
+  (`neutraliseGlobalEval`) replaces `jQuery.globalEval` with a function that
+  never evaluates and reproduces the two effects of that script natively
+  (the `MondialRelayLanguage` labels and the click handler that returns from
+  the list to the map on phones).
+- The widget's list items carry inline `onclick` attributes, which the CSP
+  would block. `disarmInlineHandlers` moves them to `data-rep-onclick` as
+  they appear and replays them from one delegated listener through
+  `parseInlineHandler` (`src/cart/relay.ts`), which accepts only the known
+  shapes `MR_jQuery('#id').trigger('Event', n)` and
+  `MR_jQuery(this).parent().find('.x').toggleClass('y')`.
+
+### 11.2 When Mondial Relay changes the widget
+
+Symptoms: "Refused to load" or "Refused to execute" errors in the browser
+console on `/commande/`, a map that never appears, or list items that no
+longer select a point (a new inline handler shape). Re-run the capture:
+
+1. `pnpm build`, then `pnpm exec astro preview --host 127.0.0.1 --port 4325 --ignore-lock`.
+2. Run a Playwright script (with `pnpm exec node`, `@playwright/test` is
+   installed) that, for `http://127.0.0.1:4325/commande/`:
+   - adds a product first (open `/boutique/`, click the first
+     `[data-add-to-cart]`), since the checkout needs a cart;
+   - serves the page with the checkout policy, since the preview sends no
+     headers: `page.route('**/commande/', ...)` fetching the response and
+     fulfilling it with the `Content-Security-Policy` value copied from
+     `public/_headers`;
+   - logs every request host (`page.on('request', r => new URL(r.url()).host)`)
+     and every console message containing "Content Security Policy";
+   - clicks the "Point Relais" method card, types a postcode such as `95400`
+     in `[data-relay-postcode]`, clicks `[data-relay-go]`, waits for the
+     list, then clicks a `.PR-List-Item`.
+3. A new host shows up as a CSP console error: add it to both checkout
+   blocks of `public/_headers` and to the table above. A new inline handler
+   shows up as a `data-rep-onclick` value that `parseInlineHandler` returns
+   `null` for: extend the parser and its unit tests in
+   `tests/unit/cart-relay-api.test.ts`. A changed inline script shows up as
+   a `globalEval` call whose code is neither of the two known effects:
+   reproduce it in `neutraliseGlobalEval`.
+4. Run `pnpm test` and `pnpm e2e`, deploy, and check the map on the live
+   site with the browser console open.
+
+### 11.3 Admin
+
+`/admin/*` replaces the global policy with the Sveltia one: `script-src`
+adds `unpkg.com` (the CMS bundle); `connect-src` adds the GitHub API,
+`github.com`, `www.githubstatus.com`, `*.workers.dev` (the Authenticator),
+`unpkg.com` and the optional AI helpers of the CMS; `img-src` adds `blob:`
+and the GitHub user content hosts; `font-src` adds `cdn.jsdelivr.net`;
+`frame-src` adds `*.workers.dev`; `worker-src` allows `blob:`. The same
+block sets `X-Robots-Tag: noindex`.
+
+### 11.4 After the first deploy
+
+Check that each route carries its own policy:
+
+```sh
+curl -sI https://racinesenpartage.fr/commande/ | grep -i content-security-policy
+curl -sI https://racinesenpartage.fr/admin/ | grep -i content-security-policy
+curl -sI https://racinesenpartage.fr/ | grep -i content-security-policy
+```
+
+- `/commande/` must print the checkout policy (with
+  `widget.mondialrelay.com`), and only one `content-security-policy` line.
+- `/admin/` must print the admin policy (with `api.github.com`), and only
+  one line.
+- `/` must print the strict policy (`script-src 'self'` and nothing else in
+  that directive).
+
+Repeat with `/en/checkout/`. Two lines on one route mean a missing
+`! Content-Security-Policy` in its block.
 
 ## 12. Go-live checklist
 
@@ -353,7 +448,8 @@ console on `/commande/`, capture the requests again and update both
    and refunded.
 8. `PUBLIC_MONDIAL_RELAY_BRAND` is Marie's code, not `BDTEST`.
 9. `curl -sI https://racinesenpartage.fr/ | grep -i content-security-policy`
-   prints the policy; the checkout map loads without console errors.
+   prints the strict policy (see section 11.4 for every route); the checkout
+   map loads without console errors.
 10. Google Search Console, Add property, Domain: `racinesenpartage.fr`;
     verification by a TXT record in Cloudflare DNS.
 11. Submit the sitemap `https://racinesenpartage.fr/sitemap-index.xml`, then

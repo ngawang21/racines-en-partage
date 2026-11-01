@@ -36,6 +36,15 @@ export function formatWeight(grams: number, locale: Locale): string {
   return `${kg}${NBSP}kg`;
 }
 
+/**
+ * Glues a trailing weight to its number for display ("Fleurs d’hibiscus
+ * 100 g" never breaks before "g"). Product labels keep plain spaces for
+ * Stripe and the e-mails; the cart views pass them through this.
+ */
+export function nowrapWeight(label: string): string {
+  return label.replace(/ (\d+(?:[.,]\d+)?) (k?g)$/, `${NBSP}$1${NBSP}$2`);
+}
+
 /** "0775689108" to "07 75 68 91 08". Other shapes are returned unchanged. */
 export function formatPhone(raw: string): string {
   const digits = raw.replace(/\D/g, '');

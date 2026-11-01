@@ -52,6 +52,8 @@ const imageUrls = await Promise.all(
 );
 
 const weight = formatWeight(product.weightGrams, locale);
+// French sets a no-break space before the colon, English none.
+const colon = locale === 'fr' ? '\u00a0:' : ':';
 const cents = toCents(product.price);
 const shopOpen = settings.shop.open;
 const max = settings.shop.maxQuantityPerLine;
@@ -140,11 +142,11 @@ const shopHref = routePath('shop', locale);
 
         <ul class="facts" role="list">
           <li class="tag">
-            <span class="visually-hidden">{t.product.weight} :</span>
+            <span class="visually-hidden">{t.product.weight}{colon}</span>{' '}
             {weight}
           </li>
           <li class="tag">
-            <span class="visually-hidden">{t.product.origin} :</span>
+            <span class="visually-hidden">{t.product.origin}{colon}</span>{' '}
             {flag && <span aria-hidden="true">{flag}</span>}
             {product.origin}
           </li>
@@ -522,7 +524,7 @@ const shopHref = routePath('shop', locale);
     color: var(--gold);
   }
   .steps li::marker {
-    color: var(--kraft-deep);
+    color: var(--kraft-ink);
     font-family: var(--font-display);
     font-weight: 600;
   }

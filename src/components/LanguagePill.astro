@@ -12,6 +12,8 @@ interface Props {
 const { locale, routeKey, slug, label, class: className } = Astro.props;
 const short: Record<Locale, string> = { fr: 'FR', en: 'EN' };
 const full: Record<Locale, string> = { fr: 'Français', en: 'English' };
+// The visible code stays first in the accessible name ("FR (Français)") so
+// voice control users can say what they see (WCAG 2.5.3, label in name).
 // The bilingual 404 and the admin page have no localised twin: point at the homes.
 const key: RouteKey = routeKey === 'notFound' || routeKey === 'admin' ? 'home' : routeKey;
 ---
@@ -23,11 +25,11 @@ const key: RouteKey = routeKey === 'notFound' || routeKey === 'admin' ? 'home' :
         href={routePath(key, l, slug)}
         lang={l}
         hreflang={l}
-        aria-label={full[l]}
         aria-current={l === locale ? 'true' : undefined}
         class:list={{ on: l === locale }}
       >
         {short[l]}
+        <span class="visually-hidden">{` (${full[l]})`}</span>
       </a>
     ))
   }

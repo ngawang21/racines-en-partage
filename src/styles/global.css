@@ -127,6 +127,7 @@ p {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-2);
+  text-wrap: balance;
 }
 .lead {
   font-size: var(--fs-1);

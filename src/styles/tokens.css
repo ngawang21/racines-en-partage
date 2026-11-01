@@ -4,10 +4,12 @@
   --cream: #fbf6ea; /* page background */
   --paper: #f3ead6; /* cards, alternating bands */
   --kraft: #d8b98e; /* frames, soft fills */
+  --kraft-ink: #86602f; /* kraft as text: 5.2:1 on cream, 4.7:1 on paper */
   --kraft-deep: #b98e5e; /* hover on kraft, captions */
   --forest: #163a1c; /* ink, primary buttons, footer */
   --forest-2: #244f2a; /* primary hover */
   --leaf: #3e7a2a; /* success, stock in, small accents */
+  --leaf-ink: #2f6420; /* leaf as text: 5.9:1 on paper, 6.6:1 on cream */
   --hibiscus: #e03a3a; /* badges, price accent, focus ring; text only >= 18px on cream or paper */
   --hibiscus-deep: #b8262e;
   --gold: #c9a24a; /* hairlines, ornaments */

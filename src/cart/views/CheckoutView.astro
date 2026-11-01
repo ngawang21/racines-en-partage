@@ -27,6 +27,8 @@ const ICON = { relay: 'pin', home: 'truck', pickup: 'leaf' } as const;
 const [termsBefore = '', termsAfter = ''] = t.checkout.acceptTerms.split('{terms}');
 const address = settings.brand.address;
 const threshold = catalog.freeShippingFrom;
+// "Offerte dès 49 €", as on the product pages (no ",00" on a round threshold).
+const wholePrice = (cents: number) => formatPrice(cents, locale).replace(/[,.]00(?=\D|$)/, '');
 ---
 
 <section class="container checkout" data-checkout aria-busy="true">
@@ -88,7 +90,7 @@ const threshold = catalog.freeShippingFrom;
                     </span>
                     {m.amount > 0 && threshold !== null && (
                       <span class="method-free" data-method-free={m.id}>
-                        {t.checkout.freeFrom.replace('{threshold}', formatPrice(threshold, locale))}
+                        {t.checkout.freeFrom.replace('{threshold}', wholePrice(threshold))}
                       </span>
                     )}
                   </span>

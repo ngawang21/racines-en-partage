@@ -1,18 +1,18 @@
 # Owner to validate: the story is written from the brief and the labels.
 seoTitle: Notre histoire
 seoDescription: >-
-  Racines en Partage relie deux terres : l'Afrique de l'Ouest et la France.
-  Des produits simples, conditionnés par l'ESAT Les Oliviers à Gennevilliers.
+  Racines en Partage relie deux terres : l’Afrique de l’Ouest et la France.
+  Des produits simples, conditionnés par l’ESAT Les Oliviers à Gennevilliers.
 title: Notre histoire
 lead: >-
-  Racines en Partage est une petite maison d'Arnouville, dans le Val-d'Oise. Elle
-  propose des poudres, des fleurs, des graines et du cacao que l'on retrouve sur
-  les tables d'Afrique de l'Ouest, dans des sachets kraft tout simples.
+  Racines en Partage est une petite maison d’Arnouville, dans le Val-d’Oise. Elle
+  propose des poudres, des fleurs, des graines et du cacao que l’on retrouve sur
+  les tables d’Afrique de l’Ouest, dans des sachets kraft tout simples.
 sections:
   - title: Deux terres
     body: >-
       Le moringa et le souchet viennent du Niger, le baobab du Sénégal, le cacao
-      de Côte d'Ivoire, le psyllium d'Inde. Ces produits ont accompagné des
+      de Côte d’Ivoire, le psyllium d’Inde. Ces produits ont accompagné des
       générations de cuisines familiales. Nous voulons les rendre faciles à
       trouver ici, avec leur origine écrite noir sur blanc.
     image: /src/assets/brand/hero-trio.webp
@@ -21,20 +21,20 @@ sections:
       feuilles de palmier
   - title: Un rituel
     body: >-
-      Une infusion de bissap partagée l'après-midi, un lait de souchet préparé la
+      Une infusion de bissap partagée l’après-midi, un lait de souchet préparé la
       veille, une cuillère de moringa dans le smoothie du matin. Chaque sachet
-      porte une idée d'utilisation et, souvent, une petite recette tirée de nos
+      porte une idée d’utilisation et, souvent, une petite recette tirée de nos
       habitudes.
-  - title: Un partenariat avec l'ESAT Les Oliviers
+  - title: Un partenariat avec l’ESAT Les Oliviers
     body: >-
-      Nos produits sont conditionnés en France par l'ESAT Les Oliviers, à
+      Nos produits sont conditionnés en France par l’ESAT Les Oliviers, à
       Gennevilliers (92). Un ESAT est un établissement qui accompagne par le
       travail des personnes en situation de handicap. Pesée, ensachage,
       étiquetage : chaque sachet passe entre leurs mains.
     image: /src/assets/brand/duo-baobab-orge.webp
-    imageAlt: Un sachet de poudre de baobab et un sachet de poudre d'orge grillée
+    imageAlt: Un sachet de poudre de baobab et un sachet de poudre d’orge grillée
   - title: Des ingrédients simples
     body: >-
-      Un seul ingrédient par sachet. Pas d'additif, pas de conservateur, pas de
-      colorant. Ce qui est écrit sur l'étiquette est ce que vous trouvez dans le
+      Un seul ingrédient par sachet. Pas d’additif, pas de conservateur, pas de
+      colorant. Ce qui est écrit sur l’étiquette est ce que vous trouvez dans le
       sachet, et rien de plus.

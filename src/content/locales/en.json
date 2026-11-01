@@ -210,7 +210,8 @@
     "updated": "Last updated: {date}",
     "sirenPending": "registration in progress",
     "vatFranchise": "VAT not applicable, article 293 B of the French General Tax Code",
-    "vatIncluded": "Prices include VAT at {rate}%"
+    "vatIncluded": "Prices include VAT at {rate}%",
+    "nav": "Legal texts"
   },
   "a11y": {
     "skip": "Skip to content",

@@ -2,6 +2,7 @@
 // summary. Keyed updates: an existing <li> is patched in place so the focus
 // stays on the stepper button the customer is pressing.
 import type { CartContext } from './context';
+import { nowrapWeight } from '../i18n/format';
 import { h, icon } from './dom';
 import type { CartLine } from './store';
 
@@ -16,6 +17,7 @@ export interface LineOptions {
 function buildLine(line: CartLine, ctx: CartContext, variant: LineVariant): HTMLLIElement {
   const product = ctx.catalog.products[line.sku];
   const name = product?.name ?? line.sku;
+  const shown = nowrapWeight(name);
   const img = product
     ? h('img', {
         src: product.image,
@@ -37,8 +39,8 @@ function buildLine(line: CartLine, ctx: CartContext, variant: LineVariant): HTML
     media.append(h('span', { class: 'cart-line-badge', 'data-line-badge': true }));
 
   const title = product
-    ? h('a', { class: 'cart-line-name', href: product.url }, name)
-    : h('span', { class: 'cart-line-name' }, name);
+    ? h('a', { class: 'cart-line-name', href: product.url }, shown)
+    : h('span', { class: 'cart-line-name' }, shown);
 
   const stepper =
     variant === 'summary'

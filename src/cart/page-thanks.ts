@@ -2,6 +2,7 @@
 // Without a valid session id, or on any error, the neutral shell stays.
 import { getOrder, isSessionId, type OrderSummary } from './api';
 import type { CartContext } from './context';
+import { nowrapWeight } from '../i18n/format';
 import { h } from './dom';
 import { displayCase } from './relay';
 
@@ -62,7 +63,7 @@ function renderOrder(root: HTMLElement, order: OrderSummary, ctx: CartContext): 
         'li',
         { class: 'order-line' },
         h('span', { class: 'order-line-qty' }, `${line.quantity} ×`),
-        h('span', { class: 'order-line-name' }, line.name),
+        h('span', { class: 'order-line-name' }, nowrapWeight(line.name)),
         h('span', { class: 'order-line-total price' }, ctx.price(line.unitAmount * line.quantity)),
       ),
     ),

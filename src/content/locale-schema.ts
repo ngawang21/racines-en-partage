@@ -219,6 +219,7 @@ export const localeSchema = z.object({
     sirenPending: text,
     vatFranchise: text,
     vatIncluded: text,
+    nav: text,
   }),
   a11y: ns({
     skip: text,

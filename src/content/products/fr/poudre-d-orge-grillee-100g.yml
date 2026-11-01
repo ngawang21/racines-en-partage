@@ -2,7 +2,7 @@ sku: REP-ORG-100
 category: poudres
 price: 5.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
 weightGrams: 100
-origin: Allemagne, Sonam'Tsampa
+origin: Allemagne, Sonam’Tsampa
 originCountryCode: DE
 images:
   - /src/assets/products/orge-grillee-100.webp
@@ -23,16 +23,16 @@ nutrition:
 # gluten under free_from. Flagged for the owner in docs/legal-notes.md.
 free_from: [additifs, conservateurs, colorants]
 related: [teguments-de-psyllium-200g, poudre-de-moringa-200g]
-name: Poudre d'orge grillée
-tagline: La tsampa, farine d'orge grillée au parfum de pain chaud.
+name: Poudre d’orge grillée
+tagline: La tsampa, farine d’orge grillée au parfum de pain chaud.
 description: >-
-  Des grains d'orge grillés puis moulus finement : une poudre au goût toasté,
+  Des grains d’orge grillés puis moulus finement : une poudre au goût toasté,
   proche du pain sortant du four. Elle se délaie dans une boisson chaude, épaissit
   une soupe ou enrichit une pâte à crêpes.
 ingredients: 100 % orge grillée (sans additifs, sans conservateur, sans colorant).
 usage:
   - À incorporer dans vos boissons, préparations culinaires (soupes, porridges, bouillies, crêpes, etc.) ou à saupoudrer sur vos plats.
-  - Dans un grand verre d'eau, le matin ou avant un repas.
+  - Dans un grand verre d’eau, le matin ou avant un repas.
   - Dans vos smoothies.
   - Dans vos yaourts, soupes ou desserts.
 benefits:
@@ -40,8 +40,8 @@ benefits:
   - Source de protéines végétales
   - Source de minéraux (fer, calcium, magnésium, phosphore, potassium)
   - Indice glycémique modéré (environ 35)
-storage: Conserver dans un endroit sec, à l'abri de la chaleur et de l'humidité. Bien refermer après ouverture.
-seoTitle: Poudre d'orge grillée (tsampa) 100 g
+storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
+seoTitle: Poudre d’orge grillée (tsampa) 100 g
 seoDescription: >-
-  Poudre d'orge grillée Sonam'Tsampa, au goût toasté. Pour vos boissons,
+  Poudre d’orge grillée Sonam’Tsampa, au goût toasté. Pour vos boissons,
   porridges, soupes et crêpes. Sans additifs ni conservateur.

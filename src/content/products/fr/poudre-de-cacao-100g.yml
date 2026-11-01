@@ -2,7 +2,7 @@ sku: REP-CAC-P100
 category: cacao
 price: 6.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
 weightGrams: 100
-origin: Côte d'Ivoire
+origin: Côte d’Ivoire
 originCountryCode: CI
 images:
   - /src/assets/products/cacao-poudre-100.webp
@@ -21,7 +21,7 @@ nutrition:
 free_from: []
 related: [grues-de-cacao-100g, tubercules-de-souchet-200g]
 name: Poudre de cacao
-tagline: Un cacao ivoirien pur, à l'arôme intense.
+tagline: Un cacao ivoirien pur, à l’arôme intense.
 description: >-
   Un cacao 100 % ivoirien, non sucré, dont on a extrait le beurre pour garder
   une poudre dense et aromatique. Pour un chocolat chaud qui a du caractère,
@@ -41,8 +41,8 @@ recipe:
     - Laissez frémir 10 minutes en remuant.
     - Dégustez bien chaud.
 benefits: []
-storage: Conserver dans un endroit sec, à l'abri de la chaleur et de l'humidité. Bien refermer après ouverture.
-seoTitle: Poudre de cacao pur de Côte d'Ivoire 100 g
+storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
+seoTitle: Poudre de cacao pur de Côte d’Ivoire 100 g
 seoDescription: >-
-  Poudre de cacao 100 % ivoirien, non sucrée, à l'arôme intense. Pour vos
+  Poudre de cacao 100 % ivoirien, non sucrée, à l’arôme intense. Pour vos
   chocolats chauds et pâtisseries. Recette de chocolat chaud incluse.

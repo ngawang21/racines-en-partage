@@ -5,6 +5,7 @@ import {
   formatPrice,
   formatWeight,
   localiseNutrition,
+  nowrapWeight,
   phoneE164,
   toCents,
 } from '../../src/i18n/format';
@@ -38,6 +39,18 @@ describe('toCents', () => {
   it('refuses NaN and infinities', () => {
     expect(() => toCents(Number.NaN)).toThrow();
     expect(() => toCents(Number.POSITIVE_INFINITY)).toThrow();
+  });
+});
+
+describe('nowrapWeight', () => {
+  it('glues a trailing weight to its number and to the name', () => {
+    expect(nowrapWeight('Fleurs d’hibiscus (bissap) 100 g')).toBe(
+      'Fleurs d’hibiscus (bissap)\u00a0100\u00a0g',
+    );
+    expect(nowrapWeight('Moringa 1,5 kg')).toBe('Moringa\u00a01,5\u00a0kg');
+  });
+  it('leaves other labels alone', () => {
+    expect(nowrapWeight('Gift card')).toBe('Gift card');
   });
 });
 

@@ -46,7 +46,7 @@ html.has-drawer {
 
 .price.is-free,
 .is-free.price {
-  color: var(--leaf);
+  color: var(--leaf-ink);
 }
 
 .text-link {
@@ -196,7 +196,7 @@ html.has-drawer {
   transition: transform var(--dur-slow) var(--ease-out);
 }
 .free-shipping.is-reached .free-shipping-text {
-  color: var(--leaf);
+  color: var(--leaf-ink);
 }
 .free-shipping.is-reached .free-shipping-text::before {
   content: '✓ ';

@@ -2,7 +2,7 @@ sku: REP-HIB-100
 category: infusions
 price: 6.50 # placeholder, to confirm with the owner (launch.pricesConfirmed)
 weightGrams: 100
-origin: Afrique de l'Ouest # not printed on the label, owner to confirm
+origin: Afrique de l’Ouest # not printed on the label, owner to confirm
 images:
   - /src/assets/products/hibiscus-100.webp
 stock: in_stock
@@ -19,13 +19,13 @@ nutrition:
   salt: < 0,03 g
 free_from: [additifs, conservateurs, colorants, gluten]
 related: [poudre-de-baobab-100g, tubercules-de-souchet-200g]
-name: Fleurs d'hibiscus (bissap)
+name: Fleurs d’hibiscus (bissap)
 tagline: Les calices rouge profond du bissap, chaud ou glacé.
 description: >-
-  Les calices séchés de la fleur d'hibiscus donnent le bissap, la boisson rouge
-  rubis que l'on partage de Dakar à Abidjan. Infusées, elles offrent un goût
+  Les calices séchés de la fleur d’hibiscus donnent le bissap, la boisson rouge
+  rubis que l’on partage de Dakar à Abidjan. Infusées, elles offrent un goût
   fruité et acidulé, à boire chaud en hiver ou glacé avec de la menthe en été.
-ingredients: 100 % fleurs d'hibiscus séchées (calices). Sans additifs, sans conservateur, sans colorant, sans gluten.
+ingredients: 100 % fleurs d’hibiscus séchées (calices). Sans additifs, sans conservateur, sans colorant, sans gluten.
 usage:
   - À incorporer dans vos boissons, infusions, sirops, jus ou recettes selon vos envies.
   - En infusion chaude ou froide.
@@ -34,8 +34,8 @@ usage:
 recipe:
   title: Infusion de bissap
   steps:
-    - Faites bouillir 1 litre d'eau.
-    - Ajoutez 2 à 3 cuillères à soupe de fleurs d'hibiscus.
+    - Faites bouillir 1 litre d’eau.
+    - Ajoutez 2 à 3 cuillères à soupe de fleurs d’hibiscus.
     - Laissez infuser 10 à 15 minutes.
     - Filtrez et dégustez chaud ou froid.
     - Vous pouvez ajouter un peu de miel, de menthe ou de citron selon vos goûts.
@@ -44,8 +44,8 @@ benefits:
   - Source de vitamine C
   - Contribue à une bonne hydratation
   - Goût fruité et rafraîchissant
-storage: Conserver dans un endroit sec, à l'abri de la chaleur et de l'humidité. Bien refermer après ouverture.
-seoTitle: Fleurs d'hibiscus séchées pour bissap 100 g
+storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
+seoTitle: Fleurs d’hibiscus séchées pour bissap 100 g
 seoDescription: >-
-  Calices d'hibiscus séchés pour préparer le bissap, chaud ou glacé. Sans
-  additifs ni conservateur. Recette d'infusion incluse.
+  Calices d’hibiscus séchés pour préparer le bissap, chaud ou glacé. Sans
+  additifs ni conservateur. Recette d’infusion incluse.

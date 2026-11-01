@@ -2,7 +2,7 @@ sku: REP-SOU-T200
 category: graines
 price: 7.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
 weightGrams: 200
-origin: Afrique de l'Ouest # not printed on the label, owner to confirm
+origin: Afrique de l’Ouest # not printed on the label, owner to confirm
 images:
   - /src/assets/products/souchet-tubercules-200.webp
 stock: in_stock
@@ -24,7 +24,7 @@ tagline: Les petits tubercules entiers, pour un lait de souchet maison.
 description: >-
   Entiers et séchés, les tubercules de souchet se croquent après trempage ou se
   mixent en horchata, ce lait végétal doux et frais. Leur goût rappelle la
-  noisette et l'amande.
+  noisette et l’amande.
 ingredients: 100 % tubercules de souchet (sans additifs, sans conservateur, sans colorant).
 usage:
   - À incorporer dans vos boissons, préparations culinaires ou recettes selon vos envies.
@@ -33,17 +33,17 @@ usage:
 recipe:
   title: Horchata de souchet (lait de souchet)
   steps:
-    - Faites tremper 250 g de tubercules de souchet dans 1 litre d'eau pendant 12 h.
+    - Faites tremper 250 g de tubercules de souchet dans 1 litre d’eau pendant 12 h.
     - Égouttez et rincez.
-    - Mixez avec 1 litre d'eau fraîche.
-    - Filtrez à l'aide d'un tissu propre.
+    - Mixez avec 1 litre d’eau fraîche.
+    - Filtrez à l’aide d’un tissu propre.
     - Sucrez selon votre goût (miel, sirop, etc.).
 benefits:
   - Source de fibres
   - Source de protéines végétales
   - Source de magnésium, de fer, de phosphore et de potassium
-storage: Conserver dans un endroit sec, à l'abri de la chaleur et de l'humidité. Bien refermer après ouverture.
+storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
 seoTitle: Tubercules de souchet entiers 200 g
 seoDescription: >-
-  Tubercules de souchet entiers et séchés, sans additifs. Recette d'horchata,
+  Tubercules de souchet entiers et séchés, sans additifs. Recette d’horchata,
   le lait de souchet maison, incluse.

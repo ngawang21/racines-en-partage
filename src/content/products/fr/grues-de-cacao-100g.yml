@@ -2,7 +2,7 @@ sku: REP-CAC-G100
 category: cacao
 price: 7.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
 weightGrams: 100
-origin: Côte d'Ivoire
+origin: Côte d’Ivoire
 originCountryCode: CI
 images:
   - /src/assets/products/cacao-grues-100.webp
@@ -39,8 +39,8 @@ benefits:
   - Source de magnésium, fer, phosphore et potassium
   - Contribue à une bonne énergie
   - Goût intense et naturel
-storage: Conserver dans un endroit sec, à l'abri de la chaleur et de l'humidité. Bien refermer après ouverture.
-seoTitle: Grués de cacao de Côte d'Ivoire 100 g
+storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
+seoTitle: Grués de cacao de Côte d’Ivoire 100 g
 seoDescription: >-
   Éclats de fèves de cacao ivoirien, croquants et intenses. À croquer, à
   parsemer sur un yaourt ou à glisser dans vos cookies.

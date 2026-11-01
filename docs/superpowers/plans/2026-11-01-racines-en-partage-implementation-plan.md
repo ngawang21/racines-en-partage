@@ -107,7 +107,7 @@ a separate entry in `worker/` deployed with the static assets by one
 
 ### Wave 1: foundation (sequential, one implementer)
 
-- [ ] Scaffold: `package.json` (scripts `dev`, `build`, `preview`, `check`,
+- [x] Scaffold: `package.json` (scripts `dev`, `build`, `preview`, `check`,
       `format`, `test`, `test:build`, `test:worker`, `e2e`, `launch-check`,
       `dev:worker`), `.nvmrc` 22, `.editorconfig`, `.prettierrc` (+ astro
       plugin), `.prettierignore`, `.gitignore` (node_modules, dist, .astro,
@@ -116,28 +116,28 @@ a separate entry in `worker/` deployed with the static assets by one
       `astro.config.mjs` (site `https://racinesenpartage.fr`, static, i18n fr
       default + en, sitemap with filter for noindex routes and `/admin/`,
       `compressHTML: 'jsx'`, `assetsInlineLimit` guard, catalog integration).
-- [ ] `src/consts.ts`: `SITE`, `LOCALES`, `DEFAULT_LOCALE`, `Locale` type.
-- [ ] Content schemas (`src/content/schemas.ts`, zod, pure) for product,
+- [x] `src/consts.ts`: `SITE`, `LOCALES`, `DEFAULT_LOCALE`, `Locale` type.
+- [x] Content schemas (`src/content/schemas.ts`, zod, pure) for product,
       category, pages, settings; `src/content.config.ts` with glob loaders:
       products `src/content/products/{fr,en}/*.yml`, categories
       `src/content/categories/{fr,en}/*.yml`, pages
       `src/content/pages/{fr,en}/*.yml`, legal `src/content/legal/{fr,en}/*.md`,
       settings `src/content/settings/shop.yml`, locales
       `src/content/locales/*.json`.
-- [ ] Seed content: 10 products FR and EN from spec appendix A (EN translated
+- [x] Seed content: 10 products FR and EN from spec appendix A (EN translated
       with care, culinary tone, no new health claims), 4 categories, home,
       about, faq, contact pages FR and EN, legal, terms and privacy Markdown
       FR and EN with placeholders, `shop.yml` from spec 4.4, `fr.json` and
       `en.json` UI strings for all namespaces (complete French, complete
       English).
-- [ ] `src/i18n/fallback.ts` (deepFallback, interpolate), `src/i18n/locale.ts`
+- [x] `src/i18n/fallback.ts` (deepFallback, interpolate), `src/i18n/locale.ts`
       (loadLocale, loadProducts(locale) merging FR shared fields and EN
       translations, loadCategories, loadPage, loadSettings), `src/i18n/routing.ts`
       (`ROUTES`, `routePath`, `routeUrl`, `alternatesFor`), `src/i18n/format.ts`
       (`formatPrice(cents, locale)`, `formatWeight`).
-- [ ] `src/images.ts`: `resolveAsset(path)` over `import.meta.glob` of
+- [x] `src/images.ts`: `resolveAsset(path)` over `import.meta.glob` of
       `/src/assets/**`; throws on a missing file at build.
-- [ ] `integrations/catalog.ts`: Astro integration that, at `astro:config:setup`
+- [x] `integrations/catalog.ts`: Astro integration that, at `astro:config:setup`
       or `astro:build:start`, writes `src/cart/catalog.generated.json` (per
       locale display data) and, at `astro:build:done`, `dist/catalog.json`
       (spec 6.2) with absolute image URLs taken from the built product image
@@ -146,12 +146,12 @@ a separate entry in `worker/` deployed with the static assets by one
       simpler choice: a static endpoint that imports the collections and
       `getImage`, so `dist/catalog.json` is just another page). Prefer the
       endpoint.
-- [ ] `src/seo/graph.ts` (pure): `buildGraph({ kind: 'home'|'shop'|'category'|'product'|'faq'|'page', ... })`
+- [x] `src/seo/graph.ts` (pure): `buildGraph({ kind: 'home'|'shop'|'category'|'product'|'faq'|'page', ... })`
       and `robotsContent`; `src/components/Seo.astro` wires it.
-- [ ] `src/styles/tokens.css` and `global.css` per spec 5.1 to 5.3 (buttons,
+- [x] `src/styles/tokens.css` and `global.css` per spec 5.1 to 5.3 (buttons,
       badges, hairline, kente divider, container, visually-hidden, focus).
       Fonts imported in `Base.astro`.
-- [ ] `Base.astro` (head, Seo, Header, main, Footer, CartDrawer and
+- [x] `Base.astro` (head, Seo, Header, main, Footer, CartDrawer and
       CartScripts placeholders, announcement bar, shop-closed notice),
       `Header.astro` (medallion, wordmark, nav, language pill, cart button per
       contract, mobile `<details>` menu), `Footer.astro` (brand, contact,
@@ -159,39 +159,39 @@ a separate entry in `worker/` deployed with the static assets by one
       `Icon.astro` (inline SVG set: cart, menu, close, leaf, truck, pin,
       lock, shield, check, chevron, minus, plus, flower), `Picture.astro`
       wrapper around `astro:assets` Picture with sizes presets.
-- [ ] Pages: every route of spec section 3 as a thin file rendering `Base`
+- [x] Pages: every route of spec section 3 as a thin file rendering `Base`
       with a stub `<h1>` and the right `routeKey`, `noindex` where specified;
       `404.astro`; `catalog.json.ts`; `robots.txt` in public.
-- [ ] Scripts: `scripts/launch-check.mjs` (SIREN, pricesConfirmed, TODO in
+- [x] Scripts: `scripts/launch-check.mjs` (SIREN, pricesConfirmed, TODO in
       legal), `scripts/generate-og.mjs` placeholder left to 2A.
-- [ ] Tests: unit for schemas, fallback, routing, format, graph, catalog
+- [x] Tests: unit for schemas, fallback, routing, format, graph, catalog
       endpoint shape (import the module and call GET with a mocked
       collection, or test the pure `buildCatalog(products, settings)` it
       calls); build tests over `dist/` (pages exist for every route in both
       locales, one JSON-LD each, robots meta, hreflang on indexable pages, no
       inline script, catalog.json valid and consistent with content).
-- [ ] CI workflow, `README.md`, `CLAUDE.md` (what this is, commands, layout,
+- [x] CI workflow, `README.md`, `CLAUDE.md` (what this is, commands, layout,
       conventions, gotchas), first commit `chore: scaffold astro storefront`
       then `feat: content model, seed catalogue, i18n, seo graph`.
 
 ### Wave 2: parallel implementers (start when wave 1 is green)
 
 2A Storefront and design (spec 5):
-- [ ] Home sections, shop grid with chips and sort, category pages, product
+- [x] Home sections, shop grid with chips and sort, category pages, product
       page (gallery, accordions, related, footnote), about, faq, contact,
       legal pages with interpolation, 404, OG image per product (script with
       sharp: 1200 by 630, cream background, product photo, name, medallion)
       and a default OG image, favicons wired (`public/icons`,
       `apple-touch-icon.png`, `favicon.svg` simple hibiscus glyph,
       `site.webmanifest`), `public/_headers` global block, `robots.txt`.
-- [ ] Visual QA at 390 and 1280 px with screenshots in `out/review/` (git
+- [x] Visual QA at 390 and 1280 px with screenshots in `out/review/` (git
       ignored); iterate until it reads premium: spacing rhythm, type scale,
       image frames, hover states, motion within reduced-motion rules.
-- [ ] Build tests extended: product pages carry `Product` with `Offer`, FAQ
+- [x] Build tests extended: product pages carry `Product` with `Offer`, FAQ
       carries `FAQPage`, OG image exists per product.
 
 2B Cart and checkout (spec 5.4 cart, checkout, thanks; 6.1; 6.4):
-- [ ] `src/cart/store.ts` (pure, tested), `src/cart/totals.ts` (pure,
+- [x] `src/cart/store.ts` (pure, tested), `src/cart/totals.ts` (pure,
       tested), `src/cart/ui.ts` (DOM glue: delegation, drawer, count,
       aria-live, steppers), `CartDrawer.astro`, `CartScripts.astro`, cart
       page, checkout page with the three methods and the Mondial Relay
@@ -201,11 +201,11 @@ a separate entry in `worker/` deployed with the static assets by one
       and to `docs/deployment.md` section "CSP"), terms checkbox, call to
       `POST /api/checkout`, inline errors incl. out-of-stock highlighting,
       thanks page with `GET /api/orders/:id`, cart cleared on `paid`.
-- [ ] Playwright config and e2e per spec 8 (route mock for `/api/*`), run
+- [x] Playwright config and e2e per spec 8 (route mock for `/api/*`), run
       against `astro preview`; `pnpm e2e` in CI.
 
 2C Worker (spec 6.2, 6.3):
-- [ ] `worker/index.ts` (fetch handler: `/api/*` to Hono, else `ASSETS`),
+- [x] `worker/index.ts` (fetch handler: `/api/*` to Hono, else `ASSETS`),
       `worker/app.ts` (`createApp(deps)`), `worker/checkout.ts`,
       `worker/orders.ts`, `worker/webhook.ts`, `worker/email/*.ts`
       (templates FR and EN, owner and customer, plain text alternative),
@@ -216,14 +216,14 @@ a separate entry in `worker/` deployed with the static assets by one
       assets dir `./dist`, `html_handling: auto-trailing-slash`,
       `not_found_handling: 404-page`, `run_worker_first: ["/api/*"]`, vars
       `SITE_URL`, `ORDER_EMAIL_FROM`), `.dev.vars.example`, `pnpm dev:worker`.
-- [ ] Tests with fakes for every path of the contract, idempotency keys,
+- [x] Tests with fakes for every path of the contract, idempotency keys,
       free shipping at threshold, closed shop, relay metadata, webhook
       signature failure, missing RESEND key path.
-- [ ] Security pass: no secret in responses or logs, `no-store`, JSON only,
+- [x] Security pass: no secret in responses or logs, `no-store`, JSON only,
       body size limit, CORS same-origin only.
 
 2D CMS and documentation (spec 4, 9, 10):
-- [ ] `public/admin/index.html` (noindex) and `public/admin/config.yml`:
+- [x] `public/admin/index.html` (noindex) and `public/admin/config.yml`:
       GitHub backend `ngawang21/racines-en-partage` branch `main`, `base_url`
       placeholder for the Authenticator worker, `site_url`, `display_url`,
       `logo`, `media_folder: /src/assets/products`, `public_folder:
@@ -241,33 +241,33 @@ a separate entry in `worker/` deployed with the static assets by one
       against the schema URL in a unit test (fetch skipped offline: validate
       structure with a local check that every content field exists in
       `schemas.ts` and vice versa).
-- [ ] `docs/guide-proprietaire.md` (FR, screenshots optional): se connecter,
+- [x] `docs/guide-proprietaire.md` (FR, screenshots optional): se connecter,
       modifier un produit, prix, photo, rupture, nouveau produit, supprimer,
       catégories, textes des pages, frais de port et seuil, pause boutique,
       annonces, commandes dans Stripe, préparer un colis Mondial Relay,
       rembourser, codes promo, e-mails, que faire si.
-- [ ] `docs/deployment.md` (EN, developer): GitHub, Cloudflare Workers Builds,
+- [x] `docs/deployment.md` (EN, developer): GitHub, Cloudflare Workers Builds,
       secrets, domain at OVHcloud with DNS at Cloudflare, Resend DNS, Stripe
       account and webhook, Mondial Relay Offre Start and brand code, Sveltia
       Authenticator and GitHub OAuth app, go-live checklist, troubleshooting.
-- [ ] `docs/handover.md` (EN): accounts matrix, transfer steps, assignment
+- [x] `docs/handover.md` (EN): accounts matrix, transfer steps, assignment
       letter template, support options, costs, independence plan.
-- [ ] `docs/client/presentation.md` (FR): ce que Marie reçoit, comment ça
+- [x] `docs/client/presentation.md` (FR): ce que Marie reçoit, comment ça
       marche, coûts, ce qu'elle doit fournir (SIREN, prix, statut TVA,
       origines manquantes, Instagram, compte Stripe, compte Mondial Relay,
       validation CGV et médiateur, textes "Notre histoire"), prochaines étapes.
-- [ ] `docs/legal-notes.md` (EN): food supplement rules summary (DGCCRF
+- [x] `docs/legal-notes.md` (EN): food supplement rules summary (DGCCRF
       declaration, claims, labelling), points flagged on labels (grués table,
       barley gluten wording, missing origins), what the site does about them.
-- [ ] `docs/content.md` (EN): content model and file layout for developers.
+- [x] `docs/content.md` (EN): content model and file layout for developers.
 
 ### Wave 3: integration, QA, release
 
-- [ ] Merge check: `pnpm check`, `pnpm test`, `pnpm test:worker`, `pnpm build`,
+- [x] Merge check: `pnpm check`, `pnpm test`, `pnpm test:worker`, `pnpm build`,
       `pnpm test:build`, `pnpm e2e`.
-- [ ] Full visual review of every route FR and EN at 390 and 1280 px; design
+- [x] Full visual review of every route FR and EN at 390 and 1280 px; design
       iteration round with the storefront implementer.
-- [ ] Accessibility scan (axe through Playwright) on home, shop, product,
+- [x] Accessibility scan (axe through Playwright) on home, shop, product,
       cart, checkout; fix every serious or critical issue.
 - [ ] Security review of `worker/` and `_headers` (ecc security reviewer).
 - [ ] Code review (ecc code reviewer) on the whole diff; fix blocking items.
@@ -280,3 +280,20 @@ a separate entry in `worker/` deployed with the static assets by one
 
 - 2026-11-01 18:10 spec and plan written; assets derived into
   `src/assets/` and `public/icons`; git initialised on `main`.
+- 2026-11-01 wave 1 (foundation): scaffold, content model and seed
+  catalogue FR and EN, i18n loaders and routing, SEO graph, catalogue
+  endpoint, tokens and layout, thin routes, launch check, CI, README and
+  CLAUDE.md; unit and build tests green.
+- 2026-11-01 wave 2 (2A storefront, 2B cart and checkout, 2C Worker, 2D CMS
+  and docs): every storefront page, OG images, cart drawer and pages,
+  checkout with the Mondial Relay widget under a strict CSP, thanks page,
+  Worker API with Stripe and Resend, Sveltia CMS, owner guide, deployment,
+  handover, presentation and legal notes. Tests: unit 152, worker 96, build
+  30, e2e 10.
+- 2026-11-01 wave 3 (polish): larger 4:3 home hero, walk of every route FR
+  and EN at 390 and 1280 px (`out/review/3/`), typographic apostrophes in the
+  content, locale-aware colons, weights that never wrap, round free-shipping
+  threshold at checkout, axe scan in `tests/e2e/a11y.spec.ts` (language pill
+  label in name, leaf and kraft text contrast, unique legal nav label; zero
+  violations left on the scanned pages), CSP section of `docs/deployment.md`.
+  Tests: unit 154, worker 96, build 30, e2e 30.
