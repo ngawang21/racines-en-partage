@@ -16,7 +16,7 @@ The products are foodstuffs (plant powders, dried flowers, seeds, tubers, cacao)
 
 ## 3. Prices
 
-Prices are shown in euros, all taxes included. {vat}. Delivery costs are shown before the order is confirmed; delivery is free above the amount displayed on the website. The seller may change prices at any time; the price that applies is the one displayed when the order is placed.
+Prices are shown in euros. {vat}. Delivery costs are shown before the order is confirmed; delivery is free from the amount displayed on the website. The seller may change prices at any time; the price that applies is the one displayed when the order is placed.
 
 ## 4. Orders
 
@@ -34,7 +34,7 @@ Three delivery methods are offered:
 - home delivery by Colissimo, in France: 2 to 4 working days after dispatch;
 - free pickup at 9 Rue du Marché, 95400 Arnouville, by appointment.
 
-Orders are packed within 2 working days. Delivery times are indicative. If delivery is more than 7 days late, the customer may cancel the order under article L216-6 of the French Consumer Code.
+Orders are packed within 2 working days. The delivery times shown are those the seller commits to. If delivery is more than 7 days late, the customer may cancel the order under article L216-6 of the French Consumer Code.
 
 ## 7. Transfer of risk
 
@@ -42,9 +42,11 @@ The risk of loss or damage passes to the customer when they take physical posses
 
 ## 8. Right of withdrawal
 
-The customer has 14 days from receipt of the products to withdraw, without giving a reason, by informing the seller by e-mail at {email}. The products must be returned unopened within 14 days of that notice, at the customer's expense. The refund is made within 14 days of receiving the return.
+The customer has 14 days from receipt of the products to withdraw, without giving a reason, by informing the seller by e-mail at {email}. The products must be returned unopened within 14 days of that notice, at the customer's expense. The refund, including the initial delivery costs (at the cheapest standard rate), is made within 14 days of the day the seller is informed of the withdrawal; it may be deferred until the products are recovered. The customer may use the withdrawal form below or any other unambiguous statement.
 
 Under article L221-28 of the French Consumer Code, the right of withdrawal does not apply to goods unsealed by the customer after delivery that cannot be returned for hygiene or health protection reasons, nor to goods liable to deteriorate rapidly. An opened pouch therefore cannot be taken back.
+
+**Withdrawal form** (to copy into an e-mail to {email}, only if you wish to withdraw): "I hereby give notice that I withdraw from my contract of sale of the following products, ordered on [date] and received on [date]: [products]. Name: [name]. Address: [address]. Date: [date]."
 
 ## 9. Guarantees
 

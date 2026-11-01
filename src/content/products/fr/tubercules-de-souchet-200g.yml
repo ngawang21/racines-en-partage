@@ -8,7 +8,7 @@ images:
   - /src/assets/products/souchet-tubercules-200.webp
 stock: in_stock
 featured: true
-nutritionVerified: true
+nutritionVerified: false # the label prints ranges (400 à 450 kcal), not a declaration
 nutrition:
   energy: 400 à 450 kcal
   fat: 22 à 25 g
@@ -40,9 +40,9 @@ recipe:
     - Filtrez à l’aide d’un tissu propre.
     - Sucrez selon votre goût (miel, sirop, etc.).
 benefits:
-  - Source de fibres
-  - Source de protéines végétales
-  - Source de magnésium, de fer, de phosphore et de potassium
+  - Tubercules entiers, séchés, sans rien ajouter
+  - Sans gluten
+  - Goût de noisette et d'amande, pour un lait de souchet maison
 storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
 seoTitle: Tubercules de souchet entiers 200 g
 seoDescription: >-

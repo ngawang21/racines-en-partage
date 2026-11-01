@@ -21,7 +21,8 @@ Your data is only shared with the following providers, for the needs of the orde
 - Stripe (online payment and receipts);
 - Cloudflare (website hosting and technical processing of requests);
 - Resend (sending the order confirmation e-mails);
-- Mondial Relay (pickup point delivery: name, phone and e-mail for the arrival notice);
+- Mondial Relay (pickup point delivery: name, phone and e-mail for the collection notice);
+- La Poste / Colissimo (home delivery: name, address and phone);
 - GitHub (storage of the website content, used only by the administrator; no customer data is stored there).
 
 Some of these providers are based in the United States; transfers are covered by the European Commission's standard contractual clauses or the EU-US Data Privacy Framework.

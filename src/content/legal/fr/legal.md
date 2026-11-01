@@ -6,7 +6,7 @@ updated: '2026-11-01'
 
 ## Éditeur du site
 
-Le site racinesenpartage.fr est édité par {company}, SIREN {siren}, dont le siège est situé {address}.
+Le site racinesenpartage.fr est édité par {company}, SIREN {siren}, dont le siège est situé au {address}.
 
 - Téléphone : {phone}
 - E-mail : {email}

@@ -24,10 +24,22 @@ import {
 import { hasAsset } from '../images';
 import { deepFallback, interpolate, interpolateHtml, pickLabel } from './fallback';
 import { formatPhone } from './format';
+import { frenchTypographyDeep, frenchTypographyHtml } from './typography';
 
 // `astro:content` is a virtual module that vitest cannot resolve, so the pure
 // helpers live in ./fallback and ../content/merge and are re-exported here.
 export { deepFallback, interpolate, interpolateHtml, pickLabel };
+
+/**
+ * French content gets its no-break spaces at load time (before « : ; ! ? »,
+ * inside guillemets, between a number and its unit), so the owner types plain
+ * spaces in the CMS. English content is returned as written.
+ */
+function typeset<T>(locale: Locale, value: T): T {
+  return locale === DEFAULT_LOCALE
+    ? (frenchTypographyDeep(value as Parameters<typeof frenchTypographyDeep>[0]) as T)
+    : value;
+}
 
 /** "fr/poudre-de-moringa-100g" to ["fr", "poudre-de-moringa-100g"]. */
 function splitId(id: string): [Locale, string] {
@@ -55,7 +67,7 @@ export async function loadLocale(locale: Locale): Promise<LocaleContent> {
     // Re-apply the schema: the dev server may keep a cache from an older schema.
     return localeSchema.parse(found.data);
   };
-  const fr = await read(DEFAULT_LOCALE);
+  const fr = typeset(DEFAULT_LOCALE, await read(DEFAULT_LOCALE));
   if (locale === DEFAULT_LOCALE) return fr;
   return deepFallback(await read(locale), fr);
 }
@@ -79,7 +91,10 @@ export async function loadCategories(locale: Locale): Promise<Category[]> {
     if (!hasAsset(c.image))
       throw new Error(`categories/fr/${c.slug}.yml: missing image ${c.image}`);
   }
-  return list.sort((a, b) => a.order - b.order || a.slug.localeCompare(b.slug));
+  return typeset(
+    locale,
+    list.sort((a, b) => a.order - b.order || a.slug.localeCompare(b.slug)),
+  );
 }
 
 /** Dangling `related` links already reported, so a build warns once per link. */
@@ -112,7 +127,7 @@ export async function loadProducts(locale: Locale): Promise<Product[]> {
   if (problems.length > 0)
     throw new Error(`Invalid product catalogue:\n- ${problems.join('\n- ')}`);
   const order = new Map(categories.map((c) => [c.slug, c.order]));
-  return publishedProducts(products).sort(compareProducts(order, locale));
+  return typeset(locale, publishedProducts(products).sort(compareProducts(order, locale)));
 }
 
 export async function loadProduct(locale: Locale, slug: string): Promise<Product> {
@@ -125,7 +140,10 @@ export async function loadPage<K extends PageKey>(locale: Locale, key: K): Promi
   const files = byLocale(await getCollection('pages'));
   const fr = files.fr.get(key);
   if (fr === undefined) throw new Error(`missing src/content/pages/fr/${key}.yml`);
-  return mergePage(key, fr, locale === DEFAULT_LOCALE ? undefined : (files[locale].get(key) ?? {}));
+  return typeset(
+    locale,
+    mergePage(key, fr, locale === DEFAULT_LOCALE ? undefined : (files[locale].get(key) ?? {})),
+  );
 }
 
 /** Values of the `{company}`, `{siren}`, ... tokens of the legal texts. */
@@ -167,10 +185,12 @@ export async function loadLegal(locale: Locale, key: LegalKey): Promise<LegalTex
     (await getEntry('legal', `${DEFAULT_LOCALE}/${key}`));
   if (!entry) throw new Error(`missing src/content/legal/fr/${key}.md`);
   const tokens = legalTokens(await loadSettings(), await loadLocale(locale), locale);
+  const inFrench = entry.id.startsWith(`${DEFAULT_LOCALE}/`);
+  const html = interpolateHtml(entry.rendered?.html ?? '', tokens);
   return {
-    title: entry.data.title,
-    description: entry.data.description,
+    title: typeset(inFrench ? DEFAULT_LOCALE : locale, entry.data.title),
+    description: typeset(inFrench ? DEFAULT_LOCALE : locale, entry.data.description),
     updated: entry.data.updated,
-    html: interpolateHtml(entry.rendered?.html ?? '', tokens),
+    html: inFrench ? frenchTypographyHtml(html) : html,
   };
 }

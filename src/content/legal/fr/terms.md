@@ -14,7 +14,7 @@ Les produits proposés sont des denrées alimentaires (poudres végétales, fleu
 
 ## 3. Prix
 
-Les prix sont indiqués en euros, toutes taxes comprises. {vat}. Les frais de livraison sont indiqués avant la validation de la commande ; la livraison est offerte à partir du montant affiché sur le site. Le vendeur peut modifier ses prix à tout moment ; le prix applicable est celui affiché au moment de la commande.
+Les prix sont indiqués en euros. {vat}. Les frais de livraison sont indiqués avant la validation de la commande ; la livraison est offerte à partir du montant affiché sur le site. Le vendeur peut modifier ses prix à tout moment ; le prix applicable est celui affiché au moment de la commande.
 
 ## 4. Commande
 
@@ -32,17 +32,19 @@ Trois modes de livraison sont proposés :
 - livraison à domicile par Colissimo, en France : 2 à 4 jours ouvrés après expédition ;
 - retrait gratuit au 9 Rue du Marché, 95400 Arnouville, sur rendez-vous.
 
-Les commandes sont préparées sous 2 jours ouvrés. Les délais sont indicatifs. En cas de retard de plus de 7 jours au-delà de la date indiquée, le client peut annuler sa commande dans les conditions de l'article L216-6 du code de la consommation.
+Les commandes sont préparées sous 2 jours ouvrés. Les délais indiqués sont ceux auxquels le vendeur s'engage. En cas de retard de plus de 7 jours au-delà de la date indiquée, le client peut annuler sa commande dans les conditions de l'article L216-6 du code de la consommation.
 
 ## 7. Transfert des risques
 
-Les risques de perte ou d'endommagement des produits sont transférés au client au moment où il prend physiquement possession des produits, au point relais, à son domicile ou lors du retrait.
+Les risques de perte ou d'endommagement des produits sont transférés au client au moment où il prend physiquement possession des produits, au Point Relais, à son domicile ou lors du retrait.
 
 ## 8. Droit de rétractation
 
-Le client dispose d'un délai de 14 jours à compter de la réception des produits pour exercer son droit de rétractation, sans avoir à se justifier, en informant le vendeur par e-mail à {email}. Les produits doivent être retournés non ouverts dans les 14 jours suivant cette information, à ses frais. Le remboursement intervient dans les 14 jours suivant la réception du retour.
+Le client dispose d'un délai de 14 jours à compter de la réception des produits pour exercer son droit de rétractation, sans avoir à se justifier, en informant le vendeur par e-mail à {email}. Les produits doivent être retournés non ouverts dans les 14 jours suivant cette information, aux frais du client. Le remboursement, frais de livraison initiaux compris (au tarif standard le moins coûteux), intervient dans les 14 jours suivant la date à laquelle le vendeur est informé de la rétractation ; il peut être différé jusqu'à la récupération des produits. Le client peut utiliser le formulaire de rétractation ci-dessous ou toute autre déclaration dénuée d'ambiguïté.
 
 Conformément à l'article L221-28 du code de la consommation, le droit de rétractation ne peut pas être exercé pour les biens qui ont été descellés par le client après la livraison et qui ne peuvent être renvoyés pour des raisons d'hygiène ou de protection de la santé, ni pour les biens susceptibles de se détériorer rapidement. Un sachet ouvert ne peut donc pas être repris.
+
+**Formulaire de rétractation** (à recopier dans un e-mail adressé à {email}, uniquement si vous souhaitez vous rétracter) : « Je vous notifie par la présente ma rétractation du contrat portant sur la vente des produits ci-dessous, commandés le [date] et reçus le [date] : [produits]. Nom : [nom]. Adresse : [adresse]. Date : [date]. »
 
 ## 9. Garanties
 

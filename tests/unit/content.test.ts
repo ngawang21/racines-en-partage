@@ -173,6 +173,7 @@ describe('seed catalogue (spec appendix A)', () => {
       'poudre-de-baobab-100g',
       'poudre-de-souchet-100g',
       'teguments-de-psyllium-200g',
+      'tubercules-de-souchet-200g',
     ]);
   });
   it('pairs the related products both ways', () => {
@@ -339,7 +340,7 @@ describe('categories', () => {
     }
     expect(
       mergeCategory('poudres', frCategories.get('poudres'), enCategories.get('poudres')).name,
-    ).toBe('Powders & superfoods');
+    ).toBe('Plant powders');
   });
   it('every category holds at least one product', () => {
     for (const slug of frCategories.keys()) {

@@ -14,8 +14,8 @@ items:
     answer: >-
       When you order, choose a Mondial Relay pickup point on the map, near your
       home or your work. You receive a text and an e-mail as soon as the parcel
-      arrives; it then waits for you for several days. Remember to bring an
-      identity document. We deliver to pickup points in France, Belgium and
+      arrives; it then waits for you for several days. Remember to bring photo ID.
+      We deliver to pickup points in France, Belgium and
       Luxembourg.
   - question: Is delivery free?
     answer: >-
@@ -28,15 +28,16 @@ items:
       soon as your order is ready.
   - question: Which payment methods do you accept?
     answer: >-
-      Payment goes through Stripe, a secure platform: bank card (CB, Visa,
+      Payments are handled by Stripe, a secure platform: debit or credit card (CB, Visa,
       Mastercard) and, depending on your device, Apple Pay or Google Pay. We
       never see your card details.
   - question: Can I return a product?
     answer: >-
       Our products are food: once a pouch is opened it cannot be taken back, for
-      hygiene reasons (article L221-28 of the French Consumer Code). An unopened
-      pouch can be returned within 14 days of delivery. If your parcel arrives
-      damaged, send us a photo and we will replace it.
+      hygiene reasons (article L221-28 of the French Consumer Code). For an
+      unopened pouch, you have 14 days after delivery to tell us you are
+      withdrawing, then 14 days to send it back. If your parcel arrives damaged,
+      send us a photo and we will replace or refund the products concerned.
   - question: How should I store the products?
     answer: >-
       In a dry place, away from heat and moisture, closing the pouch tightly after

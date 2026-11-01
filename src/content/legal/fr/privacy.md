@@ -10,7 +10,7 @@ updated: '2026-11-01'
 
 ## Données collectées et finalités
 
-Nous collectons uniquement les données nécessaires à votre commande : nom, adresse e-mail, téléphone, adresse de facturation, adresse de livraison ou point relais choisi, et le contenu de la commande. Elles servent à préparer et livrer votre commande, à vous envoyer la confirmation et à répondre à vos questions. Base légale : l'exécution du contrat de vente et nos obligations comptables.
+Nous collectons uniquement les données nécessaires à votre commande : nom, adresse e-mail, téléphone, adresse de facturation, adresse de livraison ou Point Relais choisi, et le contenu de la commande. Elles servent à préparer et livrer votre commande, à vous envoyer la confirmation et à répondre à vos questions. Base légale : l'exécution du contrat de vente et nos obligations comptables.
 
 ## Prestataires
 
@@ -19,7 +19,8 @@ Vos données sont transmises uniquement aux prestataires suivants, pour les beso
 - Stripe (paiement en ligne et reçus) ;
 - Cloudflare (hébergement du site et traitement technique des requêtes) ;
 - Resend (envoi des e-mails de confirmation de commande) ;
-- Mondial Relay (livraison en point relais : nom, téléphone et e-mail pour l'avis de passage) ;
+- Mondial Relay (livraison en Point Relais : nom, téléphone et e-mail pour l'avis de mise à disposition du colis) ;
+- La Poste / Colissimo (livraison à domicile : nom, adresse et téléphone) ;
 - GitHub (stockage du contenu du site, utilisé uniquement par l'administratrice ; aucune donnée client n'y est enregistrée).
 
 Certains de ces prestataires sont établis aux États-Unis ; les transferts sont encadrés par les clauses contractuelles types de la Commission européenne ou le cadre de protection des données UE-États-Unis.

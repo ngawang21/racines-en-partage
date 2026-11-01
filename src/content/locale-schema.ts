@@ -65,6 +65,7 @@ export const localeSchema = z.object({
     landsTo: text,
     recipeCta: text,
     otherCategories: text,
+    recipesKicker: text,
   }),
   product: ns({
     addToCart: text,

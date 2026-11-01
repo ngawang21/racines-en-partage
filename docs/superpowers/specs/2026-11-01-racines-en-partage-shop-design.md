@@ -70,7 +70,7 @@ Routes (FR, then EN). Trailing slash always.
 | admin | `/admin/` | static Sveltia page | noindex, out of sitemap |
 
 Categories at launch (slug, FR name, EN name): `poudres` "Poudres &
-superaliments" / "Powders & superfoods"; `infusions` "Tisanes & infusions" /
+superaliments" / "Plant powders"; `infusions` "Tisanes & infusions" /
 "Herbal teas & infusions"; `graines` "Graines & tubercules" / "Seeds &
 tubers"; `cacao` "Cacao" / "Cacao".
 
