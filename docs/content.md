@@ -49,17 +49,18 @@ existing related slugs and image files).
 The French file is complete and authoritative. The English file holds
 translations only.
 
-- **Shared fields** (products: `sku`, `category`, `price`, `weightGrams`,
-  `origin`, `originCountryCode`, `images`, `stock`, `featured`,
-  `nutritionVerified`, `nutrition`, `free_from`, `related`; categories:
-  `order`, `image`) are read from the French file only. Whatever the English
-  file says about them is ignored, so the two locales can never disagree on a
-  price or a stock status.
+- **Shared fields** (products: `order`, `hidden`, `sku`, `category`, `price`,
+  `weightGrams`, `origin`, `originCountryCode`, `images`, `stock`,
+  `featured`, `nutritionVerified`, `nutrition`, `free_from`, `related`;
+  categories: `order`, `image`) are read from the French file only. Whatever
+  the English file says about them is ignored, so the two locales can never
+  disagree on a price or a stock status.
 - **Translated fields** (`PRODUCT_TRANSLATED_KEYS`, `CATEGORY_TRANSLATED_KEYS`,
   derived from the translated schemas) come from the English file, and every
   gap is filled from French by `deepFallback` (`src/i18n/fallback.ts`): a
   missing key, `null`, an empty or blank string and an empty array all fall
-  back. Arrays of objects fall back item by item, by index.
+  back. Arrays of objects fall back item by item, by index. A missing English
+  file is the same as an empty one.
 - **Pages** have no shared/translated split: the whole English page is
   `deepFallback(en, fr)`. Fields that are not text (`recipeProducts`, the
   reassurance `icon`, the about `image`) may simply be left out of the English
@@ -70,56 +71,115 @@ translations only.
 Nutrition values are shared and written as printed on the French label
 ("3,0 g"); English pages pass them through `localiseNutrition`.
 
+### Hidden, deleted and reordered products
+
+`loadProducts` (`src/i18n/locale.ts`) runs three pure helpers of
+`src/content/merge.ts` after merging:
+
+1. `dropDanglingRelated`: a `related` slug that matches no product file (the
+   product was deleted in the CMS while another file still lists it) is
+   dropped, with one build warning per link ("Ignoring related links to
+   deleted products"). Deleting a product therefore never fails the build.
+   The home `recipeProducts` list is already tolerant (`HomeView` filters
+   unknown slugs).
+2. `validateCatalog` then checks the whole catalogue, hidden products
+   included (unique SKU and slug, known category, images, no self link).
+3. `publishedProducts`: products with `hidden: true` are left out, along with
+   the `related` links that point to them. A hidden product has no page, no
+   entry in `dist/catalog.json` (so the Worker refuses it at checkout), no
+   sitemap URL, and no card anywhere.
+
+The result is sorted by `compareProducts`: category `order`, then the
+product `order` (written by the CMS "Réorganiser" mode; a product without
+one comes last), then name and weight. The seed files carry `order` 1 to 10
+in the order the shop showed before the field existed (a unit test checks).
+`ShopView` still puts featured products first in its default sort; within
+each group the CMS order applies.
+
 ## 3. How the CMS maps to the model
 
 `public/admin/config.yml`, loaded by `public/admin/index.html` (Sveltia
 0.256.1 from unpkg, pinned with Subresource Integrity, see section 7; the
 config's first line points at the JSON schema for editor completion).
 
-| Model                              | CMS                                                                                                                                                                                                                                                         |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `{fr,en}` folders                  | Global `i18n.structure: multiple_folders`, `default_locale: fr`. Entry collections use `folder: src/content/<name>`; file collections use `{{locale}}` in `file:` and need `i18n: true` on the collection and on each file.                                 |
-| Shared field                       | `i18n: duplicate`: editable in French, read-only copy in English. The copy is written into the English file, where the build ignores it (tested in `content.test.ts`, "ignores shared fields written in the English file").                                 |
-| Translated field                   | `i18n: true` and `required: [fr]` (or `false` when optional): required in French only, so a blank English value is allowed and falls back. Subfields of a translated object or list need their own `i18n: true` (Sveltia defaults them to `false`).         |
-| Optional field (`.optional()`)     | `required: false`. The global `output.omit_empty_optional_fields: true` leaves it out of the file when empty. Without it the CMS would write `''`, which `text.optional()` refuses in the French file.                                                      |
-| Slug = file name = URL             | Products: `slug.template: '{{name}}-{{weightGrams}}g'` with `editable: [create]`, so a new product gets `poudre-de-moringa-100g` and the slug can never change afterwards (no broken URL, no broken `related`). Categories: `{{name}}`, editable on create. |
-| References                         | `category`, `related` and the home `recipeProducts` are `relation` fields with `value_field: '{{slug}}'` (the file name; `slug` without braces would mean a field called `slug`, which does not exist).                                                     |
-| Enums                              | `select` options with French labels and the schema values (`STOCK`, `FREE_FROM`, `REASSURANCE_ICONS`, `SHIPPING_METHODS`, VAT modes).                                                                                                                       |
-| Settings labels `{ fr, en }`       | `object` with two `string` subfields, `en` optional (empty falls back to `fr` through `pickLabel`). The singleton has no i18n.                                                                                                                              |
-| `shop.currency` (`literal('eur')`) | `hidden` field with `default: eur`.                                                                                                                                                                                                                         |
-| Legal Markdown                     | File collection, `format: frontmatter`, `body` as `richtext` with the full toolbar; `updated` is a `datetime` (`YYYY-MM-DD`, `auto_now`).                                                                                                                   |
+| Model                              | CMS                                                                                                                                                                                                                                                                               |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `{fr,en}` folders                  | Global `i18n.structure: multiple_folders`, `default_locale: fr`, `initial_locales: all`. Entry collections use `folder: src/content/<name>`; file collections use `{{locale}}` in `file:` and need `i18n: true` on the collection and on each file.                               |
+| Optional English                   | `initial_locales` being set lets the owner switch English off per entry (entry menu, "Désactiver anglais"): the English file is then deleted on save and the site shows French. No translated field is required in English, so a half-done translation saves too.                 |
+| Shared product or category field   | `i18n: false`: edited in French only, hidden in the English pane, stored in the French file only (Sveltia leaves a non-localised field out of the other locales' files). Subfields inherit it.                                                                                    |
+| Shared page field                  | `i18n: duplicate` on `recipeProducts`, the reassurance `icon` and the about `image`: read-only copy in English, written into the English file, where `deepFallback` makes it harmless.                                                                                            |
+| Translated field                   | `i18n: true` and `required: [fr]` (or `false` when optional): required in French only, so a blank English value is allowed and falls back. Subfields of a translated object or list need their own `i18n: true`.                                                                  |
+| Optional field (`.optional()`)     | `required: false`. The global `output.omit_empty_optional_fields: true` leaves it out of the file when empty. Without it the CMS would write `''`, which `text.optional()` refuses in the French file.                                                                            |
+| Slug = file name = URL             | Products: `slug.template: '{{name}}-{{weightGrams}}g'` with `editable: [create]`, so a new product gets `poudre-de-moringa-100g` and the slug can never change afterwards (no broken URL, no broken `related`). Categories: `{{name}}`, editable on create.                       |
+| `order` (products, categories)     | Collection option `reorder` (products: `{ group: category }`, a named view group). Not a form field: Sveltia writes `order` at the top of every locale's file of each moved entry, and gives a new entry the next number. The English copy is stripped by the translation schema. |
+| `hidden`                           | Boolean "Masquer ce produit du site", default `false`; list filter "Masqués du site"; the list summary appends " (masqué)" with `{{hidden \| ternary(...)}}`.                                                                                                                     |
+| References                         | `category`, `related` and the home `recipeProducts` are `relation` fields with `value_field: '{{slug}}'` (the file name). `related` filters out the product itself (`sku` equal to `{{fields.sku}}`) and hidden products; `recipeProducts` filters out hidden products.           |
+| Enums                              | `select` options with French labels and the schema values (`STOCK`, `FREE_FROM`, `REASSURANCE_ICONS`, `SHIPPING_METHODS`, VAT modes). Up to five options render as radio buttons or checkboxes, which suits a phone.                                                              |
+| Prices                             | `number`, `value_type: float`, `step: 0.01`, and `pattern` `^\d+(\.\d{1,2})?$` (Sveltia tests numbers as strings) mirroring the two-decimal refine of `euros`. Sveltia's number input accepts both "8,90" and "8.90" in a French UI.                                              |
+| Product description                | `text`, not `richtext`: `ProductView` prints the description as plain paragraphs split on blank lines, so Markdown emphasis would show its asterisks.                                                                                                                             |
+| Settings labels `{ fr, en }`       | `object` with two `string` subfields, `en` optional (empty falls back to `fr` through `pickLabel`). The singleton has no i18n.                                                                                                                                                    |
+| `shop.freeShippingFrom`            | `required: false`: emptied, it is left out of the file, which the schema (`nullish`) and every consumer read as "never free".                                                                                                                                                     |
+| `shop.currency` (`literal('eur')`) | `hidden` field with `default: eur`.                                                                                                                                                                                                                                               |
+| Legal Markdown                     | File collection, `format: frontmatter`, `body` as `richtext` limited to headings 2 and 3, bold, italic, links and lists, no editor component; `updated` is a `datetime` (`YYYY-MM-DD`, `auto_now`). A warning sits in the collection description and the body hint.               |
 
 Other choices in the config:
 
-- `publish_mode: simple`: no drafts, every save commits to `main`.
+- Field order follows how the owner thinks: name, photos, price, weight,
+  stock, hidden, category, SKU, featured; then the texts; then the label
+  details (origin, "sans" claims, nutrition); then related products and
+  Google texts. Sveltia writes keys in field order; the build does not care.
+- Every visible field has a French label and a one-sentence hint with an
+  example (unit test). Hints accept bold and italic Markdown.
+- New product defaults: `stock: in_stock`, `hidden`, `featured` and
+  `nutritionVerified` false, `weightGrams: 100`, and the usual storage
+  sentence in both languages (`default_localized`). A unit test parses those
+  defaults plus a minimal typed product with `productSchema`.
+- `publish_mode: simple` and no `skip_ci` (formerly `automatic_deployments`):
+  every save commits to `main` and deploys, and the editor shows one
+  "Enregistrer" button. Setting `skip_ci` would rename it "Publier" and add a
+  "Enregistrer sans publier" choice that leaves the site out of date.
 - `commit_messages` produce one-line conventional commits
   (`content: update products poudre-de-moringa-100g`).
-- `categories` has `delete: false`: a category with products cannot go, and an
-  empty one is rare enough to be a developer task.
-- `shipping` has `allow_add` and `allow_remove` off and a read-only `id`: a new
-  method needs Worker and checkout code, not just content.
+- `categories` has `delete: false` and `duplicate: false`: a category with
+  products cannot go, and an empty one is rare enough to be a developer task.
+- `shipping` has `allow_add`, `allow_remove`, `allow_duplicate` and
+  `allow_reorder` off and a read-only `id`: a new method needs Worker and
+  checkout code, not just content.
+- The settings singleton keeps the YAML structure the cart, the Worker and
+  the components read, but orders it for the owner: `shop` (open, banner,
+  VAT, quantity, free shipping threshold), `shipping`, `launch`, then
+  `brand` (collapsed).
 - `editor.preview: false`: a YAML preview is useless, and the second pane can
   show the other locale side by side.
+- A collection divider separates the legal texts from the everyday content.
 - A CMS save rewrites the whole file: YAML comments (for example the
   `# placeholder` notes on prices) are lost, keys follow the field order of the
-  config, and `8.90` becomes `8.9`. Sveltia writes YAML with `lineWidth: 0`,
-  plain scalars and single quotes; a simulation over every seed file passes
-  `prettier --check` unchanged.
+  config (`order` first), and `8.90` becomes `8.9`.
+
+### Options checked and left out
+
+- No top-level `locale`: Sveltia 0.256.1 has none (the JSON schema rejects
+  it). The UI language follows the browser, or Settings, Langue in the CMS.
+- No `divider` field type in 0.256.1 (only collection and singleton
+  dividers): product sections are conveyed by the field order and the hints.
+- No `bulk_edit`: it exists in 0.256.1 but its table strings are not
+  translated into French yet.
+- No `table_columns`: the list view with thumbnails reads better on a phone.
+- `save_all_locales` and `omit_default_locale_from_filename` are deprecated
+  (`initial_locales`, `omit_default_locale_from_file_path`), and the latter
+  does not apply: both locales have their folder.
+- `output.yaml.quote`, `output.encode_file_path`: defaults kept (plain
+  scalars; file names are slugified, so nothing to encode).
 
 ### Known limits
 
-- `shop.freeShippingFrom` is `nullable()` in the schema ("null disables"), but
-  an empty number field is left out of the file, not written as `null`, so the
-  CMS keeps it required. To offer free shipping never, set `null` by hand or
-  make the schema `.nullish()`.
-- Deleting a product that another product lists in `related`, or that the home
-  page lists in `recipeProducts`, fails the build (unknown related product).
-  The owner guide tells Marie to remove those references first, or to mark the
-  product out of stock instead.
 - The legal texts go through Sveltia's rich text editor: on the first save it
   may restyle the Markdown (list markers, emphasis). The rendered page is the
   same. The `{company}`-style tokens are plain text to the editor and survive.
-- The CMS UI language follows the browser; French is available.
+- The FAQ answers quote the shipping prices and the free shipping threshold
+  in words; they do not follow the settings (hint in the FAQ list).
+- `nutritionVerified: true` without a nutrition table fails the build (a
+  cross-field rule the CMS cannot express); the hint says so.
 
 ### Tests
 
@@ -127,27 +187,48 @@ Other choices in the config:
 
 - the CMS field names equal the zod schema keys for products, categories,
   every page, legal frontmatter (plus `body`) and settings, recursively
-  through objects and lists of objects;
-- the `required` flag matches the schema (required in French, optional when the
-  schema says `optional()` or `default()`), with one documented exception
-  (`shop.freeShippingFrom`);
-- `i18n: duplicate` is set on exactly the shared fields and `i18n: true` on
-  exactly the translated ones, translated leaf fields are never required in
-  English, and translated subfields declare `i18n: true`;
+  through objects and lists of objects; the `reorder` key (`order`) is the
+  only schema key allowed without a form field;
+- the `required` flag matches the schema (required in French, optional when
+  the schema says `optional()`, `default()` or `nullish()`);
+- shared product and category fields are `i18n: false`, translated ones
+  `i18n: true`, translated leaf fields are never required in English, and
+  translated subfields declare `i18n: true`;
+- the product field order, a label and a hint on every visible field, the
+  new-product defaults against `productSchema`, the price and shipping price
+  patterns against the schema, plain-text descriptions;
 - select options equal the schema enums and contain every seeded value; the
-  category view filters match the seeded categories;
+  stock, hidden and category view filters; the reorder group; the relation
+  filters; no product `thumbnail` key;
 - the product slug template reproduces every existing file name;
+- media: WebP at 1600 px, 2 MB, slugified names with the
+  `{{slug}}-{{uuid_shorter}}` template, no external image URL;
+- the settings section order, the optional free shipping threshold, the
+  legal warning;
 - every `file:` path exists for `fr` and `en`, media folders match the seeded
-  image paths;
+  image paths, and the config has no em dash;
 - `public/admin/index.html` carries `noindex` and the pinned Sveltia script
   with `integrity` and `crossorigin`, and `public/_headers` has the
-  `/admin/*` block whose `script-src` allows that version's folder only.
+  `/admin/*` block.
 
-The config was also validated once against the published Sveltia JSON schema
-(`https://unpkg.com/@sveltia/cms/schema/sveltia-cms.json`, version 0.256.1)
-with ajv; the unit test stays offline and does not fetch it. To repeat that
-check after a Sveltia upgrade, point the `yaml-language-server` line at the
-schema in an editor, or run ajv against it.
+`tests/unit/content.test.ts` covers `hidden`, `order`,
+`dropDanglingRelated`, `publishedProducts` and `compareProducts`.
+
+The config was validated against the JSON schema shipped in the
+`@sveltia/cms@0.256.1` npm package (`schema/sveltia-cms.json`) with ajv
+(strict: an unknown option is rejected); the unit test stays offline and
+does not fetch it. To repeat that check after a Sveltia upgrade:
+
+```sh
+mkdir -p /tmp/sveltia && cd /tmp/sveltia
+curl -sSfL https://registry.npmjs.org/@sveltia/cms/-/cms-<version>.tgz | tar xz
+```
+
+then validate `public/admin/config.yml` against
+`/tmp/sveltia/package/schema/sveltia-cms.json` with the repository's ajv
+(`node_modules/.pnpm/ajv@*/node_modules/ajv`). `package/types/public.d.ts`
+documents every option of that version; `package/locales/fr.json` holds the
+French button names quoted in the owner guide.
 
 ## 4. Images
 
@@ -157,13 +238,22 @@ schema in an editor, or run ajv against it.
   renders AVIF and WebP at responsive widths. The first image is the main one.
 - CMS uploads: global `media_folder` and `public_folder` are both
   `/src/assets/products`, so the stored value is exactly the path the build
-  resolves. The default media library converts every raster upload to WebP,
-  quality 85, at most 2048 by 2048 px, refuses files over 2 MB, and slugifies
-  the file name (ASCII, no accents), which keeps names inside
-  `PRODUCT_IMAGE_PATH`.
+  resolves. The default media library converts every raster upload (JPEG,
+  PNG, WebP, AVIF, HEIC) to WebP, quality 82, at most 1600 by 1600 px (the
+  largest width of the `gallery` preset), then refuses a result over 2 MB:
+  the limit applies after the conversion, so a 6 MB phone photo goes
+  through. Files are named `{{slug}}-{{uuid_shorter}}` and slugified (ASCII,
+  no accents), which keeps names inside `PRODUCT_IMAGE_PATH`.
+- `choose_url: false` on every image field: an external URL would not
+  resolve at build time.
+- HEIC (iPhone): Safari decodes it natively. Other browsers decode it with a
+  WebAssembly build of libheif that Sveltia imports from unpkg in a worker;
+  the admin CSP has no `'wasm-unsafe-eval'`, so on Chrome or Android a HEIC
+  photo is refused as invalid. The owner guide tells Marie to use Safari on
+  the iPhone or the "Le plus compatible" camera format.
 - Category images and the about-page section images live in
-  `src/assets/brand/`; their CMS fields override `media_folder` and
-  `public_folder` with `/src/assets/brand`.
+  `src/assets/brand/`; their CMS fields override `media_folder`,
+  `public_folder` and the size (2000 px).
 - A path to a missing file fails the build (`validateCatalog`, `hasAsset`).
 
 ## 5. Adding a field, end to end
@@ -178,9 +268,10 @@ Example: a translated `allergens` text on products.
 2. **Seed.** Fill it in every `products/fr/*.yml` (required fields must be
    present) and, translated, in `products/en/*.yml`.
 3. **CMS.** Add the field to the `products` collection of
-   `public/admin/config.yml` with a French `label` and a `hint`:
+   `public/admin/config.yml` with a French `label` and a one-sentence `hint`
+   with an example, at the place the owner would look for it:
    - translated: `i18n: true`, `required: [fr]` or `required: false`;
-   - shared: `i18n: duplicate`, `required: false` if the schema is optional;
+   - shared: `i18n: false`, `required: false` if the schema is optional;
    - nested object or list: the same rules for each subfield.
 4. **Tests.** `pnpm test` fails in `cms-config.test.ts` until steps 1 and 3
    agree, and in `content.test.ts` until the seed files validate. Add a
@@ -198,10 +289,11 @@ matching `files:` entry of the `pages` collection. For settings, extend
 
 `pnpm launch-check` (`scripts/launch-check.mjs`) fails until:
 
-- `brand.siren` is 9 digits (CMS: Réglages, Entreprise, Numéro SIREN). While
-  empty, the legal pages print "en cours d'immatriculation".
-- `launch.pricesConfirmed` is `true` (CMS: Réglages, Lancement, Prix
-  confirmés). The seed prices are placeholders from the spec appendix.
+- `brand.siren` is 9 digits (CMS: Réglages de la boutique, Entreprise et
+  coordonnées, Numéro SIREN). While empty, the legal pages print "en cours
+  d'immatriculation".
+- `launch.pricesConfirmed` is `true` (CMS: Réglages de la boutique,
+  Lancement, Prix confirmés). The seed prices are placeholders from the spec appendix.
 - no line of a legal text contains `TODO` (publication director in the legal
   notice, consumer mediator in the terms of sale).
 
@@ -246,6 +338,16 @@ to the browser encoder), so the host stays allowed; the main script itself is
 pinned by version and integrity in `public/admin/index.html`, and the admin
 page is only ever opened by the owner. Not verified after sign-in yet (the
 Authenticator is not deployed).
+
+Two of those helpers are WebAssembly: the HEIC decoder (`@discourse/heic`,
+run in a `blob:` module worker) and the `@jsquash` WebP encoder fallback.
+Compiling WebAssembly needs `'wasm-unsafe-eval'` in `script-src`, which the
+block does not grant. Consequences: a HEIC photo uploaded from a browser
+other than Safari is refused as invalid (Safari decodes HEIC natively), and a
+browser without a native WebP encoder (none of the current ones) could not
+convert. Adding `'wasm-unsafe-eval'` to the admin `script-src` would lift
+both; it was left out pending a decision, as the owner guide routes iPhone
+photos through Safari or the "Le plus compatible" format.
 
 ### Upgrading Sveltia
 

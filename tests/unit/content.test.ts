@@ -3,7 +3,14 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 import { localeSchema } from '../../src/content/locale-schema';
-import { mergeCategory, mergePage, mergeProduct } from '../../src/content/merge';
+import {
+  compareProducts,
+  dropDanglingRelated,
+  mergeCategory,
+  mergePage,
+  mergeProduct,
+  publishedProducts,
+} from '../../src/content/merge';
 import {
   LEGAL_KEYS,
   PAGE_SCHEMAS,
@@ -219,10 +226,105 @@ describe('merge', () => {
     expect(merged.tagline).toBe((fr as any).tagline);
     expect(merged.recipe?.title).toBe('Smoothie au Moringa');
   });
+  it('ignores the order key the CMS writes into the English file', () => {
+    const fr = frProducts.get('poudre-de-baobab-100g');
+    const merged = mergeProduct('poudre-de-baobab-100g', fr, { order: 99, name: 'Baobab' });
+    expect(merged.order).toBe((fr as { order: number }).order);
+  });
   it('names the file in a validation error', () => {
     expect(() => mergeProduct('x', { ...validProduct(), price: -1 })).toThrow(
       /products\/fr\/x\.yml/,
     );
+  });
+});
+
+describe('hidden, deleted and reordered products', () => {
+  const withSlug = (slug: string, patch: Partial<Product> = {}): Product => ({
+    ...mergeProduct(slug, frProducts.get(slug)),
+    ...patch,
+  });
+
+  it('seeds no hidden product and a distinct position for each product', () => {
+    expect(productsFr.filter((p) => p.hidden)).toEqual([]);
+    const orders = productsFr.map((p) => p.order);
+    expect(orders.every((o) => Number.isInteger(o))).toBe(true);
+    expect(new Set(orders).size).toBe(orders.length);
+  });
+
+  it('defaults hidden to false and accepts a file without order', () => {
+    const raw = validProduct();
+    delete raw.order;
+    delete raw.hidden;
+    const p = productSchema.parse(raw);
+    expect(p.hidden).toBe(false);
+    expect(p.order).toBeUndefined();
+    expect(productSchema.safeParse({ ...raw, hidden: 'yes' }).success).toBe(false);
+    expect(productSchema.safeParse({ ...raw, order: 1.5 }).success).toBe(false);
+  });
+
+  it('leaves hidden products out, with the related links that point to them', () => {
+    const list = [
+      withSlug('poudre-de-moringa-100g', {
+        related: ['poudre-de-baobab-100g', 'poudre-de-moringa-200g'],
+      }),
+      withSlug('poudre-de-baobab-100g', { hidden: true }),
+      withSlug('poudre-de-moringa-200g'),
+    ];
+    const shown = publishedProducts(list);
+    expect(shown.map((p) => p.slug)).toEqual(['poudre-de-moringa-100g', 'poudre-de-moringa-200g']);
+    expect(shown[0]!.related).toEqual(['poudre-de-moringa-200g']);
+    expect(list[0]!.related).toHaveLength(2);
+    // Nothing hidden: the same list comes back.
+    expect(publishedProducts(productsFr)).toBe(productsFr);
+  });
+
+  it('drops related links to a deleted product instead of failing the build', () => {
+    const list = [
+      withSlug('poudre-de-moringa-100g', { related: ['gone-100g', 'poudre-de-moringa-200g'] }),
+      withSlug('poudre-de-moringa-200g', { related: ['poudre-de-moringa-100g'] }),
+    ];
+    const { products, dropped } = dropDanglingRelated(list);
+    expect(dropped).toEqual(['poudre-de-moringa-100g -> gone-100g']);
+    expect(products[0]!.related).toEqual(['poudre-de-moringa-200g']);
+    expect(products[1]).toBe(list[1]);
+    expect(
+      validateCatalog({ products, categorySlugs: ['poudres'], assetExists: () => true }),
+    ).toEqual([]);
+  });
+
+  it('sorts by category, then position, then name; a product without position comes last', () => {
+    const order = new Map([
+      ['poudres', 1],
+      ['infusions', 2],
+    ]);
+    const list = [
+      withSlug('fleurs-d-hibiscus-bissap-100g', { order: 1 }),
+      withSlug('poudre-de-souchet-100g', { order: undefined }),
+      withSlug('poudre-de-moringa-200g', { order: 2 }),
+      withSlug('poudre-de-baobab-100g', { order: 7 }),
+      withSlug('poudre-d-orge-grillee-100g', { order: undefined }),
+    ];
+    expect(list.sort(compareProducts(order, 'fr')).map((p) => p.slug)).toEqual([
+      'poudre-de-moringa-200g',
+      'poudre-de-baobab-100g',
+      'poudre-d-orge-grillee-100g',
+      'poudre-de-souchet-100g',
+      'fleurs-d-hibiscus-bissap-100g',
+    ]);
+  });
+
+  it('keeps the seeded positions in the order the shop showed before', () => {
+    const order = new Map([...frCategories].map(([slug, raw]) => [slug, (raw as any).order]));
+    const byPosition = [...productsFr].sort(compareProducts(order, 'fr')).map((p) => p.slug);
+    const byName = [...productsFr]
+      .sort(
+        (a, b) =>
+          order.get(a.category) - order.get(b.category) ||
+          a.name.localeCompare(b.name, 'fr') ||
+          a.weightGrams - b.weightGrams,
+      )
+      .map((p) => p.slug);
+    expect(byPosition).toEqual(byName);
   });
 });
 
@@ -372,7 +474,9 @@ describe('writing rules', () => {
   it('no em dash in content or Markdown', () => {
     const targets = [
       ...files(CONTENT, /\.(yml|md|json)$/),
-      ...['README.md', 'CLAUDE.md'].map((f) => join(ROOT, f)),
+      ...['README.md', 'CLAUDE.md', 'docs/content.md', 'docs/guide-proprietaire.md'].map((f) =>
+        join(ROOT, f),
+      ),
     ];
     const emDash = String.fromCharCode(0x2014);
     for (const f of targets) expect(readFileSync(f, 'utf8'), f).not.toContain(emDash);

@@ -4,7 +4,14 @@
 import { getCollection, getEntry } from 'astro:content';
 import { DEFAULT_LOCALE, HOST, LOCALES, type Locale } from '../consts';
 import { localeSchema, type LocaleContent } from '../content/locale-schema';
-import { mergeCategory, mergePage, mergeProduct } from '../content/merge';
+import {
+  compareProducts,
+  dropDanglingRelated,
+  mergeCategory,
+  mergePage,
+  mergeProduct,
+  publishedProducts,
+} from '../content/merge';
 import {
   validateCatalog,
   type Category,
@@ -75,15 +82,27 @@ export async function loadCategories(locale: Locale): Promise<Category[]> {
   return list.sort((a, b) => a.order - b.order || a.slug.localeCompare(b.slug));
 }
 
+/** Dangling `related` links already reported, so a build warns once per link. */
+const warnedDanglingLinks = new Set<string>();
+
 /**
- * Every product in the locale, sorted by category order then name. Shared
- * fields come from the French file; the cross-file checks run on each call.
+ * Every product the site shows in the locale (`hidden` ones left out), sorted
+ * by category order, then the CMS "Réorganiser" position, then name. Shared
+ * fields come from the French file; the cross-file checks run on each call,
+ * hidden products included. A `related` link to a deleted product is dropped
+ * with a warning instead of failing the build.
  */
 export async function loadProducts(locale: Locale): Promise<Product[]> {
   const files = byLocale(await getCollection('products'));
-  const products = [...files.fr.entries()].map(([slug, fr]) =>
+  const merged = [...files.fr.entries()].map(([slug, fr]) =>
     mergeProduct(slug, fr, locale === DEFAULT_LOCALE ? undefined : (files[locale].get(slug) ?? {})),
   );
+  const { products, dropped } = dropDanglingRelated(merged);
+  const unseen = dropped.filter((link) => !warnedDanglingLinks.has(link));
+  if (unseen.length > 0) {
+    for (const link of unseen) warnedDanglingLinks.add(link);
+    console.warn(`Ignoring related links to deleted products: ${unseen.join(', ')}`);
+  }
   const categories = await loadCategories(DEFAULT_LOCALE);
   const problems = validateCatalog({
     products,
@@ -93,12 +112,7 @@ export async function loadProducts(locale: Locale): Promise<Product[]> {
   if (problems.length > 0)
     throw new Error(`Invalid product catalogue:\n- ${problems.join('\n- ')}`);
   const order = new Map(categories.map((c) => [c.slug, c.order]));
-  return products.sort(
-    (a, b) =>
-      (order.get(a.category) ?? 0) - (order.get(b.category) ?? 0) ||
-      a.name.localeCompare(b.name, locale) ||
-      a.weightGrams - b.weightGrams,
-  );
+  return publishedProducts(products).sort(compareProducts(order, locale));
 }
 
 export async function loadProduct(locale: Locale, slug: string): Promise<Product> {

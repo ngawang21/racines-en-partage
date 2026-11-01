@@ -53,6 +53,13 @@ export type Recipe = z.infer<typeof recipeSchema>;
 
 /** Shared fields: read from the French file only. */
 export const productSharedSchema = z.object({
+  /**
+   * Position within the category, written by the CMS "Réorganiser" mode
+   * (collection option `reorder`, not a form field). Missing sorts last.
+   */
+  order: z.number().int().nonnegative().optional(),
+  /** Left out of the site (pages, catalogue, sitemap) but kept in the CMS. */
+  hidden: z.boolean().default(false),
   sku: z.string().regex(/^[A-Z0-9][A-Z0-9-]*$/, 'upper case letters, digits and dashes'),
   category: text,
   price: euros,
@@ -97,7 +104,11 @@ export type ProductFile = z.infer<typeof productSchema>;
 /** A product as the site uses it: the file plus its slug (the file name). */
 export type Product = ProductFile & { slug: string };
 
-/** An English product file: translated fields only, each may be empty. */
+/**
+ * An English product file: translated fields only, each may be empty. Other
+ * keys (the `order` the CMS writes into every locale on "Réorganiser") are
+ * stripped.
+ */
 export const productTranslationSchema = z.object({
   name: optText,
   tagline: optText,
@@ -119,6 +130,7 @@ export const PRODUCT_TRANSLATED_KEYS = Object.keys(
 // -------------------------------------------------------------- categories
 
 export const categorySharedSchema = z.object({
+  /** Display order, written by the CMS "Réorganiser" mode (not a form field). */
   order: z.number().int().nonnegative(),
   image: z.string().regex(ASSET_IMAGE_PATH, '/src/assets/<path>'),
 });

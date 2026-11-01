@@ -4,36 +4,40 @@ Bonjour Marie,
 
 Ce guide vous accompagne pour tout ce que vous ferez seule sur votre
 boutique : changer un prix, une photo ou un texte, indiquer une rupture,
-ajouter un produit, mettre la boutique en pause, suivre les commandes dans
-Stripe et préparer les colis Mondial Relay.
+masquer ou ajouter un produit, changer l'ordre de la boutique, mettre la
+boutique en pause, suivre les commandes dans Stripe et préparer les colis
+Mondial Relay.
 
-Chaque partie traite une seule tâche, avec des étapes numérotées. Gardez ce
+Chaque partie traite une seule tâche, avec des étapes numérotées. Les mots
+en **gras** sont ceux que vous verrez à l'écran, à l'identique. Gardez ce
 guide à portée de main les premières semaines ; ensuite, le tableau « Que
 faire si » à la fin suffit souvent.
 
 **Sommaire**
 
-1. Se connecter à l'administration
+1. Se connecter à l'administration, sur ordinateur ou sur téléphone
 2. L'écran d'accueil de l'administration
-3. Modifier un produit : texte, prix, poids, origine
-4. Changer ou ajouter une photo
-5. Indiquer une rupture et remettre en stock
+3. Modifier un prix, un poids ou un texte
+4. Les photos : bien les prendre, les ajouter, les changer
+5. Indiquer une rupture, remettre en stock, masquer un produit
 6. Ajouter un nouveau produit
-7. Supprimer un produit
-8. Les catégories
-9. Les textes des pages : accueil, histoire, FAQ, contact
-10. Les textes légaux
-11. Les réglages : livraison, pause, bandeau, TVA, coordonnées
-12. Après « Enregistrer » : la mise en ligne
-13. Les commandes dans Stripe : voir, rembourser, codes promo, reçus
-14. Préparer un colis à partir de l'e-mail de commande
-15. Répondre à une cliente ou un client
-16. Que faire si...
-17. Qui contacter
+7. La traduction anglaise (facultative)
+8. Supprimer un produit
+9. Changer l'ordre de la boutique
+10. Les catégories
+11. Les textes des pages : accueil, histoire, FAQ, contact
+12. Les textes légaux
+13. Les réglages : boutique ouverte, bandeau, livraison, TVA, lancement
+14. Après « Enregistrer » : la mise en ligne et la vérification
+15. Les commandes dans Stripe : voir, rembourser, codes promo, reçus
+16. Préparer un colis à partir de l'e-mail de commande
+17. Répondre à une cliente ou un client
+18. Que faire si...
+19. Qui contacter
 
 ---
 
-## 1. Se connecter à l'administration
+## 1. Se connecter à l'administration, sur ordinateur ou sur téléphone
 
 L'administration est la partie privée du site, où vous modifiez vos
 produits et vos textes. Elle se trouve à l'adresse
@@ -41,10 +45,11 @@ produits et vos textes. Elle se trouve à l'adresse
 votre compte GitHub (GitHub est le service qui garde en sécurité tous les
 fichiers de votre site).
 
-1. Ouvrez votre navigateur (Chrome, Edge, Firefox ou Safari) sur un
-   ordinateur. Le téléphone fonctionne aussi, mais l'écran est petit.
+**Sur l'ordinateur**
+
+1. Ouvrez votre navigateur (Chrome, Edge, Firefox ou Safari).
 2. Tapez **racinesenpartage.fr/admin/** dans la barre d'adresse.
-3. Cliquez sur le bouton **Se connecter avec GitHub**.
+3. Cliquez sur **Se connecter avec GitHub**.
 4. Une petite fenêtre GitHub s'ouvre. Entrez votre identifiant
    (`racinesenpartage`) et votre mot de passe GitHub, puis le code à six
    chiffres de votre application d'authentification si GitHub le demande.
@@ -52,12 +57,26 @@ fichiers de votre site).
    bouton vert **Authorize** (autoriser).
 6. La fenêtre se ferme et l'administration s'affiche.
 
-L'administration s'affiche en français si votre navigateur est en
-français. Vous restez connectée plusieurs jours sur le même ordinateur.
+**Sur le téléphone, sans retaper le mot de passe**
 
-Pour vous déconnecter (sur un ordinateur partagé, par exemple) : cliquez
-sur le rond avec votre photo ou votre initiale, en haut à droite, puis sur
-**Se déconnecter**.
+1. Connectez-vous d'abord sur l'ordinateur (ci-dessus).
+2. Cliquez sur le rond avec votre photo ou votre initiale, en haut à
+   droite, puis sur **Se connecter sur mobile**. Un code QR s'affiche.
+3. Sur le téléphone, ouvrez l'appareil photo et visez ce code, puis
+   touchez le lien qui apparaît. L'administration s'ouvre, déjà connectée.
+
+Vous pouvez aussi ouvrir racinesenpartage.fr/admin/ sur le téléphone et
+toucher **Se connecter avec GitHub**, comme sur l'ordinateur. Sur
+téléphone, l'écran montre une seule colonne à la fois : touchez la flèche
+en haut à gauche pour revenir en arrière.
+
+L'administration s'affiche en français si votre navigateur est en
+français. Sinon : rond avec votre initiale, **Paramètres**, **Langue**,
+puis choisissez Français. Vous restez connectée plusieurs jours sur le même
+appareil.
+
+Pour vous déconnecter (sur un ordinateur partagé, par exemple) : rond avec
+votre photo ou votre initiale, puis **Se déconnecter**.
 
 **Si la page tourne en boucle ou revient sans cesse à l'écran de
 connexion**
@@ -80,112 +99,142 @@ jeton ni votre mot de passe par e-mail.
 
 ## 2. L'écran d'accueil de l'administration
 
-À gauche, la liste de ce que vous pouvez modifier :
+À gauche (sur téléphone : en touchant le menu), la liste de ce que vous
+pouvez modifier :
 
-| Rubrique                    | Ce que vous y trouvez                                            |
-| --------------------------- | ---------------------------------------------------------------- |
-| **Produits**                | Une fiche par sachet (10 au départ)                              |
-| **Catégories**              | Poudres, tisanes, graines, cacao                                 |
-| **Pages**                   | Accueil, Notre histoire, Questions fréquentes, Contact           |
-| **Textes légaux**           | Mentions légales, CGV, politique de confidentialité              |
-| **Réglages de la boutique** | Livraison, pause, bandeau d'annonce, TVA, coordonnées, lancement |
+| Rubrique                    | Ce que vous y trouvez                                                      |
+| --------------------------- | -------------------------------------------------------------------------- |
+| **Produits**                | Une fiche par sachet (10 au départ)                                        |
+| **Catégories**              | Les rayons : poudres, tisanes, graines, cacao                              |
+| **Pages**                   | Accueil, Notre histoire, Questions fréquentes, Contact                     |
+| **Textes légaux**           | Mentions légales, CGV, politique de confidentialité (séparés par un trait) |
+| **Réglages de la boutique** | Ouverture, bandeau, TVA, livraison, lancement, coordonnées                 |
 
-Dans **Produits**, la liste affiche chaque produit avec sa photo, son nom et
-son poids. En haut de la liste :
+Dans **Produits**, chaque ligne montre la première photo, le nom et le
+poids du produit, et la mention « (masqué) » pour un produit masqué. La
+liste est dans l'ordre de la boutique. En haut de la liste :
 
-- **Trier** : par nom, par prix, par disponibilité ou par poids.
-- **Filtrer** : afficher seulement les produits « En stock », « Plus que
-  quelques sachets », « Rupture », « Mis en avant », ceux dont les valeurs
-  nutritionnelles sont masquées, ou une seule catégorie.
+- **Trier** : par ordre de la boutique (**Manuel**), par nom, par prix, par
+  disponibilité ou par poids.
+- **Filtrer** : afficher seulement les produits **En stock**, **Plus que
+  quelques sachets**, **Rupture**, **Masqués du site**, **Mis en avant sur
+  l'accueil**, ceux dont les valeurs nutritionnelles sont masquées, ou une
+  seule catégorie.
 - **Grouper** : ranger la liste par catégorie ou par disponibilité.
+- **Réorganiser** : changer l'ordre de la boutique (partie 9).
+- **Nouveau** (sur téléphone, le bouton **+**) : ajouter un produit
+  (partie 6).
 
 La loupe en haut de l'écran cherche un mot dans tous vos contenus.
 
-Sous chaque champ, une phrase grise explique ce qu'il faut y mettre. Un
-champ obligatoire laissé vide devient rouge au moment d'enregistrer, avec
-le message « Ce champ est obligatoire ».
+Sous chaque case, une phrase grise explique ce qu'il faut y mettre, avec un
+exemple. Une case obligatoire laissée vide devient rouge au moment
+d'enregistrer, avec le message « Ce champ est obligatoire. » ; rien n'est
+enregistré tant qu'elle n'est pas remplie.
 
 ---
 
-## 3. Modifier un produit : texte, prix, poids, origine
+## 3. Modifier un prix, un poids ou un texte
 
-1. Cliquez sur **Produits**, puis sur le produit.
-2. La fiche s'ouvre en **français** (onglet ou menu de langue en haut de la
-   fiche). C'est toujours en français que l'on modifie le prix, le poids, la
-   disponibilité, les photos et l'origine : l'anglais les reprend tout seul.
-3. Modifiez ce que vous voulez :
-   - **Prix TTC** : en euros avec un **point**, par exemple `8.90`. Deux
-     chiffres après le point au plus.
-   - **Poids net** : en grammes, par exemple `100`.
-   - **Origine** : telle qu'elle est écrite sur l'étiquette, par exemple
-     « Niger ». Le champ **Pays d'origine (pour Google)** juste en dessous
-     sert aux moteurs de recherche ; laissez-le vide si l'origine n'est pas
-     un seul pays (« Afrique de l'Ouest »).
-   - **Description**, **Ingrédients**, **Conseils d'utilisation**,
-     **Conservation** : vos textes. Dans la description, vous pouvez mettre
-     un mot en **gras** ou en _italique_ avec les boutons au-dessus du texte.
-4. Cliquez sur **Enregistrer**, en haut à droite.
-5. Le site est à jour environ deux minutes plus tard (voir la partie 12).
+**Changer un prix**
 
-**La version anglaise du texte**
+1. **Produits**, puis touchez le produit.
+2. Dans **Prix TTC**, tapez le nouveau prix, avec une virgule ou un point :
+   `8,90` ou `8.90`. Deux chiffres après la virgule au plus.
+3. Cliquez sur **Enregistrer**, en haut à droite.
+4. Le site est à jour environ deux minutes plus tard (partie 14).
 
-1. Dans la fiche, passez en **anglais** (menu de langue en haut de la
-   fiche). Les champs communs (prix, photos...) y sont grisés : ils viennent
-   du français.
-2. Modifiez les textes anglais, puis **Enregistrer**.
+**Changer le poids**
 
-Un texte anglais laissé vide n'est pas grave : le site affiche alors le
-texte français à la place. Le bouton **Copier depuis Français** (menu de la
-langue anglaise) recopie les textes français pour vous éviter de tout
-retaper ; il ne reste qu'à les traduire.
+1. Ouvrez le produit, case **Poids net** : en grammes, par exemple `250`.
+2. **Enregistrer**.
+
+Attention : l'adresse de la page (par exemple `poudre-de-baobab-100g`) ne
+change pas avec le poids. Pour vendre un nouveau format, ajoutez plutôt un
+nouveau produit (partie 6) et masquez l'ancien (partie 5).
+
+**Changer une description ou un autre texte**
+
+1. Ouvrez le produit. La fiche est en **français** ; c'est en français que
+   l'on règle le prix, le poids, la disponibilité, les photos et l'origine.
+2. Modifiez le texte voulu : **Phrase d'accroche**, **Description**,
+   **Ingrédients**, **Conseils d'utilisation**, **Conservation**... Dans la
+   description, laissez une ligne vide entre deux paragraphes.
+3. **Enregistrer**.
+
+L'ordre des cases suit celui d'une étiquette : d'abord le nom, les photos,
+le prix, le poids, la disponibilité et la catégorie ; puis les textes ;
+puis les détails de l'étiquette (origine, mentions « sans », valeurs
+nutritionnelles) ; enfin les produits associés et les textes pour Google.
 
 **Règle importante sur les textes des produits** : la loi encadre
 strictement ce que l'on peut dire des bienfaits d'un aliment. Dans « Les
 bienfaits », gardez uniquement les phrases imprimées sur l'étiquette, sans
-en ajouter. En cas de doute, demandez avant de publier.
+en ajouter. En cas de doute, demandez avant d'enregistrer.
 
 ---
 
-## 4. Changer ou ajouter une photo
+## 4. Les photos : bien les prendre, les ajouter, les changer
 
-**Avant de commencer**
+**Prendre une bonne photo avec le téléphone**
 
-- Format : JPEG, PNG ou WebP. Sur iPhone, réglez l'appareil photo sur « Le
-  plus compatible » (Réglages, Appareil photo, Formats), sinon les photos
-  sont au format HEIC, que les ordinateurs lisent mal.
-- Taille : **2 Mo au plus** par photo. Une photo de téléphone récent dépasse
-  souvent 2 Mo : envoyez-la-vous par e-mail en taille « moyenne », ou
-  réduisez-la avec l'outil Photos de l'ordinateur.
-- Cadrage : le sachet bien net, centré, sur un fond simple, à la lumière du
-  jour. Une photo carrée ou presque carrée rend le mieux.
+1. Près d'une fenêtre, en plein jour, sans flash et sans soleil direct.
+2. Un fond simple et clair : une feuille blanche, une planche en bois, un
+   torchon uni.
+3. Le sachet de face, l'étiquette bien lisible, qui remplit presque toute
+   la photo. Tenez le téléphone droit, à hauteur du sachet.
+4. Essuyez l'objectif, ne zoomez pas : approchez-vous plutôt.
+5. Cadrez en **carré** si votre appareil le propose ; sinon, laissez de la
+   marge autour du sachet.
+6. Prenez-en plusieurs et gardez la plus nette.
+7. Idées pour les photos suivantes : la poudre dans un bol, la recette
+   prête, le dos de l'étiquette.
 
-L'administration convertit chaque photo en WebP (un format léger pour le
-web) et la réduit à 2048 pixels au plus. Le site fabrique ensuite toutes
-les tailles utiles. Vous n'avez rien à faire de plus.
+**Format et taille**
 
-**Remplacer ou ajouter une photo**
+- Envoyez la photo originale, telle que le téléphone l'a prise : pas une
+  capture d'écran, ni une photo reçue par WhatsApp ou Messenger (elles sont
+  abîmées). Au moins 1200 pixels de large, ce qu'un téléphone récent
+  dépasse toujours.
+- Formats acceptés : JPEG, PNG, WebP. Les photos d'iPhone (format HEIC)
+  passent depuis **Safari** sur l'iPhone ou le Mac. Sur un autre
+  navigateur, réglez l'iPhone sur « Le plus compatible » (Réglages,
+  Appareil photo, Formats) pour qu'il prenne ses photos en JPEG.
+- Inutile de réduire la photo : l'administration la convertit en WebP (un
+  format léger pour le web) et la ramène à 1600 pixels au plus, puis le
+  site fabrique toutes les tailles utiles. Après conversion, une photo
+  pèse en général moins de 500 Ko ; au-delà de 2 Mo, elle est refusée avec
+  un message.
+- La photo est renommée d'après le produit, par exemple
+  `poudre-de-baobab-250g-x7k2.webp` : vous n'avez pas à vous en occuper.
+
+**Ajouter ou remplacer une photo**
 
 1. Ouvrez le produit, en français.
-2. Dans **Photos**, cliquez sur **Ajouter** (ou sur une photo existante pour
-   la **Remplacer**).
-3. Choisissez **Téléverser** puis la photo sur votre ordinateur, ou
-   glissez-la dans la fenêtre. Une photo déjà envoyée se retrouve dans la
-   liste et se choisit d'un clic.
+2. Dans **Photos**, touchez **Parcourir** (ou, sur l'ordinateur, déposez
+   la photo dans la zone « Déposez des fichiers image ici ou »). Sur
+   téléphone, le téléphone propose alors sa photothèque ou l'appareil
+   photo.
+3. Une photo déjà envoyée se retrouve dans la liste et se choisit d'un
+   geste.
 4. La **première** photo de la liste est la photo principale, celle de la
    boutique. Faites glisser les photos pour changer l'ordre.
-5. Pour retirer une photo de la fiche, cliquez sur la croix ou sur
-   **Supprimer** à côté d'elle. Il faut toujours au moins une photo.
-6. **Enregistrer**.
+5. Pour retirer une photo de la fiche, utilisez **Supprimer** à côté
+   d'elle (ou **Remplacer** pour en mettre une autre à sa place). Il faut
+   toujours au moins une photo.
+6. **Enregistrer**. Les photos partent avec la fiche.
 
 Les photos des catégories et de la page « Notre histoire » se changent de
-la même manière dans leur rubrique.
+la même manière dans leur rubrique ; elles peuvent être en largeur.
 
 ---
 
-## 5. Indiquer une rupture et remettre en stock
+## 5. Indiquer une rupture, remettre en stock, masquer un produit
 
 Le site ne compte pas les sachets : c'est vous qui indiquez la
 disponibilité.
+
+**Indiquer une rupture**
 
 1. Ouvrez le produit, en français.
 2. Dans **Disponibilité**, choisissez :
@@ -196,11 +245,25 @@ disponibilité.
      le bouton d'achat est désactivé.
 3. **Enregistrer**.
 
-Pour remettre en stock, même chemin : choisissez **En stock** et
-enregistrez.
+**Remettre en stock** : même chemin, choisissez **En stock**, puis
+**Enregistrer**. Le filtre **Rupture** de la liste montre d'un coup d'œil
+tout ce qui est épuisé.
 
-Astuce : le filtre **Rupture** de la liste des produits montre d'un coup
-d'œil tout ce qui est épuisé.
+**Masquer un produit** (produit saisonnier, ancien format, pause longue)
+
+1. Ouvrez le produit, en français.
+2. Cochez **Masquer ce produit du site**.
+3. **Enregistrer**.
+
+Deux minutes plus tard, le produit a disparu du site : boutique, page du
+produit, panier, Google. Il reste dans l'administration, marqué
+« (masqué) » dans la liste et visible avec le filtre **Masqués du site**.
+Pour le faire revenir, décochez la case et enregistrez : tout revient à
+l'identique, à la même adresse.
+
+Rupture ou masqué ? **Rupture** si le produit revient bientôt (la page reste
+en ligne et Google la garde) ; **Masquer** s'il ne doit plus être vu du
+tout pendant un temps.
 
 ---
 
@@ -209,93 +272,146 @@ d'œil tout ce qui est épuisé.
 Le plus simple est souvent de **dupliquer** un produit proche (même
 catégorie, autre poids), puis de changer ce qui diffère.
 
-1. Dans **Produits**, cliquez sur **Nouveau**. Pour dupliquer, ouvrez plutôt
-   le produit modèle et choisissez **Dupliquer** dans le menu de la fiche.
-2. Remplissez la fiche **en français**, de haut en bas :
+1. Dans **Produits**, cliquez sur **Nouveau** (sur téléphone, **+**). Pour
+   dupliquer, ouvrez plutôt le produit modèle, touchez le menu **⋮** en
+   haut à droite (« Afficher les options de l'éditeur ») et choisissez
+   **Dupliquer**. Pensez alors à changer la **Référence (SKU)**, que deux
+   produits ne peuvent pas partager.
+2. Une fiche neuve est déjà en **En stock**, à **100 g**, avec la phrase de
+   conservation habituelle. Remplissez-la **en français**, de haut en bas :
 
-| Champ                                | Quoi mettre                                                                         |
-| ------------------------------------ | ----------------------------------------------------------------------------------- |
-| Nom du produit                       | Comme sur le sachet, sans le poids : « Poudre de baobab »                           |
-| Phrase d'accroche                    | Une phrase sous le nom                                                              |
-| Catégorie                            | À choisir dans la liste                                                             |
-| Référence (SKU)                      | Un code unique en majuscules, par exemple `REP-BAO-250`. Ne le changez plus ensuite |
-| Prix TTC                             | Avec un point : `12.50`                                                             |
-| Poids net                            | En grammes : `250`                                                                  |
-| Disponibilité                        | En général « En stock »                                                             |
-| Photos                               | Au moins une                                                                        |
-| Description                          | Deux à quatre phrases                                                               |
-| Ingrédients                          | Mot pour mot, comme sur l'étiquette                                                 |
-| Conseils d'utilisation               | Un conseil par ligne (bouton **Ajouter**)                                           |
-| Les bienfaits                        | Seulement les phrases de l'étiquette, ou rien                                       |
-| Comment est-il obtenu ?              | Facultatif                                                                          |
-| Petite recette                       | Facultative : titre, ingrédients, étapes                                            |
-| Conservation                         | Comme sur l'étiquette                                                               |
-| Origine, Pays d'origine              | Comme sur l'étiquette ; le pays seulement si c'est un seul pays                     |
-| Mentions « sans »                    | Seulement ce que l'étiquette affirme et qui est vrai                                |
-| Afficher les valeurs nutritionnelles | À cocher quand le tableau ci-dessous est recopié et vérifié                         |
-| Valeurs nutritionnelles pour 100 g   | Recopiez le tableau de l'étiquette, unités comprises (« 3,0 g »)                    |
-| Mettre en avant sur l'accueil        | Trois ou quatre produits cochés au total                                            |
-| Produits associés                    | Deux ou trois produits proposés en bas de la fiche                                  |
-| Titre et description pour Google     | Facultatifs ; sinon le nom et l'accroche sont utilisés                              |
+| Case                                 | Quoi mettre                                                                       |
+| ------------------------------------ | --------------------------------------------------------------------------------- |
+| Nom du produit                       | Comme sur le sachet, sans le poids : « Poudre de baobab »                         |
+| Photos                               | Au moins une ; la première est la photo principale (partie 4)                     |
+| Prix TTC                             | `12,50`                                                                           |
+| Poids net                            | En grammes : `250`                                                                |
+| Disponibilité                        | En général « En stock »                                                           |
+| Masquer ce produit du site           | Cochez-la si le produit ne doit pas encore se voir                                |
+| Catégorie                            | À choisir dans la liste                                                           |
+| Référence (SKU)                      | REP, trois lettres, le poids : `REP-BAO-250`. Ne la changez plus ensuite          |
+| Mettre en avant sur l'accueil        | Trois ou quatre produits cochés au total                                          |
+| Phrase d'accroche                    | Une phrase sous le nom                                                            |
+| Description                          | Deux à quatre phrases ; une ligne vide entre deux paragraphes                     |
+| Ingrédients                          | Mot pour mot, comme sur l'étiquette                                               |
+| Conseils d'utilisation               | Un conseil par ligne (bouton **Ajouter**)                                         |
+| Les bienfaits                        | Seulement les phrases de l'étiquette, ou rien                                     |
+| Comment est-il obtenu ?              | Facultatif                                                                        |
+| Petite recette                       | Facultative : titre, ingrédients, étapes                                          |
+| Conservation                         | Déjà remplie ; corrigez si l'étiquette dit autre chose                            |
+| Origine, Pays d'origine              | Comme sur l'étiquette ; le pays seulement si c'est un seul pays                   |
+| Mentions « sans »                    | Seulement ce que l'étiquette affirme et qui est vrai                              |
+| Afficher les valeurs nutritionnelles | À cocher quand le tableau ci-dessous est recopié et vérifié                       |
+| Valeurs nutritionnelles pour 100 g   | Recopiez le tableau de l'étiquette, unités comprises (« 3,0 g »), les huit lignes |
+| Produits associés                    | Deux ou trois produits proposés en bas de la fiche                                |
+| Titre et description pour Google     | Facultatifs ; sinon le nom et l'accroche sont utilisés                            |
 
-3. **L'adresse de la page.** À droite (ou dans le panneau « Slug »),
-   l'administration propose l'adresse de la future page à partir du nom et
-   du poids, par exemple `poudre-de-baobab-250g`, qui donnera
+3. **L'adresse de la page.** L'administration propose l'adresse de la
+   future page à partir du nom et du poids, par exemple
+   `poudre-de-baobab-250g`, qui donnera
    racinesenpartage.fr/produits/poudre-de-baobab-250g/. Gardez la
    proposition. Cette adresse **ne pourra plus être changée** après le
    premier enregistrement, pour que les liens partagés ne cassent jamais.
-4. **La traduction anglaise.** Passez en anglais : les champs communs
-   (prix, poids, photos, catégorie, stock...) sont déjà recopiés et grisés.
-   Cliquez sur **Copier depuis Français** pour reprendre les textes, puis
-   traduisez le nom, l'accroche, la description, les conseils, la
-   conservation et la recette. Ce que vous ne traduisez pas s'affiche en
-   français sur la version anglaise.
+4. **L'anglais** est facultatif (partie 7) : vous pouvez enregistrer sans
+   rien traduire, la page anglaise affichera le français.
 5. **Enregistrer**. Le produit apparaît sur le site environ deux minutes
-   plus tard, dans sa catégorie.
+   plus tard, en dernier dans sa catégorie (partie 9 pour le déplacer).
 6. Pensez à l'ajouter dans les **Produits associés** d'un ou deux produits
    proches, pour qu'il soit proposé ailleurs.
 
 ---
 
-## 7. Supprimer un produit
+## 7. La traduction anglaise (facultative)
 
-Si le produit reviendra un jour, préférez **Rupture** (partie 5) : la page
-reste en ligne, Google la garde, et il suffit de remettre en stock.
+Le site existe aussi en anglais (racinesenpartage.fr/en/). Pour chaque
+texte, l'anglais est **facultatif** : une case anglaise vide affiche le
+texte français. Le prix, le poids, les photos, le stock et la catégorie ne
+se règlent qu'en français et valent pour les deux langues ; ils
+n'apparaissent pas du côté anglais.
 
-Pour supprimer définitivement :
+**Traduire ou corriger l'anglais d'un produit**
 
-1. **D'abord, retirez-le des autres fiches.** Utilisez la loupe pour
-   chercher son nom, puis :
-   - dans chaque produit qui le cite dans **Produits associés**, retirez-le
-     et enregistrez ;
-   - dans **Pages**, **Accueil**, vérifiez qu'il ne fait pas partie des
-     trois produits de **Les trois produits dont la recette est montrée** ;
-     sinon, choisissez-en un autre et enregistrez.
-2. Ouvrez le produit, menu de la fiche, **Supprimer**, puis confirmez.
-3. Les fiches française et anglaise sont supprimées ensemble.
+1. Ouvrez le produit. Sur l'ordinateur, la fiche anglaise s'affiche à côté
+   de la française ; sur le téléphone, passez en anglais avec le choix de
+   langue en haut de la fiche (« Changer de langue du contenu »).
+2. Pour ne pas tout retaper : dans le menu de la langue anglaise
+   (« Afficher les options de contenu en anglais »), choisissez **Copier
+   depuis français**, puis traduisez les textes copiés.
+3. Modifiez les textes anglais, puis **Enregistrer**.
 
-Si vous oubliez l'étape 1, rien ne casse pour les clients : le site refuse
-simplement de se mettre à jour et garde la version précédente en ligne.
-Faites alors l'étape 1, enregistrez, et la mise à jour repart.
+**Ne pas proposer d'anglais pour un produit**
+
+Laissez simplement les cases anglaises vides : le site anglais montrera le
+texte français. Vous pouvez aussi, dans le même menu de la langue anglaise,
+choisir **Désactiver anglais** : la fiche anglaise est supprimée à
+l'enregistrement, et **Activer anglais** la fait revenir.
+
+Les catégories et les pages se traduisent de la même manière.
 
 ---
 
-## 8. Les catégories
+## 8. Supprimer un produit
+
+Avant de supprimer, demandez-vous si **Masquer** (partie 5) ne suffit pas :
+un produit masqué revient en un clic, un produit supprimé doit être
+recréé.
+
+1. Ouvrez le produit.
+2. Menu **⋮** en haut à droite, **Supprimer**.
+3. Confirmez à la question « Voulez-vous vraiment supprimer cette entrée ? ».
+   Les fiches française et anglaise sont supprimées ensemble.
+4. Deux minutes plus tard, la page du produit n'existe plus.
+
+S'il était cité dans les **Produits associés** d'autres fiches, le site
+l'enlève de lui-même ; il n'y a rien à faire. Si c'était l'un des trois
+produits de **Les trois produits dont la recette est montrée** (Pages,
+Accueil), choisissez-en un autre, sinon l'accueil ne montrera que deux
+recettes. Ses photos restent rangées dans l'administration, au cas où.
+
+---
+
+## 9. Changer l'ordre de la boutique
+
+Sur le site, les produits sont rangés par catégorie, dans l'ordre des
+catégories, puis dans l'ordre que vous choisissez. Les produits mis en
+avant passent en tête de la page Boutique.
+
+**Déplacer un produit**
+
+1. Cliquez sur **Produits**.
+2. Cliquez sur **Réorganiser**, en haut de la liste. Les produits
+   s'affichent groupés par catégorie.
+3. Faites glisser le produit à sa place dans sa catégorie, ou utilisez ses
+   flèches **Déplacer vers le haut** et **Déplacer vers le bas** (plus
+   simple sur téléphone).
+4. Cliquez sur **Terminé**. Le nouvel ordre est enregistré, et le site est à
+   jour deux minutes plus tard.
+
+Un produit ne change pas de catégorie ici : pour cela, changez sa case
+**Catégorie** dans la fiche.
+
+**Changer l'ordre des catégories** : même chose dans **Catégories**,
+**Réorganiser**, puis **Terminé**.
+
+---
+
+## 10. Les catégories
 
 Les catégories rangent la boutique : poudres, tisanes, graines, cacao.
 
 **Modifier une catégorie**
 
 1. **Catégories**, puis la catégorie.
-2. Modifiez le **Nom**, l'**Introduction** (deux phrases en haut de sa page),
-   l'**Image** ou l'**Ordre d'affichage** (1 pour la première).
-3. Passez en anglais pour le nom et l'introduction anglais.
+2. Modifiez le **Nom**, l'**Introduction** (deux phrases en haut de sa page)
+   ou l'**Image**.
+3. Passez en anglais pour le nom et l'introduction anglais (facultatif).
 4. **Enregistrer**.
 
-**Ajouter une catégorie** : **Nouveau**, puis nom, introduction, ordre et
-image. L'adresse proposée reprend le nom ; raccourcissez-la en un seul mot
-sans accent, par exemple `epices`. Elle ne pourra plus changer ensuite.
-Rangez ensuite des produits dedans (champ **Catégorie** de chaque produit).
+**Ajouter une catégorie** : **Nouveau**, puis nom, introduction et image.
+L'adresse proposée reprend le nom ; raccourcissez-la en un seul mot sans
+accent, par exemple `epices`. Elle ne pourra plus changer ensuite. La
+nouvelle catégorie se range en dernier (partie 9 pour la déplacer). Rangez
+ensuite des produits dedans (case **Catégorie** de chaque produit).
 
 **Supprimer une catégorie** n'est pas possible depuis l'administration,
 pour éviter de laisser des produits sans rayon. Déplacez d'abord ses
@@ -304,12 +420,12 @@ développeur.
 
 ---
 
-## 9. Les textes des pages : accueil, histoire, FAQ, contact
+## 11. Les textes des pages : accueil, histoire, FAQ, contact
 
 1. Cliquez sur **Pages**, puis sur la page : **Accueil**, **Notre
    histoire**, **Questions fréquentes** ou **Contact**.
 2. Modifiez les textes en français, puis passez en anglais pour la
-   traduction.
+   traduction (facultative).
 3. **Enregistrer**.
 
 Ce qu'il faut savoir page par page :
@@ -327,7 +443,7 @@ Ce qu'il faut savoir page par page :
 - **Questions fréquentes** : une liste de questions et réponses. Même règle :
   même nombre et même ordre en français et en anglais.
 - **Contact** : le titre, l'introduction et les horaires. L'adresse, le
-  téléphone et l'e-mail se changent dans les **Réglages** (partie 11).
+  téléphone et l'e-mail se changent dans les **Réglages** (partie 13).
 
 **Attention aux chiffres écrits en toutes lettres.** La réponse « La
 livraison est-elle offerte ? » de la FAQ cite le seuil de 49 € et les prix
@@ -340,10 +456,17 @@ de recherche : une phrase claire de 150 caractères environ suffit.
 
 ---
 
-## 10. Les textes légaux
+## 12. Les textes légaux
 
 Les mentions légales, les conditions générales de vente (CGV) et la
-politique de confidentialité sont dans **Textes légaux**.
+politique de confidentialité sont dans **Textes légaux**, sous le trait de
+la liste.
+
+**Attention : ces textes engagent la boutique.** Une faute peut coûter
+cher (délai de rétractation, garanties, données personnelles). Avant de
+changer une règle, faites relire le changement (votre développeur, un
+conseiller ou la chambre de commerce) ; corriger une coquille ou compléter
+une ligne TODO ne pose pas de problème.
 
 1. Ouvrez le texte, modifiez-le comme dans un traitement de texte
    (titres, gras, listes avec les boutons au-dessus).
@@ -357,75 +480,76 @@ politique de confidentialité sont dans **Textes légaux**.
    ligne, mot TODO compris.
 4. **Enregistrer**. La date « Dernière mise à jour » se met à jour toute
    seule.
-
-La version française fait foi. Si vous changez une règle des CGV (délai de
-retour, frais...), faites relire le changement avant de l'enregistrer, et
-reportez-le dans la version anglaise.
+5. Reportez le même changement dans la version anglaise. La version
+   française fait foi.
 
 ---
 
-## 11. Les réglages : livraison, pause, bandeau, TVA, coordonnées
+## 13. Les réglages : boutique ouverte, bandeau, livraison, TVA, lancement
 
 Cliquez sur **Réglages de la boutique**. Tout ici vaut pour les deux
 langues ; les textes affichés aux clients ont une case « En français » et
-une case « En anglais » (vide, c'est le français qui s'affiche).
-
-**Frais de port**
-
-1. Dépliez **Modes de livraison**, puis le mode : Point Relais, livraison à
-   domicile ou retrait à Arnouville.
-2. Changez le **Prix** (avec un point : `4.90`, ou `0` pour gratuit), le
-   **Délai affiché**, le **Nom affiché**, ou décochez **Proposé aux clients**
-   pour le retirer temporairement.
-3. **Enregistrer**.
-
-Ajouter un mode de livraison ou un pays demande votre développeur.
-
-**Seuil de livraison offerte**
-
-Dans **Boutique**, **Livraison offerte à partir de** : le montant du panier
-(produits seuls) à partir duquel la livraison devient gratuite, par exemple
-`49`. Pensez à la FAQ (partie 9). La livraison offerte se décide sur ce
-montant avant un éventuel code promo : un panier de 52 € avec un code de
-5 € reste livré gratuitement.
+une case « En anglais » (vide, c'est le français qui s'affiche). La page
+est rangée dans cet ordre : la boutique (ouverture, bandeau, TVA, quantité,
+livraison offerte), les modes de livraison, le lancement, puis les
+coordonnées (repliées).
 
 **Mettre la boutique en pause (vacances)**
 
-1. **Boutique**, décochez **Boutique ouverte**.
-2. **Enregistrer**.
+1. **Réglages de la boutique**, décochez **Boutique ouverte**.
+2. Dans **Bandeau d'annonce**, **En français**, annoncez le retour :
+   « Boutique en pause, retour le 25 août ». Faites de même en anglais si
+   vous le souhaitez.
+3. **Enregistrer**.
 
 Le site reste visible, un message annonce la pause, et le paiement est
-désactivé. Au retour, recochez la case et enregistrez. Vous pouvez
-annoncer la date de retour dans le bandeau d'annonce.
+désactivé. Au retour : recochez **Boutique ouverte**, effacez le bandeau,
+**Enregistrer**.
 
-**Bandeau d'annonce**
+**Changer le bandeau d'annonce**
 
-**Boutique**, **Bandeau d'annonce** : une phrase affichée tout en haut de
-toutes les pages (« Livraison offerte dès 49 € », « Fermeture du 1er au 15
-août »...). En français et en anglais. Effacez le texte pour faire
-disparaître le bandeau.
+1. **Bandeau d'annonce** : une phrase affichée tout en haut de toutes les
+   pages (« Livraison offerte dès 49 € », « Fermeture du 1er au 15 août »).
+   90 caractères au plus.
+2. Remplissez **En français**, et **En anglais** si vous le souhaitez.
+3. **Enregistrer**. Pour faire disparaître le bandeau, effacez le texte et
+   enregistrez.
 
-**TVA**
+**Changer le seuil de livraison offerte**
 
-À régler une fois, avec votre comptable :
+1. **Livraison offerte à partir de** : le montant du panier (produits
+   seuls) à partir duquel la livraison devient gratuite, par exemple `49`.
+2. Pour ne plus jamais offrir la livraison, videz la case.
+3. **Enregistrer**, puis corrigez la FAQ qui cite ce montant (partie 11).
+
+La livraison offerte se décide sur ce montant avant un éventuel code promo :
+un panier de 52 € avec un code de 5 € reste livré gratuitement.
+
+**Changer les prix de livraison**
+
+1. Dans **Livraison, modes et prix**, touchez le mode : Point Relais,
+   livraison à domicile ou retrait à Arnouville.
+2. Changez le **Prix** (`4,90`, ou `0` pour gratuit), le **Délai affiché**
+   ou le **Nom affiché**, ou décochez **Proposé aux clients** pour le
+   retirer temporairement.
+3. **Enregistrer**, puis corrigez la FAQ si elle cite ce prix (partie 11).
+
+Ajouter un mode de livraison ou un pays demande votre développeur.
+
+**La TVA**
+
+À régler une fois, avec votre comptable (section **TVA**, à déplier) :
 
 - **Franchise en base** : vous ne facturez pas la TVA ; les CGV et les
   mentions légales affichent automatiquement « TVA non applicable, art. 293
   B du CGI ».
-- **Prix TTC avec TVA** : les prix saisis sont TTC, et le **Taux** (5.5 pour
+- **Prix TTC avec TVA** : les prix saisis sont TTC, et le **Taux** (5,5 pour
   l'alimentaire) apparaît dans les textes légaux.
 
 Changer de régime ne change pas vos prix : vérifiez-les ensuite.
 
-**Coordonnées et entreprise**
-
-**Entreprise et coordonnées** : nom, devise, e-mail de contact, téléphone
-(10 chiffres collés, `0775689108`), adresse, lien Instagram complet, numéro
-**SIREN** (9 chiffres) et atelier de conditionnement. Ces informations
-apparaissent dans le pied de page, la page Contact et les textes légaux.
-
 **Quantité maximale par produit** : le nombre de sachets d'un même produit
-qu'une cliente peut commander d'un coup (10 au départ).
+qu'un client peut commander d'un coup (10 au départ).
 
 **Lancement : les prix provisoires**
 
@@ -434,38 +558,59 @@ Les prix actuels des dix produits sont **provisoires**. Tant que la case
 avant l'ouverture de la boutique échoue et le site ne peut pas ouvrir au
 public. Quand chaque prix est le bon :
 
-1. Vérifiez une dernière fois le prix de chaque produit (tri par prix dans
-   la liste des produits).
+1. Vérifiez une dernière fois le prix de chaque produit (**Trier**, par
+   prix, dans la liste des produits).
 2. **Réglages de la boutique**, **Lancement**, cochez **Prix confirmés**.
 3. **Enregistrer**.
 
 La même vérification exige le numéro SIREN et l'absence de ligne « TODO »
 dans les textes légaux.
 
+**Coordonnées et entreprise**
+
+Dépliez **Entreprise et coordonnées** : nom, devise, e-mail de contact,
+téléphone (10 chiffres collés, `0775689108`), adresse, lien Instagram
+complet, numéro **SIREN** (9 chiffres) et atelier de conditionnement. Ces
+informations apparaissent dans le pied de page, la page Contact et les
+textes légaux.
+
 ---
 
-## 12. Après « Enregistrer » : la mise en ligne
+## 14. Après « Enregistrer » : la mise en ligne et la vérification
+
+Il n'y a qu'un bouton pour publier : **Enregistrer**. Il n'y a pas de
+brouillon : chaque enregistrement part en ligne. Pour préparer un long
+texte tranquillement, écrivez-le d'abord dans un document à part.
 
 Quand vous cliquez sur **Enregistrer** :
 
-1. L'administration affiche « Entrée enregistrée ». Votre modification est
-   gardée en sécurité.
-2. Le site se reconstruit automatiquement : comptez **environ deux
-   minutes**.
-3. Ouvrez la page concernée sur racinesenpartage.fr et actualisez-la (touche
-   F5, ou tirez la page vers le bas sur téléphone). Le lien **Afficher sur
-   le site en ligne** de la fiche y mène directement.
+1. Le bouton affiche « Enregistrement… », puis un message confirme
+   « Entrée enregistrée. » (ou « Entrée enregistrée et publiée. »). Votre
+   modification est gardée en sécurité, avec sa date.
+2. Le service qui héberge le site (Cloudflare, « Workers Builds »)
+   reconstruit alors tout le site avec votre modification. Comptez
+   **environ deux minutes**.
+3. Pendant ces deux minutes, l'ancienne version reste en ligne : les
+   clients ne voient jamais un site à moitié à jour.
 
-Il n'y a pas de brouillon : chaque enregistrement part en ligne. Pour
-préparer un long texte tranquillement, écrivez-le d'abord dans un document
-à part.
+**Vérifier le résultat**
+
+1. Attendez deux minutes.
+2. Dans la fiche, touchez **Afficher sur le site en ligne** (une icône en
+   haut de la fiche ; sur téléphone, dans le menu **⋮**) : la page s'ouvre
+   sur racinesenpartage.fr.
+3. Actualisez la page (touche F5, ou tirez la page vers le bas sur
+   téléphone) et vérifiez votre changement : prix, photo, texte, badge
+   « Rupture ».
+4. Pour un réglage (bandeau, pause), regardez l'accueil ; pour un prix de
+   livraison, ajoutez un produit au panier et ouvrez le panier.
 
 **Si la modification n'apparaît pas après cinq minutes**
 
 1. Actualisez la page avec Ctrl + F5 (Cmd + Maj + R sur Mac), ou ouvrez-la
    dans une fenêtre de navigation privée.
-2. Toujours rien : le site a peut-être refusé la modification (photo
-   manquante, prix vide, produit supprimé encore cité ailleurs...). Dans ce
+2. Toujours rien : le site a peut-être refusé la modification (par exemple
+   « Afficher les valeurs nutritionnelles » cochée sans tableau). Dans ce
    cas, **l'ancienne version reste en ligne**, les clients ne voient aucune
    panne. Relisez votre dernière modification ; si vous ne voyez pas
    l'erreur, envoyez à votre développeur le nom de la fiche et l'heure de
@@ -476,7 +621,7 @@ toujours être annulée par votre développeur.
 
 ---
 
-## 13. Les commandes dans Stripe : voir, rembourser, codes promo, reçus
+## 15. Les commandes dans Stripe : voir, rembourser, codes promo, reçus
 
 Stripe encaisse les paiements et garde la liste de toutes vos commandes.
 Connectez-vous sur **dashboard.stripe.com** (ou dans l'application Stripe
@@ -491,7 +636,7 @@ légèrement ; s'ils diffèrent de ce guide, cherchez le mot le plus proche.
    dans les **métadonnées** le mode de livraison et le point relais choisi.
 
 Vous recevez aussi un e-mail « Nouvelle commande » pour chaque commande
-(partie 14). L'argent est versé automatiquement sur votre compte bancaire,
+(partie 16). L'argent est versé automatiquement sur votre compte bancaire,
 quelques jours après le paiement.
 
 **Rembourser**
@@ -526,7 +671,7 @@ clients**). Pour renvoyer un reçu : ouvrez le paiement, **Envoyer le reçu**.
 
 ---
 
-## 14. Préparer un colis à partir de l'e-mail de commande
+## 16. Préparer un colis à partir de l'e-mail de commande
 
 Pour chaque commande payée, vous recevez dans votre boîte Outlook un e-mail
 « Nouvelle commande » avec : le numéro de commande, les produits et
@@ -565,11 +710,11 @@ adresse et le poids, puis déposez le colis.
 L'e-mail indique « Retrait ». Appelez ou envoyez un SMS au client (numéro
 dans l'e-mail) pour convenir d'un rendez-vous au 9 Rue du Marché.
 
-Astuce : quand le colis est parti, répondez à l'e-mail du client (partie 15) pour lui dire qu'il est en route.
+Astuce : quand le colis est parti, répondez à l'e-mail du client (partie 17) pour lui dire qu'il est en route.
 
 ---
 
-## 15. Répondre à une cliente ou un client
+## 17. Répondre à une cliente ou un client
 
 Les clients vous écrivent à **racinesenpartage@outlook.com** (affiché sur la
 page Contact) ou vous appellent au 07 75 68 91 08. Quand un client répond à
@@ -585,7 +730,7 @@ Quelques conseils :
 - **Colis en retard** : vérifiez le suivi dans votre espace Mondial Relay et
   transmettez le lien de suivi au client.
 - **Colis abîmé** : demandez une photo, puis renvoyez le produit ou
-  remboursez (partie 13).
+  remboursez (partie 15).
 - **Retour** : un sachet fermé peut être retourné dans les 14 jours ; un
   sachet ouvert ne peut pas être repris (hygiène), comme l'expliquent les
   CGV et la FAQ.
@@ -594,30 +739,34 @@ Quelques conseils :
 
 ---
 
-## 16. Que faire si...
+## 18. Que faire si...
 
 | Situation                                                         | Que faire                                                                                                                                                                                                                                                       |
 | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Un prix est faux sur le site**                                  | Produits, le produit, en français, **Prix TTC** avec un point (`8.90`), Enregistrer. En ligne en deux minutes. Une commande déjà payée au mauvais prix : remboursez la différence dans Stripe (partie 13).                                                      |
+| **Un prix est faux sur le site**                                  | Produits, le produit, en français, **Prix TTC** (`8,90`), **Enregistrer**. En ligne en deux minutes. Une commande déjà payée au mauvais prix : remboursez la différence dans Stripe (partie 15).                                                                |
 | **Une photo est floue ou mal cadrée**                             | Reprenez la photo à la lumière du jour, sans zoom, puis remplacez-la (partie 4). Si elle est floue seulement sur le site, elle était sans doute trop petite au départ : envoyez l'original, pas une capture d'écran ni une photo reçue par messagerie.          |
+| **Une photo est refusée**                                         | Photo d'iPhone (HEIC) : envoyez-la depuis Safari, ou réglez l'iPhone sur « Le plus compatible » (partie 4). Message de taille : la photo dépasse 2 Mo même allégée, ce qui est rare ; prenez-la à nouveau sans zoom ni mode « RAW ».                            |
+| **Un produit est épuisé**                                         | **Disponibilité** : **Rupture** (partie 5).                                                                                                                                                                                                                     |
+| **Je veux retirer un produit quelque temps**                      | Cochez **Masquer ce produit du site** (partie 5). Décochez pour le faire revenir.                                                                                                                                                                               |
+| **Je veux changer l'ordre des produits**                          | **Produits**, **Réorganiser**, déplacez, **Terminé** (partie 9).                                                                                                                                                                                                |
 | **Une commande est payée mais je n'ai pas reçu d'e-mail**         | Regardez dans les **courriers indésirables** d'Outlook. La commande est de toute façon dans **Stripe**, Paiements, avec tout ce qu'il faut pour le colis. Si plusieurs e-mails manquent, prévenez votre développeur.                                            |
 | **Un client dit n'avoir rien reçu après sa commande**             | Vérifiez le paiement dans Stripe. Envoyez-lui son reçu depuis le paiement (**Envoyer le reçu**) et confirmez-lui sa commande par e-mail.                                                                                                                        |
 | **Le site est en panne** (page blanche, erreur)                   | Essayez depuis un autre appareil ou en 4G pour vérifier que ce n'est pas votre connexion. Si le site est vraiment inaccessible, prévenez votre développeur avec l'heure et une capture d'écran. Vos commandes et vos paiements restent en sécurité chez Stripe. |
-| **Ma modification n'apparaît pas**                                | Attendez cinq minutes, actualisez (Ctrl + F5). Toujours rien : voir la partie 12.                                                                                                                                                                               |
-| **L'administration refuse d'enregistrer**                         | Un champ est en rouge : il est obligatoire ou mal rempli (prix sans point, téléphone avec des espaces...). Lisez le message sous le champ, corrigez, enregistrez.                                                                                               |
+| **Ma modification n'apparaît pas**                                | Attendez cinq minutes, actualisez (Ctrl + F5). Toujours rien : voir la partie 14.                                                                                                                                                                               |
+| **L'administration refuse d'enregistrer**                         | Une case est en rouge : elle est obligatoire ou mal remplie (prix avec trois chiffres après la virgule, téléphone avec des espaces, référence déjà prise...). Lisez le message sous la case, corrigez, **Enregistrer**.                                         |
+| **J'ai fermé la fiche sans enregistrer**                          | Rouvrez-la : l'administration propose souvent **Restaurer** le brouillon. Sinon, refaites la modification.                                                                                                                                                      |
 | **J'ai perdu mon mot de passe GitHub**                            | Sur github.com, **Sign in**, puis **Forgot password?** : un lien arrive sur votre e-mail. Si vous avez perdu votre téléphone à codes, utilisez vos codes de secours (gardés à l'activation), sinon prévenez votre développeur.                                  |
 | **J'ai perdu mon mot de passe Stripe ou Outlook**                 | Sur la page de connexion, « Mot de passe oublié » : un lien arrive par e-mail ou par SMS.                                                                                                                                                                       |
-| **Je veux changer un texte en anglais seulement**                 | Ouvrez la fiche ou la page, passez en **anglais** avec le menu de langue, modifiez le texte, Enregistrer. Le français ne bouge pas.                                                                                                                             |
-| **Je veux changer un texte en français et en anglais**            | Modifiez le français, enregistrez, passez en anglais, modifiez, enregistrez. Un champ anglais vide affiche le français.                                                                                                                                         |
-| **Un produit est épuisé**                                         | Disponibilité : **Rupture** (partie 5).                                                                                                                                                                                                                         |
-| **Je pars en vacances**                                           | Réglages, Boutique, décochez **Boutique ouverte**, et annoncez la date de retour dans le bandeau (partie 11).                                                                                                                                                   |
-| **Je change d'adresse e-mail ou de téléphone**                    | Réglages, Entreprise et coordonnées. Prévenez aussi votre développeur pour l'e-mail : les e-mails de commande sont envoyés à une adresse réglée de son côté.                                                                                                    |
-| **Je veux changer les frais de port ou le seuil**                 | Réglages, Modes de livraison ou Boutique (partie 11), puis la réponse de la FAQ qui cite ces montants (partie 9).                                                                                                                                               |
+| **Je veux changer un texte en anglais seulement**                 | Ouvrez la fiche ou la page, passez en **anglais**, modifiez le texte, **Enregistrer**. Le français ne bouge pas (partie 7).                                                                                                                                     |
+| **Je veux changer un texte en français et en anglais**            | Modifiez les deux côtés, puis **Enregistrer** une fois. Un champ anglais vide affiche le français.                                                                                                                                                              |
+| **Je pars en vacances**                                           | Réglages, décochez **Boutique ouverte**, et annoncez la date de retour dans le **Bandeau d'annonce** (partie 13).                                                                                                                                               |
+| **Je change d'adresse e-mail ou de téléphone**                    | Réglages, **Entreprise et coordonnées**. Prévenez aussi votre développeur pour l'e-mail : les e-mails de commande sont envoyés à une adresse réglée de son côté.                                                                                                |
+| **Je veux changer les frais de port ou le seuil**                 | Réglages, **Livraison, modes et prix** ou **Livraison offerte à partir de** (partie 13), puis la réponse de la FAQ qui cite ces montants (partie 11).                                                                                                           |
 | **Je veux une nouvelle page, un nouveau mode de livraison, etc.** | Demandez à votre développeur : c'est une nouvelle fonctionnalité, pas un changement de texte.                                                                                                                                                                   |
 
 ---
 
-## 17. Qui contacter
+## 19. Qui contacter
 
 - **Votre développeur** : pour tout ce qui ne se règle pas avec ce guide.
   Indiquez toujours la page concernée, ce que vous avez fait, l'heure, et
