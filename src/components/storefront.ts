@@ -15,12 +15,6 @@ export function stockLabel(stock: Stock, t: LocaleContent): string {
   return { in_stock: t.product.stockIn, low: t.product.stockLow, out: t.product.stockOut }[stock];
 }
 
-/** "NE" to the regional-indicator flag emoji; empty for anything else. */
-export function flagEmoji(code: string | undefined): string {
-  if (!code || !/^[A-Z]{2}$/.test(code)) return '';
-  return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
-}
-
 /**
  * "Livraison en Point Relais 4,90 €, offerte dès 49 €" from the relay
  * method of the settings, or null when that method is disabled.

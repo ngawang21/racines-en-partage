@@ -25,7 +25,7 @@ import NutritionTable from '../NutritionTable.astro';
 import ProductGrid from '../ProductGrid.astro';
 import SectionHead from '../SectionHead.astro';
 import { companionPhoto } from '../companion';
-import { STOCK_CLASS, deliveryLine, flagEmoji, stockLabel } from '../storefront';
+import { STOCK_CLASS, deliveryLine, stockLabel } from '../storefront';
 
 interface Props {
   locale: Locale;
@@ -59,7 +59,6 @@ const shopOpen = settings.shop.open;
 const max = settings.shop.maxQuantityPerLine;
 const buyable = shopOpen && product.stock !== 'out';
 const qtyId = `qty-${product.sku.toLowerCase()}`;
-const flag = flagEmoji(product.originCountryCode);
 const delivery = deliveryLine(settings, t, locale);
 
 const companion = companionPhoto(product.images[0]!);
@@ -147,7 +146,7 @@ const shopHref = routePath('shop', locale);
           </li>
           <li class="tag">
             <span class="visually-hidden">{t.product.origin}{colon}</span>{' '}
-            {flag && <span aria-hidden="true">{flag}</span>}
+            <Icon name="pin" size={14} />
             {product.origin}
           </li>
         </ul>

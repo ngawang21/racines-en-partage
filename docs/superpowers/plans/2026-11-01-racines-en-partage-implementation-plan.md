@@ -308,3 +308,18 @@ a separate entry in `worker/` deployed with the static assets by one
   worker 138, build 36, e2e 32, `wrangler deploy --dry-run` green. Admin
   `script-src` kept on the whole unpkg host so Sveltia's helper imports keep
   working after sign-in.
+- 2026-11-01 23:00 second iteration after the push to GitHub: brand assets
+  rebuilt from the owner's master logo (`pnpm brand`, medallion keeps the
+  whole hibiscus, hibiscus mark favicons, OG cards regenerated); order flow
+  audit with 11 fixes (`PRICE_CHANGED` guard, every Worker error code mapped
+  to a message, thanks page retries, per-recipient idempotency keys,
+  `async_payment_failed` logged, preview return URL); CMS rework (hidden and
+  ordered products, French hints on every field, relation filters, WebP at
+  1600 px, 19 owner recipes, config validated against the 0.256.1 JSON
+  schema); front-end polish (framed photo crops, mobile menu with scrim and
+  Escape, print styles, font fallback metrics, hero entrance, scroll reveal,
+  card hover, 44 px targets); French typography at load time; unauthorised
+  health claims removed from the product pages and the policy written down;
+  CGV aligned with L221-24 with a withdrawal form; English wording pass;
+  admin CSP allows `'wasm-unsafe-eval'` for Sveltia's image codecs. Gates:
+  unit 188, worker 167, build 36, e2e 44.
