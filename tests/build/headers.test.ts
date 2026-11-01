@@ -100,11 +100,13 @@ describe('dist/_headers', () => {
     expect(page).toContain('crossorigin="anonymous"');
     const scriptSrc = ruleCsp('/admin/*').get('script-src')!;
     expect(scriptSrc[0]).toBe("'self'");
-    const remote = scriptSrc.slice(1);
+    // WebAssembly for Sveltia's HEIC decoder and WebP encoder (no eval).
+    expect(scriptSrc).toContain("'wasm-unsafe-eval'");
+    expect(scriptSrc).not.toContain("'unsafe-eval'");
     // The whole unpkg host: after sign-in Sveltia imports helper packages
     // (image encoders, date locales) from other unpkg paths. The main script
     // itself stays pinned by version and integrity in the admin page.
-    expect(remote).toEqual(['https://unpkg.com']);
+    expect(hostsOf(scriptSrc)).toEqual(['https://unpkg.com']);
     expect(src!.startsWith('https://unpkg.com/@sveltia/cms@')).toBe(true);
   });
 

@@ -56,5 +56,5 @@
 /admin/*
   ! Content-Security-Policy
   ! X-Robots-Tag
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.githubusercontent.com https://avatars.githubusercontent.com; connect-src 'self' data: blob: https://api.github.com https://github.com https://www.githubstatus.com https://*.workers.dev https://unpkg.com https://api.openai.com https://api.anthropic.com; font-src 'self' https://cdn.jsdelivr.net; frame-src 'self' https://*.workers.dev; worker-src 'self' blob:; frame-ancestors 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.githubusercontent.com https://avatars.githubusercontent.com; connect-src 'self' data: blob: https://api.github.com https://github.com https://www.githubstatus.com https://*.workers.dev https://unpkg.com https://api.openai.com https://api.anthropic.com; font-src 'self' https://cdn.jsdelivr.net; frame-src 'self' https://*.workers.dev; worker-src 'self' blob:; frame-ancestors 'self'
   X-Robots-Tag: noindex

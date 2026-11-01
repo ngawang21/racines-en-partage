@@ -22,6 +22,8 @@ Build order, file ownership and the contracts between parallel workers:
 `pnpm e2e` (Playwright, builds and previews first), `pnpm dev:worker`
 (`astro build` then `wrangler dev`, needs `.dev.vars`), `pnpm deploy`,
 `pnpm og` (regenerate the Open Graph images after a product change),
+`pnpm brand <master.png>` (logo, medallion and icons from the owner's master
+logo, then `pnpm og`),
 `pnpm launch-check`.
 Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
 
@@ -37,8 +39,15 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   `legal`, `a11y`. Fields are null tolerant; empty means "fall back to
   French".
 - `src/content/merge.ts` (pure): `mergeProduct`, `mergeCategory`,
-  `mergePage`, `parseOrThrow`. Shared fields come from the French file only;
-  the English file may hold translated fields only, each may be empty.
+  `mergePage`, `parseOrThrow`, `dropDanglingRelated`, `publishedProducts`
+  (drops `hidden` products and links to them), `compareProducts` (category
+  order, then the CMS `order`, then name). Shared fields come from the
+  French file only; the English file may hold translated fields only, each
+  may be empty.
+- `src/i18n/typography.ts` (pure): `frenchTypographyText`,
+  `frenchTypographyHtml`, `frenchTypographyDeep`. The loaders apply them to
+  French content and the e-mail templates to French e-mails, so the CMS
+  files keep plain spaces.
 - `src/content/{products,categories,pages}/{fr,en}/*.yml`,
   `src/content/legal/{fr,en}/{legal,terms,privacy}.md`,
   `src/content/settings/shop.yml` (singleton), `src/content/locales/{fr,en}.json`.
@@ -159,7 +168,18 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   nibs table repeats the moringa values and stays hidden
   (`nutritionVerified: false`).
 - Nutrition values are shared, typed as printed in French; English pages
-  pass them through `localiseNutrition`.
+  pass them through `localiseNutrition`. The tiger nut tubercules label
+  prints ranges, which is not a valid declaration, so its table stays hidden.
+- Product `benefits` carry no health or nutrition claim beyond what a
+  displayed nutrition table supports (EU regulation 1924/2006): "source de
+  protéines" on moringa is backed by its table; "favorise le transit",
+  "antioxydant", "bonne énergie" and similar label phrases were removed and
+  are listed in `docs/client/presentation.md` for the owner.
+- French content is typeset at load time (`src/i18n/typography.ts`): a test
+  or grep that looks for "Livraison :" in built HTML must expect U+00A0
+  before the colon and U+202F before `;` `!` `?` `%` and units.
+- A product with `hidden: true` has no page, no catalogue entry and no
+  sitemap URL; the CMS "Réorganiser" writes `order` into the French file.
 - `pnpm test:build` needs a fresh `pnpm build`.
 - `pnpm e2e` builds, then serves `dist/` on port 4323 with
   `astro preview --ignore-lock` (astro preview otherwise refuses a second

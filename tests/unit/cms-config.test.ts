@@ -747,7 +747,7 @@ describe('admin page', () => {
     const pinned = /src="(https:\/\/unpkg\.com\/@sveltia\/cms@[\d.]+\/)dist\//.exec(html)?.[1];
     expect(pinned).toBeDefined();
     // The whole host: Sveltia imports helper packages from unpkg after sign-in.
-    expect(block).toContain("script-src 'self' https://unpkg.com;");
+    expect(block).toContain("script-src 'self' 'wasm-unsafe-eval' https://unpkg.com;");
     expect(block).toMatch(/connect-src [^;]*https:\/\/api\.github\.com/);
     expect(block).toContain('X-Robots-Tag: noindex');
   });

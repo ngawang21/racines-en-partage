@@ -247,10 +247,11 @@ French button names quoted in the owner guide.
 - `choose_url: false` on every image field: an external URL would not
   resolve at build time.
 - HEIC (iPhone): Safari decodes it natively. Other browsers decode it with a
-  WebAssembly build of libheif that Sveltia imports from unpkg in a worker;
-  the admin CSP has no `'wasm-unsafe-eval'`, so on Chrome or Android a HEIC
-  photo is refused as invalid. The owner guide tells Marie to use Safari on
-  the iPhone or the "Le plus compatible" camera format.
+  WebAssembly build of libheif that Sveltia imports from unpkg in a worker,
+  and Sveltia's WebP encoder also falls back to WebAssembly. The admin CSP
+  therefore allows `'wasm-unsafe-eval'` (WebAssembly compilation only, not
+  `eval`). The owner guide still suggests the "Le plus compatible" camera
+  format, which gives JPEG files every browser handles.
 - Category images and the about-page section images live in
   `src/assets/brand/`; their CMS fields override `media_folder`,
   `public_folder` and the size (2000 px).
@@ -308,18 +309,18 @@ the YAML comments, so `docs/client/presentation.md` lists them for Marie.
 block that first detaches the global `Content-Security-Policy` (`!` line),
 then sets its own, and adds `X-Robots-Tag: noindex`. Hosts and why:
 
-| Directive     | Host                                                  | Why                                                                                              |
-| ------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `script-src`  | `https://unpkg.com`                                   | The pinned `sveltia-cms.js` (integrity checked) and the helper packages it imports after sign-in |
-| `connect-src` | `https://unpkg.com`                                   | Sveltia's French locale file and version check                                                   |
-| `connect-src` | `https://api.github.com`, `https://github.com`        | Content, commits, uploads                                                                        |
-| `connect-src` | `https://www.githubstatus.com`                        | GitHub status banner                                                                             |
-| `connect-src` | `https://*.workers.dev`                               | Sveltia Authenticator Worker                                                                     |
-| `connect-src` | `https://api.openai.com`, `https://api.anthropic.com` | Optional machine translation, unused unless a key is entered                                     |
-| `connect-src` | `data:`, `blob:`                                      | Sveltia fetches its own inline logo and local file previews                                      |
-| `font-src`    | `https://cdn.jsdelivr.net`                            | Sveltia's interface fonts and icon font                                                          |
-| `img-src`     | `data:`, `blob:`, `*.githubusercontent.com`           | Thumbnails of repository images, user avatar                                                     |
-| `frame-src`   | `https://*.workers.dev`                               | Authenticator                                                                                    |
+| Directive     | Host                                                  | Why                                                                                                                               |
+| ------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `script-src`  | `https://unpkg.com`, `'wasm-unsafe-eval'`             | The pinned `sveltia-cms.js` (integrity checked), the helper packages it imports after sign-in, and their WebAssembly image codecs |
+| `connect-src` | `https://unpkg.com`                                   | Sveltia's French locale file and version check                                                                                    |
+| `connect-src` | `https://api.github.com`, `https://github.com`        | Content, commits, uploads                                                                                                         |
+| `connect-src` | `https://www.githubstatus.com`                        | GitHub status banner                                                                                                              |
+| `connect-src` | `https://*.workers.dev`                               | Sveltia Authenticator Worker                                                                                                      |
+| `connect-src` | `https://api.openai.com`, `https://api.anthropic.com` | Optional machine translation, unused unless a key is entered                                                                      |
+| `connect-src` | `data:`, `blob:`                                      | Sveltia fetches its own inline logo and local file previews                                                                       |
+| `font-src`    | `https://cdn.jsdelivr.net`                            | Sveltia's interface fonts and icon font                                                                                           |
+| `img-src`     | `data:`, `blob:`, `*.githubusercontent.com`           | Thumbnails of repository images, user avatar                                                                                      |
+| `frame-src`   | `https://*.workers.dev`                               | Authenticator                                                                                                                     |
 
 Verified on 2026-11-01 with `node scripts/relay-capture.mjs admin`
 (`docs/deployment.md`, section 11.2), which serves `dist/` with the

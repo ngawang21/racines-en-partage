@@ -196,10 +196,10 @@ en ajouter. En cas de doute, demandez avant d'enregistrer.
   capture d'écran, ni une photo reçue par WhatsApp ou Messenger (elles sont
   abîmées). Au moins 1200 pixels de large, ce qu'un téléphone récent
   dépasse toujours.
-- Formats acceptés : JPEG, PNG, WebP. Les photos d'iPhone (format HEIC)
-  passent depuis **Safari** sur l'iPhone ou le Mac. Sur un autre
-  navigateur, réglez l'iPhone sur « Le plus compatible » (Réglages,
-  Appareil photo, Formats) pour qu'il prenne ses photos en JPEG.
+- Formats acceptés : JPEG, PNG, WebP et les photos d'iPhone (format HEIC),
+  qui sont converties à l'envoi. Si une photo d'iPhone est refusée, réglez
+  l'iPhone sur « Le plus compatible » (Réglages, Appareil photo, Formats)
+  pour qu'il prenne ses photos en JPEG, puis recommencez.
 - Inutile de réduire la photo : l'administration la convertit en WebP (un
   format léger pour le web) et la ramène à 1600 pixels au plus, puis le
   site fabrique toutes les tailles utiles. Après conversion, une photo
@@ -745,7 +745,7 @@ Quelques conseils :
 | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Un prix est faux sur le site**                                  | Produits, le produit, en français, **Prix TTC** (`8,90`), **Enregistrer**. En ligne en deux minutes. Une commande déjà payée au mauvais prix : remboursez la différence dans Stripe (partie 15).                                                                |
 | **Une photo est floue ou mal cadrée**                             | Reprenez la photo à la lumière du jour, sans zoom, puis remplacez-la (partie 4). Si elle est floue seulement sur le site, elle était sans doute trop petite au départ : envoyez l'original, pas une capture d'écran ni une photo reçue par messagerie.          |
-| **Une photo est refusée**                                         | Photo d'iPhone (HEIC) : envoyez-la depuis Safari, ou réglez l'iPhone sur « Le plus compatible » (partie 4). Message de taille : la photo dépasse 2 Mo même allégée, ce qui est rare ; prenez-la à nouveau sans zoom ni mode « RAW ».                            |
+| **Une photo est refusée**                                         | Photo d'iPhone (HEIC) : réglez l'iPhone sur « Le plus compatible » (partie 4) et reprenez la photo. Message de taille : la photo dépasse 2 Mo même allégée, ce qui est rare ; prenez-la à nouveau sans zoom ni mode « RAW ».                                    |
 | **Un produit est épuisé**                                         | **Disponibilité** : **Rupture** (partie 5).                                                                                                                                                                                                                     |
 | **Je veux retirer un produit quelque temps**                      | Cochez **Masquer ce produit du site** (partie 5). Décochez pour le faire revenir.                                                                                                                                                                               |
 | **Je veux changer l'ordre des produits**                          | **Produits**, **Réorganiser**, déplacez, **Terminé** (partie 9).                                                                                                                                                                                                |
