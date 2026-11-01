@@ -165,7 +165,9 @@
     "relayLoading": "Chargement de la carte des points relais…",
     "relayCountries": "Points relais en : {countries}",
     "pickupTitle": "Adresse de retrait",
-    "unavailableLines": "Retirez les produits indisponibles pour continuer."
+    "unavailableLines": "Retirez les produits indisponibles pour continuer.",
+    "postcodeRequired": "Saisissez un code postal pour rechercher un point relais.",
+    "postcodeInvalid": "Ce code postal n’est pas valide : 3 à 10 chiffres ou lettres, par exemple 95400."
   },
   "thanks": {
     "title": "Merci pour votre commande",
@@ -190,7 +192,8 @@
     "emailSent": "Un récapitulatif a été envoyé à {email}.",
     "statusPaid": "Payée",
     "statusPending": "En attente de confirmation",
-    "statusUnpaid": "Non payée"
+    "statusUnpaid": "Non payée",
+    "discount": "Remise"
   },
   "errors": {
     "notFoundTitle": "Page introuvable",

@@ -4,17 +4,33 @@ import type Stripe from 'stripe';
 import { renderCustomerEmail, renderOwnerEmail } from './email/templates';
 import { ApiError } from './errors';
 import { describeError, logError, logInfo } from './log';
-import { isPaid, summariseSession } from './orders';
+import { SESSION_EXPAND, isPaid, summariseSession, withLineItems } from './orders';
 import type { AppEnv, MailMessage, Mailer, StripeLike } from './types';
 
 export const SIGNATURE_TOLERANCE_SECONDS = 300;
 export const MAX_WEBHOOK_BYTES = 512 * 1024;
 
-export const WEBHOOK_EXPAND = [
-  'line_items',
-  'line_items.data.price.product',
-  'shipping_cost.shipping_rate',
-];
+/** Session metadata key set once both order e-mails are out (or refused for good). */
+export const EMAILS_SENT_KEY = 'emails_sent';
+
+/**
+ * A refusal Stripe should not retry: Resend 4xx other than 409 (idempotency
+ * conflict, retryable) and 429 (rate limit). 5xx, network errors and errors
+ * without a status are transient.
+ */
+export function isPermanentMailError(err: unknown): boolean {
+  const status =
+    typeof err === 'object' && err !== null && 'status' in err ? err.status : undefined;
+  return (
+    typeof status === 'number' && status >= 400 && status < 500 && status !== 409 && status !== 429
+  );
+}
+
+function mailStatus(err: unknown): number | null {
+  const status =
+    typeof err === 'object' && err !== null && 'status' in err ? err.status : undefined;
+  return typeof status === 'number' ? status : null;
+}
 
 export async function verifyEvent(
   stripe: StripeLike,
@@ -70,6 +86,11 @@ export function orderEmails(
 /**
  * Handles one verified event. Resolves when there is nothing (more) to do;
  * throws an ApiError when Stripe should retry (5xx).
+ *
+ * Idempotency without storage: once both e-mails are out, the session gets
+ * `metadata.emails_sent = 'true'`; a redelivered or second event finds it and
+ * sends nothing. Between a send and that mark, Resend's `Idempotency-Key`
+ * (`<event id>:<recipient>`) drops a duplicate of the same event.
  */
 export async function handleEvent(
   event: Stripe.Event,
@@ -90,37 +111,79 @@ export async function handleEvent(
 
   let session: Stripe.Checkout.Session;
   try {
-    session = await deps.stripe.checkout.sessions.retrieve(brief.id, { expand: WEBHOOK_EXPAND });
+    session = await deps.stripe.checkout.sessions.retrieve(brief.id, { expand: SESSION_EXPAND });
   } catch (err) {
     logError('order.retrieve_failed', { sessionId: brief.id, error: describeError(err) });
     throw new ApiError(502, 'PAYMENT_PROVIDER_ERROR', 'Could not retrieve the session');
   }
 
+  if (!session.metadata?.delivery_method) {
+    // A Checkout Session of the same Stripe account not created by this shop.
+    logInfo('order.not_ours', { sessionId: session.id, eventId: event.id });
+    return;
+  }
+  if (session.metadata[EMAILS_SENT_KEY] === 'true') {
+    logInfo('order.already_notified', { sessionId: session.id, eventId: event.id });
+    return;
+  }
+
+  try {
+    session = await withLineItems(deps.stripe, session);
+  } catch (err) {
+    logError('order.retrieve_failed', { sessionId: session.id, error: describeError(err) });
+    throw new ApiError(502, 'PAYMENT_PROVIDER_ERROR', 'Could not list the order lines');
+  }
+
   if (!deps.env.ORDER_EMAIL_TO) logError('config.missing', { name: 'ORDER_EMAIL_TO' });
   const messages = orderEmails(session, event.id, deps.env);
   const results = await Promise.allSettled(messages.map((m) => deps.mailer.send(m)));
-  const failed = results.flatMap((r, i) =>
-    r.status === 'rejected' ? [{ index: i, reason: describeError(r.reason) }] : [],
+  const recipient = (i: number) => (i === 0 && deps.env.ORDER_EMAIL_TO ? 'owner' : 'customer');
+  const rejected = results.flatMap((r, i) =>
+    r.status === 'rejected' ? [{ i, err: r.reason }] : [],
   );
+  const refused = rejected.filter((r) => isPermanentMailError(r.err));
+  const failed = rejected.filter((r) => !isPermanentMailError(r.err));
 
   logInfo('order.paid', {
     sessionId: session.id,
     eventId: event.id,
     total: session.amount_total ?? 0,
     currency: session.currency ?? 'eur',
-    emailsSent: messages.length - failed.length,
+    emailsSent: messages.length - rejected.length,
+    emailsRefused: refused.length,
     emailsFailed: failed.length,
   });
+
+  for (const r of refused) {
+    // Resending would be refused again (bad address, unverified domain...): count it as done.
+    logError('order.email_refused', {
+      sessionId: session.id,
+      recipient: recipient(r.i),
+      status: mailStatus(r.err),
+      error: describeError(r.err),
+    });
+  }
 
   if (failed.length > 0) {
     for (const f of failed) {
       logError('order.email_failed', {
         sessionId: session.id,
-        recipient: f.index === 0 && deps.env.ORDER_EMAIL_TO ? 'owner' : 'customer',
-        error: f.reason,
+        recipient: recipient(f.i),
+        status: mailStatus(f.err),
+        error: describeError(f.err),
       });
     }
     // Stripe retries the event; Resend drops the e-mails already sent (same key).
     throw new ApiError(500, 'EMAIL_FAILED', 'Order e-mail could not be sent');
+  }
+
+  try {
+    // Stripe merges metadata: the delivery keys stay.
+    await deps.stripe.checkout.sessions.update(session.id, {
+      metadata: { [EMAILS_SENT_KEY]: 'true' },
+    });
+  } catch (err) {
+    // The e-mails are out; a retry of this event would be deduplicated by Resend.
+    logError('order.mark_failed', { sessionId: session.id, error: describeError(err) });
   }
 }

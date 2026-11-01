@@ -3,9 +3,41 @@ import type Stripe from 'stripe';
 import { isLocale } from '../src/consts';
 import { ApiError } from './errors';
 import { maskEmail } from './log';
-import type { Delivery, Locale } from './types';
+import type { Delivery, Locale, StripeLike } from './types';
 
 export const SESSION_ID_PATTERN = /^cs_(test|live)_[A-Za-z0-9]+$/;
+
+/** The thanks page reads an order for 48 hours after the session was created. */
+export const ORDER_VIEW_MAX_AGE_MS = 48 * 60 * 60 * 1000;
+
+/** Above the 30 lines a checkout accepts: one page always holds every line. */
+export const LINE_ITEMS_LIMIT = 100;
+
+/** Retrieve-time expansions; line items come from listLineItems (no 10-item cap). */
+export const SESSION_EXPAND = ['shipping_cost.shipping_rate'];
+
+/**
+ * The session with every line attached. `expand: ['line_items']` returns the
+ * first 10 lines only; listLineItems takes up to 100 per page.
+ */
+export async function withLineItems(
+  stripe: StripeLike,
+  session: Stripe.Checkout.Session,
+): Promise<Stripe.Checkout.Session> {
+  const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
+    limit: LINE_ITEMS_LIMIT,
+    expand: ['data.price.product'],
+  });
+  return { ...session, line_items: lineItems };
+}
+
+/** True once the order is older than the thanks page may show. */
+export function isOrderExpired(
+  session: Pick<Stripe.Checkout.Session, 'created'>,
+  now: Date,
+): boolean {
+  return now.getTime() - session.created * 1000 > ORDER_VIEW_MAX_AGE_MS;
+}
 
 export type OrderStatus = 'paid' | 'pending' | 'unpaid';
 

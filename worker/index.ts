@@ -31,6 +31,7 @@ export default {
         STRIPE_WEBHOOK_SECRET: env.STRIPE_WEBHOOK_SECRET ?? '',
       },
       now,
+      limiters: { checkout: env.CHECKOUT_LIMITER, orders: env.ORDERS_LIMITER },
     });
     return app.fetch(request, env, ctx);
   },

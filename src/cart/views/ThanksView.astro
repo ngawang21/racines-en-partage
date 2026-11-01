@@ -43,6 +43,10 @@ const contactParts = t.thanks.nextContact.split(/(\{email\}|\{phone\})/);
           <dt>{t.cart.shipping}</dt>
           <dd class="price" data-thanks-shipping></dd>
         </div>
+        <div class="summary-row" data-thanks-discount-row hidden>
+          <dt>{t.thanks.discount}</dt>
+          <dd class="price" data-thanks-discount></dd>
+        </div>
         <div class="summary-row is-total">
           <dt>{t.cart.total}</dt>
           <dd class="price" data-thanks-total></dd>

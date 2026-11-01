@@ -11,6 +11,14 @@ export interface Env {
   STRIPE_WEBHOOK_SECRET?: string;
   RESEND_API_KEY?: string;
   ORDER_EMAIL_TO?: string;
+  /** Rate limiting bindings (wrangler.jsonc `ratelimits`); absent in tests and older wrangler. */
+  CHECKOUT_LIMITER?: RateLimiter;
+  ORDERS_LIMITER?: RateLimiter;
+}
+
+/** The Workers rate limiting binding (`RateLimit` in @cloudflare/workers-types). */
+export interface RateLimiter {
+  limit(options: { key: string }): Promise<{ success: boolean }>;
 }
 
 /** The part of the environment the API handlers read (no API key: clients are injected). */
@@ -31,6 +39,15 @@ export interface StripeLike {
       retrieve(
         id: string,
         params?: Stripe.Checkout.SessionRetrieveParams,
+      ): Promise<Stripe.Checkout.Session>;
+      listLineItems(
+        id: string,
+        params?: Stripe.Checkout.SessionListLineItemsParams,
+      ): Promise<Stripe.ApiList<Stripe.LineItem>>;
+      /** Stripe merges `metadata`: keys not sent are kept. */
+      update(
+        id: string,
+        params: Stripe.Checkout.SessionUpdateParams,
       ): Promise<Stripe.Checkout.Session>;
     };
   };

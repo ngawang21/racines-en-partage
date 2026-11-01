@@ -7,7 +7,7 @@
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()
-  Strict-Transport-Security: max-age=31536000
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
   Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
 
 # Fingerprinted build assets never change.
@@ -28,26 +28,31 @@
 
 # checkout routes (wave 2B)
 # The Mondial Relay Parcel Shop Picker loads on demand when the relay method
-# is chosen: jQuery 2.2.4 (ajax.googleapis.com), Leaflet (unpkg.com), the
-# plugin and its versioned script, styles, JSONP results and marker images
-# (widget.mondialrelay.com, one image from www.mondialrelay.com), its font
-# (fonts.googleapis.com, fonts.gstatic.com) and the OpenStreetMap tiles.
-# Hosts captured from the network log of the widget in headless Chromium
-# (2026-11-01). Everything else stays as strict as the global block.
+# is chosen. jQuery 2.2.4 and Leaflet 1.9.4 are served from /vendor/ (same
+# origin). Remote: the plugin and its versioned script, styles, JSONP results
+# and marker images (widget.mondialrelay.com, one image from
+# www.mondialrelay.com), its font (fonts.googleapis.com, fonts.gstatic.com)
+# and the OpenStreetMap tiles. The hosts mirror REMOTE_HOSTS in
+# src/cart/relay-widget.ts (tests/build/headers.test.ts); re-check them with
+# scripts/relay-capture.mjs. Everything else stays as strict as the global block.
 /commande/*
   ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://ajax.googleapis.com https://unpkg.com https://widget.mondialrelay.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://widget.mondialrelay.com https://fonts.googleapis.com; img-src 'self' data: https://widget.mondialrelay.com https://www.mondialrelay.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://widget.mondialrelay.com; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://widget.mondialrelay.com; style-src 'self' 'unsafe-inline' https://widget.mondialrelay.com https://fonts.googleapis.com; img-src 'self' data: https://widget.mondialrelay.com https://www.mondialrelay.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://widget.mondialrelay.com; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
 
 /en/checkout/*
   ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://ajax.googleapis.com https://unpkg.com https://widget.mondialrelay.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://widget.mondialrelay.com https://fonts.googleapis.com; img-src 'self' data: https://widget.mondialrelay.com https://www.mondialrelay.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://widget.mondialrelay.com; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://widget.mondialrelay.com; style-src 'self' 'unsafe-inline' https://widget.mondialrelay.com https://fonts.googleapis.com; img-src 'self' data: https://widget.mondialrelay.com https://www.mondialrelay.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://widget.mondialrelay.com; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
 
 # admin route
-# Sveltia CMS at /admin/: the script comes from unpkg, the content from the
-# GitHub API (and its status page), sign-in through the Authenticator Worker
-# on workers.dev, the interface fonts from cdn.jsdelivr.net. The "!" lines
-# detach the global headers first: Cloudflare would otherwise send both CSP
-# headers and the browser would enforce the stricter one.
+# Sveltia CMS at /admin/: the script is pinned to one version on unpkg (with
+# Subresource Integrity in public/admin/index.html), the content comes from
+# the GitHub API (and its status page), sign-in through the Authenticator
+# Worker on workers.dev, the interface fonts from cdn.jsdelivr.net. The "!"
+# lines detach the global headers first: Cloudflare would otherwise send both
+# CSP headers and the browser would enforce the stricter one.
+# The https://*.workers.dev allowance (connect-src, frame-src) should be
+# narrowed to the Authenticator host once it is known (docs/deployment.md,
+# section 10).
 /admin/*
   ! Content-Security-Policy
   ! X-Robots-Tag

@@ -45,7 +45,7 @@ export function orderFixture(items: Array<{ name: string; quantity: number; unit
     status: 'paid',
     number: 'RP-2026-0042',
     lines: items,
-    amounts: { subtotal, shipping: 0, total: subtotal, currency: 'eur' },
+    amounts: { subtotal, shipping: 0, discount: 0, total: subtotal, currency: 'eur' },
     delivery: { method: 'pickup' },
     email: 'm***@example.com',
   };

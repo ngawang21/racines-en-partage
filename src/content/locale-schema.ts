@@ -174,6 +174,8 @@ export const localeSchema = z.object({
     relayCountries: text,
     pickupTitle: text,
     unavailableLines: text,
+    postcodeRequired: text,
+    postcodeInvalid: text,
   }),
   thanks: ns({
     title: text,
@@ -199,6 +201,7 @@ export const localeSchema = z.object({
     statusPaid: text,
     statusPending: text,
     statusUnpaid: text,
+    discount: text,
   }),
   errors: ns({
     notFoundTitle: text,

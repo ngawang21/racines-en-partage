@@ -46,9 +46,11 @@ CMS: Sveltia at `/admin/`.
 | `pnpm format`       | reformat the code with prettier                                |
 | `pnpm test`         | unit tests (content, fallback, routes, prices, graph, catalog) |
 | `pnpm test:build`   | assertions over `dist/` (run `pnpm build` first)               |
-| `pnpm test:worker`  | Worker API tests (not configured yet)                          |
-| `pnpm e2e`          | end-to-end tests (not configured yet)                          |
-| `pnpm dev:worker`   | local Worker (not configured yet)                              |
+| `pnpm test:worker`  | Worker API tests (Stripe, webhook, e-mails, with fakes)        |
+| `pnpm e2e`          | Playwright: cart, checkout, thank-you page, accessibility      |
+| `pnpm dev:worker`   | build, then `wrangler dev` with the Worker (needs `.dev.vars`) |
+| `pnpm deploy`       | `wrangler deploy` (Workers Builds does this on push)           |
+| `pnpm og`           | regenerate the Open Graph images after a product change        |
 | `pnpm launch-check` | fails while the SIREN, the prices or a legal TODO is pending   |
 
 ## Layout
@@ -63,13 +65,31 @@ src/i18n/                  loaders, fallback, route table, price and weight form
 src/catalog/build.ts       shaping of catalog.json and of the cart catalogue
 src/cart/catalog.ts        build-time access to both catalogues
 src/seo/graph.ts           the schema.org graph and the robots value of a page
-src/layouts/Base.astro     page skeleton, SEO, header, footer, cart mount points
-src/components/            header, footer, icons, picture, ornaments
+src/cart/                  cart store, totals, checkout client, Mondial Relay glue, page views
+src/layouts/Base.astro     page skeleton, SEO, header, footer, cart drawer and scripts
+src/components/            storefront sections and views, header, footer, icons, picture
 src/pages/                 routes (fr at the root, en/), catalog.json, 404
-src/styles/                tokens.css, global.css
-scripts/launch-check.mjs   go-live gate
-tests/unit, tests/build    tests
+src/styles/                tokens.css, global.css, cart.css
+worker/                    Cloudflare Worker: Hono API, Stripe, webhook, order e-mails
+wrangler.jsonc             Worker and static assets configuration
+public/admin/              Sveltia CMS page and config.yml
+public/_headers            security headers and the per-route CSP
+scripts/                   launch-check, OG image generation, relay widget capture
+tests/unit, tests/build    unit and build tests
+tests/worker, tests/e2e    Worker tests, Playwright end-to-end and axe tests
+docs/                      deployment, handover, owner guide (FR), client presentation (FR),
+                           content model, legal notes, spec and plan
 ```
+
+## Documentation
+
+- `docs/deployment.md`: one-time setup (GitHub, Cloudflare, domain, Stripe,
+  Mondial Relay, Resend, CMS login) and the go-live checklist.
+- `docs/guide-proprietaire.md`: the owner's guide, in French.
+- `docs/handover.md`: accounts, ownership transfer, support options, costs.
+- `docs/client/presentation.md`: the project presented to the owner, in French.
+- `docs/content.md`: the content model for developers.
+- `docs/legal-notes.md`: rules for food supplements and what the site does.
 
 ## Licence
 

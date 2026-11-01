@@ -3,7 +3,7 @@ import type Stripe from 'stripe';
 import { vi } from 'vitest';
 import { createApp, type AppDeps } from '../../worker/app';
 import type { WorkerCatalog } from '../../worker/catalog';
-import type { AppEnv, MailMessage, Mailer, StripeLike } from '../../worker/types';
+import type { AppEnv, MailMessage, Mailer, RateLimiter, StripeLike } from '../../worker/types';
 
 export const NOW = new Date('2026-11-01T18:00:00.000Z');
 
@@ -183,18 +183,41 @@ export function fakeStripe() {
         url: `https://checkout.stripe.com/c/pay/${SESSION_ID}`,
       }) as unknown as Stripe.Checkout.Session,
   );
-  const retrieve = vi.fn(async (_id: string, _params?: Stripe.Checkout.SessionRetrieveParams) =>
-    sessionFixture(),
+  // Without `expand: ['line_items']` Stripe returns no lines: they come from listLineItems.
+  const retrieve = vi.fn(
+    async (_id: string, _params?: Stripe.Checkout.SessionRetrieveParams) =>
+      ({ ...sessionFixture(), line_items: undefined }) as unknown as Stripe.Checkout.Session,
+  );
+  const listLineItems = vi.fn(
+    async (_id: string, _params?: Stripe.Checkout.SessionListLineItemsParams) =>
+      sessionFixture().line_items as Stripe.ApiList<Stripe.LineItem>,
+  );
+  /** Echoes the session with the new metadata merged in, as Stripe does. */
+  const update = vi.fn(async (_id: string, params: Stripe.Checkout.SessionUpdateParams) =>
+    sessionFixture({
+      metadata: { ...sessionFixture().metadata, ...(params.metadata || {}) },
+    }),
   );
   const constructEventAsync = vi.fn(
     async (payload: string, _signature: string, _secret: string, _tolerance?: number) =>
       JSON.parse(payload) as Stripe.Event,
   );
   const stripe: StripeLike = {
-    checkout: { sessions: { create, retrieve } },
+    checkout: { sessions: { create, retrieve, listLineItems, update } },
     webhooks: { constructEventAsync },
   };
-  return { stripe, create, retrieve, constructEventAsync };
+  return { stripe, create, retrieve, listLineItems, update, constructEventAsync };
+}
+
+/** A Workers rate limiting binding that allows `allowed` calls, then refuses. */
+export function fakeLimiter(allowed = Infinity) {
+  const keys: string[] = [];
+  const limit = vi.fn(async ({ key }: { key: string }) => {
+    keys.push(key);
+    return { success: keys.length <= allowed };
+  });
+  const limiter: RateLimiter = { limit };
+  return { limiter, limit, keys };
 }
 
 export function fakeMailer() {

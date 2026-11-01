@@ -385,7 +385,9 @@ Ajouter un mode de livraison ou un pays demande votre développeur.
 
 Dans **Boutique**, **Livraison offerte à partir de** : le montant du panier
 (produits seuls) à partir duquel la livraison devient gratuite, par exemple
-`49`. Pensez à la FAQ (partie 9).
+`49`. Pensez à la FAQ (partie 9). La livraison offerte se décide sur ce
+montant avant un éventuel code promo : un panier de 52 € avec un code de
+5 € reste livré gratuitement.
 
 **Mettre la boutique en pause (vacances)**
 
@@ -529,8 +531,8 @@ clients**). Pour renvoyer un reçu : ouvrez le paiement, **Envoyer le reçu**.
 Pour chaque commande payée, vous recevez dans votre boîte Outlook un e-mail
 « Nouvelle commande » avec : le numéro de commande, les produits et
 quantités, le montant, le nom, l'e-mail et le **téléphone** du client, le
-mode de livraison, et pour le Point Relais le **bloc du point relais**
-(nom, adresse, numéro du type `FR-123456`).
+mode de livraison, et pour le Point Relais l'**ID Point Relais** en grand
+(du type `FR-123456`) suivi du nom et de l'adresse du point.
 
 **Point Relais Mondial Relay**
 
@@ -541,8 +543,9 @@ mode de livraison, et pour le Point Relais le **bloc du point relais**
 4. Destinataire : le **nom** et le **téléphone** de l'e-mail (Mondial Relay
    envoie un SMS au client quand le colis arrive), et l'e-mail du client.
 5. Mode de livraison : **Point Relais**. Indiquez le **numéro du point
-   relais** de l'e-mail (les chiffres après `FR-`), ou cherchez-le par son
-   nom et son code postal.
+   relais** de l'e-mail (les chiffres après `FR-`). Avant d'imprimer,
+   vérifiez que le point affiché par Mondial Relay correspond bien à ce
+   numéro : c'est l'ID qui fait foi, pas le nom recopié dans l'e-mail.
 6. Indiquez le **poids** pesé.
 7. Validez : l'étiquette est payée avec votre solde prépayé. Imprimez-la,
    collez-la sur le colis.

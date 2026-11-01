@@ -72,9 +72,9 @@ Nutrition values are shared and written as printed on the French label
 
 ## 3. How the CMS maps to the model
 
-`public/admin/config.yml`, loaded by `public/admin/index.html` (Sveltia from
-unpkg, unpinned; the config's first line points at the JSON schema for editor
-completion).
+`public/admin/config.yml`, loaded by `public/admin/index.html` (Sveltia
+0.256.1 from unpkg, pinned with Subresource Integrity, see section 7; the
+config's first line points at the JSON schema for editor completion).
 
 | Model                              | CMS                                                                                                                                                                                                                                                         |
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -139,8 +139,9 @@ Other choices in the config:
 - the product slug template reproduces every existing file name;
 - every `file:` path exists for `fr` and `en`, media folders match the seeded
   image paths;
-- `public/admin/index.html` carries `noindex` and the Sveltia script, and
-  `public/_headers` has the `/admin/*` block.
+- `public/admin/index.html` carries `noindex` and the pinned Sveltia script
+  with `integrity` and `crossorigin`, and `public/_headers` has the
+  `/admin/*` block whose `script-src` allows that version's folder only.
 
 The config was also validated once against the published Sveltia JSON schema
 (`https://unpkg.com/@sveltia/cms/schema/sveltia-cms.json`, version 0.256.1)
@@ -215,22 +216,48 @@ the YAML comments, so `docs/client/presentation.md` lists them for Marie.
 block that first detaches the global `Content-Security-Policy` (`!` line),
 then sets its own, and adds `X-Robots-Tag: noindex`. Hosts and why:
 
-| Directive     | Host                                                  | Why                                                          |
-| ------------- | ----------------------------------------------------- | ------------------------------------------------------------ |
-| `script-src`  | `https://unpkg.com`                                   | `sveltia-cms.js` (redirects to the current version)          |
-| `connect-src` | `https://unpkg.com`                                   | Sveltia's French locale file and version check               |
-| `connect-src` | `https://api.github.com`, `https://github.com`        | Content, commits, uploads                                    |
-| `connect-src` | `https://www.githubstatus.com`                        | GitHub status banner                                         |
-| `connect-src` | `https://*.workers.dev`                               | Sveltia Authenticator Worker                                 |
-| `connect-src` | `https://api.openai.com`, `https://api.anthropic.com` | Optional machine translation, unused unless a key is entered |
-| `connect-src` | `data:`, `blob:`                                      | Sveltia fetches its own inline logo and local file previews  |
-| `font-src`    | `https://cdn.jsdelivr.net`                            | Sveltia's interface fonts and icon font                      |
-| `img-src`     | `data:`, `blob:`, `*.githubusercontent.com`           | Thumbnails of repository images, user avatar                 |
-| `frame-src`   | `https://*.workers.dev`                               | Authenticator                                                |
+| Directive     | Host                                                  | Why                                                                                              |
+| ------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `script-src`  | `https://unpkg.com`                                   | The pinned `sveltia-cms.js` (integrity checked) and the helper packages it imports after sign-in |
+| `connect-src` | `https://unpkg.com`                                   | Sveltia's French locale file and version check                                                   |
+| `connect-src` | `https://api.github.com`, `https://github.com`        | Content, commits, uploads                                                                        |
+| `connect-src` | `https://www.githubstatus.com`                        | GitHub status banner                                                                             |
+| `connect-src` | `https://*.workers.dev`                               | Sveltia Authenticator Worker                                                                     |
+| `connect-src` | `https://api.openai.com`, `https://api.anthropic.com` | Optional machine translation, unused unless a key is entered                                     |
+| `connect-src` | `data:`, `blob:`                                      | Sveltia fetches its own inline logo and local file previews                                      |
+| `font-src`    | `https://cdn.jsdelivr.net`                            | Sveltia's interface fonts and icon font                                                          |
+| `img-src`     | `data:`, `blob:`, `*.githubusercontent.com`           | Thumbnails of repository images, user avatar                                                     |
+| `frame-src`   | `https://*.workers.dev`                               | Authenticator                                                                                    |
 
-Verified on 2026-11-01 in headless Chromium with the `/admin/*` headers
-applied by a small local server (`astro preview` ignores `_headers`): the
-page reaches the Sveltia sign-in screen in French ("Se connecter avec
-GitHub") with no CSP violation and no configuration error in the console.
-After a Sveltia upgrade or a "Refused to ..." message in the browser console
-on `/admin/`, repeat that check and update the block.
+Verified on 2026-11-01 with `node scripts/relay-capture.mjs admin`
+(`docs/deployment.md`, section 11.2), which serves `dist/` with the
+`/admin/*` headers applied (`astro preview` ignores `_headers`): the page
+reaches the Sveltia sign-in screen with no CSP violation, the pinned script
+passing its integrity check. After a "Refused to ..." message in the browser
+console on `/admin/`, run it again and update the block.
+
+`script-src` allows the whole `https://unpkg.com` host on purpose: after
+sign-in Sveltia imports optional libraries from other unpkg packages (a dayjs
+locale, `exifr`, the `@jsquash` image encoders used for the WebP conversion
+when the browser cannot encode WebP itself, `pdfjs-dist`, `svgo`, `turndown`,
+a HEIC decoder). Restricting the directive to the Sveltia folder made those
+imports fail silently (English date formatting, image conversion falling back
+to the browser encoder), so the host stays allowed; the main script itself is
+pinned by version and integrity in `public/admin/index.html`, and the admin
+page is only ever opened by the owner. Not verified after sign-in yet (the
+Authenticator is not deployed).
+
+### Upgrading Sveltia
+
+1. Pick the version on https://www.npmjs.com/package/@sveltia/cms and read
+   its release notes.
+2. Download it and compute its hash:
+   `curl -sSfL https://unpkg.com/@sveltia/cms@<version>/dist/sveltia-cms.js | openssl dgst -sha384 -binary | openssl base64 -A`.
+3. In `public/admin/index.html`, set the version in `src` and the new value
+   in `integrity="sha384-..."`. In `public/_headers`, `/admin/*` block, set
+   the same version in `script-src https://unpkg.com/@sveltia/cms@<version>/`.
+   `pnpm test` and `pnpm test:build` fail when the two disagree.
+4. `pnpm build`, then `node scripts/relay-capture.mjs admin`: `/admin/`
+   must reach the sign-in screen with zero CSP violation (a wrong hash shows
+   up as a blank page and an integrity error in the report). Sign in once on
+   a preview deploy and open a product before merging.

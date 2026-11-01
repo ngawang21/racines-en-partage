@@ -165,7 +165,9 @@
     "relayLoading": "Loading the pickup point map…",
     "relayCountries": "Pickup points in: {countries}",
     "pickupTitle": "Pickup address",
-    "unavailableLines": "Remove the unavailable products to continue."
+    "unavailableLines": "Remove the unavailable products to continue.",
+    "postcodeRequired": "Enter a postcode to find a pickup point.",
+    "postcodeInvalid": "This postcode is not valid: 3 to 10 digits or letters, for example 95400."
   },
   "thanks": {
     "title": "Thank you for your order",
@@ -190,7 +192,8 @@
     "emailSent": "A summary has been sent to {email}.",
     "statusPaid": "Paid",
     "statusPending": "Awaiting confirmation",
-    "statusUnpaid": "Unpaid"
+    "statusUnpaid": "Unpaid",
+    "discount": "Discount"
   },
   "errors": {
     "notFoundTitle": "Page not found",

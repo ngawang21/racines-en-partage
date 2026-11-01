@@ -10,12 +10,18 @@ export function logError(msg: string, fields: Fields = {}): void {
   console.error(JSON.stringify({ level: 'error', msg, ...fields }));
 }
 
-/** "marie@outlook.com" to "m***@outlook.com"; anything else to "***". */
+/**
+ * "marie@outlook.com" to "m***@***.com": the first character and the
+ * top-level domain only. Anything that is not an address becomes "***".
+ */
 export function maskEmail(email: string | null | undefined): string | null {
   if (!email) return null;
   const at = email.lastIndexOf('@');
   if (at < 1) return '***';
-  return `${email[0]}***${email.slice(at)}`;
+  const domain = email.slice(at + 1);
+  const dot = domain.lastIndexOf('.');
+  const tld = dot >= 0 ? domain.slice(dot).replace(/[^\w.-]/g, '') : '';
+  return `${email[0]}***@***${tld}`;
 }
 
 /** Stripe, webhook and Resend key shapes, and e-mail addresses. */

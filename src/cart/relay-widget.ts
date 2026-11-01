@@ -1,15 +1,43 @@
 // On-demand loader of the Mondial Relay Parcel Shop Picker v4 (spec 6.4).
 // Nothing loads until the customer picks the relay method on the checkout
-// page. The hosts below are mirrored in the checkout CSP block of
-// public/_headers (captured from a headless Chromium run of the widget).
+// page. jQuery and Leaflet are vendored under public/vendor/ (same origin,
+// sources and hashes in public/vendor/README.md); only the plugin is remote.
+// REMOTE_HOSTS is mirrored in the checkout CSP blocks of public/_headers
+// (tests/build/headers.test.ts checks both).
 import { mapParcelShop, parseInlineHandler, type ParcelShopPayload } from './relay';
 import type { RelayPoint } from './store';
 
-export const JQUERY_URL = 'https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js';
-export const LEAFLET_JS_URL = 'https://unpkg.com/leaflet/dist/leaflet.js';
-export const LEAFLET_CSS_URL = 'https://unpkg.com/leaflet/dist/leaflet.css';
+export const JQUERY_URL = '/vendor/jquery/jquery-2.2.4.min.js';
+export const LEAFLET_JS_URL = '/vendor/leaflet/leaflet.js';
+export const LEAFLET_CSS_URL = '/vendor/leaflet/leaflet.css';
 export const PLUGIN_URL =
   'https://widget.mondialrelay.com/parcelshop-picker/jquery.plugin.mondialrelay.parcelshoppicker.min.js';
+
+/**
+ * The widget's own init always asks for these two unversioned unpkg URLs,
+ * unless a `<script>` (or `<link>`) in `<head>` already has that exact `src`
+ * (or `href`); see preemptWidgetLeaflet.
+ */
+export const WIDGET_LEAFLET_JS_URL = 'https://unpkg.com/leaflet/dist/leaflet.js';
+export const WIDGET_LEAFLET_CSS_URL = 'https://unpkg.com/leaflet/dist/leaflet.css';
+
+/**
+ * Third-party hosts the widget reaches, per CSP directive (captured with
+ * scripts/relay-capture.mjs, widget 4.0.11). 'self' is implied everywhere.
+ */
+export const REMOTE_HOSTS = {
+  'script-src': ['https://widget.mondialrelay.com'],
+  'style-src': ['https://widget.mondialrelay.com', 'https://fonts.googleapis.com'],
+  'img-src': [
+    'https://widget.mondialrelay.com',
+    'https://www.mondialrelay.com',
+    'https://a.tile.openstreetmap.org',
+    'https://b.tile.openstreetmap.org',
+    'https://c.tile.openstreetmap.org',
+  ],
+  'font-src': ['https://fonts.gstatic.com'],
+  'connect-src': ['https://widget.mondialrelay.com'],
+} as const satisfies Record<string, readonly string[]>;
 
 const PLUGIN = 'MR_ParcelShopPicker';
 const LOAD_TIMEOUT_MS = 20000;
@@ -38,7 +66,11 @@ function loadScript(src: string): Promise<void> {
     const script = document.createElement('script');
     script.src = src;
     script.async = false;
-    const timer = window.setTimeout(() => reject(new Error(`timeout: ${src}`)), LOAD_TIMEOUT_MS);
+    const timer = window.setTimeout(() => {
+      // Forget the attempt so a later search can retry, as after an error.
+      pending.delete(src);
+      reject(new Error(`timeout: ${src}`));
+    }, LOAD_TIMEOUT_MS);
     script.addEventListener('load', () => {
       window.clearTimeout(timer);
       resolve();
@@ -149,12 +181,37 @@ export function disarmInlineHandlers(container: HTMLElement, jq: JQueryLike): ()
   };
 }
 
+/**
+ * Widget 4.0.11 (`MR_loadjscssfile` in its init) appends Leaflet from unpkg
+ * even when `L` already exists, and skips the append only when an element of
+ * `<head>` already carries the same URL. Two inert elements carry them: a
+ * script of a non-JavaScript type is neither fetched nor run, and a link of
+ * an unknown `rel` fetches nothing. The vendored Leaflet is the one in use;
+ * no request reaches unpkg and the checkout CSP does not list it.
+ */
+export function preemptWidgetLeaflet(): void {
+  const head = document.head;
+  if (![...head.getElementsByTagName('script')].some((s) => s.src === WIDGET_LEAFLET_JS_URL)) {
+    const script = document.createElement('script');
+    script.type = 'text/x-rep-inert';
+    script.src = WIDGET_LEAFLET_JS_URL;
+    head.append(script);
+  }
+  if (![...head.getElementsByTagName('link')].some((l) => l.href === WIDGET_LEAFLET_CSS_URL)) {
+    const link = document.createElement('link');
+    link.rel = 'x-rep-inert';
+    link.href = WIDGET_LEAFLET_CSS_URL;
+    head.append(link);
+  }
+}
+
 /** Loads jQuery, Leaflet (script and styles) and the plugin, in that order. */
 export async function loadRelayWidget(): Promise<JQueryLike> {
   await loadScript(JQUERY_URL);
   if (window.jQuery) neutraliseGlobalEval(window.jQuery);
   loadStylesheet(LEAFLET_CSS_URL);
   await loadScript(LEAFLET_JS_URL);
+  preemptWidgetLeaflet();
   await loadScript(PLUGIN_URL);
   if (!window.jQuery) throw new Error('jQuery missing after load');
   return window.jQuery;

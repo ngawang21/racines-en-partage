@@ -19,5 +19,11 @@
     "SITE_URL": "https://racinesenpartage.fr",
     "ORDER_EMAIL_FROM": "Racines en Partage <commandes@racinesenpartage.fr>",
   },
+  // Per-IP limits on POST /api/checkout and GET /api/orders/:id (worker/app.ts),
+  // keyed on CF-Connecting-IP. Free; namespace_id is any integer unique to the account.
+  "ratelimits": [
+    { "name": "CHECKOUT_LIMITER", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
+    { "name": "ORDERS_LIMITER", "namespace_id": "1002", "simple": { "limit": 30, "period": 60 } },
+  ],
   "observability": { "enabled": true },
 }

@@ -126,6 +126,7 @@ for (const locale of ['fr', 'en'] as const satisfies readonly Locale[]) {
       await formatInPage(page, subtotal, locale),
     );
     await expect(page.locator('[data-thanks-pickup]')).toBeVisible();
+    await expect(page.locator('[data-thanks-discount-row]')).toBeHidden();
     await expect(page.locator('[data-cart-count]').first()).toHaveText('0');
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('rep.cart.v1')!));
     expect(stored.lines).toEqual([]);
@@ -143,6 +144,24 @@ test('relay without a chosen point, then an out-of-stock answer from the API', a
   // Relay selected, no point yet: the payment is refused on the client.
   await page.locator('.method-card', { hasText: 'Point Relais' }).click();
   await expect(page.locator('[data-relay-search]')).toBeVisible();
+
+  // Empty, then malformed postcode: a visible error tied to the field, no widget load.
+  const postcode = page.locator('[data-relay-postcode]');
+  const postcodeError = page.locator('#rep-relay-postcode-error');
+  await expect(postcode).toHaveAttribute('aria-describedby', 'rep-relay-postcode-error');
+  await expect(postcodeError).toHaveAttribute('aria-live', 'polite');
+  await page.locator('[data-relay-go]').click();
+  await expect(postcodeError).toHaveText(/Saisissez un code postal/);
+  await expect(postcode).toHaveAttribute('aria-invalid', 'true');
+  await expect(postcode).toBeFocused();
+  await postcode.fill('9!');
+  await expect(postcodeError).toHaveText('');
+  await postcode.press('Enter');
+  await expect(postcodeError).toHaveText(/n’est pas valide/);
+  await expect(page.locator('[data-relay-frame]')).toBeHidden();
+  await postcode.fill('');
+  await expect(postcode).not.toHaveAttribute('aria-invalid', 'true');
+
   await page.locator('[data-co-terms]').check();
   await page.locator('[data-co-pay]').click();
   await expect(page.locator('[data-co-delivery-error]')).toHaveText(/point relais/i);
@@ -177,6 +196,26 @@ test('thanks page stays neutral without a session or when the order lookup fails
   await expect(page.locator('[data-thanks]')).not.toHaveAttribute('aria-busy', 'true');
   await expect(page.locator('[data-thanks-lead]')).toContainText('Merci de votre visite');
   await expect(page.locator('[data-thanks-order]')).toBeHidden();
+});
+
+test('thanks page shows the promotion code discount', async ({ page }) => {
+  const order = {
+    ...orderFixture([{ name: 'Poudre de moringa 100 g', quantity: 2, unitAmount: 890 }]),
+    amounts: { subtotal: 1780, shipping: 490, discount: 500, total: 1770, currency: 'eur' },
+  };
+  await page.route(`**/api/orders/${SESSION_ID}`, (route) => json(route, 200, order));
+  for (const locale of ['fr', 'en'] as const) {
+    await page.goto(`${PATHS[locale].thanks}?session_id=${SESSION_ID}`);
+    const row = page.locator('[data-thanks-discount-row]');
+    await expect(row).toBeVisible();
+    await expect(row.locator('dt')).toHaveText(locale === 'fr' ? 'Remise' : 'Discount');
+    await expect(row.locator('[data-thanks-discount]')).toHaveText(
+      `−${await formatInPage(page, 500, locale)}`,
+    );
+    await expect(page.locator('[data-thanks-total]')).toHaveText(
+      await formatInPage(page, 1770, locale),
+    );
+  }
 });
 
 test('drawer keeps the focus inside and returns it to the opener', async ({ page }) => {

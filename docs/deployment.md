@@ -99,6 +99,15 @@ Notes:
    customer who answers reaches Marie's inbox.
 5. Local development: copy `.dev.vars.example` to `.dev.vars` (git ignored),
    fill test values, run `pnpm dev:worker`.
+6. Rate limiting needs no dashboard step: the two bindings
+   `CHECKOUT_LIMITER` (10 requests per minute and IP on `POST /api/checkout`)
+   and `ORDERS_LIMITER` (30 per minute on `GET /api/orders/:id`) are declared
+   under `ratelimits` in `wrangler.jsonc` and created on deploy. They are
+   free. Over the limit the API answers `429 RATE_LIMITED` with
+   `Retry-After: 60` (`worker/README.md`, Rate limiting). The alternative,
+   if the bindings are ever unavailable, is a Cloudflare WAF rate limiting
+   rule (Security, WAF, Rate limiting rules) on the same two paths; without
+   either, the Worker simply does not limit.
 
 ## 4. Domain at OVHcloud, DNS at Cloudflare
 
@@ -306,7 +315,11 @@ the Sveltia CMS Authenticator, deployed in Marie's Cloudflare account.
      `workers.dev` host before the domain is live, add that host; list
      syntax to verify in the Authenticator README)
 5. In the repository, `public/admin/config.yml`, set
-   `backend.base_url: <worker url>`. Commit and push.
+   `backend.base_url: <worker url>`. In `public/_headers`, `/admin/*`
+   block, replace `https://*.workers.dev` in `connect-src` and `frame-src`
+   with that exact Authenticator origin (a comment in the file marks it):
+   any `workers.dev` Worker is allowed until then. Update the table in
+   `docs/content.md`, section 7. Commit and push.
 6. Open `https://racinesenpartage.fr/admin/`, "Sign in with GitHub".
    Editors need a GitHub account with write access to the repository. The
    interface follows the browser language (French available).
@@ -341,23 +354,35 @@ or the CMS would be blocked.
 
 ### 11.1 Checkout hosts
 
-Captured from the widget's network log in headless Chromium (widget 4.0.11,
-2026-11-01). One line per host and directive:
+jQuery 2.2.4 and Leaflet 1.9.4 (script, stylesheet and the `images/` folder
+the stylesheet references) are copies served from `public/vendor/`, on the
+shop's own origin; `public/vendor/README.md` lists their source URLs and
+sha384 hashes. Only the Mondial Relay plugin is loaded from a third party.
+Hosts captured with `scripts/relay-capture.mjs` (widget 4.0.11, 2026-11-01),
+one line per host and directive:
 
 | Host                                                                               | Directives                                          | What                                                                  |
 | ---------------------------------------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------- |
 | `widget.mondialrelay.com`                                                          | `script-src`, `style-src`, `img-src`, `connect-src` | plugin and its versioned script, styles, marker images, JSONP results |
-| `unpkg.com`                                                                        | `script-src`, `style-src`                           | Leaflet script and stylesheet                                         |
-| `ajax.googleapis.com`                                                              | `script-src`                                        | jQuery 2.2.4                                                          |
 | `fonts.googleapis.com`                                                             | `style-src`                                         | the widget's font stylesheet                                          |
 | `fonts.gstatic.com`                                                                | `font-src`                                          | the widget's font files                                               |
 | `www.mondialrelay.com`                                                             | `img-src`                                           | one image loaded by the widget                                        |
 | `a.tile.openstreetmap.org`, `b.tile.openstreetmap.org`, `c.tile.openstreetmap.org` | `img-src`                                           | map tiles                                                             |
 
-Every other directive is the global one. The checkout policy has neither
-`'unsafe-eval'` nor `'unsafe-inline'` in `script-src`, although the widget
-was written for both:
+The same list is the `REMOTE_HOSTS` constant of `src/cart/relay-widget.ts`;
+`tests/build/headers.test.ts` fails when the two checkout blocks of
+`_headers` allow a host that constant does not name, or miss one it names.
 
+Every other directive is the global one. The checkout policy has neither
+`'unsafe-eval'` nor `'unsafe-inline'` in `script-src`, and no CDN host,
+although the widget was written for all three:
+
+- The widget's init appends Leaflet from `unpkg.com` (unversioned) even when
+  Leaflet is already loaded, unless a `<script>` or `<link>` in `<head>`
+  already carries that exact URL. `preemptWidgetLeaflet` adds two inert
+  elements with those URLs (a script of a non-JavaScript type, a link of an
+  unknown `rel`), which the browser neither fetches nor runs; the vendored
+  Leaflet is the one in use.
 - The widget appends server-sent HTML that holds one inline script, which
   jQuery would run through `eval`. `src/cart/relay-widget.ts`
   (`neutraliseGlobalEval`) replaces `jQuery.globalEval` with a function that
@@ -371,45 +396,71 @@ was written for both:
   shapes `MR_jQuery('#id').trigger('Event', n)` and
   `MR_jQuery(this).parent().find('.x').toggleClass('y')`.
 
-### 11.2 When Mondial Relay changes the widget
+### 11.2 Capture script
 
-Symptoms: "Refused to load" or "Refused to execute" errors in the browser
-console on `/commande/`, a map that never appears, or list items that no
-longer select a point (a new inline handler shape). Re-run the capture:
+`scripts/relay-capture.mjs` serves `dist/` with the headers of
+`dist/_headers` applied the way Cloudflare applies them (`astro preview` and
+`wrangler dev` ignore that file; the matching code is
+`scripts/lib/headers.mjs`, shared with the build test), then drives the
+Chromium of `@playwright/test`:
 
-1. `pnpm build`, then `pnpm exec astro preview --host 127.0.0.1 --port 4325 --ignore-lock`.
-2. Run a Playwright script (with `pnpm exec node`, `@playwright/test` is
-   installed) that, for `http://127.0.0.1:4325/commande/`:
-   - adds a product first (open `/boutique/`, click the first
-     `[data-add-to-cart]`), since the checkout needs a cart;
-   - serves the page with the checkout policy, since the preview sends no
-     headers: `page.route('**/commande/', ...)` fetching the response and
-     fulfilling it with the `Content-Security-Policy` value copied from
-     `public/_headers`;
-   - logs every request host (`page.on('request', r => new URL(r.url()).host)`)
-     and every console message containing "Content Security Policy";
-   - clicks the "Point Relais" method card, types a postcode such as `95400`
-     in `[data-relay-postcode]`, clicks `[data-relay-go]`, waits for the
-     list, then clicks a `.PR-List-Item`.
-3. A new host shows up as a CSP console error: add it to both checkout
-   blocks of `public/_headers` and to the table above. A new inline handler
-   shows up as a `data-rep-onclick` value that `parseInlineHandler` returns
-   `null` for: extend the parser and its unit tests in
+- **checkout**: adds the first product on `/boutique/`, opens `/commande/`,
+  picks "Point Relais", searches the postcode (default `95400`), clicks a
+  result and checks that a point with an ID of the form `FR-123456` lands in
+  the cart;
+- **admin**: opens `/admin/` and waits for the "Sign In with GitHub" button.
+
+Each run records every CSP violation (`securitypolicyviolation` events and
+"Refused to" console lines) and every third-party host requested, prints one
+JSON report per target and exits non-zero unless every step worked with zero
+violation.
+
+```sh
+pnpm build
+node scripts/relay-capture.mjs                    # checkout and admin
+node scripts/relay-capture.mjs checkout --postcode 75011
+node scripts/relay-capture.mjs admin --headed     # watch the browser
+```
+
+It needs the network and the Chromium of `@playwright/test`
+(`pnpm exec playwright install chromium` once; on the development machine
+`~/.local/lib` is added to `LD_LIBRARY_PATH` automatically). Last run
+(2026-11-01): checkout, 7 results for 95400, point `FR-036408` selected,
+zero violation, no request to `unpkg.com` or `ajax.googleapis.com`; admin,
+sign-in screen reached, zero violation.
+
+When Mondial Relay changes the widget (symptoms: "Refused to load" or
+"Refused to execute" errors in the browser console on `/commande/`, a map
+that never appears, or list items that no longer select a point), run the
+script, then:
+
+1. A new host shows up as a violation and in `hosts`: add it to
+   `REMOTE_HOSTS`, to both checkout blocks of `public/_headers` and to the
+   table above.
+2. A new inline handler shows up as a list item that no longer selects a
+   point: read its `data-rep-onclick` value (`--headed`, devtools), extend
+   `parseInlineHandler` and its unit tests in
    `tests/unit/cart-relay-api.test.ts`. A changed inline script shows up as
    a `globalEval` call whose code is neither of the two known effects:
-   reproduce it in `neutraliseGlobalEval`.
-4. Run `pnpm test` and `pnpm e2e`, deploy, and check the map on the live
-   site with the browser console open.
+   reproduce it in `neutraliseGlobalEval`. A new library URL appended by the
+   widget's init shows up as a blocked `unpkg.com` (or other CDN) request:
+   vendor the file under `public/vendor/` and add the URL to
+   `preemptWidgetLeaflet`, rather than allowing the CDN.
+3. Run `pnpm test`, `pnpm test:build` and `pnpm e2e`, deploy, and check the
+   map on the live site with the browser console open.
 
 ### 11.3 Admin
 
 `/admin/*` replaces the global policy with the Sveltia one: `script-src`
-adds `unpkg.com` (the CMS bundle); `connect-src` adds the GitHub API,
+adds `https://unpkg.com/@sveltia/cms@0.256.1/` only (the pinned CMS bundle,
+loaded with Subresource Integrity, and its own chunks; upgrade steps in
+`docs/content.md`, section 7); `connect-src` adds the GitHub API,
 `github.com`, `www.githubstatus.com`, `*.workers.dev` (the Authenticator),
 `unpkg.com` and the optional AI helpers of the CMS; `img-src` adds `blob:`
 and the GitHub user content hosts; `font-src` adds `cdn.jsdelivr.net`;
 `frame-src` adds `*.workers.dev`; `worker-src` allows `blob:`. The same
-block sets `X-Robots-Tag: noindex`.
+block sets `X-Robots-Tag: noindex`. `*.workers.dev` is to be narrowed to the
+Authenticator host once it is known (section 10, step 5).
 
 ### 11.4 After the first deploy
 

@@ -75,6 +75,7 @@ export function initCheckout(ctx: CartContext): void {
     change: relayRoot.querySelector<HTMLButtonElement>('[data-relay-change]')!,
     search: relayRoot.querySelector<HTMLElement>('[data-relay-search]')!,
     postcode: relayRoot.querySelector<HTMLInputElement>('[data-relay-postcode]')!,
+    postcodeError: relayRoot.querySelector<HTMLElement>('[data-relay-postcode-error]')!,
     country: relayRoot.querySelector<HTMLInputElement | HTMLSelectElement>('[data-relay-country]')!,
     go: relayRoot.querySelector<HTMLButtonElement>('[data-relay-go]')!,
     status: relayRoot.querySelector<HTMLElement>('[data-relay-status]')!,
@@ -264,15 +265,24 @@ export function initCheckout(ctx: CartContext): void {
     return widget;
   };
 
+  // The error paragraph stays in the DOM (a polite live region) and is only
+  // emptied, so screen readers announce each new message.
+  const setPostcodeError = (message: string) => {
+    if (!relay) return;
+    relay.postcodeError.textContent = message;
+    if (message) relay.postcode.setAttribute('aria-invalid', 'true');
+    else relay.postcode.removeAttribute('aria-invalid');
+  };
+
   const runSearch = () => {
     if (!relay) return;
     const postcode = relay.postcode.value.trim();
     if (!POSTCODE_RE.test(postcode)) {
-      relay.postcode.setAttribute('aria-invalid', 'true');
+      setPostcodeError(postcode === '' ? tc.postcodeRequired : tc.postcodeInvalid);
       relay.postcode.focus();
       return;
     }
-    relay.postcode.removeAttribute('aria-invalid');
+    setPostcodeError('');
     saveSearch();
     const mounting = widget === null;
     const pending = ensureWidget();
@@ -283,6 +293,9 @@ export function initCheckout(ctx: CartContext): void {
 
   if (relay) {
     relay.go.addEventListener('click', runSearch);
+    relay.postcode.addEventListener('input', () => {
+      if (relay.postcodeError.textContent) setPostcodeError('');
+    });
     relay.postcode.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
         event.preventDefault();

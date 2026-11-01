@@ -99,6 +99,10 @@ html.has-drawer {
   font-size: var(--fs--1);
   font-weight: 600;
 }
+/* Live-region errors stay in the DOM: no gap while empty. */
+.field-error:empty {
+  margin: 0;
+}
 
 /* Quantity stepper: QuantityStepper.astro and the cart lines. */
 .qty-field {
@@ -608,6 +612,9 @@ a.cart-line-name:hover {
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-4);
+}
+.summary-row[hidden] {
+  display: none;
 }
 .summary-row dt {
   color: var(--ink-2);

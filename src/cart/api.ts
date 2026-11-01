@@ -31,7 +31,14 @@ export interface OrderSummary {
   status: 'paid' | 'pending' | 'unpaid';
   number: string;
   lines: Array<{ name: string; quantity: number; unitAmount: number }>;
-  amounts: { subtotal: number; shipping: number; total: number; currency: string };
+  amounts: {
+    subtotal: number;
+    shipping: number;
+    /** Promotion code discount, cents; 0 without one. */
+    discount: number;
+    total: number;
+    currency: string;
+  };
   delivery: Delivery;
   email?: string;
 }
@@ -142,6 +149,10 @@ export function parseOrder(data: unknown): OrderSummary | null {
   if (!Array.isArray(o.lines) || !o.amounts || typeof o.amounts.total !== 'number') return null;
   const ints = [o.amounts.subtotal, o.amounts.shipping, o.amounts.total];
   if (!ints.every((n) => Number.isInteger(n))) return null;
+  // Older Worker versions sent no discount: treat it as none.
+  const rawDiscount = (o.amounts as { discount?: unknown }).discount;
+  const discount =
+    Number.isInteger(rawDiscount) && (rawDiscount as number) > 0 ? (rawDiscount as number) : 0;
   const lines = o.lines.filter(
     (l) =>
       l &&
@@ -153,7 +164,13 @@ export function parseOrder(data: unknown): OrderSummary | null {
     status: o.status as OrderSummary['status'],
     number: typeof o.number === 'string' ? o.number : '',
     lines,
-    amounts: o.amounts,
+    amounts: {
+      subtotal: o.amounts.subtotal,
+      shipping: o.amounts.shipping,
+      discount,
+      total: o.amounts.total,
+      currency: typeof o.amounts.currency === 'string' ? o.amounts.currency : 'eur',
+    },
     delivery: o.delivery as Delivery,
     email: typeof o.email === 'string' ? o.email : undefined,
   };

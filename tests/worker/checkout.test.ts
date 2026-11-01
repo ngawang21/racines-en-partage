@@ -88,8 +88,7 @@ describe('POST /api/checkout: happy paths', () => {
       allow_promotion_codes: true,
       custom_text: {
         submit: {
-          message:
-            'Livraison en Point Relais Mondial Relay : Tabac de la Gare, 12 Avenue de la Gare, Galerie marchande, 95400 Arnouville (FR).',
+          message: 'Livraison en Point Relais Mondial Relay : Tabac de la Gare, Arnouville.',
         },
       },
       metadata: {
@@ -219,7 +218,7 @@ describe('POST /api/checkout: happy paths', () => {
 
   it('trims relay strings and keeps every metadata value within 500 characters', async () => {
     const { app, stripe } = makeApp();
-    const longName = 'N'.repeat(120);
+    const longName = 'N'.repeat(80);
     const res = await postJson(
       app,
       '/api/checkout',
@@ -229,8 +228,8 @@ describe('POST /api/checkout: happy paths', () => {
           relay: {
             ...RELAY,
             name: `  ${longName}  `,
-            address1: ` ${'A'.repeat(200)} `,
-            address2: 'B'.repeat(200),
+            address1: ` ${'A'.repeat(120)} `,
+            address2: 'B'.repeat(120),
             city: ' Arnouville ',
           },
         },
@@ -243,22 +242,111 @@ describe('POST /api/checkout: happy paths', () => {
     for (const value of Object.values(meta)) expect(String(value).length).toBeLessThanOrEqual(500);
   });
 
-  it('400 VALIDATION_ERROR on relay strings above their limits', async () => {
+  it.each([
+    ['name', 81],
+    ['address1', 121],
+    ['address2', 121],
+    ['city', 61],
+  ])('400 VALIDATION_ERROR when relay %s is longer than its limit', async (field, length) => {
     const { app } = makeApp();
     const res = await postJson(
       app,
       '/api/checkout',
-      relayBody({ delivery: { method: 'relay', relay: { ...RELAY, name: 'N'.repeat(121) } } }),
+      relayBody({
+        delivery: { method: 'relay', relay: { ...RELAY, [field]: 'N'.repeat(length) } },
+      }),
     );
     expect(res.status).toBe(400);
+    const issues = (await errorOf(res)).details!.issues as Array<{ path: string }>;
+    expect(issues[0]!.path).toBe(`delivery.relay.${field}`);
   });
 
-  it('accepts a request from localhost (wrangler dev)', async () => {
+  it('accepts accents, digits and the allowed punctuation; folds typographic apostrophes', async () => {
+    const { app, stripe } = makeApp();
+    const relay = {
+      ...RELAY,
+      name: 'Café l’Étoile & Fils (Tabac-Presse)',
+      address1: "12/14 Rue de l'Église, Bât. B",
+      address2: '',
+      city: 'Saint-Brice-sous-Forêt',
+    };
+    const res = await postJson(
+      app,
+      '/api/checkout',
+      relayBody({ delivery: { method: 'relay', relay } }),
+    );
+    expect(res.status).toBe(200);
+    const params = stripe.create.mock.calls[0]![0];
+    expect(params.metadata!.relay_name).toBe("Café l'Étoile & Fils (Tabac-Presse)");
+    expect(params.metadata!.relay_address).toBe("12/14 Rue de l'Église, Bât. B");
+    expect(params.custom_text).toEqual({
+      submit: {
+        message:
+          "Livraison en Point Relais Mondial Relay : Café l'Étoile & Fils (Tabac-Presse), Saint-Brice-sous-Forêt.",
+      },
+    });
+  });
+
+  it.each([
+    ['name', 'Tabac <b>de la Gare</b>'],
+    ['name', 'Pay at https://evil.example'],
+    ['address1', '12 Avenue\nde la Gare'],
+    ['address2', 'Appelez le +33 6 12 34 56 78'],
+    ['city', 'Arnouville; DROP'],
+    ['city', 'Arnouville "Centre"'],
+  ])('400 VALIDATION_ERROR for a relay %s outside the allow-list (%s)', async (field, value) => {
+    const { app, stripe } = makeApp();
+    const res = await postJson(
+      app,
+      '/api/checkout',
+      relayBody({ delivery: { method: 'relay', relay: { ...RELAY, [field]: value } } }),
+    );
+    expect(res.status).toBe(400);
+    const error = await errorOf(res);
+    expect(error.code).toBe('VALIDATION_ERROR');
+    expect(JSON.stringify(error)).not.toContain(value);
+    expect(stripe.create).not.toHaveBeenCalled();
+  });
+
+  it.each(['95 400', '95-400', '12', 'A'.repeat(11), '95400!'])(
+    '400 VALIDATION_ERROR for the relay postcode %s',
+    async (postcode) => {
+      const { app } = makeApp();
+      const res = await postJson(
+        app,
+        '/api/checkout',
+        relayBody({ delivery: { method: 'relay', relay: { ...RELAY, postcode } } }),
+      );
+      expect(res.status).toBe(400);
+    },
+  );
+
+  it('400 VALIDATION_ERROR when the relay id prefix is not the relay country', async () => {
+    const { app } = makeApp();
+    const res = await postJson(
+      app,
+      '/api/checkout',
+      relayBody({ delivery: { method: 'relay', relay: { ...RELAY, id: 'BE-012345' } } }),
+    );
+    expect(res.status).toBe(400);
+    const issues = (await errorOf(res)).details!.issues as Array<{ path: string }>;
+    expect(issues.map((i) => i.path)).toContain('delivery.relay.id');
+  });
+
+  it('accepts a localhost origin when SITE_URL is localhost (wrangler dev)', async () => {
+    const { app } = makeApp({ env: { ...ENV, SITE_URL: 'http://localhost:8787' } });
+    const res = await postJson(app, '/api/checkout', relayBody(), {
+      Origin: 'http://127.0.0.1:8787',
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it('403 FORBIDDEN_ORIGIN for a localhost origin against the production SITE_URL', async () => {
     const { app } = makeApp();
     const res = await postJson(app, '/api/checkout', relayBody(), {
       Origin: 'http://localhost:8787',
     });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(403);
   });
 
   it('falls back on the Referer when Origin is absent', async () => {

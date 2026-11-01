@@ -508,10 +508,10 @@ describe('CMS config: files on disk', () => {
 
 describe('admin page', () => {
   const html = readFileSync(join(ROOT, 'public/admin/index.html'), 'utf8');
-  it('is noindex and loads Sveltia CMS as a classic script', () => {
+  it('is noindex and loads a pinned Sveltia CMS as a classic script with SRI', () => {
     expect(html).toMatch(/<meta name="robots" content="noindex"\s*\/?>/);
-    expect(html).toContain(
-      '<script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js"></script>',
+    expect(html).toMatch(
+      /<script\s+src="https:\/\/unpkg\.com\/@sveltia\/cms@\d+\.\d+\.\d+\/dist\/sveltia-cms\.js"\s+integrity="sha384-[A-Za-z0-9+/=]{64}"\s+crossorigin="anonymous"\s*><\/script>/,
     );
     expect(html).not.toContain('type="module"');
     expect(html).not.toContain('<link rel="stylesheet"');
@@ -521,7 +521,10 @@ describe('admin page', () => {
     const block = headers.split(/\n(?=\S)/).find((b) => b.startsWith('/admin/*'));
     expect(block).toBeDefined();
     expect(block).toContain('! Content-Security-Policy');
-    expect(block).toMatch(/Content-Security-Policy: .*script-src 'self' https:\/\/unpkg\.com/);
+    const pinned = /src="(https:\/\/unpkg\.com\/@sveltia\/cms@[\d.]+\/)dist\//.exec(html)?.[1];
+    expect(pinned).toBeDefined();
+    // The whole host: Sveltia imports helper packages from unpkg after sign-in.
+    expect(block).toContain("script-src 'self' https://unpkg.com;");
     expect(block).toMatch(/connect-src [^;]*https:\/\/api\.github\.com/);
     expect(block).toContain('X-Robots-Tag: noindex');
   });

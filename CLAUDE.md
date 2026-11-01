@@ -180,5 +180,14 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   `jQuery.globalEval` (the widget injects one inline script, reproduced
   natively) and strips the widget's inline `onclick` attributes, replaying
   the known `MR_jQuery(...).trigger(...)` shapes via `parseInlineHandler`.
-  A widget update that changes those shapes shows up as list items that no
-  longer select a point: re-run the headless capture and extend the parser.
+  jQuery 2.2.4 and Leaflet 1.9.4 are vendored in `public/vendor/` (hashes
+  in its README); `preemptWidgetLeaflet` plants inert `<head>` elements with
+  the unpkg Leaflet URLs so the widget's init does not fetch them.
+  `REMOTE_HOSTS` in `relay-widget.ts` must match the checkout CSP blocks
+  (`tests/build/headers.test.ts`). A widget update that changes those shapes
+  shows up as list items that no longer select a point: run
+  `node scripts/relay-capture.mjs` after `pnpm build` (`docs/deployment.md`,
+  section 11.2) and extend the parser.
+- Sveltia is pinned (`public/admin/index.html`, version plus `integrity`)
+  and the admin `script-src` allows that version's folder only: upgrade both
+  together (`docs/content.md`, "Upgrading Sveltia").

@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { NullMailer } from '../../worker/email/resend';
+import { MailerError, NullMailer } from '../../worker/email/resend';
+import { isPermanentMailError } from '../../worker/webhook';
 import { createStripeClient } from '../../worker/stripe';
 import type { StripeLike } from '../../worker/types';
 import {
@@ -97,7 +98,11 @@ describe('POST /api/webhooks/stripe', () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ received: true });
     expect(fake.retrieve).toHaveBeenCalledWith(SESSION_ID, {
-      expand: ['line_items', 'line_items.data.price.product', 'shipping_cost.shipping_rate'],
+      expand: ['shipping_cost.shipping_rate'],
+    });
+    expect(fake.listLineItems).toHaveBeenCalledWith(SESSION_ID, {
+      limit: 100,
+      expand: ['data.price.product'],
     });
     expect(mail.sent).toHaveLength(2);
     const [owner, customer] = mail.sent;
@@ -112,6 +117,10 @@ describe('POST /api/webhooks/stripe', () => {
       replyTo: 'racinesenpartage@outlook.com',
       idempotencyKey: 'evt_test_1:awa.diallo@example.com',
       subject: 'Merci pour votre commande E5F6G7H8',
+    });
+    // Both e-mails out: the session is marked, metadata merged by Stripe.
+    expect(fake.update).toHaveBeenCalledExactlyOnceWith(SESSION_ID, {
+      metadata: { emails_sent: 'true' },
     });
   });
 
@@ -129,6 +138,7 @@ describe('POST /api/webhooks/stripe', () => {
       total: 3060,
       currency: 'eur',
       emailsSent: 2,
+      emailsRefused: 0,
       emailsFailed: 0,
     });
     const all = [...logs, ...errors].join('\n');
@@ -180,8 +190,9 @@ describe('POST /api/webhooks/stripe', () => {
     expect(mail.send).not.toHaveBeenCalled();
   });
 
-  it('a mailer failure answers 500 so Stripe retries, and logs it', async () => {
-    const { app, mail } = makeApp({ stripe: stripeWithRealWebhooks().stripe });
+  it('a mailer failure without status (network) answers 500 so Stripe retries, and logs it', async () => {
+    const fake = stripeWithRealWebhooks();
+    const { app, mail } = makeApp({ stripe: fake.stripe });
     mail.send.mockImplementationOnce(async () => {
       throw new Error('Resend refused the e-mail: HTTP 429 rate_limit_exceeded');
     });
@@ -193,6 +204,135 @@ describe('POST /api/webhooks/stripe', () => {
     const failure = errors.find((l) => l.includes('order.email_failed'));
     expect(failure).toBeDefined();
     expect(JSON.parse(failure!)).toMatchObject({ recipient: 'owner', sessionId: SESSION_ID });
+    expect(fake.update).not.toHaveBeenCalled();
+  });
+
+  it.each([429, 409, 500, 503])(
+    'Resend %i is transient: 500 EMAIL_FAILED, session not marked',
+    async (status) => {
+      const fake = stripeWithRealWebhooks();
+      const { app, mail } = makeApp({ stripe: fake.stripe });
+      mail.send.mockImplementationOnce(async () => {
+        throw new MailerError(`Resend refused the e-mail: HTTP ${status} x`, status);
+      });
+      const payload = eventPayload();
+      const res = await post(app, payload, await signed(payload));
+      expect(res.status).toBe(500);
+      expect(((await res.json()) as ErrorJson).error.code).toBe('EMAIL_FAILED');
+      expect(fake.update).not.toHaveBeenCalled();
+      const failure = errors.find((l) => l.includes('order.email_failed'));
+      expect(JSON.parse(failure!)).toMatchObject({ recipient: 'owner', status });
+    },
+  );
+
+  it.each([400, 403, 422])(
+    'Resend %i is permanent: logged, counted as done, 200 and the session is marked',
+    async (status) => {
+      const fake = stripeWithRealWebhooks();
+      const { app, mail } = makeApp({ stripe: fake.stripe });
+      // The customer address is refused for good; the owner e-mail goes out.
+      mail.send.mockImplementation(async (m) => {
+        if (m.to !== 'racinesenpartage@outlook.com') {
+          throw new MailerError(
+            `Resend refused the e-mail: HTTP ${status} validation_error`,
+            status,
+          );
+        }
+        mail.sent.push(m);
+      });
+      const payload = eventPayload();
+      const res = await post(app, payload, await signed(payload));
+      expect(res.status).toBe(200);
+      expect(mail.sent.map((m) => m.to)).toEqual(['racinesenpartage@outlook.com']);
+      expect(fake.update).toHaveBeenCalledOnce();
+      const refused = errors.find((l) => l.includes('order.email_refused'));
+      expect(JSON.parse(refused!)).toMatchObject({
+        sessionId: SESSION_ID,
+        recipient: 'customer',
+        status,
+      });
+      expect(errors.join('\n')).not.toContain('awa.diallo');
+      const paid = JSON.parse(logs.find((l) => l.includes('order.paid'))!);
+      expect(paid).toMatchObject({ emailsSent: 1, emailsRefused: 1, emailsFailed: 0 });
+    },
+  );
+
+  it('classifies mailer errors by status', () => {
+    expect(isPermanentMailError(new MailerError('x', 422))).toBe(true);
+    expect(isPermanentMailError(new MailerError('x', 429))).toBe(false);
+    expect(isPermanentMailError(new MailerError('x', 409))).toBe(false);
+    expect(isPermanentMailError(new MailerError('x', 502))).toBe(false);
+    expect(isPermanentMailError(new MailerError('timeout'))).toBe(false);
+    expect(isPermanentMailError(new Error('boom'))).toBe(false);
+  });
+
+  it('already notified (metadata.emails_sent): 200, nothing sent again', async () => {
+    const fake = stripeWithRealWebhooks();
+    fake.retrieve.mockResolvedValueOnce(
+      sessionFixture({ metadata: { ...sessionFixture().metadata, emails_sent: 'true' } }),
+    );
+    const { app, mail } = makeApp({ stripe: fake.stripe });
+    const payload = eventPayload('checkout.session.completed', undefined, 'evt_redelivered');
+    const res = await post(app, payload, await signed(payload));
+    expect(res.status).toBe(200);
+    expect(mail.send).not.toHaveBeenCalled();
+    expect(fake.listLineItems).not.toHaveBeenCalled();
+    expect(fake.update).not.toHaveBeenCalled();
+  });
+
+  it('a session this shop did not create (no delivery_method): 200 without work', async () => {
+    const fake = stripeWithRealWebhooks();
+    fake.retrieve.mockResolvedValueOnce(sessionFixture({ metadata: { plan: 'other-app' } }));
+    const { app, mail } = makeApp({ stripe: fake.stripe });
+    const payload = eventPayload();
+    const res = await post(app, payload, await signed(payload));
+    expect(res.status).toBe(200);
+    expect(mail.send).not.toHaveBeenCalled();
+    expect(fake.listLineItems).not.toHaveBeenCalled();
+    expect(fake.update).not.toHaveBeenCalled();
+  });
+
+  it('a listLineItems failure answers 502 so Stripe retries', async () => {
+    const fake = stripeWithRealWebhooks();
+    fake.listLineItems.mockRejectedValueOnce(new Error('timeout'));
+    const { app, mail } = makeApp({ stripe: fake.stripe });
+    const payload = eventPayload();
+    const res = await post(app, payload, await signed(payload));
+    expect(res.status).toBe(502);
+    expect(mail.send).not.toHaveBeenCalled();
+  });
+
+  it('e-mails list every line, beyond the 10 an expand would return', async () => {
+    const fake = stripeWithRealWebhooks();
+    const data = Array.from({ length: 12 }, (_, i) => ({
+      id: `li_${i}`,
+      description: `Produit ${i}`,
+      quantity: 1,
+      amount_subtotal: 100,
+      amount_total: 100,
+      price: { unit_amount: 100, product: { id: `prod_${i}`, metadata: { sku: `SKU-${i}` } } },
+    }));
+    fake.listLineItems.mockResolvedValueOnce({
+      object: 'list',
+      has_more: false,
+      url: '/v1/checkout/sessions/x/line_items',
+      data,
+    } as never);
+    const { app, mail } = makeApp({ stripe: fake.stripe });
+    const payload = eventPayload();
+    await post(app, payload, await signed(payload));
+    expect(mail.sent[0]!.text).toContain('SKU-11');
+  });
+
+  it('a failure to mark the session is logged, the event still answers 200', async () => {
+    const fake = stripeWithRealWebhooks();
+    fake.update.mockRejectedValueOnce(new Error('socket hang up'));
+    const { app, mail } = makeApp({ stripe: fake.stripe });
+    const payload = eventPayload();
+    const res = await post(app, payload, await signed(payload));
+    expect(res.status).toBe(200);
+    expect(mail.sent).toHaveLength(2);
+    expect(errors.some((l) => l.includes('order.mark_failed'))).toBe(true);
   });
 
   it('a Stripe retrieve failure answers 502 so Stripe retries', async () => {
@@ -239,7 +379,7 @@ describe('POST /api/webhooks/stripe', () => {
     expect(res.status).toBe(200);
     const skipped = logs.filter((l) => l.includes('mail.skipped')).map((l) => JSON.parse(l));
     expect(skipped).toHaveLength(2);
-    expect(skipped.map((s) => s.to)).toEqual(['r***@outlook.com', 'a***@example.com']);
+    expect(skipped.map((s) => s.to)).toEqual(['r***@***.com', 'a***@***.com']);
     expect(skipped[0]).toMatchObject({
       reason: 'RESEND_API_KEY is not set',
       idempotencyKey: 'evt_test_1',

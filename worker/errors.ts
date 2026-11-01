@@ -19,6 +19,7 @@ export type ErrorCode =
   | 'INVALID_SIGNATURE'
   | 'CATALOG_UNAVAILABLE'
   | 'EMAIL_FAILED'
+  | 'RATE_LIMITED'
   | 'INTERNAL_ERROR';
 
 export type ErrorDetails = Record<string, unknown>;

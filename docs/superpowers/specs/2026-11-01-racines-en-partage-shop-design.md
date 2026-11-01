@@ -400,15 +400,29 @@ database holds prices.
 
 ### 6.3 Worker API (`worker/`)
 
-Hono app, created by `createApp(deps)` where `deps = { stripe, mailer, loadCatalog, env, now }`
+Hono app, created by `createApp(deps)` where `deps = { stripe, mailer, loadCatalog, env, now, limiters? }`
 so tests inject fakes. Every error body is `{ "error": { "code", "message", "details?" } }`.
 
 | Method and path | Request | Response | Errors |
 | --- | --- | --- | --- |
-| `POST /api/checkout` | `{ locale: 'fr'\|'en', items: [{ sku, quantity: 1..max }], delivery: Delivery, acceptedTerms: true }` | `200 { url }` (Stripe Checkout URL) | `400 VALIDATION_ERROR`, `409 UNKNOWN_SKU`, `409 OUT_OF_STOCK` (`details.skus`), `409 SHIPPING_UNAVAILABLE`, `503 SHOP_CLOSED`, `502 PAYMENT_PROVIDER_ERROR` |
-| `GET /api/orders/:sessionId` | | `200 { status: 'paid'\|'pending'\|'unpaid', number, lines: [{ name, quantity, unitAmount }], amounts: { subtotal, shipping, total, currency }, delivery: Delivery, email (masked) }` | `404 NOT_FOUND`, `400 VALIDATION_ERROR` |
-| `POST /api/webhooks/stripe` | Stripe event, `Stripe-Signature` header | `200 { received: true }` | `400 INVALID_SIGNATURE` |
-| `GET /api/health` | | `200 { ok: true, version, catalogGeneratedAt }` | |
+| `POST /api/checkout` | `{ locale: 'fr'\|'en', items: [{ sku, quantity: 1..max }], delivery: Delivery, acceptedTerms: true }` | `200 { url }` (Stripe Checkout URL) | `400 VALIDATION_ERROR`, `403 FORBIDDEN_ORIGIN`, `409 UNKNOWN_SKU`, `409 OUT_OF_STOCK` (`details.skus`), `409 SHIPPING_UNAVAILABLE`, `413 PAYLOAD_TOO_LARGE` (over 32 KB), `415 UNSUPPORTED_MEDIA_TYPE`, `429 RATE_LIMITED` (`Retry-After: 60`), `502 PAYMENT_PROVIDER_ERROR`, `503 SHOP_CLOSED`, `503 CATALOG_UNAVAILABLE` |
+| `GET /api/orders/:sessionId` | | `200 { status: 'paid'\|'pending'\|'unpaid', number, lines: [{ name, quantity, unitAmount }], amounts: { subtotal, shipping, discount, total, currency }, delivery: Delivery, email (masked, "m***@***.com") }` | `400 VALIDATION_ERROR`, `404 NOT_FOUND` (also for a session without this shop's metadata or created more than 48 hours ago), `429 RATE_LIMITED`, `502 PAYMENT_PROVIDER_ERROR` |
+| `POST /api/webhooks/stripe` | Stripe event, `Stripe-Signature` header | `200 { received: true }` | `400 INVALID_SIGNATURE`, `413 PAYLOAD_TOO_LARGE` (over 512 KB), `500 EMAIL_FAILED` (Stripe retries), `502 PAYMENT_PROVIDER_ERROR` |
+| `GET /api/health` | | `200 { ok: true, version, catalogGeneratedAt }` | `503 CATALOG_UNAVAILABLE` |
+
+Any route: `404 NOT_FOUND` for an unknown `/api` path, `405 METHOD_NOT_ALLOWED`
+(with `Allow`) for a wrong method, `500 INTERNAL_ERROR` for an unexpected
+error (logged, never detailed). Amounts are integer cents; `discount` is the
+promotion code discount (0 without one).
+
+Rate limiting: Workers rate limiting bindings `CHECKOUT_LIMITER` (10 requests
+per 60 s) and `ORDERS_LIMITER` (30 per 60 s), keyed on `CF-Connecting-IP`;
+skipped when the binding is absent.
+
+Relay validation: `name`, `address1`, `address2`, `city` accept letters
+(accents included), digits, space and `' - . , / & ( )` only, at most 80, 120,
+120 and 60 characters; `postcode` is 3 to 10 letters or digits; the `id`
+prefix equals `country`.
 
 Checkout session construction: `mode: 'payment'`, `locale`, `line_items` from
 the catalog (`price_data` with `unit_amount`, `product_data.name`, `images`,
@@ -418,7 +432,8 @@ localised, delivery estimate), `shipping_address_collection` only for `home`
 (allowed countries from settings), `billing_address_collection: 'required'`
 and `phone_number_collection.enabled: true` always (Mondial Relay notifies by
 SMS), `customer_creation: 'if_required'`, `allow_promotion_codes: true`,
-`custom_text.submit.message` stating the relay point or pickup address,
+`custom_text.submit.message` stating the method and, for a relay point, its
+name and city only (no address, no free text), or the pickup address,
 `metadata`: `locale`, `delivery_method`, `relay_id`, `relay_name`,
 `relay_address`, `relay_postcode`, `relay_city`, `relay_country`, `skus`
 (comma list), `success_url` to the locale's thanks page with
@@ -428,16 +443,24 @@ SMS), `customer_creation: 'if_required'`, `allow_promotion_codes: true`,
 Webhook: `constructEventAsync` with the SubtleCrypto provider; on
 `checkout.session.completed` and `checkout.session.async_payment_succeeded`
 with `payment_status === 'paid'`: retrieve the session expanded with
-`line_items` and `shipping_cost.shipping_rate`, then send the owner e-mail
-(always French: order number, date, lines, totals, customer name, e-mail,
-phone, billing or shipping address, delivery method, relay point block, link
-to the Stripe payment) and the customer e-mail in `metadata.locale` (thanks,
-lines, totals, delivery method, relay point, what happens next, contact).
-Resend `Idempotency-Key: <event.id>:<recipient>`. When `RESEND_API_KEY` is
+`shipping_cost.shipping_rate`; skip it with 200 when `metadata.delivery_method`
+is missing (not this shop's) or `metadata.emails_sent` is `'true'` (already
+notified); list its lines with `listLineItems` (limit 100, the `line_items`
+expand stops at 10), then send the owner e-mail (always French: order number,
+date, lines, totals, customer name, e-mail, phone, billing or shipping
+address, delivery method, relay point ID printed large with a line asking to
+confirm the point in her Mondial Relay space before printing the label, relay
+point block, link to the Stripe payment) and the customer e-mail in
+`metadata.locale` (thanks, lines, totals, delivery method, relay point, what
+happens next, contact). Resend `Idempotency-Key: <event.id>:<recipient>`.
+Once both are out, `metadata.emails_sent = 'true'` is set on the session
+(Stripe merges metadata). A Resend 4xx other than 409 and 429 is permanent
+(logged, counted as sent for that recipient); 429, 409, 5xx and network
+errors answer `500 EMAIL_FAILED` so Stripe retries. When `RESEND_API_KEY` is
 unset the Worker logs the order summary and returns 200 (Stripe's receipt and
 dashboard still cover the owner).
 
-Bindings and variables: `ASSETS`; vars `SITE_URL`, `ORDER_EMAIL_FROM`; secrets
+Bindings and variables: `ASSETS`, `CHECKOUT_LIMITER`, `ORDERS_LIMITER`; vars `SITE_URL`, `ORDER_EMAIL_FROM`; secrets
 `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY` (optional),
 `ORDER_EMAIL_TO`. The public widget brand code is a site variable
 `PUBLIC_MONDIAL_RELAY_BRAND` (`BDTEST` in development, the "Offre Start"
@@ -447,7 +470,8 @@ client code in production) read at build time.
 
 Loaded on demand (only when the relay method is selected) from
 `https://widget.mondialrelay.com/parcelshop-picker/jquery.plugin.mondialrelay.parcelshoppicker.min.js`
-with jQuery 2.2.4 and Leaflet from the documented CDNs; `Brand` from the
+with jQuery 2.2.4 and Leaflet 1.9.4 (vendored under `public/vendor/`, same
+origin; only the plugin is remote); `Brand` from the
 variable, `Country` from the postcode form, `AllowedCountries` from the relay
 method's countries, `ColLivMod: '24R'`, `NbResults: 7`, `Responsive: true`,
 `ShowResultsOnMap: true`, `OnParcelShopSelected` maps the payload (`ID`,

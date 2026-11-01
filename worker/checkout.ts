@@ -19,26 +19,45 @@ const CUSTOM_TEXT_MAX = 1200;
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 
-const relaySchema = z.object({
-  id: z
+/**
+ * Relay strings reach Stripe's page (name, city) and the owner e-mail: only
+ * letters (accents included), digits, spaces and ' - . , / & ( ) pass.
+ * Typographic apostrophes are folded to ' first.
+ */
+const RELAY_TEXT = /^[\p{L}\p{M}\d '\-.,/&()]*$/u;
+const relayText = (max: number, min = 1) =>
+  z
     .string()
-    .trim()
-    .regex(/^[A-Z]{2}-\d{6}$/),
-  name: text(120),
-  address1: text(200),
-  address2: z.string().trim().max(200).nullish(),
-  postcode: z
-    .string()
-    .trim()
-    .regex(/^[A-Za-z0-9][A-Za-z0-9 -]{1,9}$/),
-  city: text(120),
-  country: z
-    .string()
-    .trim()
-    .regex(/^[A-Z]{2}$/),
-  // Sent by the widget for display; never used here.
-  hoursHtml: z.string().max(20_000).nullish(),
-});
+    .transform((v) => v.replace(/[\u2018\u2019]/g, "'").trim())
+    .pipe(z.string().min(min).max(max).regex(RELAY_TEXT, 'Unexpected character'));
+
+export const RELAY_LIMITS = { name: 80, address1: 120, address2: 120, city: 60 } as const;
+
+const relaySchema = z
+  .object({
+    id: z
+      .string()
+      .trim()
+      .regex(/^[A-Z]{2}-\d{6}$/),
+    name: relayText(RELAY_LIMITS.name),
+    address1: relayText(RELAY_LIMITS.address1),
+    address2: relayText(RELAY_LIMITS.address2, 0).nullish(),
+    postcode: z
+      .string()
+      .trim()
+      .regex(/^[A-Za-z0-9]{3,10}$/),
+    city: relayText(RELAY_LIMITS.city),
+    country: z
+      .string()
+      .trim()
+      .regex(/^[A-Z]{2}$/),
+    // Sent by the widget for display; never used here.
+    hoursHtml: z.string().max(20_000).nullish(),
+  })
+  .refine((relay) => relay.id.slice(0, 2) === relay.country, {
+    path: ['id'],
+    message: 'Relay id prefix must match the country',
+  });
 
 export const checkoutRequestSchema = z.object({
   locale: z.enum(LOCALES),
@@ -95,9 +114,13 @@ export function parseCheckoutRequest(body: unknown): CheckoutRequest {
   return parsed.data;
 }
 
+const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]'];
+
 /**
  * Same-origin guard: the Origin (or, without it, the Referer) must be the
- * shop's own host, the host that served this request, or localhost.
+ * shop's own host or the host that served this request. Any localhost origin
+ * passes only when `SITE_URL` is itself a localhost URL (`wrangler dev` with
+ * `.dev.vars`), never in production.
  */
 export function isAllowedOrigin(request: Request, siteUrl: string): boolean {
   const source = request.headers.get('origin') ?? request.headers.get('referer');
@@ -108,9 +131,10 @@ export function isAllowedOrigin(request: Request, siteUrl: string): boolean {
   } catch {
     return false;
   }
-  if (from.origin === new URL(siteUrl).origin) return true;
+  const site = new URL(siteUrl);
+  if (from.origin === site.origin) return true;
   if (from.origin === new URL(request.url).origin) return true;
-  return ['localhost', '127.0.0.1', '[::1]'].includes(from.hostname);
+  return LOCAL_HOSTS.includes(site.hostname) && LOCAL_HOSTS.includes(from.hostname);
 }
 
 const truncate = (value: string, max: number) =>
@@ -137,11 +161,15 @@ function relayAddress(relay: { address1: string; address2?: string | null }): st
   return [relay.address1, relay.address2].filter((part) => part && part.length > 0).join(', ');
 }
 
-/** The sentence shown above Stripe's pay button. */
+/**
+ * The sentence shown above Stripe's pay button. For a relay point it carries
+ * the method, the point's name and its city only: the full address stays in
+ * the metadata, out of Stripe's page.
+ */
 export function submitMessage(delivery: Delivery, locale: Locale): string | undefined {
   if (delivery.method === 'relay') {
     const r = delivery.relay;
-    const where = `${r.name}, ${relayAddress(r)}, ${r.postcode} ${r.city} (${r.country})`;
+    const where = `${r.name}, ${r.city}`;
     return locale === 'fr'
       ? `Livraison en Point Relais Mondial Relay : ${where}.`
       : `Delivery to the Mondial Relay pickup point: ${where}.`;

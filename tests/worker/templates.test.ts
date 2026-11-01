@@ -90,7 +90,8 @@ describe('order e-mails', () => {
       'Tabac de la Gare',
       '12 Avenue de la Gare, Galerie marchande',
       '95400 Arnouville',
-      'ID Point Relais : FR-012345',
+      'ID POINT RELAIS : FR-012345',
+      'vérifiez ce Point Relais avec son ID dans votre espace Mondial Relay',
       'REP-MOR-100',
       'https://dashboard.stripe.com/test/payments/pi_3TestPaymentIntent',
       fr('17,80 €'),
@@ -100,6 +101,11 @@ describe('order e-mails', () => {
     expect(html).toContain(
       'href="https://dashboard.stripe.com/test/payments/pi_3TestPaymentIntent"',
     );
+    // The relay ID stands out above the point's details, which come from the browser.
+    const id = html.indexOf('>FR-012345</strong>');
+    expect(id).toBeGreaterThan(-1);
+    expect(id).toBeLessThan(html.indexOf('Tabac de la Gare'));
+    expect(html).toContain('espace Mondial Relay');
   });
 
   it('owner e-mail (EN home order) stays in French and shows the shipping address', () => {

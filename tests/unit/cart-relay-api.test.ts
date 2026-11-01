@@ -267,7 +267,7 @@ describe('API errors and responses', () => {
     status: 'paid',
     number: 'RP-2026-0001',
     lines: [{ name: 'Poudre de moringa 100 g', quantity: 2, unitAmount: 890 }],
-    amounts: { subtotal: 1780, shipping: 490, total: 2270, currency: 'eur' },
+    amounts: { subtotal: 1780, shipping: 490, discount: 0, total: 2270, currency: 'eur' },
     delivery: { method: 'pickup' },
     email: 'm***@example.com',
   };
@@ -277,6 +277,16 @@ describe('API errors and responses', () => {
     expect(parseOrder({ ...order, status: 'refunded' })).toBeNull();
     expect(parseOrder({ ...order, amounts: { ...order.amounts, total: 22.7 } })).toBeNull();
     expect(parseOrder(null)).toBeNull();
+    expect(
+      parseOrder({ ...order, amounts: { ...order.amounts, discount: 300, total: 1970 } })?.amounts
+        .discount,
+    ).toBe(300);
+    // A Worker without the field, or a junk value: no discount row.
+    const { discount: _d, ...withoutDiscount } = order.amounts;
+    expect(parseOrder({ ...order, amounts: withoutDiscount })?.amounts.discount).toBe(0);
+    expect(
+      parseOrder({ ...order, amounts: { ...order.amounts, discount: '3' } })?.amounts.discount,
+    ).toBe(0);
     expect(
       parseOrder({ ...order, lines: [...order.lines, { name: 1, quantity: 1, unitAmount: 1 }] })
         ?.lines,

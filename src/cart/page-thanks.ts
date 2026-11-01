@@ -79,6 +79,11 @@ function renderOrder(root: HTMLElement, order: OrderSummary, ctx: CartContext): 
       ? (ctx.t.checkout?.free ?? '0')
       : ctx.price(order.amounts.shipping),
   );
+  const discountRow = q<HTMLElement>('[data-thanks-discount-row]');
+  if (discountRow) {
+    discountRow.hidden = order.amounts.discount <= 0;
+    set('[data-thanks-discount]', `−${ctx.price(order.amounts.discount)}`);
+  }
   set('[data-thanks-total]', ctx.price(order.amounts.total));
   const email = q<HTMLElement>('[data-thanks-email]');
   if (email && order.email) {

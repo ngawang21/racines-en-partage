@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { describeError, maskEmail } from '../../worker/log';
 import { orderNumber } from '../../worker/orders';
-import { SESSION_ID, makeApp, sessionFixture, type ErrorJson } from './fixtures';
+import { NOW, SESSION_ID, makeApp, sessionFixture, type ErrorJson } from './fixtures';
+
+const HOUR = 60 * 60;
+const createdHoursAgo = (hours: number) => Math.floor(NOW.getTime() / 1000) - hours * HOUR;
 
 beforeEach(() => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -14,7 +17,11 @@ describe('GET /api/orders/:sessionId', () => {
     const res = await app.request(`/api/orders/${SESSION_ID}`);
     expect(res.status).toBe(200);
     expect(stripe.retrieve).toHaveBeenCalledWith(SESSION_ID, {
-      expand: ['line_items', 'shipping_cost.shipping_rate'],
+      expand: ['shipping_cost.shipping_rate'],
+    });
+    expect(stripe.listLineItems).toHaveBeenCalledWith(SESSION_ID, {
+      limit: 100,
+      expand: ['data.price.product'],
     });
     expect(await res.json()).toEqual({
       status: 'paid',
@@ -35,8 +42,59 @@ describe('GET /api/orders/:sessionId', () => {
           country: 'FR',
         },
       },
-      email: 'a***@example.com',
+      email: 'a***@***.com',
     });
+  });
+
+  it('reports the promotion code discount', async () => {
+    const { app, stripe } = makeApp();
+    stripe.retrieve.mockResolvedValueOnce(
+      sessionFixture({
+        amount_total: 2560,
+        total_details: { amount_discount: 500, amount_shipping: 490, amount_tax: 0 },
+      }),
+    );
+    const body = (await (await app.request(`/api/orders/${SESSION_ID}`)).json()) as {
+      amounts: Record<string, number>;
+    };
+    expect(body.amounts).toMatchObject({ discount: 500, total: 2560 });
+  });
+
+  it('shows every line, beyond the 10 an expand would return', async () => {
+    const { app, stripe } = makeApp();
+    const data = Array.from({ length: 12 }, (_, i) => ({
+      id: `li_${i}`,
+      description: `Produit ${i}`,
+      quantity: 1,
+      amount_subtotal: 100,
+      amount_total: 100,
+      price: { unit_amount: 100, product: { id: `prod_${i}`, metadata: { sku: `SKU-${i}` } } },
+    }));
+    stripe.listLineItems.mockResolvedValueOnce({
+      object: 'list',
+      has_more: false,
+      url: '/v1/checkout/sessions/x/line_items',
+      data,
+    } as never);
+    const body = (await (await app.request(`/api/orders/${SESSION_ID}`)).json()) as {
+      lines: unknown[];
+    };
+    expect(body.lines).toHaveLength(12);
+  });
+
+  it('serves a session created 47 hours ago', async () => {
+    const { app, stripe } = makeApp();
+    stripe.retrieve.mockResolvedValueOnce(sessionFixture({ created: createdHoursAgo(47) }));
+    expect((await app.request(`/api/orders/${SESSION_ID}`)).status).toBe(200);
+  });
+
+  it('404 NOT_FOUND for a session older than 48 hours, lines never fetched', async () => {
+    const { app, stripe } = makeApp();
+    stripe.retrieve.mockResolvedValueOnce(sessionFixture({ created: createdHoursAgo(49) }));
+    const res = await app.request(`/api/orders/${SESSION_ID}`);
+    expect(res.status).toBe(404);
+    expect(((await res.json()) as ErrorJson).error.code).toBe('NOT_FOUND');
+    expect(stripe.listLineItems).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -95,11 +153,19 @@ describe('GET /api/orders/:sessionId', () => {
     stripe.retrieve.mockResolvedValueOnce(sessionFixture({ metadata: {} }));
     const res = await app.request(`/api/orders/${SESSION_ID}`);
     expect(res.status).toBe(404);
+    expect(stripe.listLineItems).not.toHaveBeenCalled();
   });
 
   it('502 PAYMENT_PROVIDER_ERROR on other Stripe failures', async () => {
     const { app, stripe } = makeApp();
     stripe.retrieve.mockRejectedValueOnce(new Error('socket hang up'));
+    const res = await app.request(`/api/orders/${SESSION_ID}`);
+    expect(res.status).toBe(502);
+  });
+
+  it('502 PAYMENT_PROVIDER_ERROR when the lines cannot be listed', async () => {
+    const { app, stripe } = makeApp();
+    stripe.listLineItems.mockRejectedValueOnce(new Error('socket hang up'));
     const res = await app.request(`/api/orders/${SESSION_ID}`);
     expect(res.status).toBe(502);
   });
@@ -110,8 +176,10 @@ describe('helpers', () => {
     expect(orderNumber('cs_test_a1B2c3D4e5F6g7H8')).toBe('E5F6G7H8');
   });
 
-  it('maskEmail keeps the first character and the domain', () => {
-    expect(maskEmail('marie@outlook.com')).toBe('m***@outlook.com');
+  it('maskEmail keeps the first character and the top-level domain only', () => {
+    expect(maskEmail('marie@outlook.com')).toBe('m***@***.com');
+    expect(maskEmail('awa.diallo@mail.example.co.uk')).toBe('a***@***.uk');
+    expect(maskEmail('root@localhost')).toBe('r***@***');
     expect(maskEmail('@weird')).toBe('***');
     expect(maskEmail(null)).toBeNull();
   });

@@ -141,8 +141,9 @@ exports[`order e-mails > FR owner e-mail (relay) matches the snapshot > owner-fr
 <p style="margin:0 0 12px;padding:12px 16px;background:#fbf6ea;border-left:3px solid #e03a3a;">Awa Diallo<br>awa.diallo@example.com<br>06 12 34 56 78</p>
 <p style="margin:0 0 12px;"><strong>Adresse de facturation</strong></p><p style="margin:0 0 12px;padding:12px 16px;background:#fbf6ea;border-left:3px solid #e03a3a;">3 Rue des Lilas<br>95400 Arnouville<br>France</p>
 <h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Livraison : Point Relais Mondial Relay</h2>
-<p style="margin:0 0 12px;padding:12px 16px;background:#fbf6ea;border-left:3px solid #e03a3a;">Tabac de la Gare<br>12 Avenue de la Gare, Galerie marchande<br>95400 Arnouville<br>France<br>ID Point Relais : FR-012345</p>
-<p style="margin:0 0 12px;">Déposer le colis chez Mondial Relay pour ce Point Relais.</p></td></tr>
+<p style="margin:0 0 12px;padding:12px 16px;border:2px solid #163a1c;border-radius:6px;font-size:13px;line-height:1.4;">ID Point Relais<br><strong style="font-family:Georgia, 'Times New Roman', serif;font-size:26px;letter-spacing:1px;color:#163a1c;">FR-012345</strong></p>
+<p style="margin:0 0 12px;padding:12px 16px;background:#fbf6ea;border-left:3px solid #e03a3a;">Tabac de la Gare<br>12 Avenue de la Gare, Galerie marchande<br>95400 Arnouville<br>France</p>
+<p style="margin:0 0 12px;">Avant d’imprimer l’étiquette, vérifiez ce Point Relais avec son ID dans votre espace Mondial Relay.</p></td></tr>
 <tr><td style="background:#d8b98e;color:#163a1c;padding:16px 28px;font-size:12px;line-height:1.5;">Racines en Partage · 9 Rue du Marché, 95400 Arnouville · <a href="mailto:racinesenpartage@outlook.com" style="color:#163a1c;">racinesenpartage@outlook.com</a></td></tr>
 </table></td></tr></table></body></html>"
 `;
@@ -171,12 +172,13 @@ Adresse de facturation
 France
 
 Livraison : Point Relais Mondial Relay
+ID POINT RELAIS : FR-012345
+
 Tabac de la Gare
 12 Avenue de la Gare, Galerie marchande
 95400 Arnouville
 France
-ID Point Relais : FR-012345
-Déposer le colis chez Mondial Relay pour ce Point Relais.
+Avant d’imprimer l’étiquette, vérifiez ce Point Relais avec son ID dans votre espace Mondial Relay.
 
 Paiement dans Stripe : https://dashboard.stripe.com/test/payments/pi_3TestPaymentIntent
 "

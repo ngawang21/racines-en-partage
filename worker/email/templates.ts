@@ -153,6 +153,11 @@ function totalsTable(rows: Array<[string, string]>): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px;margin-top:8px;">${html}</table>`;
 }
 
+/** The relay point ID, large, above the point's details: what the label needs. */
+function relayIdBox(id: string): string {
+  return `<p style="margin:0 0 12px;padding:12px 16px;border:2px solid ${C.forest};border-radius:6px;font-size:13px;line-height:1.4;">ID Point Relais<br><strong style="font-family:${SERIF};font-size:26px;letter-spacing:1px;color:${C.forest};">${esc(id)}</strong></p>`;
+}
+
 function button(href: string, label: string): string {
   return `<p style="margin:20px 0;"><a href="${esc(href)}" style="display:inline-block;background:${C.hibiscus};color:${C.white};text-decoration:none;padding:10px 18px;border-radius:999px;font-weight:bold;">${esc(label)}</a></p>`;
 }
@@ -226,10 +231,14 @@ export function renderOwnerEmail(summary: OrderSummary): RenderedEmail {
   let deliveryTitle = `Livraison : ${method}`;
   let deliveryLines: string[] = [];
   let deliveryNote = '';
+  let relayId: string | null = null;
   const d = summary.delivery;
   if (d?.method === 'relay') {
-    deliveryLines = [...relayLines(d, locale), `ID Point Relais : ${d.relay.id}`];
-    deliveryNote = 'Déposer le colis chez Mondial Relay pour ce Point Relais.';
+    relayId = d.relay.id;
+    deliveryLines = relayLines(d, locale);
+    // The name and address come from the customer's browser: the ID is what counts.
+    deliveryNote =
+      'Avant d’imprimer l’étiquette, vérifiez ce Point Relais avec son ID dans votre espace Mondial Relay.';
   } else if (d?.method === 'home') {
     deliveryLines = c.shipping
       ? [c.shipping.name, ...addressLines(c.shipping.address, locale)]
@@ -257,6 +266,7 @@ export function renderOwnerEmail(summary: OrderSummary): RenderedEmail {
       block(customerLines),
       billing.length ? paragraph(`<strong>Adresse de facturation</strong>`) + block(billing) : '',
       subheading(deliveryTitle),
+      relayId ? relayIdBox(relayId) : '',
       deliveryLines.length ? block(deliveryLines) : '',
       deliveryNote ? paragraph(esc(deliveryNote)) : '',
     ].join('\n'),
@@ -277,6 +287,7 @@ export function renderOwnerEmail(summary: OrderSummary): RenderedEmail {
     ...(billing.length ? ['', 'Adresse de facturation', ...billing] : []),
     '',
     deliveryTitle,
+    ...(relayId ? [`ID POINT RELAIS : ${relayId}`, ''] : []),
     ...deliveryLines,
     ...(deliveryNote ? [deliveryNote] : []),
     ...(paymentUrl ? ['', `Paiement dans Stripe : ${paymentUrl}`] : []),

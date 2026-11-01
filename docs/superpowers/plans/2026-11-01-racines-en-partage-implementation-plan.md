@@ -269,12 +269,12 @@ a separate entry in `worker/` deployed with the static assets by one
       iteration round with the storefront implementer.
 - [x] Accessibility scan (axe through Playwright) on home, shop, product,
       cart, checkout; fix every serious or critical issue.
-- [ ] Security review of `worker/` and `_headers` (ecc security reviewer).
-- [ ] Code review (ecc code reviewer) on the whole diff; fix blocking items.
-- [ ] `pnpm launch-check` documented as failing until the owner inputs land.
-- [ ] Final docs pass, `CLAUDE.md` gotchas, README.
-- [ ] Commits per wave; push after the GitHub repository exists.
-- [ ] Memory notes for the developer (project file) updated.
+- [x] Security review of `worker/` and `_headers` (ecc security reviewer).
+- [x] Code review (ecc code reviewer) on the whole diff; fix blocking items.
+- [x] `pnpm launch-check` documented as failing until the owner inputs land.
+- [x] Final docs pass, `CLAUDE.md` gotchas, README.
+- [x] Commits per wave; push after the GitHub repository exists (push pending: repository to be created on github.com).
+- [x] Memory notes for the developer (project file) updated.
 
 ## Progress log
 
@@ -297,3 +297,14 @@ a separate entry in `worker/` deployed with the static assets by one
   label in name, leaf and kraft text contrast, unique legal nav label; zero
   violations left on the scanned pages), CSP section of `docs/deployment.md`.
   Tests: unit 154, worker 96, build 30, e2e 30.
+- 2026-11-01 20:00 wave 3 hardening after the code and security reviews:
+  vendored jQuery 2.2.4 and Leaflet 1.9.4 (checkout CSP no longer trusts
+  unpkg or googleapis), Sveltia pinned with integrity, relay text allow-list
+  and shorter Stripe submit text, Workers rate limiting bindings, 48 h order
+  lookup window and tighter e-mail masking, webhook idempotency through
+  session metadata and permanent mail errors handled, line items through
+  `listLineItems`, discount row on the thanks page, postcode field error,
+  `tests/build/headers.test.ts`, HSTS `includeSubDomains`. Gates: unit 154,
+  worker 138, build 36, e2e 32, `wrangler deploy --dry-run` green. Admin
+  `script-src` kept on the whole unpkg host so Sveltia's helper imports keep
+  working after sign-in.

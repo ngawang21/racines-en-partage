@@ -12,11 +12,20 @@ import {
 } from './checkout';
 import { ApiError, errorBody, handleError, notFound } from './errors';
 import { describeError, logError } from './log';
-import { assertSessionId, isResourceMissing, publicOrder, summariseSession } from './orders';
-import type { AppEnv, Mailer, StripeLike } from './types';
+import {
+  SESSION_EXPAND,
+  assertSessionId,
+  deliveryFromMetadata,
+  isOrderExpired,
+  isResourceMissing,
+  publicOrder,
+  summariseSession,
+  withLineItems,
+} from './orders';
+import type { AppEnv, Mailer, RateLimiter, StripeLike } from './types';
 import { MAX_WEBHOOK_BYTES, handleEvent, verifyEvent } from './webhook';
 
-export type { AppEnv, Mailer, StripeLike } from './types';
+export type { AppEnv, Mailer, RateLimiter, StripeLike } from './types';
 
 export interface AppDeps {
   stripe: StripeLike;
@@ -24,7 +33,14 @@ export interface AppDeps {
   loadCatalog: () => Promise<WorkerCatalog>;
   env: AppEnv;
   now: () => Date;
+  /** Workers rate limiting bindings; a missing one means no limit (tests, old wrangler). */
+  limiters?: { checkout?: RateLimiter; orders?: RateLimiter };
 }
+
+/** Seconds a rate-limited client is asked to wait (the limiter period). */
+export const RETRY_AFTER_SECONDS = 60;
+/** Key shared by requests without CF-Connecting-IP (never the case behind Cloudflare). */
+const ANONYMOUS_KEY = 'no-ip';
 
 export const API_VERSION: string = pkg.version;
 
@@ -43,6 +59,28 @@ const limit = (maxSize: number) =>
       throw new ApiError(413, 'PAYLOAD_TOO_LARGE', `Body larger than ${maxSize} bytes`);
     },
   });
+
+/** Per-IP limit through a Workers rate limiting binding; skipped when the binding is absent. */
+function rateLimit(name: string, limiter: RateLimiter | undefined): MiddlewareHandler {
+  return async (c, next) => {
+    if (limiter) {
+      const key = c.req.header('cf-connecting-ip') || ANONYMOUS_KEY;
+      let success = true;
+      try {
+        ({ success } = await limiter.limit({ key }));
+      } catch (err) {
+        // A limiter outage must not close the shop: let the request through.
+        logError('ratelimit.failed', { limiter: name, error: describeError(err) });
+      }
+      if (!success) {
+        return c.json(errorBody('RATE_LIMITED', 'Too many requests, try again in a minute'), 429, {
+          'Retry-After': String(RETRY_AFTER_SECONDS),
+        });
+      }
+    }
+    await next();
+  };
+}
 
 function methodNotAllowed(allow: string) {
   return (c: Context) => {
@@ -71,54 +109,66 @@ export function createApp(deps: AppDeps) {
     return c.json({ ok: true, version: API_VERSION, catalogGeneratedAt: generatedAt });
   });
 
-  app.post('/api/checkout', limit(MAX_BODY_BYTES), async (c) => {
-    if (!isAllowedOrigin(c.req.raw, env.SITE_URL)) {
-      throw new ApiError(403, 'FORBIDDEN_ORIGIN', 'Cross-origin request refused');
-    }
-    const type = c.req.header('content-type');
-    if (type && !/^application\/json\s*(;|$)/i.test(type)) {
-      throw new ApiError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Send application/json');
-    }
-    let body: unknown;
-    try {
-      body = JSON.parse(await c.req.text());
-    } catch {
-      throw new ApiError(400, 'VALIDATION_ERROR', 'Body is not valid JSON');
-    }
-    const request = parseCheckoutRequest(body);
-    const params = buildSessionParams(request, await catalog(), env, deps.now());
+  app.post(
+    '/api/checkout',
+    rateLimit('checkout', deps.limiters?.checkout),
+    limit(MAX_BODY_BYTES),
+    async (c) => {
+      if (!isAllowedOrigin(c.req.raw, env.SITE_URL)) {
+        throw new ApiError(403, 'FORBIDDEN_ORIGIN', 'Cross-origin request refused');
+      }
+      const type = c.req.header('content-type');
+      if (type && !/^application\/json\s*(;|$)/i.test(type)) {
+        throw new ApiError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Send application/json');
+      }
+      let body: unknown;
+      try {
+        body = JSON.parse(await c.req.text());
+      } catch {
+        throw new ApiError(400, 'VALIDATION_ERROR', 'Body is not valid JSON');
+      }
+      const request = parseCheckoutRequest(body);
+      const params = buildSessionParams(request, await catalog(), env, deps.now());
 
-    let url: string | null;
-    try {
-      url = (await deps.stripe.checkout.sessions.create(params)).url;
-    } catch (err) {
-      logError('checkout.stripe_failed', { error: describeError(err) });
-      throw new ApiError(502, 'PAYMENT_PROVIDER_ERROR', 'Payment provider unavailable');
-    }
-    if (!url) {
-      logError('checkout.stripe_failed', { error: 'session without url' });
-      throw new ApiError(502, 'PAYMENT_PROVIDER_ERROR', 'Payment provider unavailable');
-    }
-    return c.json({ url });
-  });
+      let url: string | null;
+      try {
+        url = (await deps.stripe.checkout.sessions.create(params)).url;
+      } catch (err) {
+        logError('checkout.stripe_failed', { error: describeError(err) });
+        throw new ApiError(502, 'PAYMENT_PROVIDER_ERROR', 'Payment provider unavailable');
+      }
+      if (!url) {
+        logError('checkout.stripe_failed', { error: 'session without url' });
+        throw new ApiError(502, 'PAYMENT_PROVIDER_ERROR', 'Payment provider unavailable');
+      }
+      return c.json({ url });
+    },
+  );
 
-  app.get('/api/orders/:sessionId', async (c) => {
+  app.get('/api/orders/:sessionId', rateLimit('orders', deps.limiters?.orders), async (c) => {
     const id = c.req.param('sessionId');
     assertSessionId(id);
-    let summary;
-    try {
-      summary = summariseSession(
-        await deps.stripe.checkout.sessions.retrieve(id, {
-          expand: ['line_items', 'shipping_cost.shipping_rate'],
-        }),
-      );
-    } catch (err) {
-      if (isResourceMissing(err)) throw new ApiError(404, 'NOT_FOUND', 'No such order');
+    const notFound = () => new ApiError(404, 'NOT_FOUND', 'No such order');
+    const providerError = (err: unknown) => {
+      if (isResourceMissing(err)) return notFound();
       logError('orders.stripe_failed', { error: describeError(err) });
-      throw new ApiError(502, 'PAYMENT_PROVIDER_ERROR', 'Payment provider unavailable');
+      return new ApiError(502, 'PAYMENT_PROVIDER_ERROR', 'Payment provider unavailable');
+    };
+    let session;
+    try {
+      session = await deps.stripe.checkout.sessions.retrieve(id, { expand: SESSION_EXPAND });
+    } catch (err) {
+      throw providerError(err);
     }
-    if (!summary.delivery) throw new ApiError(404, 'NOT_FOUND', 'No such order');
-    return c.json(publicOrder(summary));
+    // Not created by this shop, or too old for the thanks page.
+    if (!deliveryFromMetadata(session.metadata)) throw notFound();
+    if (isOrderExpired(session, deps.now())) throw notFound();
+    try {
+      session = await withLineItems(deps.stripe, session);
+    } catch (err) {
+      throw providerError(err);
+    }
+    return c.json(publicOrder(summariseSession(session)));
   });
 
   app.post('/api/webhooks/stripe', limit(MAX_WEBHOOK_BYTES), async (c) => {

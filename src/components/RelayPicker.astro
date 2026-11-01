@@ -51,8 +51,16 @@ const regionNames = new Intl.DisplayNames([locale === 'fr' ? 'fr-FR' : 'en-GB'],
           inputmode="numeric"
           autocomplete="postal-code"
           maxlength="10"
+          aria-describedby="rep-relay-postcode-error"
           data-relay-postcode
         />
+        <p
+          id="rep-relay-postcode-error"
+          class="field-error"
+          aria-live="polite"
+          data-relay-postcode-error
+        >
+        </p>
       </div>
       {
         countries.length > 1 ? (

@@ -5,7 +5,15 @@ import pkg from '../../package.json';
 import worker from '../../worker/index';
 import { SHOP } from '../../worker/shop';
 import type { Env } from '../../worker/types';
-import { catalogFixture, makeApp, type ErrorJson } from './fixtures';
+import {
+  SAME_ORIGIN,
+  SESSION_ID,
+  catalogFixture,
+  fakeLimiter,
+  makeApp,
+  postJson,
+  type ErrorJson,
+} from './fixtures';
 
 beforeEach(() => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -87,6 +95,79 @@ describe('API surface', () => {
   });
 });
 
+describe('rate limiting', () => {
+  const checkoutBody = {
+    locale: 'fr',
+    items: [{ sku: 'REP-MOR-100', quantity: 1 }],
+    delivery: { method: 'pickup' },
+    acceptedTerms: true,
+  };
+
+  it('checkout: keyed on CF-Connecting-IP, 429 RATE_LIMITED with Retry-After once refused', async () => {
+    const checkout = fakeLimiter(1);
+    const { app, stripe } = makeApp({ limiters: { checkout: checkout.limiter } });
+    const headers = { ...SAME_ORIGIN, 'CF-Connecting-IP': '203.0.113.7' };
+    expect((await postJson(app, '/api/checkout', checkoutBody, headers)).status).toBe(200);
+    const res = await postJson(app, '/api/checkout', checkoutBody, headers);
+    expect(res.status).toBe(429);
+    expect(res.headers.get('retry-after')).toBe('60');
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    expect(((await res.json()) as ErrorJson).error.code).toBe('RATE_LIMITED');
+    expect(checkout.keys).toEqual(['203.0.113.7', '203.0.113.7']);
+    expect(stripe.create).toHaveBeenCalledOnce();
+  });
+
+  it('orders: its own limiter, Stripe untouched once refused', async () => {
+    const orders = fakeLimiter(0);
+    const checkout = fakeLimiter();
+    const { app, stripe } = makeApp({
+      limiters: { checkout: checkout.limiter, orders: orders.limiter },
+    });
+    const res = await app.request(`/api/orders/${SESSION_ID}`, {
+      headers: { 'CF-Connecting-IP': '2001:db8::1' },
+    });
+    expect(res.status).toBe(429);
+    expect(res.headers.get('retry-after')).toBe('60');
+    expect(orders.keys).toEqual(['2001:db8::1']);
+    expect(checkout.limit).not.toHaveBeenCalled();
+    expect(stripe.retrieve).not.toHaveBeenCalled();
+  });
+
+  it('falls back on a constant key without CF-Connecting-IP', async () => {
+    const checkout = fakeLimiter();
+    const { app } = makeApp({ limiters: { checkout: checkout.limiter } });
+    await postJson(app, '/api/checkout', checkoutBody);
+    expect(checkout.keys).toEqual(['no-ip']);
+  });
+
+  it('no binding (tests, older wrangler): no limit', async () => {
+    const { app } = makeApp();
+    for (let i = 0; i < 15; i++) {
+      expect((await postJson(app, '/api/checkout', checkoutBody)).status).toBe(200);
+    }
+  });
+
+  it('a limiter error lets the request through and is logged', async () => {
+    const errors: string[] = [];
+    vi.mocked(console.error).mockImplementation((line: string) => void errors.push(line));
+    const checkout = fakeLimiter();
+    checkout.limit.mockRejectedValueOnce(new Error('limiter down'));
+    const { app } = makeApp({ limiters: { checkout: checkout.limiter } });
+    expect((await postJson(app, '/api/checkout', checkoutBody)).status).toBe(200);
+    expect(errors.some((l) => l.includes('ratelimit.failed'))).toBe(true);
+  });
+
+  it('the webhook is never rate limited', async () => {
+    const checkout = fakeLimiter(0);
+    const orders = fakeLimiter(0);
+    const { app } = makeApp({ limiters: { checkout: checkout.limiter, orders: orders.limiter } });
+    const res = await app.request('/api/webhooks/stripe', { method: 'POST', body: '{}' });
+    expect(res.status).toBe(400);
+    expect(checkout.limit).not.toHaveBeenCalled();
+    expect(orders.limit).not.toHaveBeenCalled();
+  });
+});
+
 describe('worker entry (index.ts)', () => {
   function fakeAssets(catalog = catalogFixture()) {
     const fetch = vi.fn(async (input: RequestInfo | URL) => {
@@ -129,6 +210,25 @@ describe('worker entry (index.ts)', () => {
     expect(String(vi.mocked(assets.fetch).mock.calls[0]![0])).toBe(
       'http://localhost:8787/catalog.json',
     );
+  });
+
+  it('passes the rate limiting bindings to the app', async () => {
+    const checkout = fakeLimiter(0);
+    const res = await worker.fetch(
+      workerRequest('https://racinesenpartage.fr/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Origin: 'https://racinesenpartage.fr',
+          'CF-Connecting-IP': '198.51.100.4',
+        },
+        body: '{}',
+      }),
+      { ...env(fakeAssets()), CHECKOUT_LIMITER: checkout.limiter },
+      ctx,
+    );
+    expect(res.status).toBe(429);
+    expect(checkout.keys).toEqual(['198.51.100.4']);
   });
 
   it('checkout without STRIPE_SECRET_KEY fails as 502, not as a crash', async () => {
