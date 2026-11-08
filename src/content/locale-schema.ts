@@ -379,6 +379,8 @@ export const localeSchema = z.object({
       disabled: text,
     }),
   }),
+  /** Customer space, passwordless (owner: forms and cart). */
+  account: ns({}),
   /** Order lookup page (owner: forms and cart). */
   lookup: ns({
     metaTitle: text,

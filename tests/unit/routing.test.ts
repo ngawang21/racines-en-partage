@@ -32,6 +32,7 @@ describe('route table (spec section 3)', () => {
       lookup: { fr: '/ma-commande/', en: '/en/my-order/' },
       review: { fr: '/avis/', en: '/en/review/' },
       newsletter: { fr: '/newsletter/', en: '/en/newsletter/' },
+      account: { fr: '/mon-compte/', en: '/en/account/' },
       notFound: { fr: '/404.html', en: '/404.html' },
       admin: { fr: '/admin/', en: '/admin/' },
     });
@@ -45,6 +46,7 @@ describe('route table (spec section 3)', () => {
   });
   it('marks cart, checkout, thanks, review, newsletter, 404 and admin noindex', () => {
     expect([...NOINDEX_ROUTES].sort()).toEqual([
+      'account',
       'admin',
       'cart',
       'checkout',
@@ -118,9 +120,11 @@ describe('helpers', () => {
         '/en/checkout/',
         '/en/thank-you/',
         '/avis/',
+        '/en/account/',
         '/en/newsletter/',
         '/en/review/',
         '/merci/',
+        '/mon-compte/',
         '/newsletter/',
         '/panier/',
       ].sort(),

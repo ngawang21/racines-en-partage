@@ -353,3 +353,98 @@ Quiz, Instagram feed, B2B page, accounts, loyalty, chat, gift cards (section
 3). Shipping status ("expédiée") in the order lookup: it would need the owner
 to mark orders shipped somewhere; Stripe has no such state, so the page shows
 the order and the carrier's own notification channel instead.
+
+## 8. Addendum (2026-11-08, owner feedback after the first delivery)
+
+### 8.1 Page width
+
+The Nature Snacks shop stretches its grid to the full window; this site keeps
+a centred container. Both are choices; the premium one is the hybrid defined
+in `docs/design/premium-standard.md` section 2: text and controls in a
+bounded column, product grids wider on large screens, photography and bands
+full-bleed. Changes: `--container` 1200 to 1280 px, a `.container-wide`
+(1440 px) for the shop grid and the home featured grid with five columns from
+1600 px, gutters 56 px from 1440 px, the hero photograph and the coloured
+bands bleed to the edges, body measure stays at 55 to 75 characters.
+
+### 8.2 Phone navigation
+
+Phones are the primary device. The header hides on scroll down and returns on
+scroll up (transform only, 200 ms), the mobile menu becomes a full-height
+panel with 56 px rows, the contact line and the language switch, closing on
+Escape, backdrop and navigation; page transitions stay a 150 ms crossfade;
+the sticky buy bar and the cart drawer are thumb-reachable; every page is
+walked at 390 px with one thumb before release. The audit against the
+standard is `docs/design/premium-audit-2026-11-08.md`, with its fixes.
+
+### 8.3 Business card
+
+`pnpm card [medaillon|kraft|foret]` renders a 85 x 55 mm card (3 mm bleed)
+with the wordmark, the international phone, the e-mail and a QR code to the
+site, as a print PDF, PNG faces, a shareable image and previews, into
+`docs/branding/card/` and `public/carte/`, plus a vCard. The page `/carte/`
+(`/en/card/`, noindex, footer link) shows both faces and the downloads. Three
+variants are proposed to the owner; the published one is the script's
+argument.
+
+### 8.4 Address and phone
+
+The postal address prints the country ("9 Rue du Marché, 95400 Arnouville,
+France") in the footer, the contact page, the checkout pickup line, the
+thanks page and the e-mails. The phone prints "07 75 68 91 08" on French
+pages and "+33 7 75 68 91 08" on English pages, the card and the vCard
+(`formatPhoneIntl`); the `tel:` link is always E.164.
+
+### 8.5 Recipes in the navigation
+
+"Recettes" leaves the header: with six recipes attached to products it is a
+content section, not a destination. It stays reachable from the home recipes
+section, the shop page head ("Nos recettes"), product recipe disclosures and
+the footer. The header holds Boutique, Notre histoire, FAQ, Contact, plus the
+search, account and cart icons.
+
+### 8.6 Customer space without passwords ("Mon espace")
+
+The owner wants customers to see what they bought before, as the catalogue
+grows, with zero maintenance and full trust. The answer is a passwordless
+space backed by Stripe, the pattern Shopify's new customer accounts use:
+no database, no password, no OAuth client to maintain.
+
+Flow:
+
+1. `/mon-compte/` (EN `/en/account/`, route `account`, noindex). Logged out:
+   an e-mail field, "Recevoir mon lien de connexion", the sentence "Pas de mot
+   de passe : un lien valable 15 minutes arrive dans votre boîte mail."
+   `POST /api/account/login` `{ email, locale, turnstile? }` always answers
+   202 and sends the link `<SITE_URL>/mon-compte/?t=<token>` (token
+   `{ t: 'login', m, l, e: now + 15 min }`, Turnstile and the daily budget as
+   for the other forms, `FORMS_LIMITER`).
+2. Arriving with `?t=`, the page strips the token from the address and posts
+   it to `POST /api/account/session` `{ token }`, which verifies it and
+   answers 200 `{ ok: true, email: "a***@gmail.com" }` with the cookie
+   `rep_session=<token { t: 'session', m, e: now + 30 days }>`; `HttpOnly;
+   Secure; SameSite=Lax; Path=/api/account; Max-Age=2592000`. 400
+   `INVALID_TOKEN` otherwise.
+3. `GET /api/account/orders` (cookie, `ORDERS_LIMITER`) lists the Checkout
+   Sessions of that e-mail (`customer_details.email`, 100 most recent,
+   `status: complete`), newest first, line items attached for the 20 most
+   recent, and answers `{ email (masked), orders: PublicOrder[] }`; 401
+   `UNAUTHENTICATED` without a valid cookie.
+4. `POST /api/account/review-token` `{ sessionId }` (cookie) checks the
+   session belongs to the e-mail and is paid, and answers `{ token }` for the
+   SKUs not yet reviewed (the same review token as the invitation), or 409
+   `ALREADY_REVIEWED`.
+5. `POST /api/account/logout` clears the cookie.
+
+Page, logged in: a greeting with the masked e-mail and "Se déconnecter"; one
+card per order (date, number, status, total, delivery mode) that expands to
+the shared order renderer; "Commander à nouveau" adds the order's lines that
+are still in the catalogue to the cart and opens the drawer; "Donner mon
+avis" on paid orders opens `/avis/?t=`. Empty state: "Aucune commande avec
+cette adresse. Vous avez peut-être commandé avec une autre adresse e-mail."
+The account icon sits in the header next to the cart; the footer link reads
+"Mon espace"; the order lookup page stays for people without their mailbox at
+hand and links to the space. The privacy policy names the session cookie
+(strictly necessary, 30 days). Google sign-in stays out: it would add an
+OAuth client to maintain and a consent banner for no gain over the e-mail
+link, since every order already has the e-mail.

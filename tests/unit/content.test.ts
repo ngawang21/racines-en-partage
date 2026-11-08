@@ -600,6 +600,7 @@ describe('ui strings', () => {
     'search',
     'forms',
     'lookup',
+    'account',
     'a11y',
   ];
   it('both files match the schema and carry exactly the namespaces of the contract', () => {
