@@ -22,6 +22,7 @@ import {
   productSchema,
   productSharedSchema,
   productTranslatedSchema,
+  reviewSchema,
   settingsSchema,
   type PageKey,
 } from '../../src/content/schemas';
@@ -63,7 +64,7 @@ interface Collection {
   files?: CmsFile[];
   fields?: Field[];
   i18n?: boolean;
-  slug?: { template: string; pattern?: [string, string] };
+  slug?: { template: string; pattern?: [string, string]; editable?: boolean | string[] };
   view_filters?: Array<{ label: string; field: string; pattern?: string | boolean }>;
   view_groups?: { groups: Array<{ name: string; field: string }> };
   reorder?: boolean | { key?: string; group?: string };
@@ -110,6 +111,7 @@ const optionValues = (f: Field) =>
   (f.options ?? []).map((o) => (typeof o === 'string' ? o : o.value));
 
 const products = collection('products');
+const reviews = collection('reviews');
 const categories = collection('categories');
 const pages = collection('pages');
 const legal = collection('legal');
@@ -307,6 +309,7 @@ describe('CMS config: global options', () => {
   it('lists the content collections, a divider, then the legal texts', () => {
     expect(config.collections.map((c) => ('name' in c ? c.name : '---'))).toEqual([
       'products',
+      'reviews',
       'categories',
       'pages',
       '---',
@@ -438,6 +441,20 @@ describe('CMS config: products', () => {
     }
     expect(pattern.test(String(8.999))).toBe(false);
     expect(productSharedSchema.shape.price.safeParse(8.999).success).toBe(false);
+  });
+
+  it('offers search keywords as an optional translated list of words', () => {
+    // Regional names the product name does not carry (bissap, karkadé); the
+    // English file may leave the list empty and falls back to French.
+    expect(fieldAt(fields, 'keywords')).toMatchObject({
+      widget: 'list',
+      i18n: true,
+      required: false,
+      field: { widget: 'string', i18n: true },
+    });
+    expect(fieldAt(fields, 'keywords').hint).toContain('bissap');
+    const names = fields.map((f) => f.name);
+    expect(names.indexOf('keywords')).toBeLessThan(names.indexOf('seoTitle'));
   });
 
   it('stores the description as plain text, as the product page prints it', () => {
@@ -656,14 +673,28 @@ describe('CMS config: settings', () => {
   });
   it('has exactly the fields of the settings schema, at every level', () => {
     // freeShippingFrom is optional in the CMS: emptied, it is left out of the
-    // file, which the schema (nullish) reads as "never free".
-    expect(compare(shop.fields, settingsSchema.shape, '')).toEqual([]);
+    // file, which the schema (nullish) reads as "never free". The groups added
+    // in iteration 3 have a schema default so that an older shop.yml still
+    // parses, but the CMS always shows and writes them: no "add" toggle.
+    const alwaysShown = ['forms', 'newsletter', 'analytics', 'reviews'];
+    expect(compare(shop.fields, settingsSchema.shape, '', alwaysShown)).toEqual([]);
+    for (const name of alwaysShown)
+      expect(fieldAt(shop.fields, name).required, name).toBeUndefined();
     const raw = readYaml(join(CONTENT, 'settings/shop.yml')) as any;
     delete raw.shop.freeShippingFrom;
     expect(settingsSchema.parse(raw).shop.freeShippingFrom).toBeUndefined();
   });
   it('shows the sections the owner uses most first', () => {
-    expect(shop.fields.map((f) => f.name)).toEqual(['shop', 'shipping', 'launch', 'brand']);
+    expect(shop.fields.map((f) => f.name)).toEqual([
+      'shop',
+      'shipping',
+      'reviews',
+      'newsletter',
+      'launch',
+      'brand',
+      'forms',
+      'analytics',
+    ]);
     expect(fieldAt(shop.fields, 'shop').fields!.map((f) => f.name)).toEqual([
       'open',
       'announcement',
@@ -677,6 +708,12 @@ describe('CMS config: settings', () => {
     expect(fieldAt(shop.fields, 'shop.vat').label).toBe('TVA');
     expect(fieldAt(shop.fields, 'shipping').label).toMatch(/^Livraison/);
     expect(fieldAt(shop.fields, 'launch').label).toBe('Lancement');
+    expect(fieldAt(shop.fields, 'brand.siret').label).toBe('Numéro SIRET');
+    expect(fieldAt(shop.fields, 'forms.turnstileSiteKey').label).toBe(
+      'Clé Turnstile (anti-robots)',
+    );
+    expect(fieldAt(shop.fields, 'newsletter.enabled').label).toBe('Newsletter active');
+    expect(fieldAt(shop.fields, 'newsletter.welcomeCode').label).toBe('Code de bienvenue');
     for (const [path, f] of visibleFields(shop.fields))
       if (!['shipping.id'].includes(path)) expect(f.label, path).toBeTruthy();
   });
@@ -702,15 +739,238 @@ describe('CMS config: settings', () => {
       default: 'eur',
     });
   });
-  it('mirrors the schema patterns on phone, postcode and SIREN', () => {
+  it('mirrors the schema patterns on phone, postcode and SIRET', () => {
     const accepts = (path: string, value: string) =>
       new RegExp(fieldAt(shop.fields, path).pattern![0]).test(value);
     expect(accepts('brand.phone', '0775689108')).toBe(true);
     expect(accepts('brand.phone', '+33775689108')).toBe(false);
     expect(accepts('brand.address.postcode', '95400')).toBe(true);
-    expect(accepts('brand.siren', '')).toBe(true);
-    expect(accepts('brand.siren', '123 456 789')).toBe(true);
-    expect(accepts('brand.siren', '12345')).toBe(false);
+    const siret = settingsSchema.shape.brand.shape.siret;
+    for (const ok of ['', '91185884300020', '911 858 843 00020']) {
+      expect(accepts('brand.siret', ok), ok).toBe(true);
+      expect(siret.safeParse(ok).success, ok).toBe(true);
+    }
+    for (const bad of ['12345', '911 858 843', '911858843 00020']) {
+      expect(accepts('brand.siret', bad), bad).toBe(false);
+      expect(siret.safeParse(bad).success, bad).toBe(false);
+    }
+  });
+  it('explains every new setting with an example, and where an empty value leads', () => {
+    for (const path of [
+      'brand.siret',
+      'forms.turnstileSiteKey',
+      'newsletter.enabled',
+      'newsletter.welcomeCode',
+      'analytics.cloudflareToken',
+      'reviews.enabled',
+    ]) {
+      const f = fieldAt(shop.fields, path);
+      expect(typeof f.hint === 'string' && f.hint.length > 20, path).toBe(true);
+    }
+    expect(fieldAt(shop.fields, 'brand.siret').hint).toMatch(/SIREN/);
+    expect(fieldAt(shop.fields, 'forms.turnstileSiteKey').hint).toMatch(/Cloudflare/);
+    expect(fieldAt(shop.fields, 'forms.turnstileSiteKey').hint).toMatch(/[Vv]ide/);
+    expect(fieldAt(shop.fields, 'newsletter.welcomeCode').hint).toMatch(/Stripe/);
+    // Booleans default to the schema defaults, so a first save changes nothing.
+    expect(fieldAt(shop.fields, 'newsletter.enabled').default).toBe(true);
+    expect(fieldAt(shop.fields, 'reviews.enabled').default).toBe(true);
+  });
+});
+
+describe('CMS config: reviews', () => {
+  const fields = reviews.fields!;
+
+  it('reads and writes src/content/reviews/*.yml, one language per review, no locale folder', () => {
+    expect(reviews).toMatchObject({
+      folder: 'src/content/reviews',
+      format: 'yaml',
+      extension: 'yml',
+      i18n: false,
+      create: true,
+      delete: true,
+    });
+    expect(existsSync(join(ROOT, reviews.folder!))).toBe(true);
+    for (const [path, f] of walk(fields)) expect(f.i18n, path).toBeUndefined();
+  });
+
+  it('has exactly the fields of the review schema', () => {
+    expect(compare(fields, reviewSchema.shape, '')).toEqual([]);
+    expect(fields.map((f) => f.name).sort()).toEqual(Object.keys(reviewSchema.shape).sort());
+  });
+
+  it('uses only options of the pinned Sveltia version (0.256.1 JSON schema)', () => {
+    // Option names of the Sveltia CMS JSON schema (schema/sveltia-cms.json of
+    // the pinned version) for an entry collection and each widget used here.
+    // A misspelt option is silently ignored by Sveltia, so it fails here.
+    const words = (s: string) => s.split(/\s+/).filter(Boolean);
+    const common =
+      'name label label_localized widget default default_localized hint hint_localized ' +
+      'preview required readonly i18n comment unique pattern ';
+    const OPTIONS: Record<string, string[]> = {
+      relation: words(
+        common +
+          'multiple min max dropdown_threshold collection file value_field display_fields ' +
+          'search_fields filters sort_by',
+      ),
+      number: words(common + 'before_input after_input value_type min max step auto_increment'),
+      string: words(
+        common +
+          'minlength maxlength before_input after_input type prefix suffix use_emoji_autocomplete',
+      ),
+      text: words(common + 'minlength maxlength use_emoji_autocomplete'),
+      boolean: words(
+        'name label label_localized widget default default_localized hint hint_localized ' +
+          'preview required readonly i18n comment before_input after_input',
+      ),
+      datetime: words(
+        common +
+          'type min max step format date_format time_format localize_format picker_utc ' +
+          'input_timezone output_utc auto_now',
+      ),
+      select: words(common + 'multiple min max dropdown_threshold options'),
+    };
+    const COLLECTION = words(
+      'folder file fields path filter create delete duplicate reorder table_columns ' +
+        'summary_fields bulk_edit extension identifier_field slug slug_length summary ' +
+        'sortable_fields view_filters view_groups nested meta index_file thumbnail limit ' +
+        'aliases_field label_singular description media_folder public_folder hide publish_mode ' +
+        'publish format frontmatter_delimiter body_field i18n preview_path ' +
+        'preview_path_date_field editor yaml_quote name label icon readonly',
+    );
+    const SLUG = words('template editable i18n auto_increment hint pattern');
+    const VIEW = words('eq ne lt lte gt gte in not_in empty name label field pattern');
+    const unknown = (obj: object, allowed: string[]) =>
+      Object.keys(obj).filter((k) => !allowed.includes(k));
+    expect(unknown(reviews, COLLECTION)).toEqual([]);
+    expect(unknown(reviews.slug!, SLUG)).toEqual([]);
+    for (const f of fields) {
+      expect(OPTIONS[f.widget], `${f.name}: widget ${f.widget}`).toBeDefined();
+      expect(unknown(f, OPTIONS[f.widget]!), f.name).toEqual([]);
+    }
+    for (const v of reviews.view_filters!) expect(unknown(v, VIEW), v.label).toEqual([]);
+    for (const g of reviews.view_groups!.groups) expect(unknown(g, VIEW), g.name).toEqual([]);
+    // The object form of sortable_fields takes plain field names.
+    const sortable = reviews.sortable_fields as {
+      fields: unknown[];
+      default: { field: string; direction: string };
+    };
+    expect(sortable.fields.every((f) => typeof f === 'string')).toBe(true);
+    expect(sortable.default).toEqual({ field: 'date', direction: 'descending' });
+    for (const name of [...(sortable.fields as string[]), sortable.default.field])
+      expect(fieldAt(fields, name), name).toBeDefined();
+  });
+
+  it('links the review to a product of the French products collection, by file name', () => {
+    expect(fieldAt(fields, 'product')).toMatchObject({
+      widget: 'relation',
+      collection: products.name,
+      value_field: '{{slug}}',
+    });
+    expect(fieldAt(fields, 'product').multiple).toBeUndefined();
+    // The products collection is localised; a relation reads its default (French) locale.
+    expect(config.i18n.default_locale).toBe('fr');
+  });
+
+  it('publishes nothing by default, and keeps "verified" for the Worker', () => {
+    expect(fieldAt(fields, 'published')).toMatchObject({ widget: 'boolean', default: false });
+    expect(fieldAt(fields, 'published').hint).toContain("rien n'est publié sans vous");
+    // A review added here (Instagram, market) is never marked as a verified purchase.
+    expect(fieldAt(fields, 'verified')).toMatchObject({
+      widget: 'boolean',
+      default: false,
+      readonly: true,
+    });
+    expect(fieldAt(fields, 'reply').hint).toContain('Votre réponse publique, affichée sous l');
+  });
+
+  it('fills a new review with defaults the schema accepts', () => {
+    const today = '2026-11-08';
+    const defaults = Object.fromEntries(
+      fields
+        .filter((f) => f.default !== undefined)
+        .map((f) => [f.name, f.default === '{{now}}' ? today : f.default]),
+    );
+    expect(defaults).toEqual({ published: false, verified: false, locale: 'fr', date: today });
+    const typed = {
+      product: 'poudre-de-moringa-100g',
+      rating: 5,
+      author: 'Awa',
+      text: 'Un goût franc, je le mets dans mon smoothie.',
+    };
+    const parsed = reviewSchema.parse({ ...defaults, ...typed });
+    expect(parsed).toMatchObject({ order: '', title: '', reply: '', published: false });
+  });
+
+  it('mirrors the schema limits and enums', () => {
+    expect(fieldAt(fields, 'rating')).toMatchObject({
+      widget: 'number',
+      value_type: 'int',
+      min: 1,
+      max: 5,
+      step: 1,
+    });
+    expect(optionValues(fieldAt(fields, 'locale'))).toEqual(
+      (unwrap(reviewSchema.shape.locale) as z.ZodEnum).options,
+    );
+    expect(fieldAt(fields, 'author')).toMatchObject({ minlength: 2, maxlength: 40 });
+    expect(fieldAt(fields, 'title')).toMatchObject({ maxlength: 80 });
+    expect(fieldAt(fields, 'text')).toMatchObject({
+      widget: 'text',
+      minlength: 20,
+      maxlength: 1200,
+    });
+    expect(fieldAt(fields, 'date')).toMatchObject({
+      widget: 'datetime',
+      type: 'date',
+      format: 'YYYY-MM-DD',
+    });
+  });
+
+  it('names a review created here like the Worker does: <product slug>--<suffix>.yml', () => {
+    // The Worker writes <product slug>--<order number>; a review added here has
+    // no order number, so the template uses the day and the author instead.
+    // Sveltia slugifies each tag value and keeps the literal "--".
+    const slug = reviews.slug!;
+    expect(slug.template).toBe('{{product}}--{{year}}-{{month}}-{{day}}-{{author}}');
+    expect(slug.editable).toBe(false);
+    expect(slug.template).not.toContain('/');
+    const slugify = (s: string) =>
+      s
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    const values: Record<string, string> = {
+      product: 'fleurs-d-hibiscus-100g',
+      year: '2026',
+      month: '11',
+      day: '08',
+      author: 'Aïssatou D.',
+    };
+    const filled = slug.template.replace(/\{\{(\w+)\}\}/g, (_, k: string) => slugify(values[k]!));
+    expect(filled).toBe('fleurs-d-hibiscus-100g--2026-11-08-aissatou-d');
+    const name = /^([a-z0-9]+(?:-[a-z0-9]+)*)--([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*)$/;
+    for (const n of [filled, 'fleurs-d-hibiscus-100g--X9Y8Z7W6'])
+      expect(name.exec(n)?.[1], n).toBe('fleurs-d-hibiscus-100g');
+    expect(reviews.aliases_field).toBe(false);
+  });
+
+  it('lists reviews to moderate first, with the author, the rating and the product', () => {
+    expect(reviews.summary).toMatch(/^\{\{author\}\}, \{\{rating\}\}\/5, \{\{product\}\}/);
+    const filters = reviews.view_filters!;
+    expect(filters).toContainEqual(expect.objectContaining({ field: 'published', pattern: true }));
+    expect(filters).toContainEqual(expect.objectContaining({ field: 'published', ne: true }));
+    for (const f of filters) expect(fieldAt(fields, f.field), f.label).toBeDefined();
+    for (const g of reviews.view_groups!.groups)
+      expect(fieldAt(fields, g.field), g.name).toBeDefined();
+  });
+
+  it('gives every field a French label and a hint with an example', () => {
+    for (const [path, f] of visibleFields(fields)) {
+      expect(f.label, path).toBeTruthy();
+      expect(typeof f.hint === 'string' && f.hint.length > 10, `${path} hint`).toBe(true);
+    }
   });
 });
 

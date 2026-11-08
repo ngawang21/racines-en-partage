@@ -19,6 +19,7 @@ src/content/
   categories/{fr,en}/<slug>.yml    poudres, infusions, graines, cacao
   pages/{fr,en}/<key>.yml          home, about, faq, contact
   legal/{fr,en}/<key>.md           legal, terms, privacy (frontmatter + Markdown)
+  reviews/<product>--<order>.yml   one customer review per file, no locale folder (section 8)
   settings/shop.yml                singleton, not translated (labels are { fr, en })
   locales/{fr,en}.json             UI strings, not in the CMS
 src/assets/products/               product photos (CMS uploads land here)
@@ -36,6 +37,7 @@ Category slugs give `/boutique/<slug>/` and `/en/shop/<slug>/`.
 | `categories/{fr,en}/*.yml` | `categorySchema`, `categoryTranslationSchema`                       | `mergeCategory`                | `loadCategories`              |
 | `pages/{fr,en}/<key>.yml`  | `PAGE_SCHEMAS[key]`                                                 | `mergePage`                    | `loadPage`                    |
 | `legal/{fr,en}/<key>.md`   | `legalFrontmatterSchema` (body is Markdown)                         | none (EN missing: FR file)     | `loadLegal`                   |
+| `reviews/*.yml`            | `reviewSchema` (complete file, carries its own `locale`)            | none                           | `loadReviews`, `reviewsFor`   |
 | `settings/shop.yml`        | `settingsSchema`                                                    | none                           | `loadSettings`                |
 | `locales/{fr,en}.json`     | `localeSchema` (`src/content/locale-schema.ts`)                     | `deepFallback`                 | `loadLocale`                  |
 
@@ -50,7 +52,7 @@ The French file is complete and authoritative. The English file holds
 translations only.
 
 - **Shared fields** (products: `order`, `hidden`, `sku`, `category`, `price`,
-  `weightGrams`, `origin`, `originCountryCode`, `images`, `stock`,
+  `weightGrams`, `originCountryCode`, `images`, `stock`,
   `featured`, `nutritionVerified`, `nutrition`, `free_from`, `related`;
   categories: `order`, `image`) are read from the French file only. Whatever
   the English file says about them is ignored, so the two locales can never
@@ -117,6 +119,10 @@ config's first line points at the JSON schema for editor completion).
 | Enums                              | `select` options with French labels and the schema values (`STOCK`, `FREE_FROM`, `REASSURANCE_ICONS`, `SHIPPING_METHODS`, VAT modes). Up to five options render as radio buttons or checkboxes, which suits a phone.                                                              |
 | Prices                             | `number`, `value_type: float`, `step: 0.01`, and `pattern` `^\d+(\.\d{1,2})?$` (Sveltia tests numbers as strings) mirroring the two-decimal refine of `euros`. Sveltia's number input accepts both "8,90" and "8.90" in a French UI.                                              |
 | Product description                | `text`, not `richtext`: `ProductView` prints the description as plain paragraphs split on blank lines, so Markdown emphasis would show its asterisks.                                                                                                                             |
+| Product `keywords`                 | Translated `list` of `string` items, `required: false`: search words the name does not carry (bissap, karkadé, tsampa, chufa). An empty English list falls back to French. Placed after `related`, before the Google texts.                                                       |
+| Settings groups with a default     | `forms`, `newsletter`, `analytics` and `reviews` are `.default(...)` objects in `settingsSchema` (an older `shop.yml` still parses) but plain, always shown objects in the CMS, so the owner never meets an "add" toggle. The unit test allows that one required mismatch.        |
+| `brand.siret`                      | `string`, `required: false`, `pattern` `^(\d{14}\|\d{3} \d{3} \d{3} \d{5})?$` mirroring the schema (14 digits, plain or grouped 3 3 3 5, or empty). The legal tokens `{siren}` (first 9 digits) and `{siret}` derive from it.                                                     |
+| Reviews                            | Entry collection `reviews`, `i18n: false`, see section 8.                                                                                                                                                                                                                         |
 | Settings labels `{ fr, en }`       | `object` with two `string` subfields, `en` optional (empty falls back to `fr` through `pickLabel`). The singleton has no i18n.                                                                                                                                                    |
 | `shop.freeShippingFrom`            | `required: false`: emptied, it is left out of the file, which the schema (`nullish`) and every consumer read as "never free".                                                                                                                                                     |
 | `shop.currency` (`literal('eur')`) | `hidden` field with `default: eur`.                                                                                                                                                                                                                                               |
@@ -147,8 +153,20 @@ Other choices in the config:
   checkout code, not just content.
 - The settings singleton keeps the YAML structure the cart, the Worker and
   the components read, but orders it for the owner: `shop` (open, banner,
-  VAT, quantity, free shipping threshold), `shipping`, `launch`, then
-  `brand` (collapsed).
+  VAT, quantity, free shipping threshold), `shipping`, `reviews`,
+  `newsletter`, `launch`, `brand` (collapsed), then the technical `forms`
+  and `analytics` (collapsed).
+- New settings of iteration 3, all with a French hint and an example:
+
+  | Key                         | CMS label                      | Empty or false means                                               |
+  | --------------------------- | ------------------------------ | ------------------------------------------------------------------ |
+  | `brand.siret`               | Numéro SIRET                   | legal pages print "en cours d'immatriculation", launch-check fails |
+  | `forms.turnstileSiteKey`    | Clé Turnstile (anti-robots)    | forms render without the widget (public site key, never secret)    |
+  | `newsletter.enabled`        | Newsletter active              | no signup block, newsletter endpoints answer 404                   |
+  | `newsletter.welcomeCode`    | Code de bienvenue              | the confirmation e-mail prints no code (Stripe promotion code)     |
+  | `analytics.cloudflareToken` | Jeton Cloudflare Web Analytics | no beacon script                                                   |
+  | `reviews.enabled`           | Afficher les avis sur le site  | no review section, summary, home band or JSON-LD rating            |
+
 - `editor.preview: false`: a YAML preview is useless, and the second pane can
   show the other locale side by side.
 - A collection divider separates the legal texts from the everyday content.
@@ -204,7 +222,20 @@ Other choices in the config:
 - media: WebP at 1600 px, 2 MB, slugified names with the
   `{{slug}}-{{uuid_shorter}}` template, no external image URL;
 - the settings section order, the optional free shipping threshold, the
-  legal warning;
+  legal warning, the SIRET pattern against the schema (empty, plain,
+  grouped; refuses 9 digits) and a hint with an example on every new
+  setting;
+- the `keywords` field (optional translated list of strings);
+- the `reviews` collection: fields equal `reviewSchema` keys with matching
+  `required` flags, no i18n, `published` and `verified` default `false`
+  (`verified` read-only), relation to `products` by `{{slug}}`, limits and
+  enums mirrored, defaults plus a minimal review parse with `reviewSchema`,
+  the slug template and the Worker file name share the
+  `<product slug>--<suffix>` shape, view filters and groups name existing
+  fields;
+- the `reviews` collection and its fields use only option names of the
+  Sveltia 0.256.1 JSON schema (an offline allow-list; Sveltia silently
+  ignores a misspelt option);
 - every `file:` path exists for `fr` and `en`, media folders match the seeded
   image paths, and the config has no em dash;
 - `public/admin/index.html` carries `noindex` and the pinned Sveltia script
@@ -216,8 +247,10 @@ Other choices in the config:
 
 The config was validated against the JSON schema shipped in the
 `@sveltia/cms@0.256.1` npm package (`schema/sveltia-cms.json`) with ajv
-(strict: an unknown option is rejected); the unit test stays offline and
-does not fetch it. To repeat that check after a Sveltia upgrade:
+(strict: an unknown option is rejected), last on 2026-11-08 after adding
+the reviews collection and the iteration 3 settings; the unit test stays
+offline and does not fetch it (it keeps an allow-list of option names for
+the reviews collection instead). To repeat that check after a Sveltia upgrade:
 
 ```sh
 mkdir -p /tmp/sveltia && cd /tmp/sveltia
@@ -290,9 +323,11 @@ matching `files:` entry of the `pages` collection. For settings, extend
 
 `pnpm launch-check` (`scripts/launch-check.mjs`) fails until:
 
-- `brand.siren` is 9 digits (CMS: Réglages de la boutique, Entreprise et
-  coordonnées, Numéro SIREN). While empty, the legal pages print "en cours
-  d'immatriculation".
+- `brand.siret` is 14 digits with a valid Luhn checksum (CMS: Réglages de
+  la boutique, Entreprise et coordonnées, Numéro SIRET). While empty, the
+  legal pages print "en cours d'immatriculation". The legal tokens `{siren}`
+  (first 9 digits, grouped by 3) and `{siret}` (grouped 3 3 3 5) come from
+  it.
 - `launch.pricesConfirmed` is `true` (CMS: Réglages de la boutique,
   Lancement, Prix confirmés). The seed prices are placeholders from the spec appendix.
 - no line of a legal text contains `TODO` (publication director in the legal
@@ -364,3 +399,55 @@ photos through Safari or the "Le plus compatible" format.
    must reach the sign-in screen with zero CSP violation (a wrong hash shows
    up as a blank page and an integrity error in the report). Sign in once on
    a preview deploy and open a product before merging.
+
+## 8. Customer reviews
+
+Spec: section 2.1 of
+`docs/superpowers/specs/2026-11-08-iteration-3-features-design.md`.
+
+**Files.** One YAML file per review in `src/content/reviews/`, no locale
+folder: each review carries its own `locale`. The Astro collection globs
+`*.yml` there, so the file name only matters to humans and to uniqueness.
+
+- Written by the Worker (`POST /api/reviews`, GitHub Contents API, commit
+  `content: avis client sur <product slug>`):
+  `<product slug>--<order number>.yml`, with `verified: true`,
+  `published: false` and the order number in `order`. One review per product
+  per order, so the name is unique.
+- Created by the owner in the CMS (a review received on Instagram or at a
+  market): the slug template `{{product}}--{{year}}-{{month}}-{{day}}-{{author}}`
+  gives `fleurs-d-hibiscus-100g--2026-11-08-aissatou.yml`. The order number
+  is usually empty, and Sveltia replaces an empty tag with a random ID, so
+  the date and the author name the file instead. Sveltia slugifies each tag
+  value and keeps the literal `--`. Two reviews of one product by the same
+  author on the same day get the same base name: write the second author
+  slightly differently (for example "Awa D.").
+- `slug.editable: false`: no slug editor, and saving an existing review
+  keeps its file name whatever it is (Sveltia lists every `.yml` of the
+  folder and never renames on save).
+
+**Fields** (`reviewSchema`, CMS order):
+
+| Key         | CMS widget                                | Notes                                                                        |
+| ----------- | ----------------------------------------- | ---------------------------------------------------------------------------- |
+| `product`   | `relation` to `products`, `{{slug}}`      | French product file name; display `{{name}} ({{weightGrams}} g)`             |
+| `rating`    | `number`, int, 1 to 5                     |                                                                              |
+| `author`    | `string`, 2 to 40 characters              | first name or pseudonym                                                      |
+| `title`     | `string`, optional, 80 characters at most | omitted when empty, the schema defaults it to `''`                           |
+| `text`      | `text`, 20 to 1200 characters             |                                                                              |
+| `published` | `boolean`, default `false`                | the moderation switch: nothing is shown before the owner ticks it            |
+| `reply`     | `text`, optional                          | public answer, shown under the review                                        |
+| `date`      | `datetime`, `type: date`, `YYYY-MM-DD`    | default `{{now}}` for a review created in the CMS                            |
+| `locale`    | `select` fr / en, default fr              | the language the review is written in                                        |
+| `order`     | `string`, optional                        | order number from the invitation, empty otherwise                            |
+| `verified`  | `boolean`, default `false`, read-only     | set by the Worker only; a review typed in the CMS can never claim a purchase |
+
+**Moderation.** The list summary is `{{author}}, {{rating}}/5, {{product}}`
+plus " (à relire)" while unpublished; it sorts newest first by `date` and
+filters "À relire (non publiés)", "Publiés" and "Achats vérifiés"; it groups
+by product. Publishing is a save, so a published review is online about two
+minutes later, like any content change. `settings.reviews.enabled: false`
+hides every review section of the site without touching the files. Reviews
+of a hidden product are not shown. Deleting a review in the CMS deletes the
+file; the Stripe session keeps its `reviewed_<sku>` mark, so the customer
+cannot post the same review again.

@@ -399,6 +399,16 @@ collections:
           - { field: hidden, values: [true], exclude: true }
         i18n: false
         hint: Facultatif. Deux ou trois produits proposés en bas de la fiche, par exemple la poudre de baobab pour le moringa.
+      - name: keywords
+        label: Mots de recherche
+        label_singular: mot
+        widget: list
+        required: false
+        i18n: true
+        field: { name: item, label: Mot, widget: string, i18n: true }
+        hint: >-
+          Facultatif. Mots que les clientes et clients peuvent taper dans la recherche et que le nom ne
+          contient pas, par exemple bissap, karkadé, foléré ; un mot par ligne.
       - name: seoTitle
         label: Titre pour Google
         widget: string
@@ -413,6 +423,126 @@ collections:
         maxlength: 170
         i18n: true
         hint: Facultatif. Une ou deux phrases de 160 caractères environ, affichées sous le titre dans Google.
+
+  # ------------------------------------------------------------------- reviews
+  # One file per review, not localised (each review carries its language). The
+  # Worker (POST /api/reviews) writes src/content/reviews/<product slug>--<order
+  # number>.yml with published: false. Sveltia lists every .yml of the folder,
+  # whatever its name, and keeps the name of an existing file on save; the slug
+  # template only names the reviews created here, which have no order number:
+  # <product slug>--<YYYY-MM-DD>-<author>.yml (each tag is slugified, the "--"
+  # stays). Fields mirror reviewSchema in src/content/schemas.ts.
+  - name: reviews
+    label: Avis clients
+    label_singular: Avis client
+    description: >-
+      Les avis laissés après une commande arrivent ici, non publiés. Relisez l'avis, cochez
+      « Publié » et enregistrez : rien ne s'affiche sur le site sans vous.
+    icon: reviews
+    folder: src/content/reviews
+    format: yaml
+    extension: yml
+    i18n: false
+    create: true
+    delete: true
+    duplicate: false
+    identifier_field: author
+    slug:
+      template: '{{product}}--{{year}}-{{month}}-{{day}}-{{author}}'
+      editable: false
+    aliases_field: false
+    summary: "{{author}}, {{rating}}/5, {{product}}{{published | ternary('', ' (à relire)')}}"
+    # Newest first; the sort menu shows each field's label.
+    sortable_fields:
+      fields: [date, rating, published]
+      default: { field: date, direction: descending }
+    view_filters:
+      - { label: À relire (non publiés), field: published, ne: true }
+      - { label: Publiés, field: published, pattern: true }
+      - { label: Achats vérifiés, field: verified, pattern: true }
+    view_groups:
+      groups:
+        - { name: product, label: Produit, field: product }
+    fields:
+      - name: product
+        label: Produit
+        widget: relation
+        collection: products
+        value_field: '{{slug}}'
+        display_fields: ['{{name}} ({{weightGrams}} g)']
+        search_fields: [name, sku]
+        hint: Le produit dont parle l'avis, par exemple « Poudre de moringa (100 g) ».
+      - name: rating
+        label: Note
+        widget: number
+        value_type: int
+        min: 1
+        max: 5
+        step: 1
+        after_input: sur 5
+        hint: Le nombre d'étoiles, de 1 à 5, par exemple 5.
+      - name: author
+        label: Prénom ou pseudonyme
+        widget: string
+        minlength: 2
+        maxlength: 40
+        hint: Affiché sous l'avis, par exemple « Awa » ; jamais un nom de famille sans l'accord de la personne.
+      - name: title
+        label: Titre de l'avis
+        widget: string
+        required: false
+        maxlength: 80
+        hint: Facultatif. Une phrase courte, par exemple « Un vrai goût de feuille ».
+      - name: text
+        label: Avis
+        widget: text
+        minlength: 20
+        maxlength: 1200
+        hint: >-
+          Le texte tel qu'il a été écrit, par exemple « Je le mets dans mon smoothie du matin » ;
+          corrigez au plus une faute de frappe, jamais le sens.
+      - name: published
+        label: Publié
+        widget: boolean
+        default: false
+        hint: Cochez pour afficher l'avis sur le site ; rien n'est publié sans vous.
+      - name: reply
+        label: Votre réponse
+        widget: text
+        required: false
+        hint: >-
+          Facultatif. Votre réponse publique, affichée sous l'avis, par exemple « Merci Awa, ravie que
+          le moringa vous plaise ! ».
+      - name: date
+        label: Date de l'avis
+        widget: datetime
+        type: date
+        format: YYYY-MM-DD
+        default: '{{now}}'
+        hint: Le jour où l'avis a été donné, par exemple le 8 novembre 2026 ; aujourd'hui pour un nouvel avis.
+      - name: locale
+        label: Langue de l'avis
+        widget: select
+        default: fr
+        options:
+          - { label: Français, value: fr }
+          - { label: Anglais, value: en }
+        hint: La langue dans laquelle l'avis est écrit, par exemple Français.
+      - name: order
+        label: Numéro de commande
+        widget: string
+        required: false
+        hint: >-
+          Rempli automatiquement pour un avis venu de l'invitation, par exemple X9Y8Z7W6 ; laissez
+          vide pour un avis reçu ailleurs (Instagram, marché).
+      - name: verified
+        label: Achat vérifié
+        widget: boolean
+        default: false
+        readonly: true
+        hint: >-
+          Coché automatiquement quand l'avis vient de l'invitation envoyée après une commande ; reste
+          décoché pour un avis ajouté ici, par exemple un message reçu sur Instagram.
 
   # ---------------------------------------------------------------- categories
   - name: categories
@@ -872,6 +1002,33 @@ singletons:
             fields:
               - { name: fr, label: En français, widget: string, hint: 'Par exemple « 3 à 5 jours ouvrés ».' }
               - { name: en, label: En anglais, widget: string, required: false, hint: 'Facultatif ; vide, le français est affiché.' }
+      - name: reviews
+        label: Avis clients
+        widget: object
+        fields:
+          - name: enabled
+            label: Afficher les avis sur le site
+            widget: boolean
+            default: true
+            hint: >-
+              Décochez pour masquer toutes les sections d'avis du site (fiche produit, étoiles,
+              accueil) ; les avis restent enregistrés dans « Avis clients ».
+      - name: newsletter
+        label: Newsletter
+        widget: object
+        fields:
+          - name: enabled
+            label: Newsletter active
+            widget: boolean
+            default: true
+            hint: Décochez pour retirer l'inscription à la newsletter du pied de page et de la page Recettes.
+          - name: welcomeCode
+            label: Code de bienvenue
+            widget: string
+            required: false
+            hint: >-
+              Facultatif. Un code promotionnel créé dans Stripe, par exemple BIENVENUE10, imprimé dans
+              l'e-mail de confirmation d'inscription ; vide, l'e-mail n'en propose aucun.
       - name: launch
         label: Lancement
         widget: object
@@ -901,7 +1058,7 @@ singletons:
             label: E-mail de contact
             widget: string
             type: email
-            hint: Affiché sur le site et utilisé comme adresse de réponse des e-mails de commande, par exemple racinesenpartage@outlook.com.
+            hint: Affiché sur le site et utilisé comme adresse de réponse des e-mails de commande, par exemple racinesenpartage@gmail.com.
           - name: phone
             label: Téléphone
             widget: string
@@ -929,15 +1086,44 @@ singletons:
             type: url
             required: false
             hint: Facultatif. L'adresse complète, par exemple https://www.instagram.com/racinesenpartage/.
-          - name: siren
-            label: Numéro SIREN
+          - name: siret
+            label: Numéro SIRET
             widget: string
             required: false
-            pattern: ['^(\d{9}|\d{3} \d{3} \d{3})?$', '9 chiffres, par exemple 123456789 ou 123 456 789']
+            pattern: ['^(\d{14}|\d{3} \d{3} \d{3} \d{5})?$', '14 chiffres, collés ou groupés, par exemple 911 858 843 00020']
             hint: >-
-              Obligatoire avant l'ouverture, par exemple 123 456 789 ; tant qu'il est vide, les
-              mentions légales indiquent « en cours d'immatriculation ».
+              Obligatoire avant l'ouverture, par exemple 911 858 843 00020. Le SIREN en est les 9 premiers
+              chiffres (911 858 843) ; les mentions légales impriment les deux. Tant qu'il est vide,
+              elles indiquent « en cours d'immatriculation ».
           - name: packagedBy
             label: Conditionné par
             widget: string
             hint: Nom et ville de l'atelier qui conditionne les sachets, par exemple « ESAT Les Oliviers (Gennevilliers, 92) ».
+      - name: forms
+        label: Formulaires, protection anti-robots
+        widget: object
+        collapsed: true
+        hint: Protège les formulaires de contact, de newsletter et d'alerte de retour en stock contre les robots.
+        fields:
+          - name: turnstileSiteKey
+            label: Clé Turnstile (anti-robots)
+            widget: string
+            required: false
+            hint: >-
+              La clé de site (« Site Key ») du widget, dans le tableau de bord Cloudflare, menu
+              Turnstile, par exemple 0x4AAAAAAABkMYinukE8nzYS ; jamais la clé secrète. Vide, les
+              formulaires fonctionnent sans cette vérification, à condition que votre développeur ait
+              aussi retiré la clé secrète : ne la videz qu'avec lui.
+      - name: analytics
+        label: Statistiques de visite
+        widget: object
+        collapsed: true
+        hint: Mesure de fréquentation Cloudflare Web Analytics, sans cookie ni bandeau de consentement.
+        fields:
+          - name: cloudflareToken
+            label: Jeton Cloudflare Web Analytics
+            widget: string
+            required: false
+            hint: >-
+              Facultatif. Le jeton (« token ») du site, dans le tableau de bord Cloudflare, menu Web
+              Analytics, par exemple 3f9c2a1b7d8e4f60a1b2c3d4e5f60718 ; vide, rien n'est mesuré.
