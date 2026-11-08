@@ -1,0 +1,121 @@
+---
+// Business card page, both locales (noindex): the two faces made by
+// `pnpm card` and the three downloads. The 300 dpi PNGs keep their bleed for
+// the printer and are not shown here.
+import { SITE, type Locale } from '../../consts';
+import Base from '../../layouts/Base.astro';
+import { interpolate } from '../../i18n/fallback';
+import { loadLocale, loadSettings } from '../../i18n/locale';
+import { routePath } from '../../i18n/routing';
+import Breadcrumbs from '../Breadcrumbs.astro';
+import Icon from '../Icon.astro';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const [t, settings] = await Promise.all([loadLocale(locale), loadSettings()]);
+const c = t.card;
+const { brand } = settings;
+
+// "+33 7 75 68 91 08", as printed on the card
+const digits = brand.phone.replace(/\D/g, '');
+const phone =
+  digits.length === 10 && digits.startsWith('0')
+    ? `+33 ${digits[1]} ${digits.slice(2).replace(/(\d{2})(?=\d)/g, '$1 ')}`
+    : brand.phone;
+const versoAlt = interpolate(c.versoAlt, {
+  phone,
+  email: brand.email,
+  site: new URL(SITE.url).host,
+});
+const FILES = '/carte/racines-en-partage-carte';
+---
+
+<Base {locale} routeKey="card" title={c.metaTitle} description={c.metaDescription}>
+  <div class="container card-page">
+    <div class="page-head">
+      <Breadcrumbs
+        label={t.a11y.breadcrumb}
+        items={[{ name: t.nav.home, href: routePath('home', locale) }, { name: c.title }]}
+      />
+      <h1>{c.title}</h1>
+      <p class="lead">{c.lead}</p>
+    </div>
+
+    <div class="faces">
+      <img
+        src={`${FILES}-recto-apercu.png`}
+        width="960"
+        height="621"
+        alt={c.rectoAlt}
+        decoding="async"
+      />
+      <img
+        src={`${FILES}-verso-apercu.png`}
+        width="960"
+        height="621"
+        alt={versoAlt}
+        decoding="async"
+      />
+    </div>
+
+    <div class="actions">
+      <a class="btn btn-primary" href={`${FILES}.pdf`} download>
+        <Icon name="download" size={20} />
+        <span>{c.print}</span>
+      </a>
+      <a class="btn btn-secondary" href={`${FILES}-numerique.png`} download>
+        <Icon name="image" size={20} />
+        <span>{c.share}</span>
+      </a>
+      <a class="btn btn-secondary" href="/racines-en-partage.vcf" download>
+        <Icon name="contact" size={20} />
+        <span>{c.vcard}</span>
+      </a>
+    </div>
+    <p class="hint">{c.hint}</p>
+  </div>
+</Base>
+
+<style>
+  .card-page {
+    max-width: 1040px;
+    padding-bottom: clamp(3rem, 2rem + 4.5vw, 6rem);
+  }
+  .faces {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+  }
+  @media (min-width: 720px) {
+    .faces {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .faces img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-m);
+    box-shadow: var(--shadow-float);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  /* Phones: one full-width button per line. */
+  @media (max-width: 559px) {
+    .actions .btn {
+      flex: 1 1 100%;
+    }
+  }
+  .hint {
+    max-width: 62ch;
+    color: var(--ink-2);
+    font-size: var(--fs--1);
+  }
+</style>

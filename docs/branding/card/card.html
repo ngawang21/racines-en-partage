@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Racines en Partage · carte de visite</title>
+    <style>
+      /*
+        Business card, 85 x 55 mm, printed on a 91 x 61 mm sheet (3 mm bleed).
+        Tokens {{...}} are filled by scripts/business-card.mjs. The body's
+        data-variant picks the direction (medaillon | kraft | foret) and
+        data-face the face to show (recto | verso | pdf for both).
+        Safe area: everything but full-bleed backgrounds and the kente strip
+        stays at least 5 mm inside the trim (8 mm from the sheet edge).
+      */
+      @font-face {
+        font-family: 'Fraunces';
+        font-style: normal;
+        font-weight: 100 900;
+        src: url('{{fontDisplay}}') format('woff2');
+      }
+      @font-face {
+        font-family: 'Fraunces';
+        font-style: italic;
+        font-weight: 100 900;
+        src: url('{{fontDisplayItalic}}') format('woff2');
+      }
+      @font-face {
+        font-family: 'Figtree';
+        font-style: normal;
+        font-weight: 300 900;
+        src: url('{{fontBody}}') format('woff2');
+      }
+      @page {
+        size: 91mm 61mm;
+        margin: 0;
+      }
+      :root {
+        --cream: #fbf6ea;
+        --paper: #f3ead6;
+        --kraft: #d8b98e;
+        --kraft-ink: #86602f;
+        --forest: #163a1c;
+        --leaf: #3e7a2a;
+        --hibiscus: #e03a3a;
+        --gold: #c9a24a;
+        --terracotta: #c8582c;
+        --ink-2: #4a5c45;
+        --cream-muted: rgba(251, 246, 234, 0.8);
+        --display: 'Fraunces', Georgia, serif;
+        --body: 'Figtree', system-ui, sans-serif;
+        --qr: {{qrTile}};
+        --qz: {{qrQuiet}}; /* the 4-module quiet zone inside the tile */
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        background: transparent;
+      }
+      body {
+        -webkit-font-smoothing: antialiased;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        font-kerning: normal;
+        text-rendering: geometricPrecision;
+      }
+      .face {
+        position: relative;
+        width: 91mm;
+        height: 61mm;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--ink);
+        break-after: page;
+        /* Paints the sub-pixel row and column past the sheet in the face colour,
+           so the 300 dpi crop never shows a transparent edge. */
+        box-shadow: 0 0 0 1mm var(--bg);
+      }
+      .face:last-child {
+        break-after: auto;
+      }
+      body:not([data-face='pdf']) .face {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      /* only the chosen variant, and in raster mode only the chosen face */
+      body[data-variant='medaillon'] .face:not([data-variant='medaillon']),
+      body[data-variant='kraft'] .face:not([data-variant='kraft']),
+      body[data-variant='foret'] .face:not([data-variant='foret']),
+      body[data-face='recto'] .verso,
+      body[data-face='verso'] .recto {
+        display: none;
+      }
+      /* the 85 x 55 mm trim, centred in the bleed */
+      .trim {
+        position: absolute;
+        inset: 3mm;
+      }
+
+      /* ---- shared type ---- */
+      .wordmark {
+        font-family: var(--display);
+        font-weight: 600;
+        font-variation-settings:
+          'opsz' 36,
+          'SOFT' 50;
+        letter-spacing: -0.012em;
+        line-height: 1;
+        white-space: nowrap;
+      }
+      .tagline {
+        font-family: var(--display);
+        font-style: italic;
+        font-weight: 400;
+        font-variation-settings:
+          'opsz' 14,
+          'SOFT' 50;
+        font-size: 8.5pt;
+        letter-spacing: 0.005em;
+        line-height: 1.35;
+      }
+      .contacts {
+        display: flex;
+        flex-direction: column;
+        gap: 1.3mm;
+        font-family: var(--body);
+        font-weight: 500;
+        line-height: 1.15;
+        white-space: nowrap;
+        font-variant-numeric: lining-nums;
+      }
+      .contacts .tel {
+        font-size: 9.5pt;
+        letter-spacing: 0.02em;
+      }
+      .contacts .mail {
+        font-size: 8.5pt;
+        letter-spacing: 0.005em;
+      }
+      .qr {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: none;
+      }
+      .qr .tile {
+        width: var(--qr);
+        height: var(--qr);
+        border-radius: 1.4mm;
+        overflow: hidden;
+      }
+      .qr svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .qr .caption {
+        font-family: var(--body);
+        font-weight: 600;
+        font-size: 7.5pt;
+        letter-spacing: 0.03em;
+        line-height: 1;
+        white-space: nowrap;
+      }
+      .rule {
+        display: block;
+        width: 12mm;
+        height: 0.25mm;
+        background: var(--gold);
+      }
+      .glyph {
+        display: block;
+        width: 4.6mm;
+        height: 4.6mm;
+        color: var(--gold);
+      }
+
+      /* ================= medaillon ================= */
+      .medaillon.recto {
+        --bg: var(--cream);
+        --ink: var(--forest);
+      }
+      .medaillon.recto .trim {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3.6mm;
+      }
+      .medaillon .disc {
+        width: 30mm;
+        height: 30mm;
+        border-radius: 50%;
+        /* a cream gap, then a gold hairline ring */
+        box-shadow:
+          0 0 0 0.9mm var(--cream),
+          0 0 0 1.15mm var(--gold);
+      }
+      .medaillon .disc img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+      }
+      .medaillon.recto .wordmark {
+        font-size: 14.5pt;
+        letter-spacing: -0.005em;
+      }
+      .medaillon.verso {
+        --bg: var(--forest);
+        --ink: var(--cream);
+      }
+      .medaillon.verso .trim {
+        padding: 0 6mm;
+        display: flex;
+        align-items: center;
+      }
+      .medaillon.verso .row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 5mm;
+        width: 100%;
+      }
+      .medaillon.verso .left {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: var(--qr);
+        padding-block: 0.4mm 0.2mm;
+      }
+      .medaillon.verso .tagline {
+        color: var(--cream);
+      }
+      .medaillon.verso .rule {
+        margin-block: 2.6mm;
+      }
+      .medaillon.verso .qr {
+        gap: 2.2mm;
+      }
+      .medaillon.verso .caption {
+        color: var(--cream-muted);
+      }
+
+      /* ================= kraft ================= */
+      .kraft.recto {
+        --bg: var(--kraft);
+        --ink: var(--forest);
+      }
+      .kraft.recto .trim {
+        padding: 6.5mm 7mm 6.5mm;
+        display: flex;
+        flex-direction: column;
+      }
+      .kraft .mark {
+        display: block;
+        width: 10mm;
+        height: auto;
+      }
+      .kraft.recto .wordmark {
+        margin-top: auto;
+        font-size: 24pt;
+        line-height: 0.98;
+        letter-spacing: -0.018em;
+        font-variation-settings:
+          'opsz' 48,
+          'SOFT' 50;
+      }
+      .kraft.recto .wordmark span {
+        display: block;
+      }
+      .kraft.recto .tagline {
+        margin-top: 3.6mm;
+        color: var(--forest);
+      }
+      .kraft.verso {
+        --bg: var(--cream);
+        --ink: var(--forest);
+      }
+      .kraft.verso .trim {
+        /* 8 mm at the bottom: 5 mm of air above the 3 mm kente strip */
+        padding: 6mm 6mm 8mm 7mm;
+        display: flex;
+        align-items: center;
+      }
+      .kraft.verso .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 5mm;
+        width: 100%;
+      }
+      /* The tile is cream on cream: align the text with the code, not the tile. */
+      .kraft.verso .left {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding-block: calc(var(--qz) - 0.9mm) 0;
+      }
+      .kraft.verso .wordmark {
+        font-size: 11.5pt;
+        font-variation-settings:
+          'opsz' 24,
+          'SOFT' 50;
+      }
+      .kraft.verso .rule {
+        width: 8mm;
+        margin-top: 2.6mm;
+      }
+      .kraft.verso .contacts .mail {
+        color: var(--ink-2);
+      }
+      .kraft.verso .qr {
+        gap: 0;
+      }
+      /* The QR's quiet zone is cream like the card: pull the caption up into it. */
+      .kraft.verso .caption,
+      .foret.verso .caption {
+        color: var(--kraft-ink);
+        margin-top: -1.4mm;
+      }
+      .kente {
+        --k: 3mm;
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 6mm; /* 3 mm visible plus 3 mm bleed */
+        background:
+          linear-gradient(135deg, var(--terracotta) 25%, transparent 25%) calc(50% - var(--k)) 0 /
+            calc(var(--k) * 2) var(--k) repeat-x,
+          linear-gradient(225deg, var(--terracotta) 25%, transparent 25%) calc(50% - var(--k)) 0 /
+            calc(var(--k) * 2) var(--k) repeat-x,
+          linear-gradient(315deg, var(--leaf) 25%, transparent 25%) 50% 0 / calc(var(--k) * 2)
+            var(--k) repeat-x,
+          linear-gradient(45deg, var(--leaf) 25%, transparent 25%) 50% 0 / calc(var(--k) * 2)
+            var(--k) repeat-x,
+          var(--gold);
+      }
+
+      /* ================= foret ================= */
+      .foret.recto {
+        --bg: var(--forest);
+        --ink: var(--cream);
+      }
+      .foret.recto .trim {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .ornament {
+        display: flex;
+        align-items: center;
+        gap: 2.2mm;
+        margin-bottom: 4.2mm;
+      }
+      .ornament::before,
+      .ornament::after {
+        content: '';
+        width: 9mm;
+        height: 0.22mm;
+        background: var(--gold);
+      }
+      .foret.recto .wordmark {
+        font-size: 18pt;
+        font-variation-settings:
+          'opsz' 40,
+          'SOFT' 50;
+      }
+      .foret.recto .tagline {
+        margin-top: 3.4mm;
+        color: var(--cream-muted);
+      }
+      .foret.verso {
+        --bg: var(--cream);
+        --ink: var(--forest);
+      }
+      .foret.verso .trim {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .foret.verso .rule {
+        width: 10mm;
+        margin: 2.6mm 0 2.8mm;
+      }
+      .foret.verso .contacts {
+        align-items: center;
+        gap: 1.1mm;
+      }
+    </style>
+  </head>
+  <body data-variant="{{variant}}" data-face="{{face}}">
+    <!-- medaillon: the painted medallion on cream; contacts on forest -->
+    <section class="face recto medaillon" data-variant="medaillon">
+      <div class="trim">
+        <div class="disc"><img src="{{medallion}}" alt="" /></div>
+        <p class="wordmark">{{brand}}</p>
+      </div>
+    </section>
+    <section class="face verso medaillon" data-variant="medaillon">
+      <div class="trim">
+        <div class="row">
+        <div class="left">
+          <p class="tagline">{{taglineBroken}}</p>
+          <div>
+            <span class="rule"></span>
+            <div class="contacts">
+              <p class="tel">{{phone}}</p>
+              <p class="mail">{{email}}</p>
+            </div>
+          </div>
+        </div>
+        <div class="qr">
+          <div class="tile">{{qr}}</div>
+          <p class="caption">{{host}}</p>
+        </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- kraft: forest wordmark on kraft paper; contacts on cream above a kente strip -->
+    <section class="face recto kraft" data-variant="kraft">
+      <div class="trim">
+        <img class="mark" src="{{flower}}" alt="" />
+        <p class="wordmark">{{brandStacked}}</p>
+        <p class="tagline">{{tagline}}</p>
+      </div>
+    </section>
+    <section class="face verso kraft" data-variant="kraft">
+      <div class="trim">
+        <div class="row">
+        <div class="left">
+          <div>
+            <p class="wordmark">{{brand}}</p>
+            <span class="rule"></span>
+          </div>
+          <div class="contacts">
+            <p class="tel">{{phone}}</p>
+            <p class="mail">{{email}}</p>
+          </div>
+        </div>
+        <div class="qr">
+          <div class="tile">{{qr}}</div>
+          <p class="caption">{{host}}</p>
+        </div>
+        </div>
+      </div>
+      <div class="kente"></div>
+    </section>
+
+    <!-- foret: cream wordmark on forest with a gold hibiscus; a centred stack on cream -->
+    <section class="face recto foret" data-variant="foret">
+      <div class="trim">
+        <div class="ornament">
+          <svg class="glyph" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <ellipse cx="12" cy="6.4" rx="3.1" ry="4.4" transform="rotate(0 12 12)" />
+            <ellipse cx="12" cy="6.4" rx="3.1" ry="4.4" transform="rotate(72 12 12)" />
+            <ellipse cx="12" cy="6.4" rx="3.1" ry="4.4" transform="rotate(144 12 12)" />
+            <ellipse cx="12" cy="6.4" rx="3.1" ry="4.4" transform="rotate(216 12 12)" />
+            <ellipse cx="12" cy="6.4" rx="3.1" ry="4.4" transform="rotate(288 12 12)" />
+            <circle cx="12" cy="12" r="1.8" fill="#163a1c" />
+          </svg>
+        </div>
+        <p class="wordmark">{{brand}}</p>
+        <p class="tagline">{{tagline}}</p>
+      </div>
+    </section>
+    <section class="face verso foret" data-variant="foret">
+      <div class="trim">
+        <div class="qr">
+          <div class="tile">{{qr}}</div>
+          <p class="caption">{{host}}</p>
+        </div>
+        <span class="rule"></span>
+        <div class="contacts">
+          <p class="tel">{{phone}}</p>
+          <p class="mail">{{email}}</p>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

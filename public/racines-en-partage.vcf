@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+FN:Racines en Partage
+ORG:Racines en Partage
+TEL;TYPE=CELL,VOICE:+33775689108
+EMAIL;TYPE=INTERNET:racinesenpartage@gmail.com
+URL:https://racinesenpartage.fr/
+ADR;TYPE=WORK:;;9 Rue du Marché;Arnouville;;95400;France
+END:VCARD
