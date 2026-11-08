@@ -60,13 +60,23 @@ CMS: Sveltia at `/admin/`.
 | `pnpm card [v]`     | business card files for `/carte/` (`medaillon`, `kraft`, `foret`) |
 | `pnpm launch-check` | fails while the SIRET, the prices or a legal TODO is pending      |
 
+### Seeing the site from a laptop
+
 When the repository runs on a remote machine (VS Code Remote SSH), the
-server listens on that machine's loopback, so the URL printed by Astro is
-not reachable from the laptop's browser as is. Forward the port: in VS
-Code open the Ports panel, add `4321`, then open http://localhost:4321 on
-the laptop. From a plain terminal, `ssh -L 4321:127.0.0.1:4321 user@host`
-does the same. Alternatively `pnpm dev --host` and open the machine's IP
-on port 4321.
+server listens on that machine, so the URL printed by Astro is not reachable
+from the laptop's browser as is. Either forward the port (VS Code Ports
+panel, add `4321`, open http://localhost:4321) or start the server on the
+network and open the machine's IP:
+
+```bash
+pnpm dev --host                                  # editing, live reload
+pnpm build && pnpm exec astro preview --host 0.0.0.0   # what production serves
+```
+
+The dev server serves unbundled modules and resizes images on request: the
+home page is about 60 requests and 1.2 MB, against 24 requests and 0.5 MB
+for the built site. To judge speed or look, use the build and preview. Stray
+servers: `pnpm exec astro dev stop`, `pnpm exec astro preview stop`.
 
 ## Layout
 

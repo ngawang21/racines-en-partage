@@ -6,12 +6,25 @@ import { alternatesFor, matchRoute, noindexPathFragments } from './src/i18n/rout
 // locales, from the single route table.
 const noindex = noindexPathFragments();
 
+// "dev", "build", "preview", "check" or "sync" (`astro <command>`).
+const command = process.argv[2];
+
 export default defineConfig({
   site: 'https://racinesenpartage.fr',
   output: 'static',
   trailingSlash: 'always',
   compressHTML: 'jsx',
+  // The toolbar adds about 1.3 MB of scripts to every page in dev (its audit
+  // alone bundles aria-query and axobject-query). Accessibility is checked by
+  // axe in the e2e suite instead. Re-enable for one session with
+  // `pnpm exec astro preferences enable devToolbar` if ever needed.
+  devToolbar: { enabled: false },
   vite: {
+    // `astro build` pre-bundles dependencies with a different hash than
+    // `astro dev`. With one shared cache, every build made the next dev start
+    // re-optimise everything; dev keeps the default folder, the rest use
+    // their own.
+    cacheDir: command === 'dev' ? 'node_modules/.vite' : 'node_modules/.vite-build',
     build: {
       // Keep bundled component scripts as external files. The CSP in
       // public/_headers sets `script-src 'self'` with no `unsafe-inline`, so a
