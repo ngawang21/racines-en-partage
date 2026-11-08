@@ -402,3 +402,24 @@ a separate entry in `worker/` deployed with the static assets by one
   bump 1.15 in 240 ms without the red flash; SIRET in the footer; Fraunces
   italic rebuilt with WONK 0 (`scripts/subset-fonts.sh`). Gates: unit 288,
   worker 387, build 49 (1 skipped), e2e 138 (2 skipped).
+- 2026-11-08 night, design pass 5 round 3 (towards 10/10): perceived speed
+  (every internal link prefetched on hover or touch, first grid row and
+  gallery thumbnails eager, 404 medallion eager; a full crawl found no
+  console error, no broken link, no image without dimensions); the home
+  recipe cards gave way to a "Un rituel, trois moments" type band linking
+  each moment to a product's printed recipe (content in `home.yml`, three
+  products with a recipe, tested); content slots ready for the owner
+  (optional signed `ownerNote` in the story band, optional recipe `image`
+  on the recipes page, CMS fields and `src/assets/recipes/`), the owner's
+  list of remaining inputs extended (photos, signed note, three service
+  promises, publication director). A read-only click-path and production
+  audit (`out/review/13/audit-bugs.md`, 72/100 before fixes) led to: review
+  invitations fail closed (marker before send), owner e-mail failures
+  return 500 for Stripe retries with separate markers, missing webhook
+  secret logged, launch-check covers the Turnstile key, the relay brand and
+  the KV binding; expired sign-in link no longer beats a valid session,
+  drawer closes when the menu opens and on Back, stale checkout error
+  cleared, capped adds announced, thanks page keeps `session_id` on
+  language switch and empties the paid cart on arrival, cart re-read on a
+  restored page, a `bfcache` Playwright project. Gates: unit 293, worker
+  395, build 49 (1 skipped), e2e 156 (2 skipped).
