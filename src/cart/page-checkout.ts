@@ -111,6 +111,10 @@ export function initCheckout(ctx: CartContext): void {
   let inFlight = false;
   let closed = !ctx.shopOpen;
   let widget: Promise<RelayWidget> | null = null;
+  // The pay button names the amount once the total is known ("Payer 13,90 €").
+  let lastTotal = '';
+  const payText = () =>
+    lastTotal && tc.payAmount ? tc.payAmount.replace('{total}', lastTotal) : tc.pay;
 
   if (relay) {
     relay.postcode.value = memory.postcode ?? '';
@@ -170,7 +174,10 @@ export function initCheckout(ctx: CartContext): void {
     shippingEl.textContent = shippingValue ?? '–';
     shippingEl.classList.toggle('price', shippingValue !== null);
     shippingEl.classList.toggle('is-free', shipping === 0);
-    totalEl.textContent = ctx.price(totals.subtotal + (shipping ?? 0));
+    const total = ctx.price(totals.subtotal + (shipping ?? 0));
+    totalEl.textContent = total;
+    lastTotal = total;
+    if (!inFlight) payLabel.textContent = payText();
     renderFreeShipping(free, totals, ctx);
 
     for (const priceEl of root.querySelectorAll<HTMLElement>('[data-method-price]')) {
@@ -355,7 +362,7 @@ export function initCheckout(ctx: CartContext): void {
     inFlight = busy;
     pay.disabled = busy || closed;
     pay.setAttribute('aria-busy', String(busy));
-    payLabel.textContent = busy ? tc.processing : tc.pay;
+    payLabel.textContent = busy ? tc.processing : payText();
   };
 
   pay.addEventListener('click', async () => {

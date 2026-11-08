@@ -15,9 +15,12 @@ interface Props {
   locale: Locale;
   t: LocaleContent;
   settings: Settings;
+  /** Checkout tunnel: no newsletter, no shop links; brand, contact and legal. */
+  compact?: boolean;
 }
-const { locale, t, settings } = Astro.props;
+const { locale, t, settings, compact = false } = Astro.props;
 const { brand } = settings;
+const siret = brand.siret.trim();
 const addressLine = postalLine(brand.address, locale);
 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressLine)}`;
 const shopLinks = [
@@ -41,7 +44,7 @@ const year = new Date().getFullYear();
 <footer class="site-footer">
   <div class="kente" aria-hidden="true"></div>
   {
-    settings.newsletter.enabled && (
+    !compact && settings.newsletter.enabled && (
       <div class="container-wide footer-nl">
         <NewsletterSignup {locale} {t} {settings} variant="footer" />
       </div>
@@ -54,6 +57,7 @@ const year = new Date().getFullYear();
         <span class="wordmark">{SITE.name}</span>
       </a>
       <p class="tagline">{pickLabel(brand.tagline, locale)}</p>
+      {siret && <p class="siret">SIRET {siret}</p>}
     </div>
 
     <div class="contact-block">
@@ -92,18 +96,20 @@ const year = new Date().getFullYear();
       </ul>
     </div>
 
-    <nav aria-label={t.footer.shopTitle}>
-      <h2 class="col-title">{t.footer.shopTitle}</h2>
-      <ul role="list" class="links">
-        {
-          shopLinks.map((l) => (
-            <li>
-              <a href={l.href}>{l.label}</a>
-            </li>
-          ))
-        }
-      </ul>
-    </nav>
+    {
+      !compact && (
+        <nav aria-label={t.footer.shopTitle}>
+          <h2 class="col-title">{t.footer.shopTitle}</h2>
+          <ul role="list" class="links">
+            {shopLinks.map((l) => (
+              <li>
+                <a href={l.href}>{l.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )
+    }
 
     <nav aria-label={t.footer.infoTitle}>
       <h2 class="col-title">{t.footer.infoTitle}</h2>
@@ -176,6 +182,12 @@ const year = new Date().getFullYear();
     font-style: italic;
     font-size: var(--fs-1);
     max-width: 28ch;
+  }
+  .siret {
+    margin-top: var(--space-3);
+    color: var(--cream-muted);
+    font-size: var(--fs--1);
+    font-variant-numeric: tabular-nums;
   }
   .col-title {
     margin-bottom: var(--space-3);

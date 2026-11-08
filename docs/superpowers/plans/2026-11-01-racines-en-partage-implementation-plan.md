@@ -389,3 +389,16 @@ a separate entry in `worker/` deployed with the static assets by one
   Marie, the ESAT, the 200 g baobab), the legal names and the domain e-mail
   remain owner inputs. Gates: unit 288, worker 387, build 49 (1 skipped),
   e2e 138 (2 skipped).
+- 2026-11-08 night, design pass 5 round 2: a second independent review rated
+  the new build 7.5/10 (`out/review/12/rating-2.md`, local). Applied: photo-led
+  hero (5/7 grid, frame up to 660 px, 3:2 on phones so the button sits in the
+  first screen), eight-word H1 with the product names in the lead, no kicker;
+  checkout tunnel (`chrome="checkout"` on Base: header with brand and language
+  only, footer without newsletter and shop links), pay button names the amount,
+  card brands in the secure line; shop grid three columns up to 1599 px; the
+  "no reviews yet" line removed; centred blocks left-aligned to the one edge
+  (story painting, engagements, about page, card page, product footnote);
+  card hover reduced to the photo ease and the title underline; cart count
+  bump 1.15 in 240 ms without the red flash; SIRET in the footer; Fraunces
+  italic rebuilt with WONK 0 (`scripts/subset-fonts.sh`). Gates: unit 288,
+  worker 387, build 49 (1 skipped), e2e 138 (2 skipped).

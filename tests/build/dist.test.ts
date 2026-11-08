@@ -229,11 +229,22 @@ describe('contracts for wave 2', () => {
   it('the header cart button and the drawer placeholder follow the markup contract', () => {
     for (const p of ALL) {
       const d = doc(p.file);
+      expect(d.querySelectorAll('#cart-drawer').length, p.file).toBe(1);
+      // The checkout is a tunnel: its header keeps only the brand, the
+      // language and a link back to the cart.
+      if (p.key === 'checkout') {
+        expect(d.querySelector('button[data-cart-toggle]'), p.file).toBeNull();
+        const cartHref = routePath('cart', p.locale);
+        const backLinks = d
+          .querySelectorAll('a')
+          .filter((a) => a.getAttribute('href') === cartHref);
+        expect(backLinks.length, p.file).toBeGreaterThan(0);
+        continue;
+      }
       const button = d.querySelector('button[data-cart-toggle]');
       expect(button?.getAttribute('type'), p.file).toBe('button');
       expect(button?.getAttribute('aria-controls'), p.file).toBe('cart-drawer');
       expect(button?.querySelector('[data-cart-count]'), p.file).not.toBeNull();
-      expect(d.querySelectorAll('#cart-drawer').length, p.file).toBe(1);
     }
   });
   it('product pages expose an add-to-cart button with the sku', () => {

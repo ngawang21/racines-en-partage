@@ -51,7 +51,7 @@ const crop = pouchCrop(p.images[0]!);
 ---
 
 <article
-  class="card lift"
+  class="card"
   data-product-card
   data-category={p.category}
   data-price={cents}
@@ -175,13 +175,6 @@ const crop = pouchCrop(p.images[0]!);
     object-fit: fill;
   }
   @media (hover: hover) and (pointer: fine) {
-    .card.lift:hover {
-      box-shadow: none;
-    }
-    .card:hover .card-media {
-      border-color: var(--kraft-deep);
-      box-shadow: var(--shadow-float);
-    }
     .card:hover .card-media :global(img) {
       transform: scale(1.025);
     }

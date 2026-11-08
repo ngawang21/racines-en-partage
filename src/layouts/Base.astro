@@ -34,6 +34,9 @@ interface Props {
   image?: { src: ImageMetadata; alt: string };
   /** Extra graph input: breadcrumbs, product, listed items, FAQ. */
   graph?: Partial<Pick<GraphInput, 'kind' | 'breadcrumbs' | 'product' | 'items' | 'faq'>>;
+  /** "checkout": a tunnel, the header keeps only the brand and a way back to
+   *  the cart, the footer only the legal links and the contact. */
+  chrome?: 'full' | 'checkout';
 }
 
 const {
@@ -45,6 +48,7 @@ const {
   noindex = !isIndexable(routeKey),
   image,
   graph = {},
+  chrome = 'full',
 } = Astro.props;
 
 const [t, settings, home] = await Promise.all([
@@ -149,11 +153,11 @@ const analyticsToken = settings.analytics.cloudflareToken.trim();
         </div>
       )
     }
-    <Header {locale} {routeKey} {slug} {t} {settings} />
+    <Header {locale} {routeKey} {slug} {t} {settings} minimal={chrome === 'checkout'} />
     <main id="main" tabindex="-1">
       <slot />
     </main>
-    <Footer {locale} {t} {settings} />
+    <Footer {locale} {t} {settings} compact={chrome === 'checkout'} />
     <CartDrawer {locale} />
     <CartScripts {locale} />
     {

@@ -165,7 +165,6 @@ export const homePageSchema = z.object({
   ...seo,
   hero: z.object({
     /** The brand slogan, a small italic kicker above the H1. */
-    eyebrow: text,
     /** The H1: what the shop sells, in one colour. */
     title: text,
     lead: text,

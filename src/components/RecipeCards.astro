@@ -34,7 +34,7 @@ const plural = (n: number, one: string, many: string) =>
       const lines = (r.ingredients?.length ? r.ingredients : r.steps).slice(0, 3);
       return (
         <li>
-          <article class="recipe lift">
+          <article class="recipe">
             <span class="recipe-mark" aria-hidden="true">
               <Icon name="flower" size={20} />
             </span>
@@ -233,9 +233,6 @@ const plural = (n: number, one: string, many: string) =>
     transition: text-decoration-color var(--dur-fast) ease;
   }
   @media (hover: hover) and (pointer: fine) {
-    .recipe.lift:hover {
-      box-shadow: var(--shadow-float);
-    }
     .recipe:hover .recipe-title {
       text-decoration-color: var(--kraft-deep);
     }

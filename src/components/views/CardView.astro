@@ -80,7 +80,8 @@ const FILES = '/carte/racines-en-partage-carte';
 
 <style>
   .card-page {
-    max-width: 1040px;
+    max-width: calc(1040px + 2 * var(--gutter));
+    margin-inline: 0;
     padding-bottom: clamp(3rem, 2rem + 4.5vw, 6rem);
   }
   .faces {

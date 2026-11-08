@@ -28,7 +28,6 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
 <section class="hero" aria-labelledby="hero-title">
   <div class="container hero-grid">
     <div class="hero-copy">
-      <p class="eyebrow hero-kicker">{hero.eyebrow}</p>
       <h1 id="hero-title">{hero.title}</h1>
       <p class="lead hero-lead">{hero.lead}</p>
       <div class="hero-ctas">
@@ -42,7 +41,7 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
           src={heroTrio}
           alt={hero.imageAlt}
           preset="hero"
-          sizes="(min-width: 1552px) 690px, (min-width: 960px) 45vw, calc(112.5vw - 45px)"
+          sizes="(min-width: 1552px) 820px, (min-width: 960px) 55vw, 100vw"
           loading="eager"
           fetchpriority="high"
         />
@@ -67,7 +66,7 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
   }
   @media (min-width: 960px) {
     .hero-grid {
-      grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
       gap: clamp(2.5rem, 1rem + 4vw, 5rem);
     }
     .hero-media {
@@ -77,22 +76,7 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
       container-type: inline-size;
     }
   }
-  .hero-kicker {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    color: var(--ink-2);
-  }
   /* The rule sits on the first line when the slogan wraps (phones). */
-  .hero-kicker::before {
-    content: '';
-    flex: none;
-    align-self: flex-start;
-    margin-top: 0.65em;
-    width: 28px;
-    height: 1px;
-    background: var(--gold);
-  }
   h1 {
     margin-top: var(--space-4);
     max-width: 22ch;
@@ -125,14 +109,16 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
   }
   .hero-frame {
     overflow: hidden;
-    aspect-ratio: 4 / 3;
+    /* 3:2 on phones so the button lands inside the first screen at 390. */
+    aspect-ratio: 3 / 2;
     border: 1px solid var(--kraft);
     border-radius: var(--radius-m);
     background: var(--paper);
   }
   @media (min-width: 960px) {
     .hero-frame {
-      max-height: min(76vh, 640px);
+      aspect-ratio: 5 / 4;
+      max-height: min(72vh, 660px);
       border-radius: var(--radius-l);
       box-shadow: var(--shadow-soft);
     }
@@ -149,7 +135,6 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .hero-kicker,
     h1,
     .hero-lead,
     .hero-ctas {
@@ -168,10 +153,10 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
       animation: rep-hero-settle 500ms var(--ease-out-strong) both;
     }
   }
+  /* Transform only: the copy is readable at first paint. */
   @keyframes rep-hero-rise {
     from {
-      opacity: 0;
-      transform: translateY(12px);
+      transform: translateY(10px);
     }
   }
   @keyframes rep-hero-settle {

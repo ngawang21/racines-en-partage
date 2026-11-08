@@ -6,7 +6,8 @@
 import medallion from '../../assets/brand/medallion.webp';
 import type { Locale } from '../../consts';
 import Base from '../../layouts/Base.astro';
-import { loadLocale, loadPage } from '../../i18n/locale';
+import { loadLocale, loadPage, loadSettings } from '../../i18n/locale';
+import { pickLabel } from '../../i18n/fallback';
 import { routePath } from '../../i18n/routing';
 import Breadcrumbs from '../Breadcrumbs.astro';
 import Ornament from '../Ornament.astro';
@@ -16,10 +17,11 @@ interface Props {
   locale: Locale;
 }
 const { locale } = Astro.props;
-const [t, page, home] = await Promise.all([
+const [t, page, home, settings] = await Promise.all([
   loadLocale(locale),
   loadPage(locale, 'about'),
   loadPage(locale, 'home'),
+  loadSettings(),
 ]);
 ---
 
@@ -73,7 +75,7 @@ const [t, page, home] = await Promise.all([
 
   <section class="band-forest cta" aria-labelledby="about-cta">
     <div class="container section cta-inner">
-      <h2 id="about-cta" class="cta-title">{home.hero.eyebrow}</h2>
+      <h2 id="about-cta" class="cta-title">{pickLabel(settings.brand.tagline, locale)}</h2>
       <a class="btn btn-primary" href={routePath('shop', locale)}>{home.hero.cta.primary}</a>
     </div>
   </section>
@@ -136,8 +138,6 @@ const [t, page, home] = await Promise.all([
   }
   .story:not(.has-image) .story-copy {
     max-width: 680px;
-    margin-inline: auto;
-    text-align: center;
   }
   @media (min-width: 900px) {
     .story.has-image {
@@ -182,9 +182,8 @@ const [t, page, home] = await Promise.all([
   }
   .cta-inner {
     display: grid;
-    justify-items: center;
+    justify-items: start;
     gap: var(--space-6);
-    text-align: center;
   }
   .cta-title {
     max-width: 20ch;

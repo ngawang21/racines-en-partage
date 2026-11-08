@@ -25,8 +25,10 @@ interface Props {
   slug?: string;
   t: LocaleContent;
   settings: Settings;
+  /** Checkout tunnel: brand, language and a link back to the cart only. */
+  minimal?: boolean;
 }
-const { locale, routeKey, slug, t, settings } = Astro.props;
+const { locale, routeKey, slug, t, settings, minimal = false } = Astro.props;
 const { phone, email } = settings.brand;
 const phoneLabel = locale === 'fr' ? formatPhone(phone) : formatPhoneIntl(phone);
 const home = routePath('home', locale);
@@ -43,53 +45,57 @@ const links = [
 ];
 ---
 
-<header class="site-header" data-site-header>
+<header class:list={['site-header', { 'is-minimal': minimal }]} data-site-header>
   <div class="container-wide bar">
-    <details class="mobile-menu">
-      <summary class="icon-btn">
-        <Icon name="menu" class="when-closed" />
-        <Icon name="close" class="when-open" />
-        <span class="visually-hidden">{t.a11y.openMenu}</span>
-      </summary>
-      <nav class="mobile-nav" aria-label={t.nav.menu}>
-        <ul role="list">
-          {
-            links.map((l) => (
-              <li>
-                <a href={l.href} aria-current={l.current}>
-                  {l.label}
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-        <div class="mobile-foot">
-          <ul class="mobile-contact" role="list">
-            {
-              phone && (
+    {
+      !minimal && (
+        <details class="mobile-menu">
+          <summary class="icon-btn">
+            <Icon name="menu" class="when-closed" />
+            <Icon name="close" class="when-open" />
+            <span class="visually-hidden">{t.a11y.openMenu}</span>
+          </summary>
+          <nav class="mobile-nav" aria-label={t.nav.menu}>
+            <ul role="list">
+              {links.map((l) => (
                 <li>
-                  <a href={`tel:${phoneE164(phone)}`}>
-                    <Icon name="phone" size={20} />
-                    <span>{phoneLabel}</span>
+                  <a href={l.href} aria-current={l.current}>
+                    {l.label}
                   </a>
                 </li>
-              )
-            }
-            {
-              email && (
-                <li>
-                  <a href={`mailto:${email}`}>
-                    <Icon name="mail" size={20} />
-                    <span>{email}</span>
-                  </a>
-                </li>
-              )
-            }
-          </ul>
-          <LanguagePill {locale} {routeKey} {slug} label={t.a11y.language} class="mobile-pill" />
-        </div>
-      </nav>
-    </details>
+              ))}
+            </ul>
+            <div class="mobile-foot">
+              <ul class="mobile-contact" role="list">
+                {phone && (
+                  <li>
+                    <a href={`tel:${phoneE164(phone)}`}>
+                      <Icon name="phone" size={20} />
+                      <span>{phoneLabel}</span>
+                    </a>
+                  </li>
+                )}
+                {email && (
+                  <li>
+                    <a href={`mailto:${email}`}>
+                      <Icon name="mail" size={20} />
+                      <span>{email}</span>
+                    </a>
+                  </li>
+                )}
+              </ul>
+              <LanguagePill
+                {locale}
+                {routeKey}
+                {slug}
+                label={t.a11y.language}
+                class="mobile-pill"
+              />
+            </div>
+          </nav>
+        </details>
+      )
+    }
 
     <a class="brand" href={home} aria-current={routeKey === 'home' ? 'page' : undefined}>
       <Image src={medallion} alt="" width={40} height={40} densities={[1, 2]} loading="eager" />
@@ -106,61 +112,77 @@ const links = [
       </span>
     </a>
 
-    <nav class="desktop-nav" aria-label={t.nav.primary}>
-      <ul role="list">
-        {
-          links.map((l) => (
-            <li>
-              <a href={l.href} aria-current={l.current}>
-                {l.label}
-              </a>
-            </li>
-          ))
-        }
-      </ul>
-    </nav>
+    {
+      minimal ? (
+        <div class="tools tools-minimal">
+          <LanguagePill {locale} {routeKey} {slug} label={t.a11y.language} class="desktop-pill" />
+        </div>
+      ) : (
+        <>
+          <nav class="desktop-nav" aria-label={t.nav.primary}>
+            <ul role="list">
+              {links.map((l) => (
+                <li>
+                  <a href={l.href} aria-current={l.current}>
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
-    <div class="tools">
-      <LanguagePill {locale} {routeKey} {slug} label={t.a11y.language} class="desktop-pill" />
-      <button
-        type="button"
-        class="icon-btn search-toggle"
-        data-search-open
-        aria-controls="search-dialog"
-        aria-haspopup="dialog"
-      >
-        <Icon name="search" />
-        <span class="visually-hidden">{t.a11y.openSearch}</span>
-      </button>
-      <a
-        class="icon-btn account-link"
-        href={routePath('account', locale)}
-        aria-current={routeKey === 'account' ? 'page' : undefined}
-      >
-        <Icon name="user" />
-        <span class="visually-hidden">{t.a11y.account}</span>
-      </a>
-      <button
-        type="button"
-        class="icon-btn cart-toggle"
-        data-cart-toggle
-        aria-controls="cart-drawer"
-      >
-        <Icon name="cart" />
-        <span class="visually-hidden">{t.a11y.openCart}</span>
-        <span class="cart-count" data-cart-count>0</span>
-        <span class="visually-hidden">{t.a11y.cartCount}</span>
-      </button>
-    </div>
+          <div class="tools">
+            <LanguagePill {locale} {routeKey} {slug} label={t.a11y.language} class="desktop-pill" />
+            <button
+              type="button"
+              class="icon-btn search-toggle"
+              data-search-open
+              aria-controls="search-dialog"
+              aria-haspopup="dialog"
+            >
+              <Icon name="search" />
+              <span class="visually-hidden">{t.a11y.openSearch}</span>
+            </button>
+            <a
+              class="icon-btn account-link"
+              href={routePath('account', locale)}
+              aria-current={routeKey === 'account' ? 'page' : undefined}
+            >
+              <Icon name="user" />
+              <span class="visually-hidden">{t.a11y.account}</span>
+            </a>
+            <button
+              type="button"
+              class="icon-btn cart-toggle"
+              data-cart-toggle
+              aria-controls="cart-drawer"
+            >
+              <Icon name="cart" />
+              <span class="visually-hidden">{t.a11y.openCart}</span>
+              <span class="cart-count" data-cart-count>
+                0
+              </span>
+              <span class="visually-hidden">{t.a11y.cartCount}</span>
+            </button>
+          </div>
+        </>
+      )
+    }
   </div>
 </header>
-<SearchDialog {locale} {t} />
+{!minimal && <SearchDialog {locale} {t} />}
 
 <script>
   import './header-menu';
 </script>
 
 <style>
+  .tools-minimal {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-left: auto;
+  }
   .site-header {
     position: sticky;
     top: 0;

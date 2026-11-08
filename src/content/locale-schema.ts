@@ -191,6 +191,7 @@ export const localeSchema = z.object({
     acceptTerms: text,
     termsLink: text,
     pay: text,
+    payAmount: text,
     secureLine: text,
     chooseMethod: text,
     chooseRelay: text,
