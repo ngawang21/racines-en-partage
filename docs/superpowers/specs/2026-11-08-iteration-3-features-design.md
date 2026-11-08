@@ -20,7 +20,11 @@ iteration; the v1 spec stays authoritative for everything it does not change.
   with a 7-day first delay. Nothing to build.
 - Reference sites she likes: kasana.bio (and its webshop on
   nature-snacks.bio), herboristerieduvalmont.com, thes-traditions.com. The
-  study is `2026-11-08-reference-sites-study.md`.
+  study is `2026-11-08-reference-sites-study.md` (made with REA's browser
+  inspection of eight pages plus the downloaded HTML; both PrestaShop shops
+  use Société des Avis Garantis for reviews and Brevo for the newsletter,
+  Thés & Traditions is the premium benchmark: price per kilo, bulk saving,
+  size options, numbered collection cards, complete Product JSON-LD).
 - "Tous mes produits sont : 100 % végétal, sans additif, sans conservateurs":
   a site-wide promise, shown on the home reassurance strip, the product page
   assurance list and the About page.
@@ -64,7 +68,7 @@ for a 10-product micro-shop, ranked by value over cost on a static stack:
 | Customer accounts, Google sign-in     | Valmont, Thés & T.    | No (3)        |
 | Wishlist                              | Valmont, Thés & T.    | No (3)        |
 | Loyalty points, referral              | Thés & T.             | No (3)        |
-| Live chat, WhatsApp                   | Kasana, Valmont       | No (3)        |
+| Live chat (Valmont's chatbot)         | Valmont               | No (3)        |
 | Instagram feed                        | Thés & T.             | Later (3)     |
 | B2B page                              | Kasana                | Later (3)     |
 | Gift cards                            | Valmont               | No (3)        |
