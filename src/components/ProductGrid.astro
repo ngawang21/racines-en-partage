@@ -18,8 +18,19 @@ interface Props {
   headingLevel?: 'h2' | 'h3';
   id?: string;
   class?: string;
+  /** Cards loaded eagerly (the first row of a page that opens on the grid). */
+  eager?: number;
 }
-const { products, locale, t, shopOpen, headingLevel, id, class: className } = Astro.props;
+const {
+  products,
+  locale,
+  t,
+  shopOpen,
+  headingLevel,
+  id,
+  class: className,
+  eager = 0,
+} = Astro.props;
 const [reviews, settings, all, allFr] = await Promise.all([
   loadReviews(),
   loadSettings(),
@@ -42,6 +53,7 @@ const groups = groupFormats(products, all, formatFamilies(allFr));
           {shopOpen}
           {index}
           {headingLevel}
+          eager={index < eager}
           rating={
             showRatings
               ? reviewStats(formats.flatMap((f) => reviewsFor(f.slug, reviews)))

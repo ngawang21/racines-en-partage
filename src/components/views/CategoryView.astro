@@ -73,6 +73,7 @@ const others = categories.filter((c) => c.slug !== slug);
           {t}
           shopOpen={settings.shop.open}
           headingLevel="h2"
+          eager={5}
         />
       ) : (
         <p class="empty">{t.shop.empty}</p>

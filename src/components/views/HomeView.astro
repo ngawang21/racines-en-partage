@@ -13,8 +13,8 @@ import Hero from '../Hero.astro';
 import HowItWorks from '../HowItWorks.astro';
 import ProductGrid from '../ProductGrid.astro';
 import Reassurance from '../Reassurance.astro';
-import RecipeCards from '../RecipeCards.astro';
 import ReviewsBand from '../ReviewsBand.astro';
+import RitualBand from '../RitualBand.astro';
 import SectionHead from '../SectionHead.astro';
 import StoryBand from '../StoryBand.astro';
 
@@ -32,9 +32,6 @@ const [t, home, products, settings, reviews] = await Promise.all([
 // Up to five: the grid shows as many as fill whole rows (see the styles).
 const featured = products.filter((p) => p.featured).slice(0, 5);
 const bySlug = new Map(products.map((p) => [p.slug, p]));
-const recipeProducts = home.recipeProducts
-  .map((slug) => bySlug.get(slug))
-  .filter((p): p is NonNullable<typeof p> => p !== undefined);
 const shopHref = routePath('shop', locale);
 const aboutHref = routePath('about', locale);
 ---
@@ -70,18 +67,24 @@ const aboutHref = routePath('about', locale);
     image={medallion}
     imageAlt={t.a11y.medallionAlt}
     link={{ href: aboutHref, label: home.hero.cta.secondary }}
+    note={home.ownerNote}
   />
 
   {settings.reviews.enabled && <ReviewsBand {reviews} {products} {locale} {t} />}
 
-  <section class="container section" aria-labelledby="recipes-title">
-    <SectionHead
-      id="recipes-title"
-      title={home.recipesTitle}
-      link={{ href: routePath('recipes', locale), label: t.recipes.viewAll }}
-    />
-    <RecipeCards products={recipeProducts} {locale} {t} />
-  </section>
+  <RitualBand
+    title={home.ritualTitle}
+    moments={home.ritual.map((m) => {
+      const product = bySlug.get(m.product);
+      return {
+        time: m.time,
+        text: m.text,
+        productName: product?.name ?? m.product,
+        href: product ? `${routePath('product', locale, product.slug)}#recipe` : shopHref,
+      };
+    })}
+    link={{ href: routePath('recipes', locale), label: t.recipes.viewAll }}
+  />
 
   <Commitment
     title={home.commitmentTitle}

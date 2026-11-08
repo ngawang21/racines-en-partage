@@ -31,6 +31,8 @@ interface Props {
   headingLevel?: 'h2' | 'h3';
   /** Published reviews of the family (reviewStats); nothing shown at count 0. */
   rating?: { count: number; average: number };
+  /** Above the fold on a grid page: the photo loads at once. */
+  eager?: boolean;
 }
 const {
   product: p,
@@ -41,6 +43,7 @@ const {
   index = 0,
   headingLevel = 'h3',
   rating,
+  eager = false,
 } = Astro.props;
 const Heading = headingLevel;
 const href = routePath('product', locale, p.slug);
@@ -65,7 +68,13 @@ const crop = pouchCrop(p.images[0]!);
     data-crop={crop ? '' : undefined}
     style={crop ? `--crop-s: ${crop.scale}; --crop-y: ${crop.offset}` : undefined}
   >
-    <Picture src={p.images[0]!} alt="" preset="card" />
+    <Picture
+      src={p.images[0]!}
+      alt=""
+      preset="card"
+      loading={eager ? 'eager' : 'lazy'}
+      fetchpriority={eager && index === 0 ? 'high' : undefined}
+    />
     {
       p.stock !== 'in_stock' && (
         <span class:list={['badge', STOCK_CLASS[p.stock], 'card-badge']}>

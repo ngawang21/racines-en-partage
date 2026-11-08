@@ -48,6 +48,8 @@ export const recipeSchema = z.object({
   title: text,
   ingredients: textList.optional(),
   steps: textList.min(1),
+  /** The drink or dish once made (owner photo); the recipe cards show it when set. */
+  image: z.string().regex(ASSET_IMAGE_PATH).optional(),
 });
 export type Recipe = z.infer<typeof recipeSchema>;
 
@@ -164,7 +166,6 @@ const seo = { seoTitle: text, seoDescription: text };
 export const homePageSchema = z.object({
   ...seo,
   hero: z.object({
-    /** The brand slogan, a small italic kicker above the H1. */
     /** The H1: what the shop sells, in one colour. */
     title: text,
     lead: text,
@@ -178,8 +179,11 @@ export const homePageSchema = z.object({
   storyTitle: text,
   storyBody: text,
   storyLands: z.object({ from: textList.min(1), to: text }),
-  recipesTitle: text,
-  recipeProducts: z.array(text).length(3, 'exactly 3 recipe products'),
+  /** A few sentences in the owner's own voice, signed; shown in the story band once written. */
+  ownerNote: z.object({ text, signature: text }).optional(),
+  /** "Un rituel, trois moments": a time of day, one sentence, the product (its recipe anchor). */
+  ritualTitle: text,
+  ritual: z.array(z.object({ time: text, text, product: text })).length(3, 'exactly 3 moments'),
   commitmentTitle: text,
   commitmentBody: text,
 });

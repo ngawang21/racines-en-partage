@@ -1,0 +1,103 @@
+---
+// "Un rituel, trois moments": the brand's word made concrete. Three times of
+// the day, one sentence each, the product whose printed recipe it is. A type
+// moment on cream between the forest band and the engagements, no photo.
+import Icon from './Icon.astro';
+
+interface Props {
+  title: string;
+  moments: Array<{ time: string; text: string; productName: string; href: string }>;
+  link: { href: string; label: string };
+}
+const { title, moments, link } = Astro.props;
+---
+
+<section class="ritual" aria-labelledby="ritual-title">
+  <div class="container section">
+    <div class="ritual-head">
+      <h2 id="ritual-title">{title}</h2>
+      <a class="link-arrow" href={link.href}>
+        {link.label}
+        <Icon name="chevron" />
+      </a>
+    </div>
+    <ol class="moments" role="list">
+      {
+        moments.map((m) => (
+          <li class="moment">
+            <p class="moment-time">{m.time}</p>
+            <p class="moment-text">{m.text}</p>
+            <a class="moment-link" href={m.href}>
+              {m.productName}
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .ritual {
+    border-bottom: 1px solid var(--kraft);
+  }
+  .ritual-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-6);
+    margin-bottom: var(--space-10);
+  }
+  h2 {
+    font-size: var(--fs-5);
+  }
+  .moments {
+    display: grid;
+    gap: var(--space-8);
+    margin: 0;
+    padding: 0;
+  }
+  @media (min-width: 720px) {
+    .moments {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-10);
+    }
+    .moment + .moment {
+      padding-left: var(--space-8);
+      border-left: 1px solid var(--kraft);
+    }
+  }
+  .moment-time {
+    color: var(--hibiscus-deep);
+    font-family: var(--font-display);
+    font-size: var(--fs-4);
+    font-style: italic;
+    line-height: 1.1;
+  }
+  .moment-text {
+    margin-top: var(--space-3);
+    max-width: 30ch;
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: var(--fs-2);
+    line-height: 1.3;
+    text-wrap: balance;
+  }
+  .moment-link {
+    display: inline-block;
+    margin-top: var(--space-4);
+    color: var(--forest);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: var(--kraft);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    transition: text-decoration-color 200ms ease;
+  }
+  @media (hover: hover) {
+    .moment-link:hover {
+      text-decoration-color: var(--forest);
+    }
+  }
+</style>

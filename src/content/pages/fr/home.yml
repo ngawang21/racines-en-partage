@@ -37,11 +37,22 @@ storyBody: >-
 storyLands:
   from: [Niger, Sénégal, Cameroun, Côte d’Ivoire, Inde, Allemagne]
   to: Arnouville
-recipesTitle: Petites recettes
-recipeProducts:
-  - fleurs-d-hibiscus-bissap-100g
-  - tubercules-de-souchet-200g
-  - poudre-de-cacao-100g
+# Le mot de Marie : à écrire avec elle (trois phrases, signées), par exemple
+# ownerNote:
+#   text: >-
+#     ...
+#   signature: Marie
+ritualTitle: Un rituel, trois moments
+ritual:
+  - time: Le matin
+    text: Une cuillère de moringa dans le smoothie.
+    product: poudre-de-moringa-100g
+  - time: L’après-midi
+    text: Un bissap glacé, infusé la veille.
+    product: fleurs-d-hibiscus-bissap-100g
+  - time: Le soir
+    text: Un chocolat chaud au cacao de Côte d’Ivoire.
+    product: poudre-de-cacao-100g
 commitmentTitle: Nos engagements
 commitmentBody: >-
   Nos sachets sont conditionnés par l’ESAT Les Oliviers, à Gennevilliers, un

@@ -35,7 +35,17 @@ storyBody: >-
 storyLands:
   from: [Niger, Senegal, Cameroon, Côte d’Ivoire, India, Germany]
   to: Arnouville
-recipesTitle: Little recipes
+ritualTitle: One ritual, three moments
+ritual:
+  - time: In the morning
+    text: A spoon of moringa in the smoothie.
+    product: poudre-de-moringa-100g
+  - time: In the afternoon
+    text: Iced hibiscus, brewed the day before.
+    product: fleurs-d-hibiscus-bissap-100g
+  - time: In the evening
+    text: Hot chocolate with Ivorian cacao.
+    product: poudre-de-cacao-100g
 commitmentTitle: Our commitments
 commitmentBody: >-
   Our pouches are packed by ESAT Les Oliviers in Gennevilliers, a sheltered

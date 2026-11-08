@@ -281,6 +281,20 @@ collections:
             i18n: true
             required: [fr]
             hint: Par exemple « Smoothie au moringa ».
+          - name: image
+            label: Photo de la recette
+            widget: image
+            required: false
+            choose_url: false
+            media_folder: /src/assets/recipes
+            public_folder: /src/assets/recipes
+            media_libraries:
+              default:
+                config:
+                  transformations:
+                    raster_image: { format: webp, quality: 82, width: 1600, height: 1600 }
+            i18n: true
+            hint: Facultatif. La boisson ou le plat une fois préparé, en largeur ; la page Recettes l'affiche dès qu'elle est là.
           - name: ingredients
             label: Ingrédients de la recette
             label_singular: ingrédient
@@ -691,21 +705,42 @@ collections:
                 required: [fr]
                 field: { name: item, label: Pays, widget: string, i18n: true }
               - { name: to, label: Ville d'arrivée, widget: string, i18n: true, required: [fr] }
-          - { name: recipesTitle, label: Titre des recettes, widget: string, i18n: true, required: [fr] }
-          - name: recipeProducts
-            label: Les trois produits dont la recette est montrée
-            widget: relation
-            collection: products
-            value_field: '{{slug}}'
-            display_fields: ['{{name}} ({{weightGrams}} g)']
-            search_fields: [name]
-            multiple: true
+          - name: ownerNote
+            label: Le mot de Marie
+            widget: object
+            required: false
+            collapsed: auto
+            i18n: true
+            hint: Facultatif. Trois phrases dans vos mots, signées de votre prénom ; le bandeau « Deux terres » les affiche dès qu'elles sont écrites.
+            fields:
+              - { name: text, label: Texte, widget: text, i18n: true, required: [fr] }
+              - { name: signature, label: Signature, widget: string, i18n: true, required: [fr], hint: 'Par exemple « Marie ».' }
+          - { name: ritualTitle, label: Titre du rituel, widget: string, i18n: true, required: [fr] }
+          - name: ritual
+            label: Le rituel, trois moments de la journée
+            label_singular: moment
+            widget: list
             min: 3
             max: 3
-            filters:
-              - { field: hidden, values: [true], exclude: true }
-            i18n: duplicate
-            hint: Choisissez des produits qui ont une « Petite recette ».
+            allow_add: false
+            allow_remove: false
+            allow_duplicate: false
+            i18n: true
+            summary: '{{fields.time}} : {{fields.text}}'
+            fields:
+              - { name: time, label: Moment, widget: string, i18n: true, required: [fr], hint: 'Par exemple « Le matin ».' }
+              - { name: text, label: Une phrase, widget: string, i18n: true, required: [fr] }
+              - name: product
+                label: Produit
+                widget: relation
+                collection: products
+                value_field: '{{slug}}'
+                display_fields: ['{{name}} ({{weightGrams}} g)']
+                search_fields: [name]
+                i18n: duplicate
+                filters:
+                  - { field: hidden, values: [true], exclude: true }
+                hint: Le lien mène à la recette imprimée sur ce produit.
           - { name: commitmentTitle, label: Titre des engagements, widget: string, i18n: true, required: [fr] }
           - { name: commitmentBody, label: Texte des engagements, widget: text, i18n: true, required: [fr] }
           - { name: seoTitle, label: Titre pour Google, widget: string, i18n: true, required: [fr] }

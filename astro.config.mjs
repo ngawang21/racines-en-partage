@@ -19,6 +19,10 @@ export default defineConfig({
   // axe in the e2e suite instead. Re-enable for one session with
   // `pnpm exec astro preferences enable devToolbar` if ever needed.
   devToolbar: { enabled: false },
+  // Every internal link is prefetched on hover or touchstart (the script is
+  // bundled, so the strict CSP keeps working); with the cross-document view
+  // transition the next page then paints at once.
+  prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
   vite: {
     // `astro build` pre-bundles dependencies with a different hash than
     // `astro dev`. With one shared cache, every build made the next dev start

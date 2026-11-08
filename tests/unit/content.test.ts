@@ -521,9 +521,17 @@ describe('pages', () => {
       for (const land of from) expect(storyBody, `${locale} ${land}`).toContain(land);
     }
   });
-  it('the home recipes point at products that carry a recipe', () => {
-    const home = mergePage('home', pages('fr').get('home'));
-    for (const slug of home.recipeProducts) expect(bySlug.get(slug)?.recipe, slug).toBeDefined();
+  it('the home ritual points at three different products that carry a recipe', () => {
+    for (const locale of ['fr', 'en'] as const) {
+      const home = mergePage(
+        'home',
+        pages('fr').get('home'),
+        locale === 'fr' ? undefined : pages('en').get('home'),
+      );
+      const slugs = home.ritual.map((m) => m.product);
+      expect(new Set(slugs).size, locale).toBe(3);
+      for (const slug of slugs) expect(bySlug.get(slug)?.recipe, `${locale} ${slug}`).toBeDefined();
+    }
   });
   it('the home reassurance strip carries the owner promise, in order', () => {
     const items = (locale: string) =>

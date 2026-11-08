@@ -113,7 +113,14 @@ const sorts = [
       </p>
     </div>
 
-    <ProductGrid {products} {locale} {t} shopOpen={settings.shop.open} headingLevel="h2" />
+    <ProductGrid
+      {products}
+      {locale}
+      {t}
+      shopOpen={settings.shop.open}
+      headingLevel="h2"
+      eager={5}
+    />
     <p class="empty" data-empty hidden>{t.shop.empty}</p>
   </section>
 </Base>

@@ -12,6 +12,7 @@ import type { Product } from '../content/schemas';
 import { interpolate } from '../i18n/fallback';
 import { routePath } from '../i18n/routing';
 import Icon from './Icon.astro';
+import Picture from './Picture.astro';
 
 interface Props {
   products: Product[];
@@ -35,6 +36,16 @@ const plural = (n: number, one: string, many: string) =>
       return (
         <li>
           <article class="recipe">
+            {r.image && (
+              <div class="recipe-media">
+                <Picture
+                  src={r.image}
+                  alt=""
+                  preset="card"
+                  sizes="(min-width: 960px) 420px, 100vw"
+                />
+              </div>
+            )}
             <span class="recipe-mark" aria-hidden="true">
               <Icon name="flower" size={20} />
             </span>
@@ -155,6 +166,19 @@ const plural = (n: number, one: string, many: string) =>
   .recipe-mark {
     display: inline-flex;
     color: var(--hibiscus);
+  }
+  .recipe-media {
+    margin: calc(-1 * clamp(var(--space-4), 1rem + 1vw, var(--space-6)))
+      calc(-1 * clamp(var(--space-4), 1rem + 1vw, var(--space-6))) var(--space-5);
+    overflow: hidden;
+    aspect-ratio: 3 / 2;
+    border-radius: var(--radius-m) var(--radius-m) 0 0;
+    background: var(--photo-ground);
+  }
+  .recipe-media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
   .recipe-kicker {
     margin-top: var(--space-4);

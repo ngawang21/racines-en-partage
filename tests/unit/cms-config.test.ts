@@ -626,13 +626,11 @@ describe('CMS config: pages', () => {
   it('offers the icon enum and links the recipes to products', () => {
     const home = fileOf(pages, 'home').fields;
     expect(optionValues(fieldAt(home, 'reassurance.icon'))).toEqual([...REASSURANCE_ICONS]);
-    expect(fieldAt(home, 'recipeProducts')).toMatchObject({
+    expect(fieldAt(home, 'ritual')).toMatchObject({ widget: 'list', min: 3, max: 3 });
+    expect(fieldAt(home, 'ritual.product')).toMatchObject({
       widget: 'relation',
       collection: 'products',
       value_field: '{{slug}}',
-      multiple: true,
-      min: 3,
-      max: 3,
     });
     const about = fileOf(pages, 'about').fields;
     const image = fieldAt(about, 'sections.image');
