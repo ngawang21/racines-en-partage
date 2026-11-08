@@ -18,6 +18,7 @@ import {
   legalFrontmatterSchema,
   productSchema,
   productTranslationSchema,
+  reviewSchema,
   settingsSchema,
   validateCatalog,
   type PageKey,
@@ -434,6 +435,29 @@ describe('hidden, deleted and reordered products', () => {
       )
       .map((p) => p.slug);
     expect(byPosition).toEqual(byName);
+  });
+});
+
+describe('reviews folder', () => {
+  const dir = join(CONTENT, 'reviews');
+  const files = readdirSync(dir).filter((f) => f.endsWith('.yml'));
+  it('is never empty (Astro warns on every page of an empty glob collection)', () => {
+    expect(files.length).toBeGreaterThan(0);
+  });
+  it('every file matches the review schema', () => {
+    for (const f of files) {
+      expect(
+        () => reviewSchema.parse(parseYaml(readFileSync(join(dir, f), 'utf8'))),
+        f,
+      ).not.toThrow();
+    }
+  });
+  it('the model review can never be shown: its product is not in the catalogue', () => {
+    const model = reviewSchema.parse(
+      parseYaml(readFileSync(join(dir, 'exemple--modele.yml'), 'utf8')),
+    );
+    expect(model.published).toBe(false);
+    expect([...frProducts.keys()]).not.toContain(model.product);
   });
 });
 

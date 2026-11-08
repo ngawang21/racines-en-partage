@@ -1,0 +1,17 @@
+# Fiche modèle : montre à quoi ressemble un avis et évite à Astro de signaler un
+# dossier vide. Elle ne peut pas s'afficher sur le site : « exemple » n'est le
+# slug d'aucun produit, et seuls les avis d'un produit du catalogue sont
+# publiés. Les vrais avis arrivent du site (achat vérifié) ou se créent ici.
+product: exemple
+rating: 5
+author: Exemple
+locale: fr
+date: 2026-11-08
+order: ''
+verified: false
+published: false
+title: Un avis ressemble à ceci
+text: >-
+  Quelques phrases sincères sur le goût, la texture ou l'usage du produit.
+  Vous relisez chaque avis reçu, puis vous cochez « Publié » pour l'afficher.
+reply: ''

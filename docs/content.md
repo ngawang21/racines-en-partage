@@ -408,6 +408,11 @@ Spec: section 2.1 of
 **Files.** One YAML file per review in `src/content/reviews/`, no locale
 folder: each review carries its own `locale`. The Astro collection globs
 `*.yml` there, so the file name only matters to humans and to uniqueness.
+The folder always holds `exemple--modele.yml`, a model review that shows the
+shape of a file and keeps Astro from warning about an empty collection on
+every page. It cannot appear on the site: its `product` is `exemple`, not a
+catalogue slug, and only reviews of a catalogue product are published. In
+the CMS it shows as the entry "Exemple"; leave it as it is.
 
 - Written by the Worker (`POST /api/reviews`, GitHub Contents API, commit
   `content: avis client sur <product slug>`):
