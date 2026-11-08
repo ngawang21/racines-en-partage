@@ -11,7 +11,15 @@ import {
   isAllowedOrigin,
   parseCheckoutRequest,
 } from './checkout';
+import {
+  accountOrders,
+  accountReviewToken,
+  handleLogin,
+  openSession,
+  sessionEmail,
+} from './account';
 import type { FormsBudget } from './budget';
+import { clearedSessionCookie, sessionCookie } from './cookies';
 import { ApiError, errorBody, handleError, notFound } from './errors';
 import {
   MAX_FORM_BYTES,
@@ -275,6 +283,44 @@ export function createApp(deps: AppDeps) {
     return c.json({ ok: true }, 201);
   });
 
+  // Customer space (spec 8.6): sign-in link, session cookie, orders, review tokens.
+  const orders = rateLimit('orders', deps.limiters?.orders);
+
+  app.post('/api/account/login', forms, limit(MAX_FORM_BYTES), async (c) => {
+    await handleLogin(await readJson(c, env.SITE_URL), deps, clientIp(c));
+    return c.json({ ok: true }, 202);
+  });
+
+  app.post('/api/account/session', forms, limit(MAX_FORM_BYTES), async (c) => {
+    const { cookieToken, email } = await openSession(await readJson(c, env.SITE_URL), deps);
+    c.header('Set-Cookie', sessionCookie(cookieToken, env.SITE_URL));
+    return c.json({ ok: true, email });
+  });
+
+  app.get('/api/account/orders', orders, async (c) => {
+    const email = await sessionEmail(c.req.header('cookie'), deps);
+    return c.json(await accountOrders(email, deps, catalog));
+  });
+
+  app.post('/api/account/review-token', orders, limit(MAX_FORM_BYTES), async (c) => {
+    const body = await readJson(c, env.SITE_URL);
+    const email = await sessionEmail(c.req.header('cookie'), deps);
+    return c.json({ token: await accountReviewToken(body, email, deps, catalog) });
+  });
+
+  app.post('/api/account/logout', limit(MAX_FORM_BYTES), async (c) => {
+    if (!isAllowedOrigin(c.req.raw, env.SITE_URL)) {
+      throw new ApiError(403, 'FORBIDDEN_ORIGIN', 'Cross-origin request refused');
+    }
+    c.header('Set-Cookie', clearedSessionCookie(env.SITE_URL));
+    return c.json({ ok: true });
+  });
+
+  app.all('/api/account/login', methodNotAllowed('POST'));
+  app.all('/api/account/session', methodNotAllowed('POST'));
+  app.all('/api/account/orders', methodNotAllowed('GET'));
+  app.all('/api/account/review-token', methodNotAllowed('POST'));
+  app.all('/api/account/logout', methodNotAllowed('POST'));
   app.all('/api/contact', methodNotAllowed('POST'));
   app.all('/api/newsletter', methodNotAllowed('POST'));
   app.all('/api/newsletter/confirm', methodNotAllowed('POST'));

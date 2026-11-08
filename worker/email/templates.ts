@@ -720,3 +720,57 @@ export function renderStockAlertEmail(input: {
   );
   return { subject, html, text };
 }
+
+// Customer space sign-in link (FR or EN) --------------------------------------
+
+const LOGIN: Record<
+  Locale,
+  { subject: string; intro: string; button: string; validity: string; ignore: string }
+> = {
+  fr: {
+    subject: 'Votre lien de connexion',
+    intro:
+      'Voici votre lien pour ouvrir votre espace Racines en Partage et retrouver vos commandes.',
+    button: 'Ouvrir mon espace',
+    validity: 'Ce lien est valable 15 minutes.',
+    ignore:
+      'Si vous n’avez rien demandé, ignorez ce message : personne ne peut se connecter sans ce lien.',
+  },
+  en: {
+    subject: 'Your sign-in link',
+    intro: 'Here is your link to open your Racines en Partage space and find your orders.',
+    button: 'Open my space',
+    validity: 'This link is valid for 15 minutes.',
+    ignore: 'If you did not ask for it, ignore this message: nobody can sign in without this link.',
+  },
+};
+
+export function renderLoginEmail(input: { locale: Locale; url: string }): RenderedEmail {
+  const { locale, url } = input;
+  const t = LOGIN[locale];
+  const html = layout(
+    locale,
+    t.subject,
+    t.intro,
+    [
+      heading(t.subject),
+      paragraph(esc(t.intro)),
+      button(url, t.button),
+      paragraph(
+        `<span style="color:${C.muted};font-size:13px;">${esc(t.validity)} ${esc(t.ignore)}</span>`,
+      ),
+    ].join('\n'),
+  );
+  const text = [
+    t.subject,
+    '',
+    t.intro,
+    '',
+    `${t.button}${colon(locale)}${url}`,
+    '',
+    t.validity,
+    t.ignore,
+    '',
+  ].join('\n');
+  return typeset(locale, { subject: t.subject, html, text });
+}

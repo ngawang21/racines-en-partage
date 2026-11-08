@@ -56,6 +56,44 @@ export interface ReviewToken {
   e: number;
 }
 
+/** The review token of the invitation and of the customer space (60 days). */
+export function issueReviewToken(
+  sessionId: string,
+  skus: string[],
+  locale: Locale,
+  now: Date,
+  secret: string,
+): Promise<string> {
+  const payload: ReviewToken = {
+    t: 'review',
+    s: sessionId,
+    k: skus,
+    l: locale,
+    e: expiresIn(now, REVIEW_TOKEN_TTL_SECONDS),
+  };
+  return signToken(payload, secret);
+}
+
+/** SKUs of an order, line items first, else the checkout's `metadata.skus`. */
+export function orderSkus(
+  lines: Array<{ sku: string | null }>,
+  metadata: Stripe.Metadata | null,
+): string[] {
+  const fromLines = lines.flatMap((l) => (l.sku ? [l.sku] : []));
+  const skus = fromLines.length
+    ? fromLines
+    : (metadata?.skus ?? '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+  return [...new Set(skus)];
+}
+
+/** SKUs of the order still waiting for a review. */
+export function unreviewedSkus(skus: string[], metadata: Stripe.Metadata | null): string[] {
+  return skus.filter((sku) => metadata?.[reviewedKey(sku)] !== 'true');
+}
+
 export function isReviewToken(value: unknown): value is ReviewToken {
   if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
@@ -318,14 +356,7 @@ export async function inviteReviews(deps: InviteDeps, now: Date): Promise<Invite
         continue;
       }
       const products = [...new Set(summary.lines.map((l) => l.name).filter(Boolean))];
-      const payload: ReviewToken = {
-        t: 'review',
-        s: brief.id,
-        k: skus,
-        l: summary.locale,
-        e: expiresIn(now, REVIEW_TOKEN_TTL_SECONDS),
-      };
-      const token = await signToken(payload, secret);
+      const token = await issueReviewToken(brief.id, skus, summary.locale, now, secret);
       const email = renderReviewInvitation({
         locale: summary.locale,
         name: summary.customer.name,

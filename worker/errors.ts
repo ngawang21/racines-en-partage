@@ -29,6 +29,7 @@ export const ERROR_CODES = [
   'ORDER_NOT_FOUND',
   'MAIL_FAILED',
   'FEATURE_DISABLED',
+  'UNAUTHENTICATED',
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

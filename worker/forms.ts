@@ -145,14 +145,14 @@ export function switchedOff(): ApiError {
 }
 
 /** Refuses a form that would send e-mail without Turnstile in production. */
-function requireCaptchaSetup(deps: AppDeps, form: string): void {
+export function requireCaptchaSetup(deps: AppDeps, form: string): void {
   if (deps.captcha === null) {
     logError('config.missing', { name: 'TURNSTILE_SECRET_KEY', form });
     throw new ApiError(404, 'FEATURE_DISABLED', 'This feature is not enabled');
   }
 }
 
-async function checkCaptcha(deps: AppDeps, token: string | undefined, ip: string | null) {
+export async function checkCaptcha(deps: AppDeps, token: string | undefined, ip: string | null) {
   if (!deps.captcha) return;
   if (!(await deps.captcha.verify(token, ip))) {
     throw new ApiError(400, 'CAPTCHA_FAILED', 'Captcha check failed');
@@ -160,7 +160,7 @@ async function checkCaptcha(deps: AppDeps, token: string | undefined, ip: string
 }
 
 /** One unit of the daily e-mail budget, or 429 once it is spent. */
-async function takeBudget(deps: AppDeps, form: string): Promise<void> {
+export async function takeBudget(deps: AppDeps, form: string): Promise<void> {
   if (!deps.budget || (await deps.budget.take())) return;
   logError('forms.budget_exhausted', { form });
   throw new ApiError(429, 'RATE_LIMITED', 'Daily form limit reached, try again tomorrow');

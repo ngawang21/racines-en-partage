@@ -3,6 +3,7 @@ import {
   lookupUrl,
   renderContactEmail,
   renderCustomerEmail,
+  renderLoginEmail,
   renderNewsletterConfirmation,
   renderOwnerEmail,
   renderReviewInvitation,
@@ -282,5 +283,32 @@ describe('owner e-mails from the forms', () => {
     );
     expect(email.html).toMatchSnapshot('stock-alert.html');
     expect(email.text).toMatchSnapshot('stock-alert.txt');
+  });
+});
+
+describe('customer space sign-in link', () => {
+  it('FR matches the snapshot: one button, 15 minutes, ignore if not asked', () => {
+    const email = renderLoginEmail({
+      locale: 'fr',
+      url: 'https://racinesenpartage.fr/mon-compte/?t=abc.def',
+    });
+    expect(email.subject).toBe('Votre lien de connexion');
+    expect(email.html).toMatchSnapshot('login-fr.html');
+    expect(email.text).toMatchSnapshot('login-fr.txt');
+    expect(email.html.match(/<a href="https:\/\/racinesenpartage\.fr\/mon-compte\//g)).toHaveLength(
+      1,
+    );
+    expect(email.text).toContain('valable 15 minutes');
+    expect(email.text).toContain('Si vous n’avez rien demandé, ignorez ce message');
+  });
+
+  it('EN matches the snapshot', () => {
+    const email = renderLoginEmail({
+      locale: 'en',
+      url: 'https://racinesenpartage.fr/en/account/?t=abc.def',
+    });
+    expect(email.subject).toBe('Your sign-in link');
+    expect(email.html).toMatchSnapshot('login-en.html');
+    expect(email.text).toMatchSnapshot('login-en.txt');
   });
 });

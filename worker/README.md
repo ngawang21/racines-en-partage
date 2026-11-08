@@ -21,6 +21,8 @@ invitations (`scheduled` in `index.ts`).
 | `tokens.ts`           | `signToken`, `verifyToken`, `peekToken`: base64url JSON plus HMAC-SHA256 (WebCrypto)                       |
 | `yaml.ts`             | `toYaml`: flat mapping, every string quoted in the style Prettier keeps                                    |
 | `github.ts`           | GitHub Contents API client (`PUT`; a 422 about the missing `sha` means the file exists)                    |
+| `account.ts`          | Customer space: sign-in link, session token, orders of the e-mail, review tokens                           |
+| `cookies.ts`          | `readCookie`, `serializeCookie`, the `rep_session` cookie (set and cleared)                                |
 | `budget.ts`           | Daily budget of form e-mails in KV (`forms:<UTC day>`, `FORMS_DAILY_LIMIT`)                                |
 | `turnstile.ts`        | Turnstile `siteverify` client, skipped without a secret                                                    |
 | `webhook.ts`          | Signature check, paid-order handling, e-mails, `emails_sent` mark, error classes                           |
@@ -33,17 +35,22 @@ invitations (`scheduled` in `index.ts`).
 
 ## Endpoints
 
-| Method and path                | Success                                                   |
-| ------------------------------ | --------------------------------------------------------- |
-| `POST /api/checkout`           | `200 { url }`: redirect the browser to Stripe Checkout    |
-| `GET /api/orders/:sessionId`   | `200 { status, number, lines, amounts, delivery, email }` |
-| `POST /api/webhooks/stripe`    | `200 { received: true }`                                  |
-| `GET /api/health`              | `200 { ok: true, version, catalogGeneratedAt }`           |
-| `POST /api/orders/lookup`      | `200` the same body as `GET /api/orders/:sessionId`       |
-| `POST /api/contact`            | `202 { ok: true }`                                        |
-| `POST /api/newsletter`         | `202 { ok: true }`                                        |
-| `POST /api/newsletter/confirm` | `200 { ok: true }`                                        |
-| `POST /api/reviews`            | `201 { ok: true }`                                        |
+| Method and path                  | Success                                                   |
+| -------------------------------- | --------------------------------------------------------- |
+| `POST /api/checkout`             | `200 { url }`: redirect the browser to Stripe Checkout    |
+| `GET /api/orders/:sessionId`     | `200 { status, number, lines, amounts, delivery, email }` |
+| `POST /api/webhooks/stripe`      | `200 { received: true }`                                  |
+| `GET /api/health`                | `200 { ok: true, version, catalogGeneratedAt }`           |
+| `POST /api/orders/lookup`        | `200` the same body as `GET /api/orders/:sessionId`       |
+| `POST /api/contact`              | `202 { ok: true }`                                        |
+| `POST /api/newsletter`           | `202 { ok: true }`                                        |
+| `POST /api/newsletter/confirm`   | `200 { ok: true }`                                        |
+| `POST /api/reviews`              | `201 { ok: true }`                                        |
+| `POST /api/account/login`        | `202 { ok: true }`                                        |
+| `POST /api/account/session`      | `200 { ok: true, email }` plus the `rep_session` cookie   |
+| `GET /api/account/orders`        | `200 { email, orders }` (cookie)                          |
+| `POST /api/account/review-token` | `200 { token }` (cookie)                                  |
+| `POST /api/account/logout`       | `200 { ok: true }`, cookie cleared                        |
 
 `POST /api/checkout` takes
 `{ locale: 'fr' | 'en', items: [{ sku, quantity, unitAmount? }], delivery, acceptedTerms: true }`
@@ -192,6 +199,51 @@ session of this shop whose `orderNumber` equals the number with spaces
 removed and upper-cased, and answers the public order, without the 48 h
 limit. No match: 404 `ORDER_NOT_FOUND`.
 
+### Customer space (spec 8.6)
+
+No password and no database: `FORMS_SECRET` signs every token below.
+
+- `POST /api/account/login` (`FORMS_LIMITER`, daily budget, Turnstile with
+  the same production rule as the forms): `{ email, locale, turnstile?, website? }`.
+  Always 202 once valid, whether or not the address ever ordered (a refused
+  address answers 202 too; a transient Resend failure is 502 `MAIL_FAILED`).
+  Sends "Votre lien de connexion" / "Your sign-in link" with
+  `<SITE_URL>/mon-compte/?t=<token>` (EN `/en/account/?t=`), token
+  `{ t: 'login', m: email as typed and trimmed, l, e: now + 15 min }`.
+  The link is not single-use (no storage): it works for its 15 minutes.
+  Disabled (404 `FEATURE_DISABLED`) without `FORMS_SECRET` or
+  `RESEND_API_KEY`.
+- `POST /api/account/session` (`FORMS_LIMITER`): `{ token }`. A valid login
+  token answers `200 { ok: true, email: 'a***@***.com' }` and sets
+  `rep_session=<{ t: 'session', m, e: now + 30 days }>; Max-Age=2592000; Path=/api/account; HttpOnly; Secure; SameSite=Lax`
+  (`Secure` omitted when `SITE_URL` is `http://localhost` or
+  `http://127.0.0.1`). Anything else is 400 `INVALID_TOKEN`, no cookie.
+- `GET /api/account/orders` (`ORDERS_LIMITER`, cookie): lists
+  `customer_details.email = m` (pages of 100, at most 300 sessions), keeps
+  completed sessions of this shop, newest first. Each order is the
+  `publicOrder` shape plus `id` (session id), `createdAt` (ISO), `sku` on
+  each line and `reviewable` (paid, with an e-mail, a SKU without
+  `reviewed_<sku>`, and reviews on in `catalog.json`). Lines are attached
+  for the 20 most recent; older ones have `lines: []` and
+  `linesOmitted: true` (their review state comes from `metadata.skus`).
+  401 `UNAUTHENTICATED` without a valid cookie.
+- `POST /api/account/review-token` (`ORDERS_LIMITER`, cookie):
+  `{ sessionId }`. The session must belong to the cookie's address (case
+  ignored), be this shop's and paid; otherwise 404 `ORDER_NOT_FOUND`, the
+  same answer as an unknown id. Answers `{ token }`, the invitation's review
+  token for the SKUs not yet reviewed (60 days), or 409 `ALREADY_REVIEWED`.
+  404 `FEATURE_DISABLED` when reviews are off.
+- `POST /api/account/logout` (origin check, any body): clears the cookie
+  (`Max-Age=0`). A session token cannot be revoked server-side; changing
+  `FORMS_SECRET` signs everybody out (and voids every pending link).
+
+The tokens keep the address as typed (trimmed). Stripe's
+`customer_details.email` filter compares the address as stored, so the
+orders route lists both spellings (as typed and lower-cased, when they
+differ) and merges them by session id. An order stored with capitals is
+found from a login typed with the same capitals, not from an all
+lower-case login; the order lookup page covers that case.
+
 ### Review invitations (cron)
 
 `scheduled` runs `inviteReviews` at `0 9 * * *` (UTC). It lists completed
@@ -249,6 +301,7 @@ localises by `code` (`ERROR_KEY` in `src/cart/api.ts`, every code of
 | 400    | `INVALID_SIGNATURE`      | Webhook signature missing, wrong or older than 300 s                                          |
 | 400    | `CAPTCHA_FAILED`         | Turnstile token missing or refused (contact, newsletter)                                      |
 | 400    | `INVALID_TOKEN`          | Review or newsletter token bad, expired or of the other type; review SKU or session not valid |
+| 401    | `UNAUTHENTICATED`        | Customer space without a valid `rep_session` cookie                                           |
 | 403    | `FORBIDDEN_ORIGIN`       | Checkout from another origin                                                                  |
 | 404    | `NOT_FOUND`              | Unknown `/api` path, no such order, or an order older than 48 h                               |
 | 404    | `ORDER_NOT_FOUND`        | Lookup: no order of that number for that e-mail                                               |
