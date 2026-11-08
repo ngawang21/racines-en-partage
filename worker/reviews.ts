@@ -23,7 +23,8 @@ import {
   withLineItems,
 } from './orders';
 import { expiresIn, signToken, verifyToken } from './tokens';
-import type { AppEnv, Locale, Mailer, StripeLike } from './types';
+import type { AppEnv, Locale, MailMessage, Mailer, StripeLike } from './types';
+import { isPermanentMailError } from './webhook';
 import { toYaml } from './yaml';
 
 /** The invitation link works for 60 days. */
@@ -37,7 +38,11 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const INVITE_WINDOW_DAYS = { from: 10, to: 7 } as const;
 /** 100 sessions per page; 10 pages is far above a day of this shop's orders. */
 export const MAX_INVITE_PAGES = 10;
-/** Session metadata set once the invitation is out. */
+/**
+ * Session metadata set just before the invitation is sent (fail closed: a
+ * session that cannot be marked is not invited), removed again when the
+ * send fails transiently so the next run retries.
+ */
 export const REVIEW_INVITED_KEY = 'review_invited';
 /** Session metadata set once a product of the order is reviewed. */
 export const reviewedKey = (sku: string) => `reviewed_${sku}`;
@@ -308,11 +313,23 @@ async function listWindow(stripe: StripeLike, now: Date): Promise<Stripe.Checkou
   return sessions;
 }
 
+async function unmarkInvited(stripe: StripeLike, sessionId: string): Promise<void> {
+  try {
+    await stripe.checkout.sessions.update(sessionId, { metadata: { [REVIEW_INVITED_KEY]: '' } });
+  } catch (err) {
+    // The session stays marked: this order gets no invitation (fail closed).
+    logError('review.unmark_failed', { sessionId, error: describeError(err) });
+  }
+}
+
 /**
  * The daily run: one invitation per paid order of this shop created between
- * 8 and 7 days ago, then `metadata.review_invited`. Each session falls in
- * exactly one daily window; Resend's idempotency key `<session id>:review`
- * drops a duplicate if the run is retried the same day.
+ * 10 and 7 days ago (`INVITE_WINDOW_DAYS`), so each session is listed by
+ * three consecutive runs. `metadata.review_invited` is written BEFORE the
+ * e-mail and the send is skipped when that write fails (`review.mark_failed`):
+ * a refused metadata update must never turn into one invitation per run.
+ * Resend's idempotency key `<session id>:review` drops a duplicate if the
+ * run is retried the same day.
  */
 export async function inviteReviews(deps: InviteDeps, now: Date): Promise<InviteReport> {
   const report: InviteReport = { listed: 0, invited: 0, skipped: 0, failed: 0 };
@@ -348,6 +365,7 @@ export async function inviteReviews(deps: InviteDeps, now: Date): Promise<Invite
       report.skipped++;
       continue;
     }
+    let message: MailMessage;
     try {
       const summary = summariseSession(await withLineItems(deps.stripe, brief));
       const skus = [...new Set(summary.lines.flatMap((l) => (l.sku ? [l.sku] : [])))];
@@ -363,27 +381,40 @@ export async function inviteReviews(deps: InviteDeps, now: Date): Promise<Invite
         products,
         url: `${site}${ROUTES.review[summary.locale]}?t=${token}`,
       });
-      await deps.mailer.send({
+      message = {
         to: summary.customer.email!.trim(),
         ...email,
         ...(deps.env.ORDER_EMAIL_TO ? { replyTo: deps.env.ORDER_EMAIL_TO } : {}),
         idempotencyKey: `${brief.id}:review`,
         template: 'review_invitation',
-      });
+      };
     } catch (err) {
       logError('review.invite_failed', { sessionId: brief.id, error: describeError(err) });
       report.failed++;
       continue;
     }
-    report.invited++;
     try {
+      // Mark first (fail closed). Stripe merges metadata: the delivery keys stay.
       await deps.stripe.checkout.sessions.update(brief.id, {
         metadata: { [REVIEW_INVITED_KEY]: 'true' },
       });
     } catch (err) {
-      // The e-mail is out; the next run no longer lists this session.
+      // Without the mark the next two runs would invite again: send nothing.
       logError('review.mark_failed', { sessionId: brief.id, error: describeError(err) });
+      report.failed++;
+      continue;
     }
+    try {
+      await deps.mailer.send(message);
+    } catch (err) {
+      logError('review.invite_failed', { sessionId: brief.id, error: describeError(err) });
+      report.failed++;
+      // A permanent refusal (bad address) would fail again: the mark stays.
+      // Otherwise remove it (Stripe deletes a key set to '') so tomorrow retries.
+      if (!isPermanentMailError(err)) await unmarkInvited(deps.stripe, brief.id);
+      continue;
+    }
+    report.invited++;
   }
   logInfo('review.invites', { ...report });
   return report;

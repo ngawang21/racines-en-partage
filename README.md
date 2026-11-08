@@ -41,24 +41,24 @@ CMS: Sveltia at `/admin/`.
 
 ## Commands
 
-| Command             | Effect                                                            |
-| ------------------- | ----------------------------------------------------------------- |
-| `pnpm install`      | install dependencies (Node 22, pnpm 9)                            |
-| `pnpm dev`          | development server on http://localhost:4321                       |
-| `pnpm build`        | build the site into `dist/`                                       |
-| `pnpm preview`      | serve `dist/` on http://127.0.0.1:4321                            |
-| `pnpm check`        | `astro check` and prettier                                        |
-| `pnpm format`       | reformat the code with prettier                                   |
-| `pnpm test`         | unit tests (content, fallback, routes, prices, graph, catalog)    |
-| `pnpm test:build`   | assertions over `dist/` (run `pnpm build` first)                  |
-| `pnpm test:worker`  | Worker API tests (Stripe, webhook, e-mails, with fakes)           |
-| `pnpm e2e`          | Playwright: cart, checkout, thank-you page, accessibility         |
-| `pnpm dev:worker`   | build, then `wrangler dev` with the Worker (needs `.dev.vars`)    |
-| `pnpm deploy`       | `wrangler deploy` (Workers Builds does this on push)              |
-| `pnpm og`           | regenerate the Open Graph images after a product change           |
-| `pnpm brand <png>`  | regenerate logo, medallion and icons from the owner's master logo |
-| `pnpm card [v]`     | business card files for `/carte/` (`medaillon`, `kraft`, `foret`) |
-| `pnpm launch-check` | fails while the SIRET, the prices or a legal TODO is pending      |
+| Command             | Effect                                                                                                            |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `pnpm install`      | install dependencies (Node 22, pnpm 9)                                                                            |
+| `pnpm dev`          | development server on http://localhost:4321                                                                       |
+| `pnpm build`        | build the site into `dist/`                                                                                       |
+| `pnpm preview`      | serve `dist/` on http://127.0.0.1:4321                                                                            |
+| `pnpm check`        | `astro check` and prettier                                                                                        |
+| `pnpm format`       | reformat the code with prettier                                                                                   |
+| `pnpm test`         | unit tests (content, fallback, routes, prices, graph, catalog)                                                    |
+| `pnpm test:build`   | assertions over `dist/` (run `pnpm build` first)                                                                  |
+| `pnpm test:worker`  | Worker API tests (Stripe, webhook, e-mails, with fakes)                                                           |
+| `pnpm e2e`          | Playwright: cart, checkout, thank-you page, accessibility                                                         |
+| `pnpm dev:worker`   | build, then `wrangler dev` with the Worker (needs `.dev.vars`)                                                    |
+| `pnpm deploy`       | `wrangler deploy` (Workers Builds does this on push)                                                              |
+| `pnpm og`           | regenerate the Open Graph images after a product change                                                           |
+| `pnpm brand <png>`  | regenerate logo, medallion and icons from the owner's master logo                                                 |
+| `pnpm card [v]`     | business card files for `/carte/` (`medaillon`, `kraft`, `foret`)                                                 |
+| `pnpm launch-check` | fails while the SIRET, the prices, a legal TODO, the Turnstile site key, the relay brand or `FORMS_KV` is pending |
 
 ### Seeing the site from a laptop
 

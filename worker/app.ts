@@ -245,6 +245,14 @@ export function createApp(deps: AppDeps) {
   });
 
   app.post('/api/webhooks/stripe', limit(MAX_WEBHOOK_BYTES), async (c) => {
+    if (!env.STRIPE_WEBHOOK_SECRET) {
+      // Stripe only sees a 400; this line tells the Worker logs why.
+      logError('config.missing', {
+        name: 'STRIPE_WEBHOOK_SECRET',
+        consequence:
+          'every Stripe event is refused (400 INVALID_SIGNATURE) and no order e-mail goes out',
+      });
+    }
     const payload = await c.req.text();
     const event = await verifyEvent(
       deps.stripe,

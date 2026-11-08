@@ -1,8 +1,11 @@
 // Go-live gate (spec 8). Fails while an owner input is missing: the SIRET,
-// the price confirmation, or a TODO left in a legal text. Part of the launch
-// checklist, not of CI: previews may deploy with placeholders, the live shop
-// may not.
-import { readFileSync, readdirSync } from 'node:fs';
+// the price confirmation, or a TODO left in a legal text; and while a setting
+// still switches a feature off: the Turnstile site key (without it the
+// contact, newsletter, stock alert and sign-in forms answer CAPTCHA_FAILED),
+// the Mondial Relay brand (BDTEST is the test code), the FORMS_KV binding (the
+// daily form e-mail ceiling). Part of the launch checklist, not of CI:
+// previews may deploy with placeholders, the live shop may not.
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
@@ -37,6 +40,47 @@ if (settings?.launch?.pricesConfirmed !== true) {
   problems.push('src/content/settings/shop.yml: launch.pricesConfirmed is not true');
 }
 
+if (!String(settings?.forms?.turnstileSiteKey ?? '').trim()) {
+  problems.push(
+    'src/content/settings/shop.yml: forms.turnstileSiteKey is empty (contact, newsletter, stock alert and sign-in forms would answer CAPTCHA_FAILED)',
+  );
+}
+
+/** The value of `name` in a dotenv file, or undefined (no quotes handling beyond one pair). */
+function dotenvValue(text, name) {
+  const line = text.split('\n').find((l) => l.trim().startsWith(`${name}=`));
+  return line
+    ?.slice(line.indexOf('=') + 1)
+    .trim()
+    .replace(/^(['"])(.*)\1$/, '$2');
+}
+// The build reads the environment first, then .env (Workers Builds sets a build variable).
+const envFile = join(root, '.env');
+const relayBrand =
+  process.env.PUBLIC_MONDIAL_RELAY_BRAND ??
+  (existsSync(envFile)
+    ? (dotenvValue(readFileSync(envFile, 'utf8'), 'PUBLIC_MONDIAL_RELAY_BRAND') ?? '')
+    : undefined);
+if (relayBrand === undefined) {
+  problems.push(
+    'no .env: relay brand unknown (PUBLIC_MONDIAL_RELAY_BRAND, same value as the Workers Builds variable)',
+  );
+} else if (!relayBrand.trim() || relayBrand.trim().toUpperCase() === 'BDTEST') {
+  problems.push(
+    `${process.env.PUBLIC_MONDIAL_RELAY_BRAND === undefined ? '.env' : 'environment'}: PUBLIC_MONDIAL_RELAY_BRAND is ${relayBrand.trim() ? 'BDTEST (the test code)' : 'unset'}, not the owner's Mondial Relay code`,
+  );
+}
+
+const wrangler = readFileSync(join(root, 'wrangler.jsonc'), 'utf8')
+  .split('\n')
+  .filter((line) => !line.trim().startsWith('//'))
+  .join('\n');
+if (!/"binding"\s*:\s*"FORMS_KV"/.test(wrangler)) {
+  problems.push(
+    'wrangler.jsonc: the FORMS_KV binding is still commented out (no daily ceiling on form e-mails)',
+  );
+}
+
 const legalDir = join(root, 'src/content/legal');
 for (const locale of readdirSync(legalDir)) {
   for (const file of readdirSync(join(legalDir, locale)).filter((f) => f.endsWith('.md'))) {
@@ -54,4 +98,6 @@ if (problems.length > 0) {
   for (const p of problems) console.error(`- ${p}`);
   process.exit(1);
 }
-console.log('launch-check: SIRET set and valid, prices confirmed, no TODO in the legal texts.');
+console.log(
+  'launch-check: SIRET set and valid, prices confirmed, no TODO in the legal texts, Turnstile site key set, relay brand set, FORMS_KV bound.',
+);

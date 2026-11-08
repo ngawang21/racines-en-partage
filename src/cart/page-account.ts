@@ -2,7 +2,11 @@
 // sign-in form, enhanced by src/forms/forms.ts) and `in` (greeting, logout,
 // order cards). A ?t= sign-in token, already removed from the address by
 // ui.ts, is traded for the session cookie; without one the page asks for the
-// orders directly (the cookie lasts 30 days) and a 401 means "logged out".
+// orders directly (the cookie lasts 30 days) and a 401 means "logged out". A
+// refused token (opened twice, older than 15 minutes) never hides a valid
+// cookie: the page then asks for the orders, and says "link expired" only when
+// the cookie does not open the space either.
+import { addOutcome } from './add-outcome';
 import { linesToCart } from './reorder';
 import {
   ERROR_KEY,
@@ -21,6 +25,7 @@ interface AccountStrings {
   greeting: string;
   orderDate: string;
   reordered: string;
+  reorderedCapped: string;
   reorderMissing: string;
   reorderNone: string;
   reorderOf: string;
@@ -139,9 +144,27 @@ export function initAccount(ctx: CartContext, token: string | null): void {
     reorder.setAttribute('aria-label', ctx.fmt(as.reorderOf, { number: order.number }));
     reorder.addEventListener('click', () => {
       const pick = linesToCart(order, ctx.catalog, ctx.store.maxQuantity);
-      for (const line of pick.lines) ctx.store.addLine(line.sku, line.quantity);
+      const quantityOf = (sku: string) =>
+        ctx.store.getCart().lines.find((l) => l.sku === sku)?.quantity ?? 0;
+      const outcomes = pick.lines.map((line) => {
+        const before = quantityOf(line.sku);
+        ctx.store.addLine(line.sku, line.quantity);
+        return addOutcome(before, quantityOf(line.sku), line.quantity);
+      });
+      // The order asked for more than the per-line maximum, or the cart was
+      // already near it: say so rather than "added".
+      const capped = pick.capped || outcomes.some((o) => o !== 'added');
+      const max = ctx.store.maxQuantity;
+      const added =
+        outcomes.length === 0
+          ? as.reorderNone
+          : outcomes.every((o) => o === 'none')
+            ? ctx.fmt(ctx.t.cart.maxReached, { max })
+            : capped
+              ? ctx.fmt(as.reorderedCapped || as.reordered, { max })
+              : as.reordered;
       const parts = [
-        pick.lines.length > 0 ? as.reordered : as.reorderNone,
+        added,
         pick.unavailable.length > 0
           ? ctx.fmt(as.reorderMissing, { names: pick.unavailable.join(', ') })
           : '',
@@ -182,12 +205,13 @@ export function initAccount(ctx: CartContext, token: string | null): void {
    * succeeded: a failure then is real and shows in the signed-in view. Without
    * it, a failure that does not prove a session shows the bare sign-in form.
    */
-  const load = async (signedInAs: string | null = null) => {
+  const load = async (signedInAs: string | null = null, signedOutMessage = '') => {
     show('loading', as.loading);
     setFailure('');
     const answer = await getAccountOrders();
     if (answer.status === 'error') {
-      if (accountFailure(answer.error, signedInAs !== null) === 'signed-out') return loggedOut();
+      if (accountFailure(answer.error, signedInAs !== null) === 'signed-out')
+        return loggedOut(signedOutMessage);
       list.replaceChildren();
       if (empty) empty.hidden = true;
       if (greeting)
@@ -209,8 +233,11 @@ export function initAccount(ctx: CartContext, token: string | null): void {
       const email = (result.data as { email?: unknown } | null)?.email;
       return load(typeof email === 'string' ? email : '');
     }
+    // The token was refused (or the call failed): a valid session cookie
+    // still opens the space; the message only shows if it does not.
     const code = result.error.code;
-    loggedOut(
+    return load(
+      null,
       code === 'INVALID_TOKEN' || code === 'VALIDATION_ERROR'
         ? as.expired
         : errorText(result.error),

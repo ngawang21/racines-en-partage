@@ -3,6 +3,7 @@ import {
   ERROR_KEY,
   buildCheckoutRequest,
   claimOrderClear,
+  releaseOrderClear,
   getOrder,
   isSessionId,
   parseApiError,
@@ -403,5 +404,23 @@ describe('API errors and responses', () => {
       removeItem: () => {},
     };
     expect(claimOrderClear(broken, 'cs_test_4')).toBe(true);
+  });
+
+  it('releaseOrderClear forgets one claim, so a later visit empties the cart again', () => {
+    const map = new Map<string, string>();
+    const storage = {
+      getItem: (k: string) => map.get(k) ?? null,
+      setItem: (k: string, v: string) => void map.set(k, v),
+      removeItem: (k: string) => void map.delete(k),
+    };
+    expect(claimOrderClear(storage, 'cs_test_1')).toBe(true);
+    expect(claimOrderClear(storage, 'cs_test_2')).toBe(true);
+    releaseOrderClear(storage, 'cs_test_1');
+    expect(claimOrderClear(storage, 'cs_test_2')).toBe(false);
+    expect(claimOrderClear(storage, 'cs_test_1')).toBe(true);
+    // Nothing stored, no storage, corrupt value: no throw.
+    releaseOrderClear(null, 'cs_test_1');
+    map.set('rep.cart.cleared', '{');
+    expect(() => releaseOrderClear(storage, 'cs_test_1')).not.toThrow();
   });
 });

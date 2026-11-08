@@ -32,7 +32,9 @@ costs and accounts: `docs/launch-runbook.md` (details in `docs/deployment.md`).
 logo, then `pnpm og`),
 `pnpm card [medaillon|kraft|foret|review]` (business card PDF, PNGs and vCard,
 committed; `kraft` is published; `review` renders all three to `out/review/card/`),
-`pnpm launch-check`.
+`pnpm launch-check` (fails while the SIRET, the prices, a legal TODO, the
+Turnstile site key, the Mondial Relay brand or the `FORMS_KV` binding is
+still pending).
 Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
 
 ## Layout
@@ -279,6 +281,9 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   shows up as list items that no longer select a point: run
   `node scripts/relay-capture.mjs` after `pnpm build` (`docs/deployment.md`,
   section 11.2) and extend the parser.
-- Sveltia is pinned (`public/admin/index.html`, version plus `integrity`)
-  and the admin `script-src` allows that version's folder only: upgrade both
-  together (`docs/content.md`, "Upgrading Sveltia").
+- Sveltia's main bundle is pinned (`public/admin/index.html`, version plus
+  `integrity`: upgrade both together, `docs/content.md`, "Upgrading
+  Sveltia"). The admin `script-src` allows the whole `https://unpkg.com`
+  host on purpose (after sign-in Sveltia imports helper packages from other
+  unpkg paths, `docs/content.md`, section 7; the build test expects it), so
+  the helpers are not pinned.

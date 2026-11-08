@@ -10,8 +10,16 @@ import type { AppEnv, MailMessage, Mailer, StripeLike } from './types';
 export const SIGNATURE_TOLERANCE_SECONDS = 300;
 export const MAX_WEBHOOK_BYTES = 512 * 1024;
 
-/** Session metadata key set once both order e-mails are out (or refused for good). */
+/**
+ * Session metadata key set once both order e-mails are out (a customer
+ * address refused for good counts as done).
+ */
 export const EMAILS_SENT_KEY = 'emails_sent';
+/**
+ * Session metadata key set when the owner e-mail is out but the customer
+ * e-mail failed transiently: the retry then sends the customer e-mail only.
+ */
+export const OWNER_EMAILED_KEY = 'owner_emailed';
 
 /**
  * A refusal Stripe should not retry: Resend 4xx other than 409 (idempotency
@@ -97,7 +105,15 @@ export function orderEmails(
  * Idempotency without storage: once both e-mails are out, the session gets
  * `metadata.emails_sent = 'true'`; a redelivered or second event finds it and
  * sends nothing. Between a send and that mark, Resend's `Idempotency-Key`
- * (`<event id>:<role>`) drops a duplicate of the same event.
+ * (`<event id>:<role>`) drops a duplicate of the same event for 24 hours.
+ *
+ * The owner e-mail goes first and the customer e-mail only once it is out.
+ * Any owner failure, a permanent Resend refusal included (unverified domain,
+ * bad sender), answers 500 so Stripe retries for up to three days: the shop
+ * must never miss an order, and the customer cannot get a second confirmation
+ * because of it, since none was sent yet. A customer address refused for good
+ * counts as done; a transient customer failure marks `owner_emailed` and
+ * retries the customer e-mail only.
  */
 export async function handleEvent(
   event: Stripe.Event,
@@ -152,54 +168,85 @@ export async function handleEvent(
 
   if (!deps.env.ORDER_EMAIL_TO) logError('config.missing', { name: 'ORDER_EMAIL_TO' });
   const messages = orderEmails(session, event.id, deps.env);
-  const results = await Promise.allSettled(messages.map((m) => deps.mailer.send(m)));
-  const recipient = (i: number) => (i === 0 && deps.env.ORDER_EMAIL_TO ? 'owner' : 'customer');
-  const rejected = results.flatMap((r, i) =>
-    r.status === 'rejected' ? [{ i, err: r.reason }] : [],
-  );
-  const refused = rejected.filter((r) => isPermanentMailError(r.err));
-  const failed = rejected.filter((r) => !isPermanentMailError(r.err));
-
-  logInfo('order.paid', {
-    sessionId: session.id,
-    eventId: event.id,
-    total: session.amount_total ?? 0,
-    currency: session.currency ?? 'eur',
-    emailsSent: messages.length - rejected.length,
-    emailsRefused: refused.length,
-    emailsFailed: failed.length,
-  });
-
-  for (const r of refused) {
-    // Resending would be refused again (bad address, unverified domain...): count it as done.
-    logError('order.email_refused', {
-      sessionId: session.id,
-      recipient: recipient(r.i),
-      status: mailStatus(r.err),
-      error: describeError(r.err),
+  const owner = messages.find((m) => m.template === 'order_owner');
+  const customer = messages.find((m) => m.template === 'order_customer');
+  const ownerAlreadySent = session.metadata?.[OWNER_EMAILED_KEY] === 'true';
+  const counts = { emailsSent: 0, emailsRefused: 0, emailsFailed: 0 };
+  const sessionId = session.id;
+  const logPaid = () =>
+    logInfo('order.paid', {
+      sessionId,
+      eventId: event.id,
+      total: session.amount_total ?? 0,
+      currency: session.currency ?? 'eur',
+      ...counts,
     });
-  }
+  const logMailError = (recipient: 'owner' | 'customer', err: unknown) => {
+    const permanent = isPermanentMailError(err);
+    if (permanent) counts.emailsRefused++;
+    else counts.emailsFailed++;
+    logError(permanent ? 'order.email_refused' : 'order.email_failed', {
+      sessionId,
+      recipient,
+      status: mailStatus(err),
+      error: describeError(err),
+    });
+  };
+  const retry = () => new ApiError(500, 'EMAIL_FAILED', 'Order e-mail could not be sent');
 
-  if (failed.length > 0) {
-    for (const f of failed) {
-      logError('order.email_failed', {
-        sessionId: session.id,
-        recipient: recipient(f.i),
-        status: mailStatus(f.err),
-        error: describeError(f.err),
-      });
+  let ownerSentNow = false;
+  if (owner && !ownerAlreadySent) {
+    try {
+      await deps.mailer.send(owner);
+      counts.emailsSent++;
+      ownerSentNow = true;
+    } catch (err) {
+      // Permanent or not, the shop must hear of the order: Stripe retries the
+      // event (up to three days) and the customer e-mail waits for the owner's.
+      logMailError('owner', err);
+      logPaid();
+      throw retry();
     }
-    // Stripe retries the event; Resend drops the e-mails already sent (same key).
-    throw new ApiError(500, 'EMAIL_FAILED', 'Order e-mail could not be sent');
   }
 
+  if (customer) {
+    try {
+      await deps.mailer.send(customer);
+      counts.emailsSent++;
+    } catch (err) {
+      logMailError('customer', err);
+      logPaid();
+      if (!isPermanentMailError(err)) {
+        // Stripe retries; the owner e-mail is not sent again.
+        if (ownerSentNow) await markSession(deps.stripe, sessionId, OWNER_EMAILED_KEY);
+        throw retry();
+      }
+      // Resending would be refused again (bad address): count it as done.
+      await markSession(deps.stripe, sessionId, EMAILS_SENT_KEY);
+      return;
+    }
+  }
+
+  logPaid();
+  await markSession(deps.stripe, sessionId, EMAILS_SENT_KEY);
+}
+
+/**
+ * Sets one "done" key on the session (Stripe merges metadata: the delivery
+ * keys stay). The e-mails are already out, so a failure cannot be undone: it
+ * is logged as an error naming the duplicate it allows, to be checked by
+ * hand (docs/launch-runbook.md, phase F).
+ */
+async function markSession(stripe: StripeLike, sessionId: string, key: string): Promise<void> {
   try {
-    // Stripe merges metadata: the delivery keys stay.
-    await deps.stripe.checkout.sessions.update(session.id, {
-      metadata: { [EMAILS_SENT_KEY]: 'true' },
-    });
+    await stripe.checkout.sessions.update(sessionId, { metadata: { [key]: 'true' } });
   } catch (err) {
-    // The e-mails are out; a retry of this event would be deduplicated by Resend.
-    logError('order.mark_failed', { sessionId: session.id, error: describeError(err) });
+    logError('order.mark_failed', {
+      sessionId,
+      key,
+      error: describeError(err),
+      consequence:
+        'session not marked: a redelivery of this event after 24 hours would send the e-mails again',
+    });
   }
 }

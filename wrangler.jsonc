@@ -7,6 +7,10 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "racines-en-partage",
   "main": "worker/index.ts",
+  // The *.workers.dev address (the default, workers_dev true) serves the whole
+  // shop, /api/* included. It stays on until the custom domain serves and the
+  // go-live order passed, then "workers_dev": false is added here
+  // (docs/deployment.md, section 5, step 4; launch runbook phase K).
   // Newest date the workerd bundled with wrangler 4.156 supports (dev refuses later ones).
   "compatibility_date": "2026-10-30",
   "compatibility_flags": ["nodejs_compat"],

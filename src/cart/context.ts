@@ -52,6 +52,12 @@ export function getContext(): CartContext | null {
     if (e.storageArea === null || e.key === null || e.key === STORAGE_KEY)
       store.syncFromStorage(e.key);
   });
+  // A page restored from the back/forward cache re-reads the cart: the other
+  // page may have changed it, and a browser that drops the storage event on
+  // resume (WebKit) would otherwise write stale lines back on the next add.
+  window.addEventListener('pageshow', (e) => {
+    if (e.persisted) store.syncFromStorage(STORAGE_KEY);
+  });
 
   let timer: number | undefined;
   const announce = (message: string) => {

@@ -6,7 +6,8 @@
 import { getContext } from './context';
 import { createDrawer, type Drawer } from './drawer';
 import { itemCount, type CartState } from './store';
-import { takeUrlToken } from './url-token';
+import { addOutcome } from './add-outcome';
+import { carryQueryToLanguageLinks, takeUrlToken } from './url-token';
 
 /** The forms src/forms/forms.ts enhances (the lookup and review pages load their own). */
 const ENHANCED_FORMS = ['contact', 'newsletter', 'stock_alert', 'account_login']
@@ -103,7 +104,12 @@ function init(): void {
     '[data-review-page], [data-newsletter-landing], [data-account]',
   );
   const status = new URLSearchParams(window.location.search).get('status');
-  const token = bearerPage ? takeUrlToken('t') : null;
+  // The customer space keeps its sign-in token out of the language links.
+  const token = bearerPage
+    ? takeUrlToken('t', { keepInLanguageLinks: !bearerPage.matches('[data-account]') })
+    : null;
+  // The thanks page in the other language needs the same ?session_id.
+  if (document.querySelector('[data-thanks]')) carryQueryToLanguageLinks(window.location.search);
 
   if (document.querySelector(ENHANCED_FORMS)) lazyForms();
   const landing = document.querySelector<HTMLElement>('[data-newsletter-landing]');
@@ -152,10 +158,17 @@ function init(): void {
       add.classList.add('is-added');
       window.setTimeout(() => add.classList.remove('is-added'), 1200);
       bump();
+      // A request the per-line maximum cut short says so (7 in the cart, 5 more: 10).
+      const outcome = addOutcome(before, after, quantity);
       const message =
-        after > before
+        outcome === 'added'
           ? ctx.fmt(ctx.t.cart.added, { name: product.name })
-          : ctx.fmt(ctx.t.cart.maxReached, { max: store.maxQuantity });
+          : outcome === 'capped'
+            ? ctx.fmt(ctx.t.cart.addedCapped || ctx.t.cart.maxReached, {
+                name: product.name,
+                max: store.maxQuantity,
+              })
+            : ctx.fmt(ctx.t.cart.maxReached, { max: store.maxQuantity });
       if (suggestion) {
         // A cross-sell suggestion leaves its list once in the cart (the render
         // above ran synchronously): the focus moves to the new cart line, in

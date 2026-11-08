@@ -136,10 +136,8 @@ test('a sign-in link opens the space, strips the token and lists the orders', as
   await expect(space).toBeVisible();
   expect(sessions).toEqual([{ token: 'login.tok-1' }]);
   expect(new URL(page.url()).search).toBe('');
-  await expect(page.locator('a[hreflang="en"]').first()).toHaveAttribute(
-    'href',
-    '/en/account/?t=login.tok-1',
-  );
+  // The sign-in token never reaches the language links (the cookie carries the visit).
+  await expect(page.locator('a[hreflang="en"]').first()).toHaveAttribute('href', '/en/account/');
   await expect(page.locator('[data-account-greeting]')).toContainText('a***@gmail.com');
 
   const cards = page.locator('[data-account-orders] > li');
@@ -171,16 +169,50 @@ test('a sign-in link opens the space, strips the token and lists the orders', as
   await expect(drawer.locator('[data-drawer-lines] li[data-sku]')).toHaveCount(1);
   await page.keyboard.press('Escape');
   await expect(first.locator('[data-o-message]')).toContainText('Poudre disparue 100 g');
+  // 30 ordered, capped at the maximum: said so, not a plain "Ajouté" (C4).
+  await expect(first.locator('[data-o-message]')).toContainText(
+    `quantité maximale atteinte\u00a0: ${catalog.maxQuantityPerLine} sachets`,
+  );
+  // Again, already at the maximum: nothing added, the maximum is named.
+  await first.getByRole('button', { name: /Commander à nouveau/ }).click();
+  await page.keyboard.press('Escape');
+  await expect(first.locator('[data-o-message]')).toHaveText(
+    new RegExp(`^${catalog.maxQuantityPerLine} sachets au maximum par produit`),
+  );
 });
 
-test('an expired sign-in link shows the message and the form', async ({ page }) => {
+test('an expired sign-in link without a session shows the message and the form', async ({
+  page,
+}) => {
   await page.route('**/api/account/session', (route) =>
     json(route, 400, { error: { code: 'INVALID_TOKEN', message: 'x' } }),
+  );
+  await page.route('**/api/account/orders', (route) =>
+    json(route, 401, { error: { code: 'UNAUTHENTICATED', message: 'x' } }),
   );
   await page.goto(`${ACCOUNT.en}?t=old`);
   await expect(page.locator('[data-account-notice]')).toHaveText(/expired, ask for a new one/);
   await expect(page.locator('form[data-form="account_login"]')).toBeVisible();
   expect(new URL(page.url()).search).toBe('');
+  await expect(page.locator('a[hreflang="fr"]').first()).toHaveAttribute('href', '/mon-compte/');
+});
+
+test('an expired sign-in link never hides a valid session cookie (C1)', async ({ page }) => {
+  const calls: string[] = [];
+  await page.route('**/api/account/session', (route) => {
+    calls.push('session');
+    return json(route, 400, { error: { code: 'INVALID_TOKEN', message: 'x' } });
+  });
+  await page.route('**/api/account/orders', (route) => {
+    calls.push('orders');
+    return json(route, 200, { email: 'a***@gmail.com', orders: [] });
+  });
+  await page.goto(`${ACCOUNT.fr}?t=used.tok`);
+  await expect(page.locator('[data-account-state="in"]')).toBeVisible();
+  await expect(page.locator('[data-account-greeting]')).toContainText('a***@gmail.com');
+  await expect(page.locator('[data-account-notice]')).toBeHidden();
+  expect(calls).toEqual(['session', 'orders']);
+  await expect(page.locator('a[hreflang="en"]').first()).toHaveAttribute('href', '/en/account/');
 });
 
 test('logged in without orders: the empty sentence, then sign out', async ({ page }) => {

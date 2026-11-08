@@ -220,6 +220,14 @@ export function initCheckout(ctx: CartContext): void {
     errorBox.textContent = message;
     errorBox.hidden = false;
   };
+  /**
+   * The customer acted on the delivery or the terms: an API error about the
+   * previous choice no longer applies. Flagged lines and a closed shop keep
+   * theirs (the lines and the disabled button still need the explanation).
+   */
+  const clearStaleError = () => {
+    if (flagged.size === 0 && !closed) hideError();
+  };
 
   const apiMessage = (error: ApiError): string => {
     if (error.code === 'OUT_OF_STOCK') {
@@ -247,6 +255,7 @@ export function initCheckout(ctx: CartContext): void {
     saveSearch();
     if (selected === 'relay') ctx.store.setDelivery({ method: 'relay', relay: point });
     deliveryError.hidden = true;
+    clearStaleError();
     ctx.announce(
       `${tc.relayChosen}${ctx.locale === 'fr' ? '\u00a0:' : ':'} ${displayCase(point.name)}`,
     );
@@ -343,6 +352,7 @@ export function initCheckout(ctx: CartContext): void {
     if (!enabled.has(method)) return;
     selected = method;
     deliveryError.hidden = true;
+    clearStaleError();
     if (method === 'relay') {
       ctx.store.setDelivery(lastRelay ? { method: 'relay', relay: lastRelay } : undefined);
       // Without a point yet, open the picker straight away when a postcode is known.
@@ -356,6 +366,7 @@ export function initCheckout(ctx: CartContext): void {
 
   terms.addEventListener('change', () => {
     if (terms.checked) termsError.hidden = true;
+    clearStaleError();
   });
 
   const setBusy = (busy: boolean) => {

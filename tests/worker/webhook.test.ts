@@ -228,6 +228,30 @@ describe('POST /api/webhooks/stripe', () => {
     expect(mail.send).not.toHaveBeenCalled();
   });
 
+  it('400 INVALID_SIGNATURE and one config.missing line without STRIPE_WEBHOOK_SECRET', async () => {
+    const fake = stripeWithRealWebhooks();
+    const { app, mail } = makeApp({
+      stripe: fake.stripe,
+      env: { ...ENV, STRIPE_WEBHOOK_SECRET: '' },
+    });
+    const payload = eventPayload();
+    const res = await post(app, payload, await signed(payload));
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as ErrorJson).error.code).toBe('INVALID_SIGNATURE');
+    expect(mail.send).not.toHaveBeenCalled();
+    const missing = errors.map((l) => JSON.parse(l)).filter((l) => l.msg === 'config.missing');
+    expect(missing).toHaveLength(1);
+    expect(missing[0]).toMatchObject({ level: 'error', name: 'STRIPE_WEBHOOK_SECRET' });
+    expect(missing[0].consequence).toContain('every Stripe event is refused');
+  });
+
+  it('a configured secret logs no config.missing line', async () => {
+    const { app } = makeApp({ stripe: stripeWithRealWebhooks().stripe });
+    const payload = eventPayload();
+    await post(app, payload, await signed(payload));
+    expect(errors.some((l) => l.includes('config.missing'))).toBe(false);
+  });
+
   it('a mailer failure without status (network) answers 500 so Stripe retries, and logs it', async () => {
     const fake = stripeWithRealWebhooks();
     const { app, mail } = makeApp({ stripe: fake.stripe });
@@ -238,7 +262,8 @@ describe('POST /api/webhooks/stripe', () => {
     const res = await post(app, payload, await signed(payload));
     expect(res.status).toBe(500);
     expect(((await res.json()) as ErrorJson).error.code).toBe('EMAIL_FAILED');
-    expect(mail.send).toHaveBeenCalledTimes(2);
+    // The owner e-mail failed: the customer e-mail waits for the retry.
+    expect(mail.send).toHaveBeenCalledTimes(1);
     const failure = errors.find((l) => l.includes('order.email_failed'));
     expect(failure).toBeDefined();
     expect(JSON.parse(failure!)).toMatchObject({ recipient: 'owner', sessionId: SESSION_ID });
@@ -258,13 +283,71 @@ describe('POST /api/webhooks/stripe', () => {
       expect(res.status).toBe(500);
       expect(((await res.json()) as ErrorJson).error.code).toBe('EMAIL_FAILED');
       expect(fake.update).not.toHaveBeenCalled();
+      expect(mail.sent).toHaveLength(0);
       const failure = errors.find((l) => l.includes('order.email_failed'));
       expect(JSON.parse(failure!)).toMatchObject({ recipient: 'owner', status });
     },
   );
 
+  it.each([403, 422])(
+    'owner e-mail refused for good (Resend %i): 500 so Stripe retries, customer not e-mailed, not marked',
+    async (status) => {
+      const fake = stripeWithRealWebhooks();
+      const { app, mail } = makeApp({ stripe: fake.stripe });
+      mail.send.mockImplementationOnce(async () => {
+        throw new MailerError(
+          `Resend refused the e-mail: HTTP ${status} domain not verified`,
+          status,
+        );
+      });
+      const payload = eventPayload();
+      const res = await post(app, payload, await signed(payload));
+      expect(res.status).toBe(500);
+      expect(((await res.json()) as ErrorJson).error.code).toBe('EMAIL_FAILED');
+      expect(mail.send).toHaveBeenCalledOnce();
+      expect(mail.sent).toHaveLength(0);
+      expect(fake.update).not.toHaveBeenCalled();
+      const refused = errors.find((l) => l.includes('order.email_refused'));
+      expect(JSON.parse(refused!)).toMatchObject({ recipient: 'owner', status });
+      const paid = JSON.parse(logs.find((l) => l.includes('order.paid'))!);
+      expect(paid).toMatchObject({ emailsSent: 0, emailsRefused: 1, emailsFailed: 0 });
+    },
+  );
+
+  it('owner out, customer failed transiently: marks owner_emailed, the retry e-mails the customer only', async () => {
+    const fake = stripeWithRealWebhooks();
+    const { app, mail } = makeApp({ stripe: fake.stripe });
+    mail.send.mockImplementation(async (m) => {
+      if (m.template === 'order_customer') throw new MailerError('HTTP 500', 500);
+      mail.sent.push(m);
+    });
+    const payload = eventPayload();
+    const res = await post(app, payload, await signed(payload));
+    expect(res.status).toBe(500);
+    expect(mail.sent.map((m) => m.template)).toEqual(['order_owner']);
+    expect(fake.update).toHaveBeenCalledExactlyOnceWith(SESSION_ID, {
+      metadata: { owner_emailed: 'true' },
+    });
+
+    // Stripe redelivers (after Resend's 24 h key, too): the session says the owner is done.
+    mail.send.mockReset();
+    mail.send.mockImplementation(async (m) => void mail.sent.push(m));
+    mail.sent.length = 0;
+    fake.update.mockClear();
+    fake.retrieve.mockResolvedValueOnce({
+      ...sessionFixture({ metadata: { ...sessionFixture().metadata, owner_emailed: 'true' } }),
+      line_items: undefined,
+    } as never);
+    const retry = await post(app, payload, await signed(payload));
+    expect(retry.status).toBe(200);
+    expect(mail.sent.map((m) => m.template)).toEqual(['order_customer']);
+    expect(fake.update).toHaveBeenCalledExactlyOnceWith(SESSION_ID, {
+      metadata: { emails_sent: 'true' },
+    });
+  });
+
   it.each([400, 403, 422])(
-    'Resend %i is permanent: logged, counted as done, 200 and the session is marked',
+    'customer address refused for good (Resend %i): logged, counted as done, 200 and marked',
     async (status) => {
       const fake = stripeWithRealWebhooks();
       const { app, mail } = makeApp({ stripe: fake.stripe });
@@ -370,7 +453,9 @@ describe('POST /api/webhooks/stripe', () => {
     const res = await post(app, payload, await signed(payload));
     expect(res.status).toBe(200);
     expect(mail.sent).toHaveLength(2);
-    expect(errors.some((l) => l.includes('order.mark_failed'))).toBe(true);
+    const line = errors.map((l) => JSON.parse(l)).find((l) => l.msg === 'order.mark_failed');
+    expect(line).toMatchObject({ level: 'error', sessionId: SESSION_ID, key: 'emails_sent' });
+    expect(line.consequence).toContain('would send the e-mails again');
   });
 
   it('a Stripe retrieve failure answers 502 so Stripe retries', async () => {

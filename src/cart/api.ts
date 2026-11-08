@@ -325,6 +325,18 @@ export function claimOrderClear(storage: StorageLike | null, sessionId: string):
   return true;
 }
 
+/** Forgets a claim made by `claimOrderClear` (the session turned out not to be completed). */
+export function releaseOrderClear(storage: StorageLike | null, sessionId: string): void {
+  try {
+    if (!storage) return;
+    const seen: unknown = JSON.parse(storage.getItem(CLEARED_ORDERS_KEY) ?? '[]');
+    if (!Array.isArray(seen)) return;
+    storage.setItem(CLEARED_ORDERS_KEY, JSON.stringify(seen.filter((v) => v !== sessionId)));
+  } catch {
+    // Corrupt value or storage refused: nothing to forget.
+  }
+}
+
 // ------------------------------------------------------------ customer space
 
 /** One order of GET /api/account/orders: a public order plus its id, date and review flag. */

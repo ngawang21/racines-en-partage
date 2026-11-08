@@ -169,6 +169,28 @@ about 7 to 10 EUR per year.
 3. Check `https://racinesenpartage.fr/` (padlock),
    `https://www.racinesenpartage.fr/boutique/` (redirects to the apex) and
    `https://racinesenpartage.fr/sitemap-index.xml`.
+4. Once the custom domain serves the shop and the go-live order has passed
+   (section 12), close the `workers.dev` address: until then the whole shop,
+   `/api/*` included, also answers on
+   `racines-en-partage.<account>.workers.dev`, the Worker accepts that host
+   as an origin and sends Stripe customers back to it. Before closing it,
+   check that both Stripe webhook endpoints (test and live) use
+   `https://racinesenpartage.fr/api/webhooks/stripe` and that the Turnstile
+   widget no longer lists the `workers.dev` host. Then add to
+   `wrangler.jsonc`, next to `"main"`:
+
+   ```jsonc
+   "workers_dev": false,
+   // Keep the per-version preview URLs for branch tests (verify they stay on).
+   "preview_urls": true,
+   ```
+
+   Commit and push (a toggle in the dashboard would be undone by the next
+   deploy, which applies `wrangler.jsonc`). Check:
+   `curl -sI https://racines-en-partage.<account>.workers.dev/api/health`
+   no longer answers 200, and `https://racinesenpartage.fr/api/health` still
+   does. Do not set it earlier: phase C of `docs/launch-runbook.md` tests on
+   that address before the domain exists.
 
 ## 6. Resend: sending domain
 
@@ -265,6 +287,24 @@ stripe.com/fr/pricing.
    9. "Back" on the Stripe page returns to `/panier/` with the cart intact.
    10. Create a test promo code (section 8.4) and use it once.
    11. Refund the first test payment from the dashboard.
+   12. Send-once markers. Every "send once" guard of the Worker (order
+       e-mails, review invitations, "already reviewed") is a metadata key
+       written on the completed Checkout Session; the tests use a fake
+       Stripe, so check it once for real. Take the session id `cs_test_...`
+       of the first test order (the `session_id` in the `/merci/` address).
+       Workbench (Developers), Logs (menu names to verify): the request
+       `POST /v1/checkout/sessions/cs_test_...` answers 200 and its response
+       `metadata` holds `"emails_sent": "true"` next to `delivery_method`.
+       The same from a terminal with the Stripe CLI:
+       `stripe checkout sessions retrieve cs_test_...`. Workers & Pages, the
+       Worker, Logs must show no `order.mark_failed` line for that session.
+       A 400 on that request, or an `order.mark_failed` line, means Stripe
+       refuses the update: stop, nothing is idempotent until it is solved.
+       The other markers are checked in section 12, step 16:
+       `review_invited` (the invitation run; a refusal logs
+       `review.mark_failed` and sends no invitation) and `reviewed_<SKU>`, for
+       example `reviewed_REP-MOR-100` (a submitted review; a refusal logs
+       `review.mark_failed`, harmless since the review file decides).
 
 ### 8.3 Live mode
 
@@ -480,9 +520,13 @@ script, then:
 ### 11.3 Admin
 
 `/admin/*` replaces the global policy with the Sveltia one: `script-src`
-adds `https://unpkg.com/@sveltia/cms@0.256.1/` only (the pinned CMS bundle,
-loaded with Subresource Integrity, and its own chunks; upgrade steps in
-`docs/content.md`, section 7); `connect-src` adds the GitHub API,
+adds `'wasm-unsafe-eval'` and the whole `https://unpkg.com` host, on purpose
+(after sign-in Sveltia imports helper packages, image encoders and date
+locales, from other unpkg paths; `docs/content.md`, section 7). Only the main
+bundle is pinned, by version and Subresource Integrity in
+`public/admin/index.html`; the helpers are not. Because the admin shares the
+shop origin, Sveltia's GitHub token sits in the same `localStorage` as the
+shop pages, so the strict shop CSP is what protects it. `connect-src` adds the GitHub API,
 `github.com`, `www.githubstatus.com`, `*.workers.dev` (the Authenticator),
 `unpkg.com` and the optional AI helpers of the CMS; `img-src` adds `blob:`
 and the GitHub user content hosts; `font-src` adds `cdn.jsdelivr.net`;
@@ -512,8 +556,12 @@ Repeat with `/en/checkout/`. Two lines on one route mean a missing
 
 ## 12. Go-live checklist
 
-1. `pnpm launch-check` passes: SIREN filled, `launch.pricesConfirmed: true`,
-   no `TODO` left in the legal texts.
+1. `pnpm launch-check` passes: SIRET filled and valid,
+   `launch.pricesConfirmed: true`, no `TODO` left in the legal texts, the CMS
+   `forms.turnstileSiteKey` filled, `PUBLIC_MONDIAL_RELAY_BRAND` set to
+   Marie's code (not `BDTEST`) in the local `.env` (same value as the Workers
+   Builds variable; the script says "relay brand unknown" without a `.env`),
+   and the `FORMS_KV` binding uncommented in `wrangler.jsonc`.
 2. Legal pages read through with Marie: mentions légales, CGV (mediator
    named), confidentialité. See `docs/legal-notes.md`.
 3. Test orders in test mode pass (section 8.2), for all three delivery
@@ -548,10 +596,17 @@ Repeat with `/en/checkout/`. Two lines on one route mean a missing
     its link opens `/newsletter/?t=...`, and the button adds the contact
     to the Resend audience; `/ma-commande/` finds a test order by number
     and e-mail; `FORMS_KV` is bound (sections 13 to 18).
-16. Reviews: run the cron locally against a test order (section 17), open
-    the invitation link, submit a review, check the new file in
-    `src/content/reviews/` on GitHub and publish it from the CMS.
-17. Commit, push, check the deployment and the CI run.
+16. Reviews: run the cron locally (section 17) against a test order placed
+    7 to 10 days earlier (the run lists sessions created between 10 and 7
+    days before it, so a fresh order is not listed: keep the first test
+    order of section 8.2 for this). The run logs `review.invites` with
+    `invited: 1`; the session's metadata then holds `review_invited: "true"`
+    (no `review.mark_failed` line); a second run reports `skipped: 1` and
+    sends nothing. Open the invitation link, submit a review, check
+    `reviewed_<SKU>` on the session and the new file in
+    `src/content/reviews/` on GitHub, and publish it from the CMS.
+17. After the go-live order: `workers_dev` set to false (section 5, step 4).
+18. Commit, push, check the deployment and the CI run.
 
 ## 13. Forms secret
 
@@ -664,9 +719,12 @@ the invitation link keeps working once the token is replaced.
 day at 09:00 UTC (10:00 in winter, 11:00 in summer in Paris) the Worker
 lists the Checkout Sessions created between 10 and 7 days earlier (a
 session missed by a failed run is retried on the next two days;
-`review_invited` prevents a second invitation) and sends
-one invitation per paid order with a customer e-mail, then sets
-`metadata.review_invited = 'true'` on the session. The run needs
+`review_invited` prevents a second invitation), sets
+`metadata.review_invited = 'true'` on the session and then sends one
+invitation per paid order with a customer e-mail. The mark comes first and
+fails closed: when Stripe refuses it, the log shows `review.mark_failed`
+with the session id and no invitation goes out. A transient e-mail failure
+removes the mark again, so the next run retries. The run needs
 `STRIPE_SECRET_KEY`, `RESEND_API_KEY` and `FORMS_SECRET`; without
 `RESEND_API_KEY` or `FORMS_SECRET` it logs `config.missing` and sends
 nothing.
@@ -676,7 +734,8 @@ nothing.
   `invited`, `skipped` and `failed`.
 - Test without waiting: `pnpm exec wrangler dev --test-scheduled`, then
   `curl "http://localhost:8787/__scheduled?cron=0+9+*+*+*"` (with test
-  keys in `.dev.vars`).
+  keys in `.dev.vars`). The run uses the current time, so it only lists test
+  orders placed 7 to 10 days earlier.
 - Disable the invitations: Marie turns `reviews.enabled` off in the CMS
   settings; after the rebuild the run logs `review.invites_off` and sends
   nothing, and the review page answers `404 FEATURE_DISABLED`. To stop the
@@ -736,10 +795,19 @@ link, Turnstile and the daily budget apply as for the other forms
 - **`/api/*` returns 404 or HTML.** `run_worker_first: ["/api/*"]` must be
   in `wrangler.jsonc`, and the deployed Worker must be the one built from
   this repository (Deployments tab).
-- **Webhook signature errors (400 `INVALID_SIGNATURE`).** The
-  `STRIPE_WEBHOOK_SECRET` does not belong to this endpoint or this mode
-  (test and live differ), or it was pasted with a space. Copy it again from
-  the endpoint page. Then, in Stripe, resend the failed events.
+- **Webhook signature errors (400 `INVALID_SIGNATURE`).** When the Worker
+  logs show `config.missing` with `name: "STRIPE_WEBHOOK_SECRET"`, the
+  secret is not set at all. Otherwise the `STRIPE_WEBHOOK_SECRET` does not
+  belong to this endpoint or this mode (test and live differ), or it was
+  pasted with a space. Copy it again from the endpoint page. Then, in
+  Stripe, resend the failed events.
+- **Webhook 500 `EMAIL_FAILED`.** The owner e-mail could not be sent:
+  Worker logs `order.email_refused` (a Resend 4xx: domain not verified,
+  wrong `ORDER_EMAIL_TO` or sender) or `order.email_failed` (Resend down),
+  with `recipient: "owner"`. The customer e-mail waits for the owner's, so
+  nobody receives a confirmation twice. Stripe retries for up to three
+  days, then e-mails the account about the failing endpoint. Fix the cause,
+  then resend the event from the endpoint page.
 - **A customer sees "un prix a changé".** The Worker refused an order
   because the page showed another price than `/catalog.json`
   (`409 PRICE_CHANGED`): a tab opened before a price change, or the minute

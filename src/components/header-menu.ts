@@ -1,7 +1,8 @@
 // Header behaviour on top of markup that works without script.
 //
 // Mobile menu (<details class="mobile-menu">): Escape closes it and returns
-// focus to the button, choosing a link closes it, and a page restored from
+// focus to the button (unless a modal dialog is open on top: Escape is then
+// the dialog's), choosing a link closes it, and a page restored from
 // the back-forward cache, or a window widened to the desktop layout, never
 // shows it open. The scrim beside the panel is the summary's ::before, so a
 // tap outside the panel toggles it closed natively. The panel and the scrim
@@ -38,7 +39,8 @@ function initHeaderMenu(): void {
   });
   window.addEventListener('resize', () => menu.open && placePanel());
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && menu.open) {
+    // A modal dialog (cart drawer, search) owns Escape while it is open.
+    if (event.key === 'Escape' && menu.open && !document.querySelector('dialog[open]')) {
       event.preventDefault();
       close(true);
     }

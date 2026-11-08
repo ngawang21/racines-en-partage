@@ -93,23 +93,34 @@ retrieves the session and skips it with 200 when `metadata.delivery_method`
 is missing (a session of the same Stripe account not created by this shop) or
 when `metadata.emails_sent` is `'true'` (already notified). Otherwise it lists
 the lines (`listLineItems`, limit 100), sends the owner e-mail (French, to
-`ORDER_EMAIL_TO`, reply-to the customer) and the customer e-mail (checkout
-language, reply-to `ORDER_EMAIL_TO`), each with
+`ORDER_EMAIL_TO`, reply-to the customer) and, only once that one is out, the
+customer e-mail (checkout language, reply-to `ORDER_EMAIL_TO`), each with
 `Idempotency-Key: <event id>:owner` or `<event id>:customer` (by role, so the
 owner ordering with her own address still gets two keys), then sets
 `metadata.emails_sent = 'true'` on the session (Stripe merges metadata, the
-other keys stay). Mailer errors:
+other keys stay). The owner e-mail goes first so that a failing owner e-mail
+can never send the customer a second confirmation on a retry. Mailer errors
+(permanent: Resend 4xx other than 409 and 429, such as a refused address or
+an unverified domain; transient: 409, 429, 5xx, network errors, timeouts):
 
-- Resend 4xx other than 409 and 429 (a refused address, an unverified
-  domain): permanent. Logged with the status as `order.email_refused`,
-  counted as done for that recipient; the event still answers 200.
-- 409, 429, 5xx, network errors and timeouts: transient. Logged as
-  `order.email_failed`, the event answers `500 EMAIL_FAILED` so Stripe
-  retries, and the session is not marked; Resend drops the e-mail already
-  sent under the same key.
+- Owner e-mail, permanent or transient: logged as `order.email_refused` or
+  `order.email_failed` with `recipient: "owner"`; the customer e-mail is not
+  sent, the session is not marked and the event answers `500 EMAIL_FAILED`,
+  so Stripe retries for up to three days (then e-mails the account about the
+  failing endpoint). Fix the cause (Resend domain, `ORDER_EMAIL_TO`) and
+  resend the event from the Stripe dashboard.
+- Customer e-mail, permanent: logged as `order.email_refused`, counted as
+  done; the session is marked and the event answers 200.
+- Customer e-mail, transient: logged as `order.email_failed`; the session
+  gets `metadata.owner_emailed = 'true'` (when the owner e-mail went out in
+  this attempt) and the event answers `500 EMAIL_FAILED`. The retry sends the
+  customer e-mail only.
 
-A failure to mark the session is logged (`order.mark_failed`) and the event
-still answers 200: the e-mails are out.
+A failure to mark the session is logged as an error, `order.mark_failed`
+with the `key` and the duplicate it allows, and the event still answers
+200: the e-mails are out, and Resend drops a redelivery of the same event
+for 24 hours only. Check the markers once in test mode
+(`docs/launch-runbook.md`, phase F).
 `checkout.session.async_payment_failed` (a bank debit that bounced) is logged
 as `order.payment_failed` for this shop's sessions and answered 200: nothing
 was sent while it was pending. Other event types get 200 without work.
@@ -252,9 +263,13 @@ retried on the next two days; 100 per page, at most
 10 pages), skips those already invited (`metadata.review_invited`), unpaid,
 not this shop's or without an e-mail, lists their lines, and sends the
 invitation (FR or EN per `metadata.locale`, link `/avis/?t=` or
-`/en/review/?t=`, key `<session id>:review`) before setting
-`metadata.review_invited = 'true'`. A failed e-mail leaves the session
-unmarked and the run goes on. Without `RESEND_API_KEY` or `FORMS_SECRET`
+`/en/review/?t=`, key `<session id>:review`) after setting
+`metadata.review_invited = 'true'`. The mark comes first and fails closed:
+when Stripe refuses it, the run logs `review.mark_failed` with the session id
+and sends nothing for that session (otherwise each of the three runs would
+invite again). A transient e-mail failure removes the mark again (the key set
+to `''`; `review.unmark_failed` if that fails too) so the next run retries; a
+permanent refusal keeps it. The run goes on with the next session. Without `RESEND_API_KEY` or `FORMS_SECRET`
 nothing is sent. When `features.reviews` is false (or `catalog.json` cannot
 be read) the run logs one line and sends nothing. Remove the `triggers`
 block of `wrangler.jsonc` to stop the run itself.
@@ -334,7 +349,7 @@ localises by `code` (`ERROR_KEY` in `src/cart/api.ts`, every code of
 | `SITE_URL`                    | var              | Success and cancel URLs (not on `*.workers.dev`), allowed origin     |
 | `ORDER_EMAIL_FROM`            | var              | `Racines en Partage <commandes@racinesenpartage.fr>`                 |
 | `STRIPE_SECRET_KEY`           | secret           | Without it, Stripe calls fail as 502                                 |
-| `STRIPE_WEBHOOK_SECRET`       | secret           | Without it, every webhook is 400                                     |
+| `STRIPE_WEBHOOK_SECRET`       | secret           | Without it, every webhook is 400 and logs `config.missing`           |
 | `RESEND_API_KEY`              | secret, optional | Without it, `NullMailer` logs the template name and a masked address |
 | `ORDER_EMAIL_TO`              | secret           | Owner inbox                                                          |
 | `FORMS_SECRET`                | secret           | HMAC key of the review and newsletter tokens                         |

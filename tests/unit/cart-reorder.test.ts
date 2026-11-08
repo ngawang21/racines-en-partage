@@ -36,6 +36,7 @@ describe('linesToCart', () => {
         { sku: 'MOR', quantity: 1 },
       ],
       unavailable: [],
+      capped: false,
     });
   });
 
@@ -46,6 +47,12 @@ describe('linesToCart', () => {
     expect(linesToCart({ lines: [line('MOR', 30)] }, catalog, 10).lines).toEqual([
       { sku: 'MOR', quantity: 10 },
     ]);
+  });
+
+  it('says when a quantity was capped (C4: a capped reorder is not announced as a full one)', () => {
+    expect(linesToCart({ lines: [line('MOR', 7), line('MOR', 5)] }, catalog, 10).capped).toBe(true);
+    expect(linesToCart({ lines: [line('MOR', 30)] }, catalog, 10).capped).toBe(true);
+    expect(linesToCart({ lines: [line('MOR', 10)] }, catalog, 10).capped).toBe(false);
   });
 
   it('names the products that cannot come back: out of stock, unknown or without a SKU', () => {
@@ -77,10 +84,14 @@ describe('linesToCart', () => {
       catalog,
       10,
     );
-    expect(pick).toEqual({ lines: [], unavailable: ['X'] });
+    expect(pick).toEqual({ lines: [], unavailable: ['X'], capped: false });
   });
 
   it('an empty order picks nothing', () => {
-    expect(linesToCart({ lines: [] }, catalog, 10)).toEqual({ lines: [], unavailable: [] });
+    expect(linesToCart({ lines: [] }, catalog, 10)).toEqual({
+      lines: [],
+      unavailable: [],
+      capped: false,
+    });
   });
 });

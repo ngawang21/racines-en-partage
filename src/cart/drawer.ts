@@ -1,6 +1,8 @@
 // Cart drawer (spec 5.5): a modal <dialog> sliding from the right. showModal
 // makes the page inert (focus stays inside), Escape and a backdrop click
-// close it, and the focus returns to the control that opened it.
+// close it, and the focus returns to the control that opened it. Opening it
+// closes the mobile menu (one overlay at a time, so Escape reaches the
+// drawer), and a page restored from the back/forward cache never shows it.
 import type { CartContext } from './context';
 import { renderCrossSell } from './cross-sell-view';
 import { renderFreeShipping } from './free-shipping';
@@ -72,6 +74,17 @@ export function createDrawer(ctx: CartContext): Drawer | null {
     else if ((event.target as Element).closest('[data-drawer-close]')) close();
   });
 
+  // Back to this page after following a drawer link ("Commander"): the
+  // restored page must not sit inert under the modal. Closed at once, without
+  // the exit animation, and without moving the focus.
+  window.addEventListener('pageshow', (event) => {
+    if (!event.persisted || !dialog.open) return;
+    opener = null;
+    closing = false;
+    dialog.classList.remove('is-closing');
+    dialog.close();
+  });
+
   if (list) bindLineEvents(list, ctx, () => title);
 
   return {
@@ -81,6 +94,10 @@ export function createDrawer(ctx: CartContext): Drawer | null {
         return;
       }
       opener = from ?? (document.activeElement as HTMLElement | null);
+      // The mobile menu stays behind otherwise, and its Escape handler would
+      // close it before the drawer.
+      const menu = document.querySelector<HTMLDetailsElement>('details.mobile-menu[open]');
+      if (menu) menu.open = false;
       closing = false;
       dialog.classList.remove('is-closing');
       document.documentElement.classList.add('has-drawer');

@@ -16,6 +16,8 @@ export interface ReorderPick {
   lines: Array<{ sku: string; quantity: number }>;
   /** Names of the lines that cannot come back (unknown, hidden or out of stock), deduplicated. */
   unavailable: string[];
+  /** A line asked for more than the per-line maximum (merged repeats included). */
+  capped: boolean;
 }
 
 export function linesToCart(
@@ -41,5 +43,6 @@ export function linesToCart(
   return {
     lines: [...quantities].map(([sku, quantity]) => ({ sku, quantity: Math.min(quantity, cap) })),
     unavailable,
+    capped: [...quantities.values()].some((quantity) => quantity > cap),
   };
 }

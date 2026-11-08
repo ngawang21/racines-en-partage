@@ -35,7 +35,7 @@ page the day it is used.
    so nothing points at `ngawang21` later. Stripe, OVHcloud, Mondial Relay
    carry Marie's legal identity from the start.
 5. **Test mode until the last step.** Stripe test keys, `BDTEST` relay code
-   and the `workers.dev` host until phase 9. Live keys are the last change.
+   and the `workers.dev` host until phase K. Live keys are the last change.
 
 ## 1. The stack, and what it costs
 
@@ -222,8 +222,20 @@ Each step: **who**, what, check. Commands run at the repository root.
    D8.2.
 5. **Dev** Test checklist D8.2 step 4: three delivery methods, FR and EN,
    3-D Secure card, declined card, back button, promo code, refund. Both
-   e-mails received each time, webhook 200.
-6. Live keys wait for phase I.
+   e-mails received each time, webhook 200. Note the date of the first test
+   order: the review step K4 needs an order 7 to 10 days old.
+6. **Dev** Send-once markers, right after the first test order (D8.2 step
+   4, item 12). Every "send once" guard (order e-mails, review invitations,
+   "already reviewed") is a metadata key Stripe must accept on a completed
+   Checkout Session. Workbench (Developers), Logs: the request
+   `POST /v1/checkout/sessions/cs_test_...` of that order answers 200 and
+   its response `metadata` holds `"emails_sent": "true"` (or
+   `stripe checkout sessions retrieve cs_test_...`). The Worker logs must
+   show no `order.mark_failed` line; that line, with the session id, is what
+   a refusal looks like (`review.mark_failed` for the review keys
+   `review_invited` and `reviewed_<SKU>`, checked in K4). A refusal stops
+   the launch until it is solved.
+7. Live keys wait for phase I.
 
 ### Phase G. Mondial Relay (Marie, developer for the code, 30 minutes)
 
@@ -266,7 +278,11 @@ Each step: **who**, what, check. Commands run at the repository root.
    name and address once she has joined one. Developer removes the `TODO`s
    in `src/content/legal/`. `docs/legal-notes.md`.
 4. **Marie** Reads and approves CGV and privacy policy.
-5. **Dev** `pnpm launch-check` passes.
+5. **Dev** `pnpm launch-check` passes: SIRET valid, prices confirmed, no
+   `TODO` in the legal texts, CMS `forms.turnstileSiteKey` filled (H3),
+   `PUBLIC_MONDIAL_RELAY_BRAND` set to her code in the local `.env` (G2,
+   same value as the build variable; without a `.env` the script reports
+   "relay brand unknown"), `FORMS_KV` uncommented in `wrangler.jsonc` (C5).
 
 ### Phase J. Google, Bing, Instagram (developer, 30 minutes, verification days later)
 
@@ -290,14 +306,23 @@ Each step: **who**, what, check. Commands run at the repository root.
    secrets. D8.3.
 3. **Marie** One real order with the cheapest product, paid with her own
    card; both e-mails arrive; **Dev** refunds it from the dashboard.
-4. **Dev** Review flow once against a test order:
-   `pnpm exec wrangler dev --test-scheduled` and the `__scheduled` curl of
-   D17, the invitation link, a review, the file in
-   `src/content/reviews/`, publication from the CMS.
-5. **Dev** Lighthouse mobile on the live home, shop, product and cart
+4. **Dev** Review flow once against a test order placed 7 to 10 days
+   earlier (the run lists sessions created 10 to 7 days before it; a fresh
+   order is not listed): `pnpm exec wrangler dev --test-scheduled` and the
+   `__scheduled` curl of D17. Check `review.invites` reports `invited: 1`,
+   the session's metadata holds `review_invited: "true"` and no
+   `review.mark_failed` line appears; a second curl reports `skipped: 1`.
+   Then the invitation link, a review (`reviewed_<SKU>` on the session), the
+   file in `src/content/reviews/`, publication from the CMS. D12 step 16.
+5. **Dev** Close the `workers.dev` address once the custom domain serves
+   and step 3 passed: both Stripe endpoints on `racinesenpartage.fr`, then
+   `"workers_dev": false` (and `"preview_urls": true`) in `wrangler.jsonc`,
+   commit, push. Check: the `workers.dev` `/api/health` no longer answers
+   200, `https://racinesenpartage.fr/api/health` does. D5 step 4.
+6. **Dev** Lighthouse mobile on the live home, shop, product and cart
    pages (target 95 on each category) and a real-phone walk of the
    purchase flow.
-6. **Dev** Reminders in the vault's notes: `GITHUB_TOKEN` expiry, domain
+7. **Dev** Reminders in the vault's notes: `GITHUB_TOKEN` expiry, domain
    renewal date, the quarterly dependency update.
 
 ### Phase L. Handover session (Marie and developer, 1 hour, after the final payment)

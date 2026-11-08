@@ -24,6 +24,12 @@ const env = Object.fromEntries(
   Object.entries(process.env).filter((e): e is [string, string] => typeof e[1] === 'string'),
 );
 
+// Playwright launches Chromium with the back/forward cache disabled, and its
+// headless shell cannot use it at all. The `bfcache` project runs the
+// `*.bfcache.spec.ts` files in the full Chromium build with the cache on, so
+// a Back really restores the page (`pageshow` with `persisted`).
+const BFCACHE_SPEC = /\.bfcache\.spec\.ts$/;
+
 // --ignore-lock: astro preview keeps one server per project by default, and a
 // developer preview may already be running.
 const preview = `pnpm exec astro preview --host ${HOST} --port ${PORT} --ignore-lock`;
@@ -46,10 +52,22 @@ export default defineConfig({
   projects: [
     {
       name: 'desktop',
+      testIgnore: BFCACHE_SPEC,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 900 } },
     },
     {
+      name: 'bfcache',
+      testMatch: BFCACHE_SPEC,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 900 },
+        channel: 'chromium',
+        launchOptions: { env, ignoreDefaultArgs: ['--disable-back-forward-cache'] },
+      },
+    },
+    {
       name: 'mobile',
+      testIgnore: BFCACHE_SPEC,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 390, height: 844 },

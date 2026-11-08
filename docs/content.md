@@ -394,12 +394,10 @@ Authenticator is not deployed).
 Two of those helpers are WebAssembly: the HEIC decoder (`@discourse/heic`,
 run in a `blob:` module worker) and the `@jsquash` WebP encoder fallback.
 Compiling WebAssembly needs `'wasm-unsafe-eval'` in `script-src`, which the
-block does not grant. Consequences: a HEIC photo uploaded from a browser
-other than Safari is refused as invalid (Safari decodes HEIC natively), and a
-browser without a native WebP encoder (none of the current ones) could not
-convert. Adding `'wasm-unsafe-eval'` to the admin `script-src` would lift
-both; it was left out pending a decision, as the owner guide routes iPhone
-photos through Safari or the "Le plus compatible" format.
+admin block grants (`public/_headers`): WebAssembly compilation only, never
+`eval`. A HEIC photo from an iPhone is therefore decoded in every browser,
+and the WebP conversion has its fallback encoder. The shop pages keep the
+strict `script-src 'self'`.
 
 ### Upgrading Sveltia
 
@@ -408,9 +406,11 @@ photos through Safari or the "Le plus compatible" format.
 2. Download it and compute its hash:
    `curl -sSfL https://unpkg.com/@sveltia/cms@<version>/dist/sveltia-cms.js | openssl dgst -sha384 -binary | openssl base64 -A`.
 3. In `public/admin/index.html`, set the version in `src` and the new value
-   in `integrity="sha384-..."`. In `public/_headers`, `/admin/*` block, set
-   the same version in `script-src https://unpkg.com/@sveltia/cms@<version>/`.
-   `pnpm test` and `pnpm test:build` fail when the two disagree.
+   in `integrity="sha384-..."`. Nothing changes in `public/_headers`: the
+   admin `script-src` allows the whole `https://unpkg.com` host on purpose
+   (the helpers Sveltia imports after sign-in come from there), and the main
+   bundle is the one pinned by version and integrity. `pnpm test` and
+   `pnpm test:build` fail when `src` and `integrity` disagree.
 4. `pnpm build`, then `node scripts/relay-capture.mjs admin`: `/admin/`
    must reach the sign-in screen with zero CSP violation (a wrong hash shows
    up as a blank page and an integrity error in the report). Sign in once on

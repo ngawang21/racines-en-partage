@@ -1,8 +1,14 @@
-// Thanks page: GET /api/orders/:sessionId, render, clear the cart once the
-// order is placed. Without a valid session id, or for an order the API does
-// not know, the neutral shell stays; a lookup that fails (network, 429, 5xx)
-// is retried, then says so.
-import { claimOrderClear, getOrder, isSessionId } from './api';
+// Thanks page: GET /api/orders/:sessionId and render. Without a valid session
+// id, or for an order the API does not know, the neutral shell stays; a lookup
+// that fails (network, 429, 5xx) is retried, then says so.
+//
+// Stripe only sends the customer here (success_url) once the Checkout Session
+// is complete: the paid cart is emptied on arrival, before the lookup, so a
+// failed lookup never leaves lines that could be paid twice. Only on the first
+// visit for that session, so a cart filled since is never wiped. The one case
+// that gives the lines back is a session the API reports as not completed
+// (`unpaid`, an address typed by hand): "your cart is waiting" must hold.
+import { claimOrderClear, getOrder, isSessionId, releaseOrderClear } from './api';
 import type { CartContext } from './context';
 import { renderOrder } from './order-view';
 
@@ -33,6 +39,11 @@ export async function initThanks(ctx: CartContext): Promise<void> {
     done();
     return;
   }
+  const storage = localStorageOrNull();
+  const paidCart = ctx.store.getCart();
+  const cleared = claimOrderClear(storage, sessionId);
+  if (cleared) ctx.store.clear();
+
   if (loading) loading.textContent = tt.loading;
   let lookup = await getOrder(sessionId);
   for (const delay of ORDER_RETRY_DELAYS) {
@@ -60,8 +71,14 @@ export async function initThanks(ctx: CartContext): Promise<void> {
   if (lead)
     lead.textContent =
       order.status === 'paid' ? tt.lead : order.status === 'pending' ? tt.pending : tt.unpaid;
-  // Paid, or placed with a payment still clearing: the cart has become this
-  // order. Only on the first visit, so a cart filled since is never wiped.
-  if (order.status !== 'unpaid' && claimOrderClear(localStorageOrNull(), sessionId))
-    ctx.store.clear();
+  // Not completed after all: put the lines back (unless a cart was filled
+  // meanwhile, in another tab) and forget the claim, so a later successful
+  // payment of the same session still empties the cart.
+  if (order.status === 'unpaid' && cleared) {
+    releaseOrderClear(storage, sessionId);
+    if (ctx.store.getCart().lines.length === 0 && paidCart.lines.length > 0) {
+      for (const line of paidCart.lines) ctx.store.addLine(line.sku, line.quantity);
+      if (paidCart.delivery) ctx.store.setDelivery(paidCart.delivery);
+    }
+  }
 }

@@ -314,7 +314,7 @@ function cron(catalog = catalogFixture()) {
 }
 
 describe('inviteReviews (cron)', () => {
-  it('lists the window from 8 to 7 days ago, completed sessions only', async () => {
+  it('lists the window from 10 to 7 days ago, completed sessions only', async () => {
     const { stripe, deps } = cron();
     await inviteReviews(deps, RUN);
     expect(stripe.list).toHaveBeenCalledWith({
@@ -324,7 +324,7 @@ describe('inviteReviews (cron)', () => {
     });
   });
 
-  it('invites a paid order: e-mail with a 60-day token, idempotency key, then the mark', async () => {
+  it('invites a paid order: the mark first, then the e-mail with a 60-day token and idempotency key', async () => {
     const { stripe, mail, deps } = cron();
     stripe.list.mockResolvedValueOnce(sessionPage([listed(SESSION_ID)]));
     const report = await inviteReviews(deps, RUN);
@@ -349,6 +349,9 @@ describe('inviteReviews (cron)', () => {
     expect(stripe.update).toHaveBeenCalledWith(SESSION_ID, {
       metadata: { review_invited: 'true' },
     });
+    expect(stripe.update.mock.invocationCallOrder[0]!).toBeLessThan(
+      mail.send.mock.invocationCallOrder[0]!,
+    );
   });
 
   it('English order: English e-mail and /en/review/', async () => {
@@ -422,7 +425,7 @@ describe('inviteReviews (cron)', () => {
     expect(report.listed).toBe(10);
   });
 
-  it('a failed e-mail leaves the session unmarked and the run goes on', async () => {
+  it('a transient e-mail failure removes the mark again so the next run retries; the run goes on', async () => {
     const { stripe, mail, deps } = cron();
     stripe.list.mockResolvedValueOnce(
       sessionPage([listed('cs_test_first'), listed('cs_test_second')]),
@@ -430,8 +433,52 @@ describe('inviteReviews (cron)', () => {
     mail.send.mockRejectedValueOnce(new MailerError('down', 500));
     const report = await inviteReviews(deps, RUN);
     expect(report).toEqual({ listed: 2, invited: 1, skipped: 0, failed: 1 });
-    expect(stripe.update).toHaveBeenCalledTimes(1);
-    expect(stripe.update).toHaveBeenCalledWith('cs_test_second', expect.anything());
+    expect(stripe.update.mock.calls).toEqual([
+      ['cs_test_first', { metadata: { review_invited: 'true' } }],
+      ['cs_test_first', { metadata: { review_invited: '' } }],
+      ['cs_test_second', { metadata: { review_invited: 'true' } }],
+    ]);
+  });
+
+  it('a permanent refusal (bad address) keeps the mark: no daily retry', async () => {
+    const { stripe, mail, deps } = cron();
+    stripe.list.mockResolvedValueOnce(sessionPage([listed(SESSION_ID)]));
+    mail.send.mockRejectedValueOnce(new MailerError('invalid to', 422));
+    const report = await inviteReviews(deps, RUN);
+    expect(report).toEqual({ listed: 1, invited: 0, skipped: 0, failed: 1 });
+    expect(stripe.update).toHaveBeenCalledExactlyOnceWith(SESSION_ID, {
+      metadata: { review_invited: 'true' },
+    });
+  });
+
+  it('fails closed: a refused metadata mark sends no invitation and logs review.mark_failed', async () => {
+    const { stripe, mail, deps } = cron();
+    stripe.list.mockResolvedValueOnce(
+      sessionPage([listed('cs_test_first'), listed('cs_test_second')]),
+    );
+    stripe.update.mockRejectedValueOnce(
+      Object.assign(new Error('This Checkout Session can no longer be updated'), {
+        type: 'StripeInvalidRequestError',
+      }),
+    );
+    const report = await inviteReviews(deps, RUN);
+    expect(report).toEqual({ listed: 2, invited: 1, skipped: 0, failed: 1 });
+    expect(mail.sent.map((m) => m.idempotencyKey)).toEqual(['cs_test_second:review']);
+    const line = vi
+      .mocked(console.error)
+      .mock.calls.map((c) => JSON.parse(String(c[0])))
+      .find((l) => l.msg === 'review.mark_failed');
+    expect(line).toMatchObject({ level: 'error', sessionId: 'cs_test_first' });
+  });
+
+  it('three daily runs over a session whose mark is always refused send nothing', async () => {
+    const { stripe, mail, deps } = cron();
+    stripe.list.mockImplementation(async () => sessionPage([listed(SESSION_ID)]));
+    stripe.update.mockRejectedValue(new Error('refused'));
+    for (const day of [0, 1, 2]) {
+      await inviteReviews(deps, new Date(RUN.getTime() + day * 86_400_000));
+    }
+    expect(mail.send).not.toHaveBeenCalled();
   });
 
   it('a session without SKUs is skipped', async () => {
