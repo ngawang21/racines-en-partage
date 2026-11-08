@@ -60,6 +60,14 @@ CMS: Sveltia at `/admin/`.
 | `pnpm card [v]`     | business card files for `/carte/` (`medaillon`, `kraft`, `foret`) |
 | `pnpm launch-check` | fails while the SIRET, the prices or a legal TODO is pending      |
 
+When the repository runs on a remote machine (VS Code Remote SSH), the
+server listens on that machine's loopback, so the URL printed by Astro is
+not reachable from the laptop's browser as is. Forward the port: in VS
+Code open the Ports panel, add `4321`, then open http://localhost:4321 on
+the laptop. From a plain terminal, `ssh -L 4321:127.0.0.1:4321 user@host`
+does the same. Alternatively `pnpm dev --host` and open the machine's IP
+on port 4321.
+
 ## Layout
 
 ```
