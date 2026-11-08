@@ -221,6 +221,11 @@
     "vatIncluded": "Prices include VAT at {rate}%",
     "nav": "Legal texts"
   },
+  "reviews": {},
+  "recipes": {},
+  "search": {},
+  "forms": {},
+  "lookup": {},
   "a11y": {
     "skip": "Skip to content",
     "openCart": "Open the basket",

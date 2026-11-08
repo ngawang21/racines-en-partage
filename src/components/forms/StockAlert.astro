@@ -1,0 +1,21 @@
+---
+// "Prévenez-moi du retour" for an out-of-stock product (spec iteration 3,
+// 2.10). Stub: the forms-and-cart owner fills it.
+import type { Locale } from '../../consts';
+import type { LocaleContent } from '../../content/locale-schema';
+import type { Settings } from '../../content/schemas';
+
+interface Props {
+  locale: Locale;
+  t: LocaleContent;
+  settings: Settings;
+  sku: string;
+  productName: string;
+}
+const { locale, t, settings, sku, productName } = Astro.props;
+void locale;
+void t;
+void settings;
+void sku;
+void productName;
+---

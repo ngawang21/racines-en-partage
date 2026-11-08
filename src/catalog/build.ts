@@ -68,6 +68,14 @@ export interface ClientProduct {
   stock: Stock;
   /** Root-relative URL of a small WebP thumbnail. */
   image: string;
+  /** Category slug and its name in the locale (search). */
+  category: string;
+  categoryName: string;
+  /** Extra search words (regional names), in the locale. */
+  keywords: string[];
+  /** SKUs of the related products (cart cross-sell), published ones only. */
+  related: string[];
+  featured: boolean;
 }
 
 /** "Poudre de moringa 100 g": the name a cart line, Stripe and the e-mails show. */
@@ -137,7 +145,10 @@ export function buildClientCatalog(
   settings: Settings,
   locale: Locale,
   imageUrlBySku: Record<string, string>,
+  /** Category name per slug, in the locale. */
+  categoryNames: Record<string, string> = {},
 ): ClientCatalog {
+  const skuBySlug = new Map(products.map((p) => [p.slug, p.sku]));
   return {
     locale,
     currency: settings.shop.currency,
@@ -165,6 +176,13 @@ export function buildClientCatalog(
           unitAmount: toCents(p.price),
           stock: p.stock,
           image: imageFor(imageUrlBySku, p.sku),
+          category: p.category,
+          categoryName: categoryNames[p.category] ?? p.category,
+          keywords: [...p.keywords],
+          related: p.related
+            .map((slug) => skuBySlug.get(slug))
+            .filter((sku): sku is string => sku !== undefined),
+          featured: p.featured,
         },
       ]),
     ),

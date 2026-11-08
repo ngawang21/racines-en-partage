@@ -221,6 +221,11 @@
     "vatIncluded": "Prix TTC, TVA incluse au taux de {rate} %",
     "nav": "Textes légaux"
   },
+  "reviews": {},
+  "recipes": {},
+  "search": {},
+  "forms": {},
+  "lookup": {},
   "a11y": {
     "skip": "Aller au contenu",
     "openCart": "Ouvrir le panier",

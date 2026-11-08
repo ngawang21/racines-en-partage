@@ -28,6 +28,10 @@ describe('route table (spec section 3)', () => {
       legal: { fr: '/mentions-legales/', en: '/en/legal-notice/' },
       terms: { fr: '/cgv/', en: '/en/terms-of-sale/' },
       privacy: { fr: '/confidentialite/', en: '/en/privacy/' },
+      recipes: { fr: '/recettes/', en: '/en/recipes/' },
+      lookup: { fr: '/ma-commande/', en: '/en/my-order/' },
+      review: { fr: '/avis/', en: '/en/review/' },
+      newsletter: { fr: '/newsletter/', en: '/en/newsletter/' },
       notFound: { fr: '/404.html', en: '/404.html' },
       admin: { fr: '/admin/', en: '/admin/' },
     });
@@ -39,8 +43,16 @@ describe('route table (spec section 3)', () => {
       }
     }
   });
-  it('marks cart, checkout, thanks, 404 and admin noindex', () => {
-    expect([...NOINDEX_ROUTES].sort()).toEqual(['admin', 'cart', 'checkout', 'notFound', 'thanks']);
+  it('marks cart, checkout, thanks, review, newsletter, 404 and admin noindex', () => {
+    expect([...NOINDEX_ROUTES].sort()).toEqual([
+      'admin',
+      'cart',
+      'checkout',
+      'newsletter',
+      'notFound',
+      'review',
+      'thanks',
+    ]);
     expect(isIndexable('product')).toBe(true);
     expect(isIndexable('cart')).toBe(false);
   });
@@ -105,7 +117,11 @@ describe('helpers', () => {
         '/en/cart/',
         '/en/checkout/',
         '/en/thank-you/',
+        '/avis/',
+        '/en/newsletter/',
+        '/en/review/',
         '/merci/',
+        '/newsletter/',
         '/panier/',
       ].sort(),
     );

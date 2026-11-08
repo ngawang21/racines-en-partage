@@ -14,7 +14,7 @@
 import { getImage } from 'astro:assets';
 import { DEFAULT_LOCALE, LOCALES, SITE, type Locale } from '../consts';
 import type { Product } from '../content/schemas';
-import { loadProducts, loadSettings } from '../i18n/locale';
+import { loadCategories, loadProducts, loadSettings } from '../i18n/locale';
 import { resolveAsset } from '../images';
 import {
   buildCatalog,
@@ -47,7 +47,14 @@ async function mainImageUrls(products: Product[], width: number): Promise<Record
 export async function getClientCatalog(locale: Locale): Promise<ClientCatalog> {
   const products = await loadProducts(locale);
   const images = await mainImageUrls(products, CLIENT_THUMB_WIDTH);
-  return buildClientCatalog(products, await loadSettings(), locale, images);
+  const categories = await loadCategories(locale);
+  return buildClientCatalog(
+    products,
+    await loadSettings(),
+    locale,
+    images,
+    Object.fromEntries(categories.map((c) => [c.slug, c.name])),
+  );
 }
 
 export async function getWorkerCatalog(now: Date = new Date()): Promise<WorkerCatalog> {

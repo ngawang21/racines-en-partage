@@ -84,6 +84,11 @@ describe('buildClientCatalog (embedded rep-catalog)', () => {
       unitAmount: 650,
       stock: 'in_stock',
       image: '/_astro/fleurs-d-hibiscus-bissap-100g_160.webp',
+      category: 'infusions',
+      categoryName: 'infusions',
+      keywords: [],
+      related: ['REP-BAO-100', 'REP-SOU-T200'],
+      featured: true,
     });
     expect(c.shipping[0]).toEqual({
       id: 'relay',

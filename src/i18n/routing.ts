@@ -15,6 +15,10 @@ export type RouteKey =
   | 'legal'
   | 'terms'
   | 'privacy'
+  | 'recipes'
+  | 'lookup'
+  | 'review'
+  | 'newsletter'
   | 'notFound'
   | 'admin';
 
@@ -36,6 +40,10 @@ export const ROUTES: Record<RouteKey, Record<Locale, string>> = {
   legal: { fr: '/mentions-legales/', en: '/en/legal-notice/' },
   terms: { fr: '/cgv/', en: '/en/terms-of-sale/' },
   privacy: { fr: '/confidentialite/', en: '/en/privacy/' },
+  recipes: { fr: '/recettes/', en: '/en/recipes/' },
+  lookup: { fr: '/ma-commande/', en: '/en/my-order/' },
+  review: { fr: '/avis/', en: '/en/review/' },
+  newsletter: { fr: '/newsletter/', en: '/en/newsletter/' },
   notFound: { fr: '/404.html', en: '/404.html' },
   admin: { fr: '/admin/', en: '/admin/' },
 };
@@ -45,6 +53,8 @@ export const NOINDEX_ROUTES: readonly RouteKey[] = [
   'cart',
   'checkout',
   'thanks',
+  'review',
+  'newsletter',
   'notFound',
   'admin',
 ];

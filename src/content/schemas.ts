@@ -90,6 +90,8 @@ export const productTranslatedSchema = z.object({
   recipe: recipeSchema.optional(),
   benefits: textList.default([]),
   storage: text,
+  /** Search words the name does not carry (regional names: bissap, karkadé, tsampa, chufa). */
+  keywords: textList.default([]),
   seoTitle: text.optional(),
   seoDescription: text.optional(),
 });
@@ -121,6 +123,7 @@ export const productTranslationSchema = z.object({
   recipe: z.object({ title: optText, ingredients: optList, steps: optList }).nullish(),
   benefits: optList,
   storage: optText,
+  keywords: optList,
   seoTitle: optText,
   seoDescription: optText,
 });
@@ -269,9 +272,10 @@ export const settingsSchema = z.object({
       country: z.string().regex(/^[A-Z]{2}$/),
     }),
     instagram: z.union([z.literal(''), z.url()]).default(''),
-    siren: z
+    /** 14 digits, spaces allowed ("911 858 843 00020"); the SIREN is its first 9 digits. */
+    siret: z
       .string()
-      .regex(/^(\d{9}|\d{3} \d{3} \d{3})?$/, '9 digits or empty')
+      .regex(/^(\d{14}|\d{3} \d{3} \d{3} \d{5})?$/, '14 digits or empty')
       .default(''),
     packagedBy: text,
   }),
@@ -288,9 +292,53 @@ export const settingsSchema = z.object({
     .array(shippingMethodSchema)
     .min(1)
     .refine((list) => new Set(list.map((s) => s.id)).size === list.length, 'duplicate method id'),
+  /** Public Turnstile site key; empty renders the forms without the widget. */
+  forms: z.object({ turnstileSiteKey: z.string().default('') }).default({ turnstileSiteKey: '' }),
+  newsletter: z
+    .object({
+      enabled: z.boolean().default(true),
+      /** Promotion code (created in Stripe) printed in the confirmation e-mail; empty prints none. */
+      welcomeCode: z.string().default(''),
+    })
+    .default({ enabled: true, welcomeCode: '' }),
+  /** Cloudflare Web Analytics token; empty adds no beacon. */
+  analytics: z.object({ cloudflareToken: z.string().default('') }).default({ cloudflareToken: '' }),
+  reviews: z.object({ enabled: z.boolean().default(true) }).default({ enabled: true }),
   launch: z.object({ pricesConfirmed: z.boolean() }),
 });
 export type Settings = z.infer<typeof settingsSchema>;
+
+// ----------------------------------------------------------------- reviews
+
+/** A YAML day, quoted or not (YAML turns an unquoted date into a Date). */
+const isoDay = z
+  .union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.date()])
+  .transform((v) => (typeof v === 'string' ? v : v.toISOString().slice(0, 10)));
+
+export const REVIEW_LIMITS = { author: [2, 40], title: 80, text: [20, 1200] } as const;
+
+/**
+ * One customer review, `src/content/reviews/<product slug>--<order>.yml`.
+ * Written by the Worker (verified purchase) or by the owner in the CMS; shown
+ * only once the owner sets `published: true`.
+ */
+export const reviewSchema = z.object({
+  product: text,
+  rating: z.number().int().min(1).max(5),
+  author: z.string().trim().min(REVIEW_LIMITS.author[0]).max(REVIEW_LIMITS.author[1]),
+  locale: z.enum(['fr', 'en']),
+  date: isoDay,
+  /** Order number ("X9Y8Z7W6") when the review came through the invitation, else empty. */
+  order: z.string().default(''),
+  verified: z.boolean().default(false),
+  published: z.boolean().default(false),
+  title: z.string().trim().max(REVIEW_LIMITS.title).default(''),
+  text: z.string().trim().min(REVIEW_LIMITS.text[0]).max(REVIEW_LIMITS.text[1]),
+  /** Public answer from the owner, optional. */
+  reply: z.string().trim().default(''),
+});
+export type ReviewFile = z.infer<typeof reviewSchema>;
+export type Review = ReviewFile & { id: string };
 
 // ------------------------------------------------------- cross-file checks
 

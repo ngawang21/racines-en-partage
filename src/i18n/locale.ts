@@ -146,7 +146,12 @@ export async function loadPage<K extends PageKey>(locale: Locale, key: K): Promi
   );
 }
 
-/** Values of the `{company}`, `{siren}`, ... tokens of the legal texts. */
+/** "911858843" to "911 858 843". */
+export function formatSiren(digits: string): string {
+  return digits.replace(/(\d{3})(?=\d)/g, '$1 ');
+}
+
+/** Values of the `{company}`, `{siren}`, `{siret}`, ... tokens of the legal texts. */
 export function legalTokens(
   settings: Settings,
   t: LocaleContent,
@@ -154,9 +159,11 @@ export function legalTokens(
 ): Record<string, string> {
   const { brand, shop } = settings;
   const country = new Intl.DisplayNames([locale], { type: 'region' }).of(brand.address.country);
+  const siret = brand.siret.replace(/\s/g, '');
   return {
     company: brand.name,
-    siren: brand.siren.trim() || t.legal.sirenPending,
+    siren: siret ? formatSiren(siret.slice(0, 9)) : t.legal.sirenPending,
+    siret: siret ? `${formatSiren(siret.slice(0, 9))} ${siret.slice(9)}` : t.legal.sirenPending,
     address: `${brand.address.street}, ${brand.address.postcode} ${brand.address.city}, ${country}`,
     email: brand.email,
     phone: formatPhone(brand.phone),

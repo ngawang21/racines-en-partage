@@ -1,0 +1,19 @@
+---
+// Newsletter signup (spec iteration 3, 2.2). Stub: the forms-and-cart owner
+// fills it. `variant` "footer" renders inline in the footer, "band" a full band.
+import type { Locale } from '../../consts';
+import type { LocaleContent } from '../../content/locale-schema';
+import type { Settings } from '../../content/schemas';
+
+interface Props {
+  locale: Locale;
+  t: LocaleContent;
+  settings: Settings;
+  variant: 'footer' | 'band';
+}
+const { locale, t, settings, variant } = Astro.props;
+void locale;
+void t;
+void settings;
+void variant;
+---

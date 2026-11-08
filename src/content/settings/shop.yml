@@ -5,11 +5,11 @@ brand:
       fr: 'Deux terres. Un rituel. Un bien-être à partager.',
       en: 'Two lands. One ritual. Well-being to share.',
     }
-  email: racinesenpartage@outlook.com
+  email: racinesenpartage@gmail.com
   phone: '0775689108'
   address: { street: 9 Rue du Marché, postcode: '95400', city: Arnouville, country: FR }
   instagram: '' # URL or empty
-  siren: '' # owner placeholder, launch-check fails while empty
+  siret: '911 858 843 00020' # 14 digits; the legal texts print the SIREN (first 9) and the SIRET
   packagedBy: 'ESAT Les Oliviers (Gennevilliers, 92)'
 shop:
   open: true # false shows a "boutique en pause" notice and disables checkout
@@ -37,5 +37,14 @@ shipping:
     countries: [FR]
     label: { fr: 'Retrait gratuit à Arnouville', en: 'Free pickup in Arnouville' }
     estimate: { fr: 'sur rendez-vous, 9 Rue du Marché', en: 'by appointment, 9 Rue du Marché' }
+forms:
+  turnstileSiteKey: '' # Cloudflare Turnstile site key (public); empty shows the forms without the widget
+newsletter:
+  enabled: true
+  welcomeCode: '' # Stripe promotion code printed in the confirmation e-mail, or empty
+analytics:
+  cloudflareToken: '' # Cloudflare Web Analytics token; empty adds no script
+reviews:
+  enabled: true
 launch:
-  pricesConfirmed: false # launch-check fails while false
+  pricesConfirmed: false # launch-check fails while false (cacao prices still to confirm)

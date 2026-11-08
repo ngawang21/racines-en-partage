@@ -229,6 +229,16 @@ export const localeSchema = z.object({
     vatIncluded: text,
     nav: text,
   }),
+  /** Reviews section, summary and the review page (owner: storefront features). */
+  reviews: ns({}),
+  /** Recipes page (owner: storefront features). */
+  recipes: ns({}),
+  /** Header search dialog (owner: storefront features). */
+  search: ns({}),
+  /** Contact, newsletter and stock-alert forms (owner: forms and cart). */
+  forms: ns({}),
+  /** Order lookup page (owner: forms and cart). */
+  lookup: ns({}),
   a11y: ns({
     skip: text,
     openCart: text,

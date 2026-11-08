@@ -40,7 +40,7 @@ const validProduct = () => structuredClone(frProducts.get('poudre-de-moringa-100
 describe('settings', () => {
   const settings = settingsSchema.parse(readYaml(join(CONTENT, 'settings/shop.yml')));
   it('match spec 4.4', () => {
-    expect(settings.brand.email).toBe('racinesenpartage@outlook.com');
+    expect(settings.brand.email).toBe('racinesenpartage@gmail.com');
     expect(settings.brand.phone).toBe('0775689108');
     expect(settings.brand.address).toEqual({
       street: '9 Rue du Marché',
@@ -61,12 +61,12 @@ describe('settings', () => {
       ['pickup', 0, ['FR']],
     ]);
     expect(settings.launch.pricesConfirmed).toBe(false);
-    expect(settings.brand.siren).toBe('');
+    expect(settings.brand.siret).toBe('911 858 843 00020');
   });
   it('rejects a malformed SIREN, phone or duplicate method', () => {
     const raw = readYaml(join(CONTENT, 'settings/shop.yml')) as any;
     expect(() =>
-      settingsSchema.parse({ ...raw, brand: { ...raw.brand, siren: '12345' } }),
+      settingsSchema.parse({ ...raw, brand: { ...raw.brand, siret: '12345' } }),
     ).toThrow();
     expect(() =>
       settingsSchema.parse({ ...raw, brand: { ...raw.brand, phone: '+33775689108' } }),
@@ -75,8 +75,9 @@ describe('settings', () => {
       settingsSchema.parse({ ...raw, shipping: [raw.shipping[0], raw.shipping[0]] }),
     ).toThrow();
     expect(
-      settingsSchema.parse({ ...raw, brand: { ...raw.brand, siren: '123 456 789' } }).brand.siren,
-    ).toBe('123 456 789');
+      settingsSchema.parse({ ...raw, brand: { ...raw.brand, siret: '123 456 789 00012' } }).brand
+        .siret,
+    ).toBe('123 456 789 00012');
   });
 });
 
@@ -380,7 +381,7 @@ describe('pages', () => {
 });
 
 describe('legal texts', () => {
-  const TOKENS = new Set(['company', 'siren', 'address', 'email', 'phone', 'host', 'vat']);
+  const TOKENS = new Set(['company', 'siren', 'siret', 'address', 'email', 'phone', 'host', 'vat']);
   const read = (locale: string, key: string) =>
     readFileSync(join(CONTENT, 'legal', locale, `${key}.md`), 'utf8');
   const frontmatter = (src: string) => readYamlFrontmatter(src);
@@ -443,6 +444,11 @@ describe('ui strings', () => {
     'thanks',
     'errors',
     'legal',
+    'reviews',
+    'recipes',
+    'search',
+    'forms',
+    'lookup',
     'a11y',
   ];
   it('both files match the schema and carry exactly the namespaces of the contract', () => {

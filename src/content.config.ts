@@ -2,7 +2,7 @@ import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'zod';
 import { localeSchema } from './content/locale-schema';
-import { legalFrontmatterSchema, settingsSchema } from './content/schemas';
+import { legalFrontmatterSchema, reviewSchema, settingsSchema } from './content/schemas';
 
 // Products, categories and pages hold a complete French file and a possibly
 // partial English one in the same collection, so their collection schema only
@@ -31,6 +31,12 @@ const legal = defineCollection({
   schema: legalFrontmatterSchema,
 });
 
+// Customer reviews: one complete file each, no locale folder (each carries its language).
+const reviews = defineCollection({
+  loader: glob({ pattern: '*.yml', base: './src/content/reviews' }),
+  schema: reviewSchema,
+});
+
 const settings = defineCollection({
   loader: glob({ pattern: 'shop.yml', base: './src/content/settings' }),
   schema: settingsSchema,
@@ -41,4 +47,4 @@ const locales = defineCollection({
   schema: localeSchema,
 });
 
-export const collections = { products, categories, pages, legal, settings, locales };
+export const collections = { products, categories, pages, legal, reviews, settings, locales };
