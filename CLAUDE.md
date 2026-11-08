@@ -17,7 +17,8 @@ Build order, file ownership and the contracts between parallel workers:
 `docs/superpowers/plans/2026-11-01-racines-en-partage-implementation-plan.md`
 and `docs/superpowers/plans/2026-11-08-iteration-3-implementation-plan.md`.
 The reference-site study behind the feature choices is
-`docs/superpowers/specs/2026-11-08-reference-sites-study.md`.
+`docs/superpowers/specs/2026-11-08-reference-sites-study.md`. Launch order,
+costs and accounts: `docs/launch-runbook.md` (details in `docs/deployment.md`).
 
 ## Commands
 
@@ -30,7 +31,7 @@ The reference-site study behind the feature choices is
 `pnpm brand <master.png>` (logo, medallion and icons from the owner's master
 logo, then `pnpm og`),
 `pnpm card [medaillon|kraft|foret|review]` (business card PDF, PNGs and vCard,
-committed; `medaillon` is published; `review` renders all three to `out/review/card/`),
+committed; `kraft` is published; `review` renders all three to `out/review/card/`),
 `pnpm launch-check`.
 Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
 

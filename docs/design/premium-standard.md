@@ -44,7 +44,8 @@ runs. The audit of this site against the standard lives in
   width (tabular numerals).
 
 Checks: no horizontal scroll at 320 px; body measure 55 to 75 ch at every
-width; the hero and bands bleed, the text does not; the product grid uses the
+width; the hero and bands bleed, the text does not; the hero copy, the header
+wordmark and the first grid share one left edge; the product grid uses the
 room on a 1920 px screen without stretching the cards past 340 px.
 
 ## 3. Typography

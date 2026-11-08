@@ -104,8 +104,8 @@ histoire ».
 La page racinesenpartage.fr/carte/ montre votre carte de visite, recto et
 verso : votre logo, votre téléphone, votre e-mail et un QR code vers le
 site, avec les fichiers prêts pour l'imprimeur et une fiche contact à
-enregistrer dans un téléphone. Je vous propose trois modèles (médaillon,
-kraft, forêt) : vous choisissez, et c'est celui-là qui sera publié.
+enregistrer dans un téléphone. Vous avez choisi le modèle « Kraft » parmi
+les trois proposés : c'est celui qui est publié.
 
 **Être trouvée sur Google**
 
@@ -176,21 +176,23 @@ français, Hello Bank compris.
 
 Pas d'abonnement, pas de frais mensuels pour le site.
 
-| Poste                                | Coût                                           | Remarque                                                                                 |
-| ------------------------------------ | ---------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Nom de domaine racinesenpartage.fr   | Environ 8 € par an                             | Chez OVHcloud, à votre nom                                                               |
-| Hébergement du site                  | 0 €                                            | Cloudflare, gratuit à votre échelle                                                      |
-| Administration du site               | 0 €                                            | Outil libre et gratuit                                                                   |
-| E-mails de commande                  | 0 €                                            | Jusqu'à 3 000 e-mails par mois                                                           |
-| Lettre d'information                 | 0 €                                            | Resend, offre gratuite (nombre d'abonnés et d'envois à vérifier)                         |
-| Protection anti-robots, statistiques | 0 €                                            | Cloudflare Turnstile et Web Analytics, gratuits                                          |
-| Paiement par carte                   | 1,5 % + 0,25 € par paiement (carte européenne) | Stripe, à vérifier sur stripe.com/fr/pricing. Exemple : 0,70 € pour une commande de 30 € |
-| Étiquette Mondial Relay              | À partir de 3,09 € HT environ par colis        | Compte prépayé, à vérifier à l'ouverture                                                 |
-| Étiquette Colissimo                  | Selon le poids                                 | La Poste, à vérifier                                                                     |
-| Médiateur de la consommation         | Selon le médiateur choisi                      | Obligatoire, voir plus bas                                                               |
+| Poste                                | Coût                                                              | Remarque                                                                                 |
+| ------------------------------------ | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Nom de domaine racinesenpartage.fr   | 5,99 € TTC la première année, puis 9,35 € TTC par an (à vérifier) | Chez OVHcloud, au nom de votre entreprise                                                |
+| Hébergement du site                  | 0 €                                                               | Cloudflare, gratuit à votre échelle                                                      |
+| Administration du site               | 0 €                                                               | Outil libre et gratuit                                                                   |
+| E-mails de commande                  | 0 €                                                               | Jusqu'à 3 000 e-mails par mois                                                           |
+| Lettre d'information                 | 0 €                                                               | Resend, offre gratuite (nombre d'abonnés et d'envois à vérifier)                         |
+| Protection anti-robots, statistiques | 0 €                                                               | Cloudflare Turnstile et Web Analytics, gratuits                                          |
+| Paiement par carte                   | 1,5 % + 0,25 € par paiement (carte européenne)                    | Stripe, à vérifier sur stripe.com/fr/pricing. Exemple : 0,70 € pour une commande de 30 € |
+| Étiquette Mondial Relay              | À partir de 3,09 € HT environ par colis                           | Compte prépayé, à vérifier à l'ouverture                                                 |
+| Étiquette Colissimo                  | Selon le poids                                                    | La Poste, à vérifier                                                                     |
+| Médiateur de la consommation         | Selon le médiateur choisi                                         | Obligatoire, voir plus bas                                                               |
 
 Les frais de port payés par vos clients (4,90 € ou 6,90 €) couvrent tout ou
-partie de l'étiquette.
+partie de l'étiquette. Le détail des coûts, des comptes et de ce que vous
+aurez à faire vous-même est dans `couts-et-comptes.md`, à côté de ce
+document.
 
 ## 5. Ce dont j'ai besoin de vous
 

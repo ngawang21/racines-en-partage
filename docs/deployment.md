@@ -9,7 +9,9 @@ push to `main`. There is no database: Stripe holds the orders,
 `catalog.json` holds prices and stock, the repository holds the content and
 the reviews, Resend holds the newsletter contacts.
 
-Everything below is done once, in web interfaces, in the order given. Values
+The ordered checklist with who does what is `docs/launch-runbook.md`; this
+file is the detailed reference it points to. Everything below is done once,
+in web interfaces, in the order given. Values
 marked "to verify" were not confirmed on 2026-11-01; check them on the
 provider's page before relying on them.
 

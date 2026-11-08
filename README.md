@@ -90,11 +90,15 @@ docs/                      deployment, handover, owner guide (FR), client presen
 
 ## Documentation
 
+- `docs/launch-runbook.md`: the ordered launch checklist, who does what, the
+  stack's costs and the accounts to create.
 - `docs/deployment.md`: one-time setup (GitHub, Cloudflare, domain, Stripe,
   Mondial Relay, Resend, CMS login) and the go-live checklist.
 - `docs/guide-proprietaire.md`: the owner's guide, in French.
 - `docs/handover.md`: accounts, ownership transfer, support options, costs.
 - `docs/client/presentation.md`: the project presented to the owner, in French.
+- `docs/client/couts-et-comptes.md`: costs, accounts and the owner's own steps,
+  in French.
 - `docs/content.md`: the content model for developers.
 - `docs/legal-notes.md`: rules for food supplements and what the site does.
 

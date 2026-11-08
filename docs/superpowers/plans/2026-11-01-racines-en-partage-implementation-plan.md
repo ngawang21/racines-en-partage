@@ -356,3 +356,14 @@ a separate entry in `worker/` deployed with the static assets by one
   orders from Stripe, re-order, review from the space) with its privacy and
   FAQ texts. Gates: unit 252, worker 387, build 49 (1 skipped), e2e 124
   (2 skipped).
+- 2026-11-08 night, launch preparation: the owner chose the Kraft business
+  card (`pnpm card` now publishes it); the home hero moved to the wide
+  container so its copy aligns with the header wordmark and the featured grid
+  (it sat 80 px further in on wide screens, leaving a cream strip left of the
+  text while the photo bled right), title scale up to 4.75 rem; new
+  `docs/launch-runbook.md` (ordered phases A to L, who does what, stack and
+  cost table, accounts table, secrets map) and `docs/client/couts-et-comptes.md`
+  (French cost and accounts sheet for the owner); handover principle updated
+  (accounts opened by the developer on the business address, GitHub transfer
+  before deployment, vault handover). Gates: unit 252, worker 387, build 49
+  (1 skipped), e2e 124 (2 skipped).
