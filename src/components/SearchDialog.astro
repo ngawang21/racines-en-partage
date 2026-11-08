@@ -190,6 +190,14 @@ const { locale, t } = Astro.props;
     background: transparent;
     color: var(--forest);
   }
+  .search-close {
+    transition:
+      background-color var(--dur-fast) ease,
+      transform var(--dur-press) var(--ease-out-strong);
+  }
+  .search-close:active {
+    transform: scale(0.94);
+  }
   @media (hover: hover) {
     .search-close:hover {
       background: rgba(22, 58, 28, 0.06);

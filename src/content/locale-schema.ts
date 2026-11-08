@@ -42,6 +42,8 @@ export const localeSchema = z.object({
     writeUs: text,
     lookup: text,
     recipes: text,
+    account: text,
+    card: text,
   }),
   shop: ns({
     title: text,
@@ -80,6 +82,7 @@ export const localeSchema = z.object({
       shareText: text,
     }),
     unitPrice: text,
+    recipesLink: text,
   }),
   product: ns({
     addToCart: text,
@@ -249,6 +252,7 @@ export const localeSchema = z.object({
     orderNotFound: text,
     mailFailed: text,
     featureDisabled: text,
+    unauthenticated: text,
   }),
   legal: ns({
     updated: text,
@@ -380,7 +384,36 @@ export const localeSchema = z.object({
     }),
   }),
   /** Customer space, passwordless (owner: forms and cart). */
-  account: ns({}),
+  account: ns({
+    metaTitle: text,
+    metaDescription: text,
+    title: text,
+    lead: text,
+    email: text,
+    submit: text,
+    noPassword: text,
+    sent: text,
+    signingIn: text,
+    loading: text,
+    expired: text,
+    loadFailed: text,
+    greeting: text,
+    logout: text,
+    ordersTitle: text,
+    orderDate: text,
+    details: text,
+    linesOmitted: text,
+    reorder: text,
+    reorderOf: text,
+    reordered: text,
+    reorderMissing: text,
+    reorderNone: text,
+    review: text,
+    reviewOf: text,
+    alreadyReviewed: text,
+    empty: text,
+    loggedOut: text,
+  }),
   /** Order lookup page (owner: forms and cart). */
   lookup: ns({
     metaTitle: text,
@@ -397,6 +430,21 @@ export const localeSchema = z.object({
     carrier: text,
     help: text,
     contactLink: text,
+    accountHint: text,
+    accountLink: text,
+  }),
+  /** Business card page (/carte/): previews and downloads made by `pnpm card`. */
+  card: ns({
+    metaTitle: text,
+    metaDescription: text,
+    title: text,
+    lead: text,
+    rectoAlt: text,
+    versoAlt: text,
+    print: text,
+    share: text,
+    vcard: text,
+    hint: text,
   }),
   a11y: ns({
     skip: text,
@@ -411,6 +459,7 @@ export const localeSchema = z.object({
     newTab: text,
     medallionAlt: text,
     openSearch: text,
+    account: text,
   }),
 });
 

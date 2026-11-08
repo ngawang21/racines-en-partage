@@ -29,6 +29,8 @@ The reference-site study behind the feature choices is
 `pnpm og` (regenerate the Open Graph images after a product change),
 `pnpm brand <master.png>` (logo, medallion and icons from the owner's master
 logo, then `pnpm og`),
+`pnpm card [medaillon|kraft|foret|review]` (business card PDF, PNGs and vCard,
+committed; `medaillon` is published; `review` renders all three to `out/review/card/`),
 `pnpm launch-check`.
 Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
 
@@ -110,6 +112,10 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   (hairline with the hibiscus glyph), and the wave 2B placeholders
   `CartDrawer` and `CartScripts`.
 - `src/pages/`: thin routes; stubs until wave 2A and 2B fill them.
+- Business card: `docs/branding/card/card.html` (three variants, `data-variant`)
+  rendered by `scripts/business-card.mjs` to `docs/branding/card/` and
+  `public/carte/`, plus `public/racines-en-partage.vcf`; `CardView.astro` is the
+  `/carte/` page (route `card`, noindex). See `docs/branding/README.md`.
 
 ## Contracts (from the plan)
 
@@ -174,7 +180,11 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   filter drops every `NOINDEX_ROUTES` path.
 - `font-variation-settings` takes numbers only; optical sizing is
   `font-optical-sizing: auto` next to `font-variation-settings: 'SOFT' 50`.
-  Only the Fraunces `full` files carry both the `opsz` and `SOFT` axes.
+  The site serves its own Fraunces subsets (`src/assets/fonts/`, roman with
+  `opsz`, italic pinned at 48, SOFT 50 and WONK 1 baked in, weights 400 to
+  600, about 93 KB together) built by `scripts/subset-fonts.sh` (fonttools
+  and brotli) from the @fontsource `full` files; the business card script
+  keeps using the full files. Figtree stays the @fontsource variable file.
 - `compressHTML` is `'jsx'`: use `{' '}` where inline elements need a space.
   Built HTML is mostly one line; count matches, not lines, when grepping.
 - The `assetsInlineLimit` guard keeps component scripts external so the CSP

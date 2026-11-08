@@ -125,8 +125,10 @@ const siblings = (['legal', 'terms', 'privacy'] as const).map((key) => ({
       border-radius: 0;
     }
   }
-  .legal-nav a:hover {
-    color: var(--forest);
+  @media (hover: hover) {
+    .legal-nav a:hover {
+      color: var(--forest);
+    }
   }
   .legal-nav a[aria-current] {
     border-color: var(--forest);

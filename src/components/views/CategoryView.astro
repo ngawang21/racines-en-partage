@@ -44,7 +44,7 @@ const others = categories.filter((c) => c.slug !== slug);
     items: listed.map((p) => ({ name: p.name, url: routeUrl('product', locale, p.slug) })),
   }}
 >
-  <div class="container page-head cat-head">
+  <div class="container-wide page-head cat-head">
     <div class="cat-copy">
       <Breadcrumbs
         label={t.a11y.breadcrumb}
@@ -70,7 +70,7 @@ const others = categories.filter((c) => c.slug !== slug);
     </div>
   </div>
 
-  <section class="container cat-grid" aria-label={category.name}>
+  <section class="container-wide cat-grid" aria-label={category.name}>
     {
       listed.length > 0 ? (
         <ProductGrid
@@ -86,7 +86,7 @@ const others = categories.filter((c) => c.slug !== slug);
     }
   </section>
 
-  <nav class="container others" aria-labelledby="others-title">
+  <nav class="container-wide others" aria-labelledby="others-title">
     <h2 id="others-title" class="others-title">{t.shop.otherCategories}</h2>
     <ul role="list">
       {

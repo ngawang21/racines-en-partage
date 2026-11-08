@@ -19,31 +19,33 @@ const steps: Array<{ icon: IconName; title: string; text: string }> = [
 ];
 ---
 
-<section class="container section how" aria-labelledby="how-title">
-  <SectionHead id="how-title" title={t.shop.howTitle} eyebrow={t.shop.howKicker} {reveal} />
-  <ol class="steps" role="list">
-    {
-      steps.map((step, i) => (
-        <li class="step" data-reveal={reveal ? '' : undefined}>
-          <span class="step-icon">
-            <Icon name={step.icon} size={26} />
-            <span class="step-n" aria-hidden="true">
-              {i + 1}
+<section class="band-paper how" aria-labelledby="how-title">
+  <div class="container section">
+    <SectionHead id="how-title" title={t.shop.howTitle} eyebrow={t.shop.howKicker} {reveal} />
+    <ol class="steps" role="list">
+      {
+        steps.map((step, i) => (
+          <li class="step" data-reveal={reveal ? '' : undefined}>
+            <span class="step-icon">
+              <Icon name={step.icon} size={26} />
+              <span class="step-n" aria-hidden="true">
+                {i + 1}
+              </span>
             </span>
-          </span>
-          <div>
-            <h3 class="step-title">{step.title}</h3>
-            <p class="step-text">{step.text}</p>
-          </div>
-        </li>
-      ))
-    }
-  </ol>
+            <div>
+              <h3 class="step-title">{step.title}</h3>
+              <p class="step-text">{step.text}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
 </section>
 
 <style>
   .how {
-    border-top: 1px solid var(--line);
+    border-block: 1px solid var(--kraft);
   }
   .steps {
     display: grid;
@@ -77,7 +79,7 @@ const steps: Array<{ icon: IconName; title: string; text: string }> = [
     height: 60px;
     border: 1px solid var(--kraft);
     border-radius: 50%;
-    background: var(--paper);
+    background: var(--cream);
     color: var(--forest);
   }
   .step-n {

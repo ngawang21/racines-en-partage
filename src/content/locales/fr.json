@@ -26,9 +26,11 @@
     "email": "E-mail",
     "hours": "Horaires",
     "moreQuestions": "Une autre question ?",
-    "writeUs": "Écrivez-nous ou appelez-nous, nous répondons personnellement.",
+    "writeUs": "Écrivez‑nous ou appelez‑nous, nous répondons personnellement.",
     "lookup": "Suivre ma commande",
-    "recipes": "Recettes"
+    "recipes": "Recettes",
+    "account": "Mon espace",
+    "card": "Carte de visite"
   },
   "shop": {
     "title": "La boutique",
@@ -66,7 +68,8 @@
       "shareTitle": "Recevez et partagez",
       "shareText": "Votre colis arrive en quelques jours. Il ne reste qu’à préparer la tasse."
     },
-    "unitPrice": "Prix au kilo"
+    "unitPrice": "Prix au kilo",
+    "recipesLink": "Nos recettes"
   },
   "product": {
     "addToCart": "Ajouter au panier",
@@ -169,9 +172,9 @@
     "relayChosen": "Votre Point Relais",
     "relayChange": "Changer de Point Relais",
     "relayHours": "Horaires d’ouverture",
-    "relayFallback": "La carte ne s’affiche pas ? Écrivez-nous ou appelez-nous, nous choisirons ensemble un Point Relais près de chez vous.",
+    "relayFallback": "La carte ne s’affiche pas ? Écrivez‑nous ou appelez‑nous, nous choisirons ensemble un Point Relais près de chez vous.",
     "homeCountries": "Livraison possible en : {countries}",
-    "pickupAddress": "9 Rue du Marché, 95400 Arnouville",
+    "pickupAddress": "9 Rue du Marché, 95400 Arnouville, France",
     "pickupNote": "Sur rendez-vous : nous vous contactons dès que votre commande est prête.",
     "acceptTerms": "J’ai lu et j’accepte les {terms}",
     "termsLink": "conditions générales de vente",
@@ -198,7 +201,7 @@
     "metaDescription": "Merci pour votre commande chez Racines en Partage.",
     "lead": "Nous avons bien reçu votre paiement. Un e-mail de confirmation est en route.",
     "pending": "Votre paiement est en cours de validation. Vous recevrez un e-mail dès qu’il sera confirmé.",
-    "neutral": "Merci de votre visite. Pour toute question sur une commande, écrivez-nous ou appelez-nous.",
+    "neutral": "Merci de votre visite. Pour toute question sur une commande, écrivez‑nous ou appelez‑nous.",
     "orderNumber": "Commande n° {number}",
     "linesTitle": "Votre commande",
     "deliveryTitle": "Livraison",
@@ -206,7 +209,7 @@
     "nextPreparation": "Nous préparons votre colis avec soin sous 2 jours ouvrés.",
     "nextRelay": "Mondial Relay vous prévient par SMS et par e-mail dès que le colis arrive dans votre Point Relais.",
     "nextHome": "Colissimo vous envoie un lien de suivi dès l’expédition.",
-    "nextPickup": "Nous vous appelons pour convenir d’un rendez-vous au 9 Rue du Marché, à Arnouville.",
+    "nextPickup": "Nous vous appelons pour convenir d’un rendez-vous au 9 Rue du Marché, 95400 Arnouville, France.",
     "nextContact": "Une question ? Écrivez à {email} ou appelez le {phone}.",
     "backToShop": "Retour à la boutique",
     "loading": "Nous retrouvons votre commande…",
@@ -239,8 +242,9 @@
     "alreadyReviewed": "Vous avez déjà donné votre avis sur ce produit pour cette commande. Merci !",
     "invalidToken": "Ce lien n’est plus valide. Utilisez le lien le plus récent reçu par e-mail.",
     "orderNotFound": "Aucune commande ne correspond à ce numéro et à cette adresse e-mail. Vérifiez les deux, puis réessayez.",
-    "mailFailed": "L’envoi n’a pas abouti. Réessayez dans quelques minutes, ou écrivez-nous directement par e-mail.",
-    "featureDisabled": "Ce service est momentanément fermé. Écrivez-nous par e-mail si besoin."
+    "mailFailed": "L’envoi n’a pas abouti. Réessayez dans quelques minutes, ou écrivez‑nous directement par e-mail.",
+    "featureDisabled": "Ce service est momentanément fermé. Écrivez‑nous par e-mail si besoin.",
+    "unauthenticated": "Votre session a expiré. Demandez un nouveau lien de connexion."
   },
   "legal": {
     "updated": "Dernière mise à jour : {date}",
@@ -300,11 +304,11 @@
     "tooLong": "{max} caractères au maximum.",
     "validation": "Certains champs sont à vérifier. Corrigez-les, puis envoyez à nouveau.",
     "sending": "Envoi en cours…",
-    "noscript": "Ce formulaire a besoin de JavaScript ; écrivez-nous à {email}.",
+    "noscript": "Ce formulaire a besoin de JavaScript ; écrivez‑nous à {email}.",
     "privacyLink": "politique de confidentialité",
     "honeypot": "Laissez ce champ vide",
     "contact": {
-      "title": "Écrivez-nous",
+      "title": "Écrivez‑nous",
       "lead": "Une question sur un produit, une commande ou une recette ? Nous répondons personnellement, en général sous 48 heures.",
       "name": "Votre nom",
       "email": "Votre e-mail",
@@ -334,8 +338,8 @@
       "metaDescription": "Donnez votre avis sur les produits Racines en Partage que vous avez commandés.",
       "title": "Votre avis compte",
       "lead": "Dites-nous ce que vous avez pensé de votre commande. Chaque avis est relu avant d’être publié sur la boutique.",
-      "invalid": "Ce lien d’avis n’est pas valide. Utilisez le lien reçu par e-mail, ou écrivez-nous.",
-      "expired": "Ce lien d’avis a expiré. Si vous souhaitez tout de même partager votre avis, écrivez-nous.",
+      "invalid": "Ce lien d’avis n’est pas valide. Utilisez le lien reçu par e-mail, ou écrivez‑nous.",
+      "expired": "Ce lien d’avis a expiré. Si vous souhaitez tout de même partager votre avis, écrivez‑nous.",
       "contactLink": "Nous écrire",
       "rating": "Votre note",
       "star": "{count} sur 5",
@@ -365,7 +369,36 @@
       "disabled": "Les inscriptions à la lettre sont fermées pour le moment."
     }
   },
-  "account": {},
+  "account": {
+    "metaTitle": "Mon espace",
+    "metaDescription": "Retrouvez toutes vos commandes Racines en Partage avec un lien envoyé par e-mail, sans mot de passe.",
+    "title": "Mon espace",
+    "lead": "Retrouvez vos commandes passées avec l’adresse e-mail utilisée pour commander.",
+    "email": "Votre e-mail",
+    "submit": "Recevoir mon lien de connexion",
+    "noPassword": "Pas de mot de passe : un lien valable 15 minutes arrive dans votre boîte mail.",
+    "sent": "Vérifiez votre boîte mail : votre lien de connexion vous attend. Il est valable 15 minutes.",
+    "signingIn": "Connexion en cours…",
+    "loading": "Chargement de vos commandes…",
+    "expired": "Ce lien a expiré, demandez-en un nouveau.",
+    "loadFailed": "Nous n’arrivons pas à afficher vos commandes pour le moment. Rechargez la page dans quelques minutes.",
+    "greeting": "Bonjour ! Voici les commandes passées avec {email}.",
+    "logout": "Se déconnecter",
+    "ordersTitle": "Vos commandes",
+    "orderDate": "Passée le {date}",
+    "details": "Voir le détail",
+    "linesOmitted": "Le détail des articles n’est pas affiché pour les commandes les plus anciennes.",
+    "reorder": "Commander à nouveau",
+    "reorderOf": "Commander à nouveau la commande {number}",
+    "reordered": "Ajouté au panier.",
+    "reorderMissing": "Plus proposé : {names}.",
+    "reorderNone": "Aucun produit de cette commande n’est encore proposé.",
+    "review": "Donner mon avis",
+    "reviewOf": "Donner mon avis sur la commande {number}",
+    "alreadyReviewed": "Vous avez déjà donné votre avis sur cette commande. Merci !",
+    "empty": "Aucune commande avec cette adresse. Vous avez peut-être commandé avec une autre adresse e-mail.",
+    "loggedOut": "Vous êtes déconnecté de votre espace."
+  },
   "lookup": {
     "metaTitle": "Suivre ma commande",
     "metaDescription": "Retrouvez le détail de votre commande Racines en Partage avec son numéro et votre adresse e-mail.",
@@ -380,7 +413,21 @@
     "again": "Rechercher une autre commande",
     "carrier": "Le suivi du colis vous parvient du transporteur : SMS et e-mail de Mondial Relay, ou lien de suivi Colissimo.",
     "help": "Vous ne retrouvez pas votre commande ? {contact}",
-    "contactLink": "Écrivez-nous"
+    "contactLink": "Écrivez‑nous",
+    "accountHint": "Vous avez votre boîte mail ? Retrouvez toutes vos commandes dans {account}.",
+    "accountLink": "Mon espace"
+  },
+  "card": {
+    "metaTitle": "Carte de visite",
+    "metaDescription": "La carte de visite de Racines en Partage à télécharger : PDF pour l’imprimeur, image à partager et fiche contact.",
+    "title": "Notre carte de visite",
+    "lead": "Imprimez-la, envoyez-la à un proche ou gardez nos coordonnées dans votre téléphone. Le QR code mène à la boutique.",
+    "rectoAlt": "Recto de la carte de visite Racines en Partage.",
+    "versoAlt": "Verso de la carte : téléphone {phone}, e-mail {email} et QR code vers {site}.",
+    "print": "PDF pour l’imprimeur",
+    "share": "Image à partager",
+    "vcard": "Fiche contact (vCard)",
+    "hint": "Le PDF mesure 85 × 55 mm avec 3 mm de fond perdu, en 300 dpi : l’imprimeur se charge de la conversion en CMJN. L’image est faite pour WhatsApp et les messageries."
   },
   "a11y": {
     "skip": "Aller au contenu",
@@ -394,6 +441,7 @@
     "breadcrumb": "Fil d’Ariane",
     "newTab": "(s’ouvre dans un nouvel onglet)",
     "medallionAlt": "Médaillon Racines en Partage : une fleur d’hibiscus et des feuilles",
-    "openSearch": "Ouvrir la recherche"
+    "openSearch": "Ouvrir la recherche",
+    "account": "Mon espace"
   }
 }

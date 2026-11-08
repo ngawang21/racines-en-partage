@@ -133,7 +133,11 @@ function initSearch(): void {
     input.select();
   };
 
-  for (const btn of openers) btn.addEventListener('click', () => open(btn));
+  for (const btn of openers) {
+    btn.addEventListener('click', () => open(btn));
+    // Secondary openers (the 404 page) stay hidden until the dialog works.
+    btn.hidden = false;
+  }
 
   dialog.addEventListener('close', () => {
     window.clearTimeout(statusTimer);

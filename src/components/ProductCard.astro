@@ -103,7 +103,7 @@ const weight = formatWeight(p.weightGrams, locale);
   }
   .card-media :global(img) {
     object-position: 50% 60%;
-    transition: transform 600ms var(--ease-out-strong);
+    transition: transform 400ms var(--ease-out-strong);
   }
   @media (hover: hover) and (pointer: fine) {
     .card.lift:hover {
@@ -136,7 +136,7 @@ const weight = formatWeight(p.weightGrams, locale);
     display: flex;
     flex: 1;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--space-2);
     padding: var(--space-4) 2px 2px;
   }
   /* One line: a long origin is shortened rather than stranding the dot. The
@@ -198,8 +198,10 @@ const weight = formatWeight(p.weightGrams, locale);
     text-underline-offset: 4px;
     transition: text-decoration-color 200ms ease;
   }
-  .card:hover .card-title a {
-    text-decoration-color: var(--kraft-deep);
+  @media (hover: hover) {
+    .card:hover .card-title a {
+      text-decoration-color: var(--kraft-deep);
+    }
   }
   .card-foot {
     display: flex;
@@ -209,11 +211,12 @@ const weight = formatWeight(p.weightGrams, locale);
     margin-top: auto;
     padding-top: var(--space-2);
   }
+  /* Price over price per kilo, always: every card has the same two lines, so
+     prices and buttons line up across a row at any width. */
   .card-prices {
     display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 2px 8px;
+    flex-direction: column;
+    align-items: flex-start;
     margin: 0;
   }
   .card-price {

@@ -601,6 +601,7 @@ describe('ui strings', () => {
     'forms',
     'lookup',
     'account',
+    'card',
     'a11y',
   ];
   it('both files match the schema and carry exactly the namespaces of the contract', () => {

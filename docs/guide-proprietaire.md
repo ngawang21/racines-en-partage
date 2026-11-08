@@ -35,8 +35,9 @@ faire si » à la fin suffit souvent.
 18. Les avis clients
 19. La newsletter
 20. Fréquentation du site et protection anti-robots
-21. Que faire si...
-22. Qui contacter
+21. Télécharger ma carte de visite
+22. Que faire si...
+23. Qui contacter
 
 ---
 
@@ -1021,7 +1022,43 @@ refusent les envois.
 
 ---
 
-## 21. Que faire si...
+## 21. Télécharger ma carte de visite
+
+Votre carte de visite est prête sur le site, à l’adresse
+**racinesenpartage.fr/carte/** (lien **Carte de visite** en bas de chaque
+page, colonne **Informations**). La page montre le recto et le verso, et
+propose trois fichiers :
+
+- **PDF pour l’imprimeur** : la carte à imprimer, recto et verso.
+- **Image à partager** : les deux faces sur une seule image, à envoyer par
+  WhatsApp, SMS ou e-mail.
+- **Fiche contact (vCard)** : ouverte sur un téléphone, elle ajoute
+  Racines en Partage aux contacts (téléphone, e-mail, site, adresse).
+
+Le QR code au verso ouvre la boutique quand on le vise avec l’appareil
+photo d’un téléphone.
+
+**Faire imprimer la carte**
+
+1. Ouvrez **racinesenpartage.fr/carte/** et cliquez sur **PDF pour
+   l’imprimeur**.
+2. Chez l’imprimeur, en ligne ou en boutique, choisissez le format carte de
+   visite **85 × 55 mm**, **recto verso**.
+3. Envoyez le PDF tel quel. Si on vous pose la question : le fichier a
+   **3 mm de fond perdu** tout autour (la couleur déborde pour une coupe
+   nette), il est en **300 dpi**, et c’est l’imprimeur qui fait la
+   **conversion en CMJN** (les couleurs d’impression).
+4. Demandez un bon à tirer (un aperçu avant impression) et vérifiez que le
+   texte n’est pas coupé et que le QR code s’ouvre bien avec votre
+   téléphone.
+
+Un papier mat de 350 g ou plus donne un beau rendu. Si votre numéro ou
+votre e-mail change, prévenez votre développeur : il régénère la carte en
+quelques minutes.
+
+---
+
+## 22. Que faire si...
 
 | Situation                                                         | Que faire                                                                                                                                                                                                                                                       |
 | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1052,7 +1089,7 @@ refusent les envois.
 
 ---
 
-## 22. Qui contacter
+## 23. Qui contacter
 
 - **Votre développeur** : pour tout ce qui ne se règle pas avec ce guide.
   Indiquez toujours la page concernée, ce que vous avez fait, l’heure, et

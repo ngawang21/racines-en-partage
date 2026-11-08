@@ -5,6 +5,28 @@
    scaled to the width and vertical metrics of Fraunces (weight 600) and
    Figtree (weight 400), so the swap does not rewrap lines or shift layout.
    Values from the font files (capsize unpack) and measured weight ratios. */
+/* Fraunces, self-hosted (scripts/subset-fonts.sh): SOFT 50 and WONK 1 pinned,
+   weights 400 to 600, optical sizing on the roman only. */
+@font-face {
+  font-family: 'Fraunces Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 600;
+  src: url('../assets/fonts/fraunces-roman.woff2') format('woff2-variations');
+  unicode-range:
+    U+0000-017F, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212, U+FEFF,
+    U+FFFD;
+}
+@font-face {
+  font-family: 'Fraunces Variable';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400 600;
+  src: url('../assets/fonts/fraunces-italic.woff2') format('woff2-variations');
+  unicode-range:
+    U+0000-017F, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212, U+FEFF,
+    U+FFFD;
+}
 @font-face {
   font-family: 'Fraunces Fallback';
   src: local('Georgia');
@@ -205,11 +227,17 @@ blockquote {
 
 /* --------------------------------------------------------------- layout */
 
-.container {
+.container,
+.container-wide {
   width: 100%;
   max-width: calc(var(--container) + 2 * var(--gutter));
   margin-inline: auto;
   padding-inline: var(--gutter);
+}
+/* Product grids (shop, category, home selection): wider on large screens,
+   five columns from 1600 px. */
+.container-wide {
+  max-width: calc(var(--container-wide) + 2 * var(--gutter));
 }
 .section {
   padding-block: var(--space-16);
@@ -553,11 +581,15 @@ blockquote {
   flex: none;
   transition: transform 200ms var(--ease-out);
 }
-.link-arrow:hover {
-  text-decoration-color: var(--forest);
+@media (hover: hover) {
+  .link-arrow:hover {
+    text-decoration-color: var(--forest);
+  }
 }
-.link-arrow:hover svg {
-  transform: translateX(3px);
+@media (hover: hover) {
+  .link-arrow:hover svg {
+    transform: translateX(3px);
+  }
 }
 .band-forest .link-arrow {
   color: var(--cream);
@@ -595,6 +627,13 @@ blockquote {
 @media (min-width: 1080px) {
   .product-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+/* Five columns in the wide container: cards stay near 270 px, never past
+   340 px at any width. */
+@media (min-width: 1600px) {
+  .container-wide .product-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
@@ -652,13 +691,29 @@ blockquote {
   color: var(--ink-2);
   text-decoration: none;
 }
-.crumbs a:hover {
-  color: var(--forest);
-  text-decoration: underline;
+@media (hover: hover) {
+  .crumbs a:hover {
+    color: var(--forest);
+    text-decoration: underline;
+  }
 }
 .crumbs [aria-current] {
   color: var(--forest);
   font-weight: 500;
+}
+/* Phones, deep trails (a product): only the parent, as a back link, so the
+   trail never takes two lines above the photo. */
+@media (max-width: 599px) {
+  .crumbs ol:has(> li:nth-child(4)) > li:not(:nth-last-child(2)) {
+    display: none;
+  }
+  .crumbs ol:has(> li:nth-child(4)) > li:nth-last-child(2)::before {
+    margin-right: 2px;
+    transform: rotate(-135deg);
+  }
+  .crumbs ol:has(> li:nth-child(4)) a {
+    min-height: 44px;
+  }
 }
 
 /* Page header shared by the inner pages. */
@@ -698,8 +753,8 @@ blockquote {
 /* Eased on the way in only: hiding at load is instant and unseen. */
 [data-reveal]:not(.is-pending) {
   transition:
-    opacity 640ms var(--ease-out-strong) var(--reveal-delay, 0ms),
-    transform 640ms var(--ease-out-strong) var(--reveal-delay, 0ms);
+    opacity 480ms var(--ease-out-strong) var(--reveal-delay, 0ms),
+    transform 480ms var(--ease-out-strong) var(--reveal-delay, 0ms);
 }
 [data-reveal].is-pending {
   opacity: 0;
@@ -724,7 +779,7 @@ blockquote {
 }
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 180ms;
+  animation-duration: 150ms;
   animation-timing-function: ease;
 }
 ::view-transition-group(site-header) {

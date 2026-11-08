@@ -1,10 +1,10 @@
 ---
-// Home hero (spec 5.4): copy on the left, vertically centred; the trio photo
-// in a tall 4:3 soft frame on the right (about 58 percent of the row on
-// desktop), under the copy at full width on phones, with the medallion
-// resting on its corner. The photo is the LCP element: eager, fetchpriority
-// high. The 3:2 photo is cropped to 4:3 by object-fit, so the rendered image
-// is about 1.125 times the frame width: `sizes` accounts for it.
+// Home hero (spec 5.4, premium standard section 2): copy on the left in the
+// text column, vertically centred; the trio photo bleeds to the right edge of
+// the window on desktop and edge to edge under the copy on phones, with the
+// medallion resting on its corner. The photo is the LCP element: eager,
+// fetchpriority high. On phones the 3:2 photo is cropped to 4:3, so the
+// rendered image is about 1.125 times the frame width: `sizes` accounts for it.
 // Entrance: the copy rises in a short stagger, the photo settles from a
 // slight zoom (transform only, so the LCP image is never transparent) and the
 // medallion lands last. All of it is off under prefers-reduced-motion.
@@ -42,7 +42,7 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
           src={heroTrio}
           alt={hero.imageAlt}
           preset="hero"
-          sizes="(min-width: 1240px) 780px, (min-width: 960px) 64vw, 112vw"
+          sizes="(min-width: 960px) 58vw, 112vw"
           loading="eager"
           fetchpriority="high"
         />
@@ -62,6 +62,9 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
 
 <style>
   .hero {
+    /* The bleeding photo must never cause a horizontal scroll (100vw counts
+       the scrollbar). */
+    overflow-x: clip;
     padding-block: clamp(2rem, 1rem + 4vw, 4.5rem) clamp(2.5rem, 1.5rem + 4vw, 5rem);
   }
   .hero-grid {
@@ -120,14 +123,30 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
   }
   .hero-media {
     position: relative;
+    /* Phones: edge to edge. */
+    margin-inline: calc(var(--gutter) * -1);
   }
   .hero-frame {
     overflow: hidden;
     aspect-ratio: 4 / 3;
-    border: 1px solid var(--kraft);
-    border-radius: 24px;
+    border-block: 1px solid var(--kraft);
     background: var(--paper);
-    box-shadow: var(--shadow-soft);
+  }
+  @media (min-width: 960px) {
+    /* Desktop: the photo runs from its column to the window's right edge. */
+    .hero-media {
+      --bleed: calc(var(--gutter) + max(0px, (100vw - var(--container) - 2 * var(--gutter)) / 2));
+      margin-inline: 0 calc(var(--bleed) * -1);
+      container-type: inline-size;
+    }
+    /* Full width of the bleeding column; 4:3 until the height cap. */
+    .hero-frame {
+      aspect-ratio: auto;
+      height: min(75cqi, 76vh, 680px);
+      border-left: 1px solid var(--kraft);
+      border-radius: var(--radius-l) 0 0 var(--radius-l);
+      box-shadow: var(--shadow-soft);
+    }
   }
   .hero-frame :global(picture),
   .hero-frame :global(img) {
@@ -161,7 +180,7 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
   @media (max-width: 959px) {
     .hero-media :global(.hero-medallion) {
       left: auto;
-      right: 14px;
+      right: calc(var(--gutter) + 6px);
     }
   }
 
@@ -171,7 +190,7 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
     .hero-accent,
     .hero-lead,
     .hero-ctas {
-      animation: rep-hero-rise 560ms var(--ease-out-strong) both;
+      animation: rep-hero-rise 480ms var(--ease-out-strong) both;
     }
     .hero-title-main {
       animation-delay: 50ms;
@@ -186,10 +205,10 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
       animation-delay: 260ms;
     }
     .hero-frame :global(img) {
-      animation: rep-hero-settle 600ms var(--ease-out-strong) both;
+      animation: rep-hero-settle 500ms var(--ease-out-strong) both;
     }
     .hero-media :global(.hero-medallion) {
-      animation: rep-hero-land 520ms var(--ease-out-strong) 300ms both;
+      animation: rep-hero-land 440ms var(--ease-out-strong) 300ms both;
     }
   }
   @keyframes rep-hero-rise {

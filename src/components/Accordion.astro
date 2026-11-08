@@ -60,8 +60,10 @@ const Heading = level;
     text-underline-offset: 5px;
     transition: text-decoration-color var(--dur-fast) ease;
   }
-  summary:hover .acc-title {
-    text-decoration-color: var(--kraft-deep);
+  @media (hover: hover) {
+    summary:hover .acc-title {
+      text-decoration-color: var(--kraft-deep);
+    }
   }
   @media (hover: hover) {
     summary:hover .acc-icon {
@@ -75,7 +77,12 @@ const Heading = level;
     height: 32px;
     border: 1px solid var(--line);
     border-radius: 50%;
-    transition: background-color var(--dur-fast) var(--ease-out);
+    transition:
+      background-color var(--dur-fast) ease,
+      transform var(--dur-press) var(--ease-out-strong);
+  }
+  summary:active .acc-icon {
+    transform: scale(0.92);
   }
   .acc-icon::before,
   .acc-icon::after {

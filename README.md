@@ -57,6 +57,7 @@ CMS: Sveltia at `/admin/`.
 | `pnpm deploy`       | `wrangler deploy` (Workers Builds does this on push)              |
 | `pnpm og`           | regenerate the Open Graph images after a product change           |
 | `pnpm brand <png>`  | regenerate logo, medallion and icons from the owner's master logo |
+| `pnpm card [v]`     | business card files for `/carte/` (`medaillon`, `kraft`, `foret`) |
 | `pnpm launch-check` | fails while the SIRET, the prices or a legal TODO is pending      |
 
 ## Layout

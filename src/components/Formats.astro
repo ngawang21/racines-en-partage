@@ -81,7 +81,7 @@ const { current, formats, locale, t } = Astro.props;
     justify-content: center;
     min-width: 96px;
     min-height: 52px;
-    padding: 6px 16px;
+    padding: var(--space-2) var(--space-4);
     border: 1px solid var(--kraft-deep);
     border-radius: var(--radius-s);
     background: rgba(255, 255, 255, 0.55);
@@ -90,7 +90,11 @@ const { current, formats, locale, t } = Astro.props;
     text-decoration: none;
     transition:
       border-color var(--dur-fast) ease,
-      background-color var(--dur-fast) ease;
+      background-color var(--dur-fast) ease,
+      transform var(--dur-press) var(--ease-out-strong);
+  }
+  .pill:active {
+    transform: scale(0.97);
   }
   .pill-main {
     display: flex;

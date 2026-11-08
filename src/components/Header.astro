@@ -1,13 +1,19 @@
 ---
 // Site header (spec 5.5). Markup contract with wave 2B: the cart button is
 // `button[data-cart-toggle][aria-controls="cart-drawer"]` holding
-// `span[data-cart-count]`. The mobile menu is a <details>: it works without
-// script; header-menu.ts adds Escape, close on navigation and bfcache. The
-// search button opens SearchDialog (mounted right after the header).
+// `span[data-cart-count]`. The mobile menu is a <details>: a full-height
+// panel (56 px rows, contact line and language at the bottom) over a scrim
+// that closes it; it works without script, and header-menu.ts adds Escape,
+// close on navigation, bfcache, the panel's top edge and the header that
+// hides on scroll down on phones. The search button opens SearchDialog
+// (mounted right after the header). Primary links: four (spec 8.5), recipes
+// live in context and in the footer.
 import { Image } from 'astro:assets';
 import medallion from '../assets/brand/medallion.webp';
 import { SITE, type Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
+import type { Settings } from '../content/schemas';
+import { formatPhone, formatPhoneIntl, phoneE164 } from '../i18n/format';
 import { routePath, type RouteKey } from '../i18n/routing';
 import Icon from './Icon.astro';
 import LanguagePill from './LanguagePill.astro';
@@ -18,8 +24,11 @@ interface Props {
   routeKey: RouteKey;
   slug?: string;
   t: LocaleContent;
+  settings: Settings;
 }
-const { locale, routeKey, slug, t } = Astro.props;
+const { locale, routeKey, slug, t, settings } = Astro.props;
+const { phone, email } = settings.brand;
+const phoneLabel = locale === 'fr' ? formatPhone(phone) : formatPhoneIntl(phone);
 const home = routePath('home', locale);
 // "Racines" / "en Partage": the wordmark stacks on two lines on narrow phones.
 const [firstWord, ...others] = SITE.name.split(' ');
@@ -28,15 +37,14 @@ const active = (keys: RouteKey[]): 'page' | undefined =>
   keys.includes(routeKey) ? 'page' : undefined;
 const links = [
   { href: routePath('shop', locale), label: t.nav.shop, current: active(['shop', 'category']) },
-  { href: routePath('recipes', locale), label: t.nav.recipes, current: active(['recipes']) },
   { href: routePath('about', locale), label: t.nav.about, current: active(['about']) },
   { href: routePath('faq', locale), label: t.nav.faq, current: active(['faq']) },
   { href: routePath('contact', locale), label: t.nav.contact, current: active(['contact']) },
 ];
 ---
 
-<header class="site-header">
-  <div class="container bar">
+<header class="site-header" data-site-header>
+  <div class="container-wide bar">
     <details class="mobile-menu">
       <summary class="icon-btn">
         <Icon name="menu" class="when-closed" />
@@ -55,7 +63,31 @@ const links = [
             ))
           }
         </ul>
-        <LanguagePill {locale} {routeKey} {slug} label={t.a11y.language} class="mobile-pill" />
+        <div class="mobile-foot">
+          <ul class="mobile-contact" role="list">
+            {
+              phone && (
+                <li>
+                  <a href={`tel:${phoneE164(phone)}`}>
+                    <Icon name="phone" size={20} />
+                    <span>{phoneLabel}</span>
+                  </a>
+                </li>
+              )
+            }
+            {
+              email && (
+                <li>
+                  <a href={`mailto:${email}`}>
+                    <Icon name="mail" size={20} />
+                    <span>{email}</span>
+                  </a>
+                </li>
+              )
+            }
+          </ul>
+          <LanguagePill {locale} {routeKey} {slug} label={t.a11y.language} class="mobile-pill" />
+        </div>
       </nav>
     </details>
 
@@ -100,6 +132,14 @@ const links = [
         <Icon name="search" />
         <span class="visually-hidden">{t.a11y.openSearch}</span>
       </button>
+      <a
+        class="icon-btn account-link"
+        href={routePath('account', locale)}
+        aria-current={routeKey === 'account' ? 'page' : undefined}
+      >
+        <Icon name="user" />
+        <span class="visually-hidden">{t.a11y.account}</span>
+      </a>
       <button
         type="button"
         class="icon-btn cart-toggle"
@@ -131,10 +171,20 @@ const links = [
     /* Held still while the rest of the page crossfades (global.css). */
     view-transition-name: site-header;
   }
+  /* Phones: header-menu.ts slides the header away on scroll down and back on
+     scroll up (transform only, no layout shift). Never under reduced motion. */
+  @media (max-width: 1023px) and (prefers-reduced-motion: no-preference) {
+    .site-header {
+      transition: transform 200ms var(--ease-out-strong);
+    }
+    .site-header.is-tucked {
+      transform: translateY(-100%);
+    }
+  }
   .bar {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-1);
     min-height: var(--header-h);
   }
   @media (min-width: 400px) {
@@ -164,8 +214,10 @@ const links = [
       transform: rotate(-8deg);
     }
   }
-  /* One line from 430 px (19 px). Narrower phones, where the search and cart
-     buttons leave too little room, stack it: "Racines" over "en Partage". */
+  /* One line from 480 px (19 px). Narrower phones, where the search, account
+     and cart buttons leave too little room, stack it: "Racines" over "en
+     Partage"; below 360 px only the medallion shows (the name stays for
+     assistive technology). */
   .wordmark {
     overflow: hidden;
     font-family: var(--font-display);
@@ -178,7 +230,7 @@ const links = [
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  @media (max-width: 429px) {
+  @media (max-width: 479px) {
     .wordmark {
       font-size: 1rem;
       line-height: 1.05;
@@ -187,6 +239,23 @@ const links = [
     .wordmark-rest {
       display: block;
     }
+    .brand {
+      gap: 6px;
+    }
+    .brand img {
+      width: 36px;
+      height: 36px;
+    }
+  }
+  @media (max-width: 374px) {
+    .wordmark {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
   }
   .desktop-nav ul {
     display: flex;
@@ -194,7 +263,7 @@ const links = [
     margin: 0;
   }
   .desktop-nav a,
-  .mobile-nav a {
+  .mobile-nav > ul a {
     color: var(--ink-2);
     font-weight: 500;
     text-decoration: none;
@@ -202,19 +271,23 @@ const links = [
   .desktop-nav a {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    min-width: 44px;
     min-height: 44px;
     border-bottom: 2px solid transparent;
     transition:
       color var(--dur-fast) ease,
       border-color var(--dur-fast) ease;
   }
-  .desktop-nav a:hover,
   .desktop-nav a[aria-current] {
     color: var(--forest);
     border-bottom-color: var(--gold);
   }
-  .desktop-nav a:hover:not([aria-current]) {
-    border-bottom-color: rgba(201, 162, 74, 0.55);
+  @media (hover: hover) {
+    .desktop-nav a:hover {
+      color: var(--forest);
+      border-bottom-color: rgba(201, 162, 74, 0.55);
+    }
   }
   .tools {
     display: flex;
@@ -276,19 +349,31 @@ const links = [
   .mobile-menu[open] summary {
     background: rgba(22, 58, 28, 0.06);
   }
-  /* Scrim under the panel. It belongs to the summary, so a tap on it closes
-     the menu natively; it is positioned against the sticky header. */
+  /* A transform would make the summary the containing block of its fixed
+     scrim, which would then shrink under the finger between press and
+     release: no press scale while the menu is open. */
+  .mobile-menu[open] > summary:active {
+    transform: none;
+  }
+  /* While the menu is open the header drops its backdrop filter (which would
+     make it the containing block of fixed children), so the panel and the
+     scrim are fixed to the viewport, from the header's bottom edge
+     (--menu-top, set by header-menu.ts) to the bottom of the screen. */
+  .site-header:has(.mobile-menu[open]) {
+    background: var(--cream);
+    backdrop-filter: none;
+  }
+  /* Scrim beside the panel. It belongs to the summary, so a tap on it closes
+     the menu natively. */
   .mobile-menu[open] > summary::before {
     content: '';
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    height: 100dvh;
-    background: rgba(22, 58, 28, 0.28);
+    position: fixed;
+    inset: var(--menu-top, var(--header-h)) 0 0;
+    background: rgba(22, 58, 28, 0.32);
     cursor: default;
   }
-  @media (max-width: 899px) {
+  @media (max-width: 1023px) {
+    /* Nothing scrolls behind the open menu. */
     :global(html:has(.mobile-menu[open])) {
       overflow: hidden;
     }
@@ -301,13 +386,18 @@ const links = [
     display: block;
   }
   .mobile-nav {
-    position: absolute;
+    position: fixed;
+    top: var(--menu-top, var(--header-h));
+    bottom: 0;
     left: 0;
-    right: 0;
-    top: 100%;
-    padding: var(--space-4) var(--gutter) var(--space-6);
+    display: flex;
+    flex-direction: column;
+    width: min(88vw, 400px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-2) var(--gutter) calc(var(--space-6) + env(safe-area-inset-bottom));
     background: var(--cream);
-    border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
     box-shadow: var(--shadow-float);
   }
   @media (prefers-reduced-motion: no-preference) {
@@ -320,8 +410,8 @@ const links = [
   }
   @keyframes rep-menu-in {
     from {
+      transform: translateX(-24px);
       opacity: 0;
-      transform: translateY(-8px);
     }
   }
   @keyframes rep-scrim-in {
@@ -329,19 +419,22 @@ const links = [
       opacity: 0;
     }
   }
-  .mobile-nav ul {
-    margin: 0 0 var(--space-4);
+  .mobile-nav > ul {
+    margin: 0;
   }
-  .mobile-nav a {
+  .mobile-nav > ul a {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 52px;
-    font-size: var(--fs-1);
+    min-height: 56px;
+    font-family: var(--font-display);
+    font-size: var(--fs-2);
+    font-weight: 500;
     border-bottom: 1px solid var(--line);
     transition: color var(--dur-fast) ease;
   }
-  .mobile-nav a::after {
+  .mobile-nav > ul a::after {
     content: '';
     width: 7px;
     height: 7px;
@@ -350,18 +443,56 @@ const links = [
     border-right: 1.5px solid var(--kraft-deep);
     transform: rotate(45deg);
   }
-  .mobile-nav a:active {
+  .mobile-nav > ul a:active {
     color: var(--forest);
   }
-  .mobile-nav a[aria-current] {
+  .mobile-nav > ul a[aria-current] {
     color: var(--forest);
     font-weight: 600;
+  }
+  .mobile-nav > ul a[aria-current]::before {
+    content: '';
+    position: absolute;
+    left: calc(var(--gutter) * -1);
+    width: 3px;
+    height: 24px;
+    border-radius: 0 2px 2px 0;
+    background: var(--gold);
+  }
+  /* Contact line and language at the bottom of the panel, by the thumb. */
+  .mobile-foot {
+    display: grid;
+    gap: var(--space-4);
+    margin-top: auto;
+    padding-top: var(--space-8);
+  }
+  .mobile-contact {
+    display: grid;
+    gap: var(--space-1);
+    margin: 0;
+  }
+  .mobile-contact a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 44px;
+    color: var(--forest);
+    font-size: 0.9375rem;
+    font-variant-numeric: lining-nums;
+    text-decoration: none;
+  }
+  .mobile-contact :global(svg) {
+    flex: none;
+    color: var(--leaf);
+  }
+  .mobile-foot :global(.mobile-pill) {
+    justify-self: start;
   }
   .desktop-nav,
   .tools :global(.desktop-pill) {
     display: none;
   }
-  @media (min-width: 900px) {
+  @media (min-width: 1024px) {
     .mobile-menu {
       display: none;
     }

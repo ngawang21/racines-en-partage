@@ -65,8 +65,10 @@
   --dur-base: 240ms;
   --dur-slow: 420ms;
 
-  /* Layout */
-  --container: 1200px;
+  /* Layout (premium standard section 2): text and controls in a bounded
+     column, product grids wider, photography and bands full-bleed. */
+  --container: 1280px;
+  --container-wide: 1440px;
   --gutter: 20px;
   --header-h: 64px;
 }
@@ -75,6 +77,12 @@
   :root {
     --gutter: 40px;
     --header-h: 76px;
+  }
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --gutter: 56px;
   }
 }
 

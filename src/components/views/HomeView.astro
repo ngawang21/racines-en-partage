@@ -36,7 +36,8 @@ const [t, home, products, categories, settings, reviews] = await Promise.all([
   loadSettings(),
   loadReviews(),
 ]);
-const featured = products.filter((p) => p.featured).slice(0, 4);
+// Up to five: the grid shows as many as fill whole rows (see the styles).
+const featured = products.filter((p) => p.featured).slice(0, 5);
 const bySlug = new Map(products.map((p) => [p.slug, p]));
 const recipeProducts = home.recipeProducts
   .map((slug) => bySlug.get(slug))
@@ -52,7 +53,7 @@ const aboutHref = routePath('about', locale);
   <div class="kente" aria-hidden="true"></div>
   <Reassurance items={home.reassurance} />
 
-  <section class="container section" aria-labelledby="featured-title">
+  <section class="container-wide section featured" aria-labelledby="featured-title">
     <SectionHead
       id="featured-title"
       title={home.featuredTitle}
@@ -117,3 +118,29 @@ const aboutHref = routePath('about', locale);
 <script>
   import '../reveal';
 </script>
+
+<style>
+  /* The home selection never leaves a lone card on its last row: three cards
+     in the three-column range, four from 1080 px, five from 1600 px when the
+     owner features five (four columns otherwise). */
+  @media (min-width: 720px) and (max-width: 1079px) {
+    .featured :global(.featured-grid > li:nth-child(n + 4)) {
+      display: none;
+    }
+  }
+  @media (min-width: 1080px) and (max-width: 1599px) {
+    .featured :global(.featured-grid > li:nth-child(n + 5)) {
+      display: none;
+    }
+  }
+  @media (min-width: 1600px) {
+    .featured :global(.featured-grid:not(:has(> li:nth-child(5)))) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 719px) {
+    .featured :global(.featured-grid > li:nth-child(n + 5)) {
+      display: none;
+    }
+  }
+</style>

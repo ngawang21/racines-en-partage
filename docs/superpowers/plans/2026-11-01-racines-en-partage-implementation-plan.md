@@ -342,3 +342,17 @@ a separate entry in `worker/` deployed with the static assets by one
   live regions, Safari accordion target, token stripped from the address,
   search quantity bug) applied. Gates: unit 242, worker 351, build 47
   (1 skipped: no out-of-stock product), e2e 106 (2 skipped, same reason).
+- 2026-11-08 evening, owner feedback round (spec section 8): premium
+  standard written (`docs/design/premium-standard.md`) and the site audited
+  against it (`docs/design/premium-audit-2026-11-08.md`): hybrid width
+  (container 1280, wide grids 1440, full-bleed hero and bands), phone
+  navigation (full-height menu panel, header hides on scroll down, sticky buy
+  bar from arrival, back link breadcrumb), self-hosted Fraunces subsets
+  (fonts 291 to 114 KB), press and hover states, 44 px targets, 56 ch FAQ
+  measure; business card in three variants (`pnpm card`, `/carte/` page,
+  print PDF, shareable image, vCard), address printed with the country and the
+  international phone on English pages, "Recettes" out of the header, the
+  passwordless customer space `/mon-compte/` (e-mail link, signed cookie,
+  orders from Stripe, re-order, review from the space) with its privacy and
+  FAQ texts. Gates: unit 252, worker 387, build 49 (1 skipped), e2e 124
+  (2 skipped).

@@ -704,6 +704,23 @@ load), which is enough for a ceiling.
 Without the binding no budget applies (tests, before this step). A KV
 error lets the form through and logs `forms.budget_unavailable`.
 
+## 19. Customer space ("Mon espace")
+
+`/mon-compte/` (EN `/en/account/`) lets customers see their past orders
+without a password. Nothing to set up beyond the forms: `FORMS_SECRET`
+signs the sign-in links and the session cookie, `RESEND_API_KEY` sends the
+link, Turnstile and the daily budget apply as for the other forms
+(sections 13, 14, 18).
+
+- The e-mail "Votre lien de connexion" carries a link valid 15 minutes.
+- Opening it sets the cookie `rep_session` (`HttpOnly`, `Secure`,
+  `SameSite=Lax`, path `/api/account`, 30 days). It is strictly necessary,
+  so it needs no consent banner; the privacy policy names it.
+- The orders come from Stripe (the Checkout Sessions of that e-mail).
+  Nothing is stored by the shop.
+- To sign everybody out at once, change `FORMS_SECRET` (section 13); this
+  also voids pending review and newsletter links.
+
 ## Troubleshooting
 
 - **Build fails on Cloudflare, passes locally.** Check the build command

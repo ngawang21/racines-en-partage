@@ -75,13 +75,13 @@ export function formatPhone(raw: string): string {
   return digits.replace(/(\d{2})(?=\d)/g, '$1 ');
 }
 
-/** "0775689108" to "+33775689108" for tel: links and structured data. */
 /** "0775689108" to "+33 7 75 68 91 08" (French numbers only). */
 export function formatPhoneIntl(digits: string): string {
   const rest = digits.replace(/\D/g, '').replace(/^0/, '');
   return `+33 ${rest.replace(/(\d)(?=(\d{2})+$)/, '$1 ').replace(/(\d{2})(?=\d)/g, '$1 ')}`.trim();
 }
 
+/** "0775689108" to "+33775689108" for tel: links and structured data. */
 export function phoneE164(raw: string): string {
   const digits = raw.replace(/\D/g, '');
   if (digits.length === 10 && digits.startsWith('0')) return `+33${digits.slice(1)}`;

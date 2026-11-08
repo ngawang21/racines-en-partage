@@ -163,7 +163,7 @@ const plural = (n: number, one: string, many: string) =>
     height: 100%;
     object-fit: cover;
     object-position: 50% 70%;
-    transition: transform 600ms var(--ease-out-strong);
+    transition: transform 400ms var(--ease-out-strong);
   }
   @media (hover: hover) and (pointer: fine) {
     .recipe.lift:hover {
@@ -225,10 +225,10 @@ const plural = (n: number, one: string, many: string) =>
   }
   .recipe-lines li {
     position: relative;
-    padding-left: 18px;
+    padding-left: 16px;
   }
   .recipe-lines li + li {
-    margin-top: 6px;
+    margin-top: var(--space-2);
   }
   .recipe-lines li::before {
     content: '';

@@ -1,9 +1,10 @@
 ---
-import '@fontsource-variable/fraunces/full.css';
-import '@fontsource-variable/fraunces/full-italic.css';
+// Fraunces is self-hosted from src/assets/fonts (scripts/subset-fonts.sh:
+// axes pinned, about 93 KB for both styles instead of 270); its @font-face
+// rules are in global.css. Figtree comes from fontsource as is.
 import '@fontsource-variable/figtree';
 import '../styles/global.css';
-import frauncesLatin from '@fontsource-variable/fraunces/files/fraunces-latin-full-normal.woff2?url';
+import frauncesLatin from '../assets/fonts/fraunces-roman.woff2?url';
 import figtreeLatin from '@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url';
 import type { ImageMetadata } from 'astro';
 import { getImage } from 'astro:assets';
@@ -148,7 +149,7 @@ const analyticsToken = settings.analytics.cloudflareToken.trim();
         </div>
       )
     }
-    <Header {locale} {routeKey} {slug} {t} />
+    <Header {locale} {routeKey} {slug} {t} {settings} />
     <main id="main" tabindex="-1">
       <slot />
     </main>

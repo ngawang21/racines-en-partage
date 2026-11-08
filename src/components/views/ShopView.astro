@@ -7,6 +7,7 @@ import Base from '../../layouts/Base.astro';
 import { loadCategories, loadLocale, loadProducts, loadSettings } from '../../i18n/locale';
 import { routePath, routeUrl } from '../../i18n/routing';
 import Breadcrumbs from '../Breadcrumbs.astro';
+import Icon from '../Icon.astro';
 import ProductGrid from '../ProductGrid.astro';
 import { countLabel } from '../storefront';
 
@@ -46,16 +47,20 @@ const sorts = [
     items: products.map((p) => ({ name: p.name, url: routeUrl('product', locale, p.slug) })),
   }}
 >
-  <div class="container page-head">
+  <div class="container-wide page-head">
     <Breadcrumbs
       label={t.a11y.breadcrumb}
       items={[{ name: t.nav.home, href: routePath('home', locale) }, { name: t.nav.shop }]}
     />
     <h1>{t.shop.title}</h1>
     <p class="lead">{t.shop.intro}</p>
+    <a class="link-arrow head-link" href={routePath('recipes', locale)}>
+      {t.shop.recipesLink}
+      <Icon name="chevron" />
+    </a>
   </div>
 
-  <section class="container shop" aria-labelledby="shop-results">
+  <section class="container-wide shop" aria-labelledby="shop-results">
     <noscript
       ><style is:inline>
         .shop-tools {
@@ -111,6 +116,11 @@ const sorts = [
 </script>
 
 <style>
+  .head-link {
+    margin-top: var(--space-2);
+    font-size: 0.9375rem;
+    font-weight: 500;
+  }
   .shop {
     padding-bottom: clamp(3rem, 2rem + 4.5vw, 6rem);
   }
@@ -244,8 +254,10 @@ const sorts = [
   select {
     transition: border-color var(--dur-fast) ease;
   }
-  select:hover {
-    border-color: var(--kraft-deep);
+  @media (hover: hover) {
+    select:hover {
+      border-color: var(--kraft-deep);
+    }
   }
   .count {
     margin-block: var(--space-6) var(--space-6);

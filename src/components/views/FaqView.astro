@@ -97,7 +97,8 @@ const { brand } = settings;
     border-top: 1px solid var(--line);
   }
   .answer {
-    max-width: 64ch;
+    /* About 70 characters a line: Figtree's "0" is wider than its average glyph. */
+    max-width: 56ch;
     color: var(--ink-2);
     line-height: 1.7;
   }
@@ -129,8 +130,10 @@ const { brand } = settings;
     font-size: 0.9375rem;
     text-decoration: none;
   }
-  .ask ul a:hover {
-    text-decoration: underline;
+  @media (hover: hover) {
+    .ask ul a:hover {
+      text-decoration: underline;
+    }
   }
   .ask :global(svg) {
     flex: none;

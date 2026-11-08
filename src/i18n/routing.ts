@@ -20,6 +20,7 @@ export type RouteKey =
   | 'review'
   | 'newsletter'
   | 'account'
+  | 'card'
   | 'notFound'
   | 'admin';
 
@@ -46,6 +47,7 @@ export const ROUTES: Record<RouteKey, Record<Locale, string>> = {
   review: { fr: '/avis/', en: '/en/review/' },
   newsletter: { fr: '/newsletter/', en: '/en/newsletter/' },
   account: { fr: '/mon-compte/', en: '/en/account/' },
+  card: { fr: '/carte/', en: '/en/card/' },
   notFound: { fr: '/404.html', en: '/404.html' },
   admin: { fr: '/admin/', en: '/admin/' },
 };
@@ -58,6 +60,7 @@ export const NOINDEX_ROUTES: readonly RouteKey[] = [
   'review',
   'newsletter',
   'account',
+  'card',
   'notFound',
   'admin',
 ];

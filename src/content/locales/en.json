@@ -28,7 +28,9 @@
     "moreQuestions": "Another question?",
     "writeUs": "Write to us or give us a call: we reply to every message ourselves.",
     "lookup": "Track my order",
-    "recipes": "Recipes"
+    "recipes": "Recipes",
+    "account": "My account",
+    "card": "Business card"
   },
   "shop": {
     "title": "The shop",
@@ -66,7 +68,8 @@
       "shareTitle": "Receive and share",
       "shareText": "Your parcel arrives within a few days. All that is left is to make the cup."
     },
-    "unitPrice": "Price per kilo"
+    "unitPrice": "Price per kilo",
+    "recipesLink": "Our recipes"
   },
   "product": {
     "addToCart": "Add to basket",
@@ -206,7 +209,7 @@
     "nextPreparation": "We pack your parcel with care within 2 working days.",
     "nextRelay": "Mondial Relay will text and e-mail you as soon as the parcel reaches your pickup point.",
     "nextHome": "Colissimo will send you a tracking link once your parcel has been dispatched.",
-    "nextPickup": "We will call you to arrange a time at 9 Rue du Marché, Arnouville.",
+    "nextPickup": "We will call you to arrange a time at 9 Rue du Marché, 95400 Arnouville, France.",
     "nextContact": "Any questions? Write to {email} or call {phone}.",
     "backToShop": "Back to the shop",
     "loading": "Retrieving your order…",
@@ -240,7 +243,8 @@
     "invalidToken": "This link is no longer valid. Please use the most recent link we e-mailed you.",
     "orderNotFound": "No order matches this number and e-mail address. Check both, then try again.",
     "mailFailed": "We could not send it. Try again in a few minutes, or write to us directly by e-mail.",
-    "featureDisabled": "This service is closed for now. Write to us by e-mail if you need anything."
+    "featureDisabled": "This service is closed for now. Write to us by e-mail if you need anything.",
+    "unauthenticated": "Your session has expired. Ask for a new sign-in link."
   },
   "legal": {
     "updated": "Last updated: {date}",
@@ -365,7 +369,36 @@
       "disabled": "Newsletter sign-ups are closed for now."
     }
   },
-  "account": {},
+  "account": {
+    "metaTitle": "My account",
+    "metaDescription": "Find all your Racines en Partage orders with a link sent by e-mail, no password needed.",
+    "title": "My account",
+    "lead": "Find your past orders with the e-mail address you ordered with.",
+    "email": "Your e-mail",
+    "submit": "Send me a sign-in link",
+    "noPassword": "No password: a link valid for 15 minutes arrives in your inbox.",
+    "sent": "Check your inbox: your sign-in link is waiting. It is valid for 15 minutes.",
+    "signingIn": "Signing you in…",
+    "loading": "Loading your orders…",
+    "expired": "This link has expired, ask for a new one.",
+    "loadFailed": "We cannot show your orders right now. Reload the page in a few minutes.",
+    "greeting": "Hello! Here are the orders placed with {email}.",
+    "logout": "Sign out",
+    "ordersTitle": "Your orders",
+    "orderDate": "Placed on {date}",
+    "details": "See the details",
+    "linesOmitted": "Item details are not shown for the oldest orders.",
+    "reorder": "Order again",
+    "reorderOf": "Order again: order {number}",
+    "reordered": "Added to your basket.",
+    "reorderMissing": "No longer available: {names}.",
+    "reorderNone": "None of the products in this order is still available.",
+    "review": "Leave a review",
+    "reviewOf": "Leave a review of order {number}",
+    "alreadyReviewed": "You have already reviewed this order. Thank you!",
+    "empty": "No order with this address. You may have ordered with another e-mail address.",
+    "loggedOut": "You are signed out of your account."
+  },
   "lookup": {
     "metaTitle": "Track my order",
     "metaDescription": "Find the details of your Racines en Partage order with its number and your e-mail address.",
@@ -380,7 +413,21 @@
     "again": "Look up another order",
     "carrier": "Parcel tracking comes from the carrier: texts and e-mails from Mondial Relay, or a Colissimo tracking link.",
     "help": "Cannot find your order? {contact}",
-    "contactLink": "Write to us"
+    "contactLink": "Write to us",
+    "accountHint": "Have your mailbox at hand? Find all your orders in {account}.",
+    "accountLink": "My account"
+  },
+  "card": {
+    "metaTitle": "Business card",
+    "metaDescription": "The Racines en Partage business card to download: a PDF for the printer, an image to share and a contact card.",
+    "title": "Our business card",
+    "lead": "Print it, send it to a friend or keep our details in your phone. The QR code leads to the shop.",
+    "rectoAlt": "Front of the Racines en Partage business card.",
+    "versoAlt": "Back of the card: phone {phone}, e-mail {email} and a QR code to {site}.",
+    "print": "PDF for the printer",
+    "share": "Image to share",
+    "vcard": "Contact card (vCard)",
+    "hint": "The PDF is 85 × 55 mm with a 3 mm bleed at 300 dpi; the printer handles the CMYK conversion. The image is made for WhatsApp and messaging apps."
   },
   "a11y": {
     "skip": "Skip to content",
@@ -394,6 +441,7 @@
     "breadcrumb": "Breadcrumb",
     "newTab": "(opens in a new tab)",
     "medallionAlt": "Racines en Partage medallion: a hibiscus flower and leaves",
-    "openSearch": "Open search"
+    "openSearch": "Open search",
+    "account": "My account"
   }
 }

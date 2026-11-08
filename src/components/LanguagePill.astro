@@ -51,12 +51,20 @@ const key: RouteKey = routeKey === 'notFound' || routeKey === 'admin' ? 'home' :
     position: relative;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    min-width: 44px;
     min-height: 36px;
     padding: 0 12px;
     border-radius: var(--radius-pill);
     color: var(--ink-2);
     text-decoration: none;
-    transition: background-color var(--dur-fast) var(--ease-out);
+    transition:
+      background-color var(--dur-fast) ease,
+      color var(--dur-fast) ease,
+      transform var(--dur-press) var(--ease-out-strong);
+  }
+  .pill a:active {
+    transform: scale(0.97);
   }
   /* Grow the hit area to 44 px without growing the pill. */
   .pill a::after {
@@ -64,8 +72,10 @@ const key: RouteKey = routeKey === 'notFound' || routeKey === 'admin' ? 'home' :
     position: absolute;
     inset: -4px 0;
   }
-  .pill a:hover:not(.on) {
-    color: var(--forest);
+  @media (hover: hover) {
+    .pill a:hover:not(.on) {
+      color: var(--forest);
+    }
   }
   .pill a.on {
     background: var(--forest);

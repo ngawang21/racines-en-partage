@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import medallion from '../assets/brand/medallion.webp';
 import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
 import Ornament from '../components/Ornament.astro';
 import { loadLocale } from '../i18n/locale';
 import { routePath } from '../i18n/routing';
@@ -32,6 +33,17 @@ const [fr, en] = await Promise.all([loadLocale('fr'), loadLocale('en')]);
       <a class="btn btn-primary" href={routePath('shop', 'fr')}>{fr.errors.toShop}</a>
       <a class="btn btn-secondary" href={routePath('home', 'fr')}>{fr.errors.backHome}</a>
     </div>
+    <button
+      type="button"
+      class="btn btn-ghost nf-search"
+      data-search-open
+      aria-controls="search-dialog"
+      aria-haspopup="dialog"
+      hidden
+    >
+      <Icon name="search" />
+      <span>{fr.search.title}</span>
+    </button>
 
     <Ornament class="nf-ornament" />
 
@@ -68,6 +80,12 @@ const [fr, en] = await Promise.all([loadLocale('fr'), loadLocale('en')]);
   }
   .lead {
     margin-top: var(--space-4);
+  }
+  .nf-search {
+    margin-top: var(--space-3);
+  }
+  .nf-search[hidden] {
+    display: none;
   }
   .nf-ctas {
     display: flex;
