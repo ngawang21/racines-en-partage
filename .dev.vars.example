@@ -11,7 +11,21 @@ STRIPE_WEBHOOK_SECRET=whsec_replace_me
 RESEND_API_KEY=
 
 # Owner inbox for order e-mails (also the reply-to of customer e-mails).
-ORDER_EMAIL_TO=racinesenpartage@outlook.com
+ORDER_EMAIL_TO=racinesenpartage@gmail.com
 
 # Overrides the wrangler.jsonc value so Stripe redirects back to the local server.
 SITE_URL=http://localhost:8787
+
+# Signs the review and newsletter links. Generate with `openssl rand -base64 32`.
+# FORMS_SECRET=
+
+# Fine-grained GitHub token (Contents read and write on this repository only);
+# needed by POST /api/reviews. Leave unset locally unless testing reviews.
+# GITHUB_TOKEN=
+
+# Turnstile secret. Unset skips the captcha check; set it only together with
+# the site key in the CMS settings, or every form fails.
+# TURNSTILE_SECRET_KEY=
+
+# Resend audience of the newsletter; unset disables the newsletter endpoints.
+# RESEND_AUDIENCE_ID=

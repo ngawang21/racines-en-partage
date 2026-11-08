@@ -3,10 +3,11 @@
 The shop is one Cloudflare Worker. `pnpm build` produces `dist/` (static
 pages, images, `catalog.json`); `npx wrangler deploy` uploads `dist/` as
 static assets together with the Worker script in `worker/`, which answers
-`/api/*` (checkout, order lookup, Stripe webhook). Workers Builds runs both
-commands on every push to `main`. There is no database: Stripe holds the
-orders, `catalog.json` holds prices and stock, the repository holds the
-content.
+`/api/*` (checkout, order pages, Stripe webhook, forms, reviews) and runs
+the daily review invitations. Workers Builds runs both commands on every
+push to `main`. There is no database: Stripe holds the orders,
+`catalog.json` holds prices and stock, the repository holds the content and
+the reviews, Resend holds the newsletter contacts.
 
 Everything below is done once, in web interfaces, in the order given. Values
 marked "to verify" were not confirmed on 2026-11-01; check them on the
@@ -39,7 +40,7 @@ The Cloudflare account is opened in Marie's name from day one, because it
 holds the domain zone, the Worker and the secrets.
 
 1. With Marie: create a free Cloudflare account with
-   `racinesenpartage@outlook.com`. She sets the password and two-factor
+   `racinesenpartage@gmail.com`. She sets the password and two-factor
    authentication on her phone.
 2. She invites the developer: Manage account, Members, Invite, role
    Administrator (exact role names to verify in the dashboard).
@@ -79,15 +80,20 @@ Secrets. Saving a secret deploys a new version of the Worker.
 | `STRIPE_SECRET_KEY`          | secret           | `sk_test_...` first, then `sk_live_...`                                                                 | Section 8  |
 | `STRIPE_WEBHOOK_SECRET`      | secret           | `whsec_...` of the endpoint in the same mode as the key                                                 | Section 8  |
 | `RESEND_API_KEY`             | secret, optional | `re_...`                                                                                                | Section 6  |
-| `ORDER_EMAIL_TO`             | secret           | `racinesenpartage@outlook.com`                                                                          | Marie      |
+| `ORDER_EMAIL_TO`             | secret           | `racinesenpartage@gmail.com`                                                                            | Marie      |
 | `SITE_URL`                   | variable         | `https://racinesenpartage.fr`                                                                           | Fixed      |
 | `ORDER_EMAIL_FROM`           | variable         | `Racines en Partage <commandes@racinesenpartage.fr>` (display name and address, as in `wrangler.jsonc`) | Section 6  |
 | `PUBLIC_MONDIAL_RELAY_BRAND` | build variable   | `BDTEST`, then Marie's client code                                                                      | Section 9  |
+| `FORMS_SECRET`               | secret           | 32 random bytes, base64 (`openssl rand -base64 32`)                                                     | Section 13 |
+| `TURNSTILE_SECRET_KEY`       | secret, optional | Secret key of the Turnstile widget                                                                      | Section 14 |
+| `RESEND_AUDIENCE_ID`         | secret, optional | Id of the newsletter audience in Resend                                                                 | Section 15 |
+| `GITHUB_TOKEN`               | secret           | Fine-grained token, contents read and write on this repository only                                     | Section 16 |
+| `GITHUB_REPO`                | variable         | `ngawang21/racines-en-partage` (in `wrangler.jsonc`)                                                    | Section 16 |
 
 Notes:
 
-1. `SITE_URL` and `ORDER_EMAIL_FROM` are also declared under `vars` in
-   `wrangler.jsonc`. On each deploy, Wrangler applies the values from the
+1. `SITE_URL`, `ORDER_EMAIL_FROM` and `GITHUB_REPO` are also declared
+   under `vars` in `wrangler.jsonc`. On each deploy, Wrangler applies the values from the
    file, so change them in the file, not only in the dashboard (to verify
    against the final `wrangler.jsonc`; secrets are never in the file).
 2. `PUBLIC_MONDIAL_RELAY_BRAND` is read by Astro at build time. It goes in
@@ -95,19 +101,30 @@ Notes:
    change needs a new build (Deployments, Retry, or any push).
 3. Without `RESEND_API_KEY`, the webhook logs the order summary and still
    answers 200. Marie then relies on Stripe's own receipt and dashboard.
-4. Customer e-mails carry the reply-to `racinesenpartage@outlook.com`, so a
+4. Customer e-mails carry the reply-to `racinesenpartage@gmail.com`, so a
    customer who answers reaches Marie's inbox.
 5. Local development: copy `.dev.vars.example` to `.dev.vars` (git ignored),
    fill test values, run `pnpm dev:worker`.
-6. Rate limiting needs no dashboard step: the two bindings
-   `CHECKOUT_LIMITER` (10 requests per minute and IP on `POST /api/checkout`)
-   and `ORDERS_LIMITER` (30 per minute on `GET /api/orders/:id`) are declared
-   under `ratelimits` in `wrangler.jsonc` and created on deploy. They are
+6. Rate limiting needs no dashboard step: the three bindings
+   `CHECKOUT_LIMITER` (10 requests per minute and IP on `POST /api/checkout`),
+   `ORDERS_LIMITER` (30 per minute on `GET /api/orders/:id` and
+   `POST /api/orders/lookup`) and `FORMS_LIMITER` (10 per minute on the
+   contact, newsletter and review endpoints) are declared under `ratelimits`
+   in `wrangler.jsonc` and created on deploy. They are
    free. Over the limit the API answers `429 RATE_LIMITED` with
    `Retry-After: 60` (`worker/README.md`, Rate limiting). The alternative,
    if the bindings are ever unavailable, is a Cloudflare WAF rate limiting
-   rule (Security, WAF, Rate limiting rules) on the same two paths; without
+   rule (Security, WAF, Rate limiting rules) on the same paths; without
    either, the Worker simply does not limit.
+7. A feature whose secret is missing answers `404 FEATURE_DISABLED` and logs
+   `config.missing` with the name: the newsletter without `FORMS_SECRET`,
+   `RESEND_API_KEY` or `RESEND_AUDIENCE_ID`; reviews without `FORMS_SECRET`
+   or `GITHUB_TOKEN`; the contact form without `ORDER_EMAIL_TO`. The owner's
+   switches in the CMS settings act too, after the rebuild that her save
+   triggers: `newsletter.enabled` false hides the signup blocks and turns
+   the newsletter endpoints off; `reviews.enabled` false hides the reviews,
+   turns `POST /api/reviews` off and stops the invitations
+   (`catalog.json`, `features`).
 
 ## 4. Domain at OVHcloud, DNS at Cloudflare
 
@@ -151,7 +168,7 @@ about 7 to 10 EUR per year.
 Free tier: 3,000 e-mails per month, 100 per day. Each paid order sends two
 e-mails (Marie and the customer), so the daily ceiling is about 50 orders.
 
-1. Create a Resend account with `racinesenpartage@outlook.com` (Marie owns
+1. Create a Resend account with `racinesenpartage@gmail.com` (Marie owns
    it; team access for the developer to verify on the free plan).
 2. Domains, Add domain: `racinesenpartage.fr` (choose an EU region if
    offered; to verify).
@@ -168,23 +185,23 @@ e-mails (Marie and the customer), so the daily ceiling is about 50 orders.
    `racinesenpartage.fr`. Paste it into `RESEND_API_KEY` (section 3).
 
 Sender: `commandes@racinesenpartage.fr`. Reply-to:
-`racinesenpartage@outlook.com`.
+`racinesenpartage@gmail.com`.
 
 ## 7. Cloudflare Email Routing for contact@
 
 Free. Lets the site show `contact@racinesenpartage.fr` while mail lands in
-Marie's Outlook.
+Marie's Gmail.
 
 1. Cloudflare, `racinesenpartage.fr`, Email, Email Routing, Get started.
-2. Destination address: `racinesenpartage@outlook.com`. Marie clicks the
+2. Destination address: `racinesenpartage@gmail.com`. Marie clicks the
    confirmation link she receives.
 3. Custom addresses: `contact@racinesenpartage.fr` to that destination. Add
    `commandes@racinesenpartage.fr` too, so a customer who writes to the
    sender address is not lost.
 4. Cloudflare adds its MX and SPF records. Check them against section 6,
    step 5.
-5. Ask Marie to add `commandes@racinesenpartage.fr` to her Outlook safe
-   senders after the first test order, and to mark it "Not junk" if needed.
+5. Ask Marie to add `commandes@racinesenpartage.fr` to her Gmail contacts
+   after the first test order, and to mark it "Not spam" if needed.
 
 ## 8. Stripe
 
@@ -229,7 +246,7 @@ stripe.com/fr/pricing.
    2. The browser lands on `/merci/` with the order number and the relay
       point. The cart is empty.
    3. Stripe, Webhooks, the endpoint: the event shows HTTP 200.
-   4. Marie's Outlook receives the order e-mail (French) with lines, totals,
+   4. Marie's Gmail receives the order e-mail (French) with lines, totals,
       customer phone and the relay point block (name, address, ID).
    5. The customer address receives its e-mail in the checkout language.
    6. Repeat with "Livraison à domicile" (Stripe asks for the address) and
@@ -519,7 +536,127 @@ Repeat with `/en/checkout/`. Two lines on one route mean a missing
 13. Bing Webmaster Tools: "Import from Google Search Console".
 14. Instagram: bio link set to `https://racinesenpartage.fr`, and the
     Instagram URL filled in the CMS settings (`brand.instagram`).
-15. Commit, push, check the deployment and the CI run.
+15. Forms: a contact message and a stock alert reach Marie's Gmail with
+    the customer as reply-to; a newsletter signup sends the confirmation
+    and its link lands on `/newsletter/?status=ok` with the contact in the
+    Resend audience; `/ma-commande/` finds a test order by number and
+    e-mail (sections 13 to 16).
+16. Reviews: run the cron locally against a test order (section 17), open
+    the invitation link, submit a review, check the new file in
+    `src/content/reviews/` on GitHub and publish it from the CMS.
+17. Commit, push, check the deployment and the CI run.
+
+## 13. Forms secret
+
+`FORMS_SECRET` signs the links of the review invitation and of the
+newsletter confirmation (HMAC-SHA256). Generate it once:
+
+```bash
+openssl rand -base64 32
+```
+
+Paste the output into the secret `FORMS_SECRET` (section 3) and nowhere
+else. Changing it invalidates every invitation and confirmation link already
+sent; do it only if the value leaked.
+
+## 14. Cloudflare Turnstile
+
+Turnstile protects the contact, stock-alert and newsletter forms against
+bots. Free, no cookie banner needed.
+
+1. Cloudflare dashboard, Turnstile, Add widget.
+2. Widget name: `racines-en-partage`. Hostnames: `racinesenpartage.fr`
+   (add the `*.workers.dev` host too while testing on it).
+3. Widget mode: Managed (Cloudflare shows a checkbox only when it doubts).
+   Pre-clearance: No.
+4. Create. Cloudflare shows a site key and a secret key.
+5. The site key is public: paste it in the CMS settings, field
+   `forms.turnstileSiteKey` (the Turnstile site key). Saving rebuilds the
+   site with the widget.
+6. The secret key goes into the Worker secret `TURNSTILE_SECRET_KEY`
+   (section 3). Never in the CMS or the repository.
+
+Without the secret the Worker skips the check (local development, before
+the widget exists). With the secret, a missing or refused token answers
+`400 CAPTCHA_FAILED`, and so does a Turnstile outage (the check fails
+closed; the customer retries). Both are set or both are empty: an empty
+site key in the CMS while `TURNSTILE_SECRET_KEY` is set makes every
+contact, stock-alert and newsletter form fail with `400 CAPTCHA_FAILED`,
+because the pages render no widget and send no token. Set the secret after
+the site key is saved and the site rebuilt; remove the site key only after
+deleting the secret.
+
+## 15. Resend audience (newsletter)
+
+The newsletter is double opt-in: the form sends a confirmation e-mail, and
+the contact is created in Resend only when the link is clicked.
+
+1. Resend, Audiences (also called Contacts in newer dashboards; to verify),
+   Create audience: `Newsletter Racines en Partage`.
+2. Copy its id (a UUID) into the secret `RESEND_AUDIENCE_ID` (section 3).
+   The API key of section 6 must also allow contacts: "Full access", or a
+   key restricted to sending cannot add contacts (to verify on the key
+   page; create a second key if needed and use it as `RESEND_API_KEY`).
+3. Optional welcome code: Marie creates a promotion code in Stripe
+   (Products, Coupons, then a promotion code such as `BIENVENUE10`), then
+   types exactly the same code in the CMS settings
+   (`newsletter.welcomeCode`) and saves. After the rebuild the confirmation
+   e-mail prints it. A code that does not exist in Stripe is refused at
+   checkout, so create it first.
+4. Campaigns are written in Resend Broadcasts to that audience; Resend adds
+   the unsubscribe link (owner guide).
+
+Without `RESEND_AUDIENCE_ID`, or with `newsletter.enabled` off in the CMS,
+the newsletter endpoints answer `404 FEATURE_DISABLED`. The confirmation link redirects to
+`/newsletter/?status=ok`, `status=invalid` (expired after 48 hours or
+altered) or `status=error` (Resend unavailable; clicking again later works).
+
+## 16. GitHub token for reviews
+
+`POST /api/reviews` commits each review as a file in `src/content/reviews/`
+with `published: false`; Marie publishes it from the CMS.
+
+1. GitHub, signed in as `ngawang21`: Settings, Developer settings, Personal
+   access tokens, Fine-grained tokens, Generate new token.
+2. Name: `racines-en-partage reviews`. Resource owner: `ngawang21`.
+   Expiration: one year (custom date).
+3. Repository access: Only select repositories, `racines-en-partage`.
+4. Permissions, Repository permissions: Contents, Read and write. Nothing
+   else (Metadata read-only is added automatically).
+5. Generate, copy the token into the secret `GITHUB_TOKEN` (section 3).
+6. Put a calendar reminder two weeks before the expiry date: generate a new
+   token the same way, replace the secret, delete the old token.
+7. `GITHUB_REPO` is `ngawang21/racines-en-partage` in `wrangler.jsonc`.
+   After the transfer to Marie's account (`docs/handover.md`), change it to
+   the new owner and create the token from her account.
+
+An expired or revoked token makes review submissions fail with
+`502 INTERNAL_ERROR` and the log line `review.github_failed` with status
+401; nothing is lost on the customer's side except that submission, and
+the invitation link keeps working once the token is replaced.
+
+## 17. Review invitations (cron trigger)
+
+`wrangler.jsonc` declares `"triggers": { "crons": ["0 9 * * *"] }`: every
+day at 09:00 UTC (10:00 in winter, 11:00 in summer in Paris) the Worker
+lists the Checkout Sessions created between 8 and 7 days earlier and sends
+one invitation per paid order with a customer e-mail, then sets
+`metadata.review_invited = 'true'` on the session. The run needs
+`STRIPE_SECRET_KEY`, `RESEND_API_KEY` and `FORMS_SECRET`; without
+`RESEND_API_KEY` or `FORMS_SECRET` it logs `config.missing` and sends
+nothing.
+
+- Check a run: Workers & Pages, the Worker, Settings, Trigger events lists
+  the cron; Logs shows `review.invites` with the counts `listed`,
+  `invited`, `skipped` and `failed`.
+- Test without waiting: `pnpm exec wrangler dev --test-scheduled`, then
+  `curl "http://localhost:8787/__scheduled?cron=0+9+*+*+*"` (with test
+  keys in `.dev.vars`).
+- Disable the invitations: Marie turns `reviews.enabled` off in the CMS
+  settings; after the rebuild the run logs `review.invites_off` and sends
+  nothing, and the review page answers `404 FEATURE_DISABLED`. To stop the
+  run itself, remove the `triggers` block from `wrangler.jsonc` and deploy
+  (deleting the trigger in the dashboard lasts only until the next deploy).
 
 ## Troubleshooting
 
@@ -545,10 +682,11 @@ Repeat with `/en/checkout/`. Two lines on one route mean a missing
   page fixes it; nothing was charged.
 - **Webhook 200 but no e-mail.** Check `RESEND_API_KEY`, the domain status
   in Resend (Verified), the Resend logs, the 100 per day limit, then
-  Outlook's junk folder. Workers & Pages, the Worker, Logs shows the order
+  Gmail's spam folder. Workers & Pages, the Worker, Logs shows the order
   summary when no key is set.
 - **E-mails land in junk.** DKIM, SPF and DMARC must all pass: open the
-  message source in Outlook and read the `Authentication-Results` header.
+  message in Gmail, "Show original", and read the SPF, DKIM and DMARC
+  lines.
 - **CMS login loop or "origin not allowed".** `ALLOWED_DOMAINS` does not
   match the host in the address bar, the OAuth callback URL is not
   `<worker url>/callback`, or `base_url` in `public/admin/config.yml`

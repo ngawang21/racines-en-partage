@@ -11,9 +11,20 @@ export interface Env {
   STRIPE_WEBHOOK_SECRET?: string;
   RESEND_API_KEY?: string;
   ORDER_EMAIL_TO?: string;
+  /** HMAC key of the review and newsletter tokens (32 random bytes, base64). */
+  FORMS_SECRET?: string;
+  /** Fine-grained GitHub token, contents read and write on GITHUB_REPO only. */
+  GITHUB_TOKEN?: string;
+  /** "owner/name" of the repository the reviews are committed to. */
+  GITHUB_REPO?: string;
+  /** Turnstile secret; empty skips the captcha check. */
+  TURNSTILE_SECRET_KEY?: string;
+  /** Resend audience of the newsletter; empty disables the newsletter endpoints. */
+  RESEND_AUDIENCE_ID?: string;
   /** Rate limiting bindings (wrangler.jsonc `ratelimits`); absent in tests and older wrangler. */
   CHECKOUT_LIMITER?: RateLimiter;
   ORDERS_LIMITER?: RateLimiter;
+  FORMS_LIMITER?: RateLimiter;
 }
 
 /** The Workers rate limiting binding (`RateLimit` in @cloudflare/workers-types). */
@@ -29,6 +40,8 @@ export interface AppEnv {
   ORDER_EMAIL_TO: string;
   /** Signing secret of the Stripe webhook endpoint, "whsec_...". */
   STRIPE_WEBHOOK_SECRET: string;
+  /** HMAC key of the review and newsletter tokens; without it those endpoints are disabled. */
+  FORMS_SECRET?: string;
 }
 
 /** The Stripe surface the API uses, so tests inject a fake. */
@@ -40,6 +53,10 @@ export interface StripeLike {
         id: string,
         params?: Stripe.Checkout.SessionRetrieveParams,
       ): Promise<Stripe.Checkout.Session>;
+      /** Newest first; `starting_after` pages through older ones. */
+      list(
+        params?: Stripe.Checkout.SessionListParams,
+      ): Promise<Stripe.ApiList<Stripe.Checkout.Session>>;
       listLineItems(
         id: string,
         params?: Stripe.Checkout.SessionListLineItemsParams,
@@ -75,6 +92,21 @@ export interface MailMessage {
 /** Sends one e-mail; rejects when the provider refuses it. */
 export interface Mailer {
   send(message: MailMessage): Promise<void>;
+}
+
+/** Cloudflare Turnstile `siteverify`; true when the token is valid (or checks are off). */
+export interface Captcha {
+  verify(token: string | undefined, remoteIp: string | null): Promise<boolean>;
+}
+
+/** The newsletter audience (Resend contacts); resolves when the address is subscribed. */
+export interface Audience {
+  addContact(email: string): Promise<void>;
+}
+
+/** Writes one new file to the repository; `exists` when the path is already taken. */
+export interface ReviewRepo {
+  createFile(path: string, content: string, message: string): Promise<'created' | 'exists'>;
 }
 
 /** Relay point as the cart sends it (spec 6.1, 6.4). */

@@ -34,6 +34,14 @@ export const workerCatalogSchema = z.object({
       image: z.url({ protocol: /^https$/ }),
     }),
   ),
+  // Default for a catalog.json built before the switches existed: everything on.
+  features: z
+    .object({
+      newsletter: z.boolean(),
+      reviews: z.boolean(),
+      newsletterWelcomeCode: z.string(),
+    })
+    .default({ newsletter: true, reviews: true, newsletterWelcomeCode: '' }),
 });
 
 // Compile-time proof that the schema and the build-side type describe the same shape.

@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  lookupUrl,
+  renderContactEmail,
   renderCustomerEmail,
+  renderNewsletterConfirmation,
   renderOwnerEmail,
+  renderReviewInvitation,
+  renderStockAlertEmail,
   stripePaymentUrl,
 } from '../../worker/email/templates';
 import { summariseSession } from '../../worker/orders';
@@ -163,5 +168,119 @@ describe('order e-mails', () => {
     expect(renderOwnerEmail(summary).text).toContain(
       'Contactez la cliente ou le client pour convenir du rendez-vous',
     );
+  });
+});
+
+describe('order lookup line in the customer e-mail', () => {
+  it('links the lookup page of the order language, on SITE_URL', () => {
+    expect(renderCustomerEmail(relayOrder()).text).toContain(
+      fr('Retrouver ma commande à tout moment : https://racinesenpartage.fr/ma-commande/'),
+    );
+    expect(renderCustomerEmail(homeOrderEn()).text).toContain(
+      'Find your order at any time: https://racinesenpartage.fr/en/my-order/',
+    );
+    expect(renderCustomerEmail(relayOrder(), 'http://localhost:8787/').html).toContain(
+      'href="http://localhost:8787/ma-commande/"',
+    );
+    expect(lookupUrl('en')).toBe('https://racinesenpartage.fr/en/my-order/');
+  });
+});
+
+describe('review invitation', () => {
+  const input = {
+    name: 'Awa Diallo',
+    products: ['Poudre de moringa 100 g', 'Poudre de baobab 100 g'],
+    url: 'https://racinesenpartage.fr/avis/?t=abc.def',
+  };
+
+  it('FR matches the snapshot', () => {
+    const email = renderReviewInvitation({ ...input, locale: 'fr' });
+    expect(email.subject).toBe('Votre avis compte pour nous');
+    expect(email.html).toMatchSnapshot('invitation-fr.html');
+    expect(email.text).toMatchSnapshot('invitation-fr.txt');
+  });
+
+  it('EN matches the snapshot', () => {
+    const email = renderReviewInvitation({
+      ...input,
+      locale: 'en',
+      name: null,
+      products: ['Moringa powder 100 g'],
+      url: 'https://racinesenpartage.fr/en/review/?t=abc.def',
+    });
+    expect(email.html).toMatchSnapshot('invitation-en.html');
+    expect(email.text).toMatchSnapshot('invitation-en.txt');
+  });
+
+  it('one button to the token link, the products, the moderation line', () => {
+    const { html, text } = renderReviewInvitation({ ...input, locale: 'fr' });
+    expect(
+      html.match(/<a href="https:\/\/racinesenpartage\.fr\/avis\/\?t=abc\.def"/g),
+    ).toHaveLength(1);
+    expect(html).toContain('>Donner mon avis</a>');
+    expect(text).toContain(fr('- Poudre de moringa 100 g'));
+    expect(text).toContain('Nous lisons chaque avis avant sa mise en ligne.');
+  });
+
+  it('escapes product names and the customer name', () => {
+    const { html } = renderReviewInvitation({
+      ...input,
+      locale: 'fr',
+      name: '<b>x</b>',
+      products: ['<script>'],
+    });
+    expect(html).not.toContain('<script>');
+    expect(html).not.toContain('<b>x</b>');
+  });
+});
+
+describe('newsletter confirmation', () => {
+  const url = 'https://racinesenpartage.fr/api/newsletter/confirm?t=abc.def';
+
+  it('FR with a welcome code matches the snapshot', () => {
+    const email = renderNewsletterConfirmation({ locale: 'fr', url, welcomeCode: 'BIENVENUE10' });
+    expect(email.html).toMatchSnapshot('newsletter-fr.html');
+    expect(email.text).toMatchSnapshot('newsletter-fr.txt');
+    expect(email.html).toContain('>Confirmer mon inscription</a>');
+  });
+
+  it('EN without a code matches the snapshot', () => {
+    const email = renderNewsletterConfirmation({ locale: 'en', url, welcomeCode: '' });
+    expect(email.subject).toBe('Please confirm your newsletter subscription');
+    expect(email.html).toMatchSnapshot('newsletter-en.html');
+    expect(email.text).toMatchSnapshot('newsletter-en.txt');
+    expect(email.text).not.toContain('discount code');
+  });
+});
+
+describe('owner e-mails from the forms', () => {
+  it('contact matches the snapshot and escapes the message', () => {
+    const email = renderContactEmail({
+      name: 'Awa Diallo',
+      email: 'awa.diallo@example.com',
+      message: 'Bonjour !\nAvez-vous du moringa en 500 g ? <b>merci</b> & "bises"',
+      locale: 'fr',
+    });
+    expect(email.subject).toBe('Message du site de Awa Diallo');
+    expect(email.html).toMatchSnapshot('contact.html');
+    expect(email.text).toMatchSnapshot('contact.txt');
+    expect(email.html).toContain('&lt;b&gt;merci&lt;/b&gt; &amp; &quot;bises&quot;');
+    // The customer's words stay as typed: no typography added inside them.
+    expect(email.text).toContain('Bonjour !\nAvez-vous du moringa en 500 g ?');
+  });
+
+  it('stock alert matches the snapshot', () => {
+    const email = renderStockAlertEmail({
+      email: 'john@example.com',
+      name: '',
+      product: 'Poudre de souchet 100 g',
+      sku: 'REP-SOU-P100',
+      locale: 'en',
+    });
+    expect(email.subject).toBe(
+      fr('Alerte de stock : ') + 'Poudre de souchet 100 g pour john@example.com',
+    );
+    expect(email.html).toMatchSnapshot('stock-alert.html');
+    expect(email.text).toMatchSnapshot('stock-alert.txt');
   });
 });

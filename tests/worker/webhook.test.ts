@@ -107,14 +107,14 @@ describe('POST /api/webhooks/stripe', () => {
     expect(mail.sent).toHaveLength(2);
     const [owner, customer] = mail.sent;
     expect(owner).toMatchObject({
-      to: 'racinesenpartage@outlook.com',
+      to: 'racinesenpartage@gmail.com',
       replyTo: 'awa.diallo@example.com',
       idempotencyKey: 'evt_test_1:owner',
       subject: fr('Nouvelle commande E5F6G7H8 : 30,60 €'),
     });
     expect(customer).toMatchObject({
       to: 'awa.diallo@example.com',
-      replyTo: 'racinesenpartage@outlook.com',
+      replyTo: 'racinesenpartage@gmail.com',
       idempotencyKey: 'evt_test_1:customer',
       subject: fr('Votre commande n° E5F6G7H8 est confirmée'),
     });
@@ -170,7 +170,7 @@ describe('POST /api/webhooks/stripe', () => {
       ...sessionFixture({
         customer_details: {
           ...sessionFixture().customer_details,
-          email: 'racinesenpartage@outlook.com',
+          email: 'racinesenpartage@gmail.com',
         },
       }),
       line_items: undefined,
@@ -270,7 +270,7 @@ describe('POST /api/webhooks/stripe', () => {
       const { app, mail } = makeApp({ stripe: fake.stripe });
       // The customer address is refused for good; the owner e-mail goes out.
       mail.send.mockImplementation(async (m) => {
-        if (m.to !== 'racinesenpartage@outlook.com') {
+        if (m.to !== 'racinesenpartage@gmail.com') {
           throw new MailerError(
             `Resend refused the e-mail: HTTP ${status} validation_error`,
             status,
@@ -281,7 +281,7 @@ describe('POST /api/webhooks/stripe', () => {
       const payload = eventPayload();
       const res = await post(app, payload, await signed(payload));
       expect(res.status).toBe(200);
-      expect(mail.sent.map((m) => m.to)).toEqual(['racinesenpartage@outlook.com']);
+      expect(mail.sent.map((m) => m.to)).toEqual(['racinesenpartage@gmail.com']);
       expect(fake.update).toHaveBeenCalledOnce();
       const refused = errors.find((l) => l.includes('order.email_refused'));
       expect(JSON.parse(refused!)).toMatchObject({
@@ -407,7 +407,7 @@ describe('POST /api/webhooks/stripe', () => {
     const payload = eventPayload();
     const res = await post(app, payload, await signed(payload));
     expect(res.status).toBe(200);
-    expect(mail.sent.map((m) => m.to)).toEqual(['racinesenpartage@outlook.com']);
+    expect(mail.sent.map((m) => m.to)).toEqual(['racinesenpartage@gmail.com']);
   });
 
   it('NullMailer path (no RESEND_API_KEY): 200 and a redacted log line per e-mail', async () => {

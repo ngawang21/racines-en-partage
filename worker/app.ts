@@ -2,6 +2,7 @@
 // run the real handlers against a fake Stripe, a fake mailer and a fixture catalogue.
 import { Hono, type Context, type MiddlewareHandler } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
+import { z } from 'zod';
 import pkg from '../package.json';
 import type { WorkerCatalog } from './catalog';
 import {
@@ -11,18 +12,36 @@ import {
   parseCheckoutRequest,
 } from './checkout';
 import { ApiError, errorBody, handleError, notFound } from './errors';
+import {
+  MAX_FORM_BYTES,
+  confirmNewsletter,
+  emailField,
+  handleContact,
+  handleNewsletter,
+  parseBody,
+} from './forms';
 import { describeError, logError } from './log';
 import {
   SESSION_EXPAND,
   assertSessionId,
   deliveryFromMetadata,
+  findOrderByNumber,
   isOrderExpired,
   isResourceMissing,
   publicOrder,
   summariseSession,
   withLineItems,
 } from './orders';
-import type { AppEnv, Mailer, RateLimiter, StripeLike } from './types';
+import { submitReview } from './reviews';
+import type {
+  AppEnv,
+  Audience,
+  Captcha,
+  Mailer,
+  RateLimiter,
+  ReviewRepo,
+  StripeLike,
+} from './types';
 import { MAX_WEBHOOK_BYTES, handleEvent, verifyEvent } from './webhook';
 
 export type { AppEnv, Mailer, RateLimiter, StripeLike } from './types';
@@ -34,8 +53,19 @@ export interface AppDeps {
   env: AppEnv;
   now: () => Date;
   /** Workers rate limiting bindings; a missing one means no limit (tests, old wrangler). */
-  limiters?: { checkout?: RateLimiter; orders?: RateLimiter };
+  limiters?: { checkout?: RateLimiter; orders?: RateLimiter; forms?: RateLimiter };
+  /** Turnstile check of the public forms; absent means no check. */
+  captcha?: Captcha;
+  /** Newsletter contacts; absent disables the newsletter endpoints (404 FEATURE_DISABLED). */
+  audience?: Audience;
+  /** Where reviews are committed; absent disables POST /api/reviews (404 FEATURE_DISABLED). */
+  reviewRepo?: ReviewRepo;
 }
+
+const lookupRequestSchema = z.object({
+  number: z.string().trim().min(1).max(64),
+  email: emailField,
+});
 
 /** Seconds a rate-limited client is asked to wait (the limiter period). */
 export const RETRY_AFTER_SECONDS = 60;
@@ -82,6 +112,24 @@ function rateLimit(name: string, limiter: RateLimiter | undefined): MiddlewareHa
   };
 }
 
+/** Same-origin JSON body of a POST: 403, 415 or 400 otherwise. */
+async function readJson(c: Context, siteUrl: string): Promise<unknown> {
+  if (!isAllowedOrigin(c.req.raw, siteUrl)) {
+    throw new ApiError(403, 'FORBIDDEN_ORIGIN', 'Cross-origin request refused');
+  }
+  const type = c.req.header('content-type');
+  if (type && !/^application\/json\s*(;|$)/i.test(type)) {
+    throw new ApiError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Send application/json');
+  }
+  try {
+    return JSON.parse(await c.req.text());
+  } catch {
+    throw new ApiError(400, 'VALIDATION_ERROR', 'Body is not valid JSON');
+  }
+}
+
+const clientIp = (c: Context) => c.req.header('cf-connecting-ip') ?? null;
+
 function methodNotAllowed(allow: string) {
   return (c: Context) => {
     c.header('Allow', allow);
@@ -114,20 +162,7 @@ export function createApp(deps: AppDeps) {
     rateLimit('checkout', deps.limiters?.checkout),
     limit(MAX_BODY_BYTES),
     async (c) => {
-      if (!isAllowedOrigin(c.req.raw, env.SITE_URL)) {
-        throw new ApiError(403, 'FORBIDDEN_ORIGIN', 'Cross-origin request refused');
-      }
-      const type = c.req.header('content-type');
-      if (type && !/^application\/json\s*(;|$)/i.test(type)) {
-        throw new ApiError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Send application/json');
-      }
-      let body: unknown;
-      try {
-        body = JSON.parse(await c.req.text());
-      } catch {
-        throw new ApiError(400, 'VALIDATION_ERROR', 'Body is not valid JSON');
-      }
-      const request = parseCheckoutRequest(body);
+      const request = parseCheckoutRequest(await readJson(c, env.SITE_URL));
       const params = buildSessionParams(request, await catalog(), env, deps.now(), c.req.url);
 
       let url: string | null;
@@ -144,6 +179,29 @@ export function createApp(deps: AppDeps) {
       return c.json({ url });
     },
   );
+
+  // Registered before GET /api/orders/:sessionId, which would otherwise take "lookup" as an id.
+  app.post(
+    '/api/orders/lookup',
+    rateLimit('orders', deps.limiters?.orders),
+    limit(MAX_FORM_BYTES),
+    async (c) => {
+      const req = parseBody(lookupRequestSchema, await readJson(c, env.SITE_URL), 'lookup');
+      const missing = () => new ApiError(404, 'ORDER_NOT_FOUND', 'No order matches');
+      let session;
+      try {
+        session = await findOrderByNumber(deps.stripe, req.number, req.email);
+        if (!session) throw missing();
+        session = await withLineItems(deps.stripe, session);
+      } catch (err) {
+        if (err instanceof ApiError) throw err;
+        logError('orders.stripe_failed', { error: describeError(err) });
+        throw new ApiError(502, 'PAYMENT_PROVIDER_ERROR', 'Payment provider unavailable');
+      }
+      return c.json(publicOrder(summariseSession(session)));
+    },
+  );
+  app.all('/api/orders/lookup', methodNotAllowed('POST'));
 
   app.get('/api/orders/:sessionId', rateLimit('orders', deps.limiters?.orders), async (c) => {
     const id = c.req.param('sessionId');
@@ -183,6 +241,36 @@ export function createApp(deps: AppDeps) {
     return c.json({ received: true });
   });
 
+  const forms = rateLimit('forms', deps.limiters?.forms);
+
+  app.post('/api/contact', forms, limit(MAX_FORM_BYTES), async (c) => {
+    const body = await readJson(c, env.SITE_URL);
+    await handleContact(body, deps, clientIp(c), async (sku) => {
+      const product = (await catalog()).products.find((p) => p.sku === sku);
+      return product ? product.name.fr : null;
+    });
+    return c.json({ ok: true }, 202);
+  });
+
+  app.post('/api/newsletter', forms, limit(MAX_FORM_BYTES), async (c) => {
+    await handleNewsletter(await readJson(c, env.SITE_URL), deps, clientIp(c), catalog);
+    return c.json({ ok: true }, 202);
+  });
+
+  // A link opened from an e-mail: no origin check, the signed token is the proof.
+  app.get('/api/newsletter/confirm', forms, async (c) => {
+    return c.redirect(await confirmNewsletter(c.req.query('t'), deps, catalog), 303);
+  });
+
+  app.post('/api/reviews', forms, limit(MAX_FORM_BYTES), async (c) => {
+    await submitReview(await readJson(c, env.SITE_URL), deps, catalog);
+    return c.json({ ok: true }, 201);
+  });
+
+  app.all('/api/contact', methodNotAllowed('POST'));
+  app.all('/api/newsletter', methodNotAllowed('POST'));
+  app.all('/api/newsletter/confirm', methodNotAllowed('GET'));
+  app.all('/api/reviews', methodNotAllowed('POST'));
   app.all('/api/health', methodNotAllowed('GET'));
   app.all('/api/checkout', methodNotAllowed('POST'));
   app.all('/api/orders/:sessionId', methodNotAllowed('GET'));

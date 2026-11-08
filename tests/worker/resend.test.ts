@@ -7,7 +7,7 @@ const message: MailMessage = {
   subject: 'Merci pour votre commande E5F6G7H8',
   html: '<p>Merci</p>',
   text: 'Merci',
-  replyTo: 'racinesenpartage@outlook.com',
+  replyTo: 'racinesenpartage@gmail.com',
   idempotencyKey: 'evt_1:customer',
 };
 
@@ -38,7 +38,7 @@ describe('ResendMailer', () => {
       subject: 'Merci pour votre commande E5F6G7H8',
       html: '<p>Merci</p>',
       text: 'Merci',
-      reply_to: 'racinesenpartage@outlook.com',
+      reply_to: 'racinesenpartage@gmail.com',
     });
   });
 

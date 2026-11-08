@@ -242,3 +242,40 @@ export function isResourceMissing(err: unknown): boolean {
   const e = err as { code?: unknown; statusCode?: unknown };
   return e.code === 'resource_missing' || e.statusCode === 404;
 }
+
+/** "x9y8 z7w6" to "X9Y8Z7W6": spaces dropped, upper case, as `orderNumber` prints it. */
+export function normaliseOrderNumber(value: string): string {
+  return value.replace(/\s+/g, '').toUpperCase();
+}
+
+/** Stripe's list filter takes up to 100 sessions per e-mail address. */
+export const LOOKUP_LIST_LIMIT = 100;
+
+/**
+ * The completed session of this shop whose number matches, among the 100 most
+ * recent sessions of that e-mail address; null when none does. Stripe compares
+ * the address exactly, so a miss is retried once in lower case.
+ */
+export async function findOrderByNumber(
+  stripe: StripeLike,
+  number: string,
+  email: string,
+): Promise<Stripe.Checkout.Session | null> {
+  const wanted = normaliseOrderNumber(number);
+  if (!wanted) return null;
+  const addresses = [...new Set([email, email.toLowerCase()])];
+  for (const address of addresses) {
+    const list = await stripe.checkout.sessions.list({
+      customer_details: { email: address },
+      limit: LOOKUP_LIST_LIMIT,
+    });
+    const match = list.data.find(
+      (s) =>
+        s.status === 'complete' &&
+        orderNumber(s.id) === wanted &&
+        deliveryFromMetadata(s.metadata) !== null,
+    );
+    if (match) return match;
+  }
+  return null;
+}

@@ -19,6 +19,7 @@ export function createStripeClient(secretKey: string): StripeLike {
       sessions: {
         create: (params) => stripe.checkout.sessions.create(params),
         retrieve: (id, params) => stripe.checkout.sessions.retrieve(id, params),
+        list: async (params) => await stripe.checkout.sessions.list(params),
         listLineItems: async (id, params) =>
           await stripe.checkout.sessions.listLineItems(id, params),
         update: (id, params) => stripe.checkout.sessions.update(id, params),
@@ -41,7 +42,9 @@ export function createStripeClient(secretKey: string): StripeLike {
 export function missingStripeClient(): StripeLike {
   const fail = () => Promise.reject(new Error('STRIPE_SECRET_KEY is not set'));
   return {
-    checkout: { sessions: { create: fail, retrieve: fail, listLineItems: fail, update: fail } },
+    checkout: {
+      sessions: { create: fail, retrieve: fail, list: fail, listLineItems: fail, update: fail },
+    },
     webhooks: { constructEventAsync: fail },
   };
 }

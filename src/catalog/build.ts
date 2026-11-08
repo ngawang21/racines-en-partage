@@ -35,6 +35,13 @@ export interface WorkerCatalog {
     /** Absolute URL of an 800 px WebP of the main image. */
     image: string;
   }>;
+  /** Owner switches of the CMS settings the Worker honours. */
+  features: {
+    newsletter: boolean;
+    reviews: boolean;
+    /** Stripe promotion code printed in the newsletter confirmation; empty prints none. */
+    newsletterWelcomeCode: string;
+  };
 }
 
 /** The locale-filtered catalogue embedded in storefront pages for the cart script. */
@@ -136,6 +143,11 @@ export function buildCatalog(
       name: Object.fromEntries(LOCALES.map((l) => [l, nameIn(l, p)])) as Localised,
       image: imageFor(imageUrlBySku, p.sku),
     })),
+    features: {
+      newsletter: settings.newsletter.enabled,
+      reviews: settings.reviews.enabled,
+      newsletterWelcomeCode: settings.newsletter.welcomeCode.trim(),
+    },
   };
 }
 

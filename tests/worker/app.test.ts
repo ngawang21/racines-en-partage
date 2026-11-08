@@ -64,6 +64,10 @@ describe('API surface', () => {
     ['POST', '/api/health', 'GET'],
     ['DELETE', '/api/orders/cs_test_abc', 'GET'],
     ['GET', '/api/webhooks/stripe', 'POST'],
+    ['GET', '/api/contact', 'POST'],
+    ['GET', '/api/newsletter', 'POST'],
+    ['GET', '/api/reviews', 'POST'],
+    ['GET', '/api/orders/lookup', 'POST'],
   ])('405 METHOD_NOT_ALLOWED for %s %s', async (method, path, allow) => {
     const { app } = makeApp();
     const res = await app.request(path, { method });
@@ -247,6 +251,78 @@ describe('worker entry (index.ts)', () => {
       ctx,
     );
     expect(res.status).toBe(502);
+  });
+
+  it('passes the forms limiter to the app', async () => {
+    const forms = fakeLimiter(0);
+    const res = await worker.fetch(
+      workerRequest('https://racinesenpartage.fr/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Origin: 'https://racinesenpartage.fr' },
+        body: '{}',
+      }),
+      { ...env(fakeAssets()), FORMS_LIMITER: forms.limiter },
+      ctx,
+    );
+    expect(res.status).toBe(429);
+  });
+
+  it('without RESEND_AUDIENCE_ID, GITHUB_TOKEN or FORMS_SECRET the features answer 404 FEATURE_DISABLED', async () => {
+    const post = (path: string) =>
+      worker.fetch(
+        workerRequest(`https://racinesenpartage.fr${path}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Origin: 'https://racinesenpartage.fr' },
+          body: JSON.stringify({ email: 'a@example.com', locale: 'fr' }),
+        }),
+        { ...env(fakeAssets()), FORMS_SECRET: 'x', RESEND_API_KEY: 're_x' },
+        ctx,
+      );
+    for (const path of ['/api/newsletter', '/api/reviews']) {
+      const res = await post(path);
+      expect(res.status).toBe(404);
+      expect(((await res.json()) as ErrorJson).error.code).toBe('FEATURE_DISABLED');
+    }
+  });
+
+  it('scheduled: lists the review window through Stripe when the keys are set', async () => {
+    const list = vi.fn((_url: string) => undefined);
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = String(input instanceof Request ? input.url : input);
+      if (url.startsWith('https://api.stripe.com/v1/checkout/sessions')) {
+        list(url);
+        return Response.json({ object: 'list', data: [], has_more: false, url: '/v1' });
+      }
+      throw new Error(`unexpected fetch ${url}`);
+    });
+    const controller = { scheduledTime: Date.UTC(2026, 10, 8, 9), cron: '0 9 * * *' };
+    await worker.scheduled!(
+      controller as ScheduledController,
+      {
+        ...env(fakeAssets()),
+        STRIPE_SECRET_KEY: 'sk_test_cron',
+        RESEND_API_KEY: 're_test',
+        FORMS_SECRET: 'secret',
+      },
+      ctx,
+    );
+    expect(list).toHaveBeenCalledOnce();
+    const url = new URL(String(list.mock.calls[0]![0]));
+    const gte = Date.UTC(2026, 10, 8, 9) / 1000 - 8 * 86_400;
+    expect(url.searchParams.get('created[gte]')).toBe(String(gte));
+    expect(url.searchParams.get('created[lt]')).toBe(String(gte + 86_400));
+    expect(url.searchParams.get('status')).toBe('complete');
+    fetchSpy.mockRestore();
+  });
+
+  it('scheduled: does nothing without RESEND_API_KEY (no session marked for a logged e-mail)', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    await worker.scheduled!(
+      { scheduledTime: Date.UTC(2026, 10, 8, 9), cron: '0 9 * * *' } as ScheduledController,
+      { ...env(fakeAssets()), STRIPE_SECRET_KEY: 'sk_test_cron', FORMS_SECRET: 'secret' },
+      ctx,
+    );
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
 

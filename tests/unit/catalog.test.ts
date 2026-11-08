@@ -8,6 +8,7 @@ import {
 } from '../../src/catalog/build';
 import { mergeProduct } from '../../src/content/merge';
 import { settingsSchema, type Product, type Settings } from '../../src/content/schemas';
+import { toCents } from '../../src/i18n/format';
 import { CONTENT, readYaml, yamlFolder } from './helpers';
 
 const settings = settingsSchema.parse(readYaml(join(CONTENT, 'settings/shop.yml')));
@@ -46,12 +47,14 @@ describe('buildCatalog (dist/catalog.json)', () => {
     expect(catalog.shipping.map((s) => s.amount)).toEqual([490, 690, 0]);
   });
   it('lists every product with its amount, stock, names and image', () => {
-    expect(catalog.products).toHaveLength(10);
+    // Prices and the product list belong to the owner: read them from the content.
+    expect(catalog.products).toHaveLength(fr.size);
     const moringa = catalog.products.find((p) => p.sku === 'REP-MOR-100');
+    const source = products.fr.find((p) => p.sku === 'REP-MOR-100')!;
     expect(moringa).toEqual({
       sku: 'REP-MOR-100',
       slug: 'poudre-de-moringa-100g',
-      unitAmount: 890,
+      unitAmount: toCents(source.price),
       weightGrams: 100,
       stock: 'in_stock',
       name: { fr: 'Poudre de moringa 100 g', en: 'Moringa powder 100 g' },
@@ -68,12 +71,30 @@ describe('buildCatalog (dist/catalog.json)', () => {
   it('fails loudly on a missing image URL', () => {
     expect(() => buildCatalog(products, settings, {}, now)).toThrow(/no image URL/);
   });
+  it('carries the owner switches for the Worker (newsletter, reviews, welcome code)', () => {
+    expect(catalog.features).toEqual({
+      newsletter: settings.newsletter.enabled,
+      reviews: settings.reviews.enabled,
+      newsletterWelcomeCode: settings.newsletter.welcomeCode.trim(),
+    });
+    const off: Settings = {
+      ...settings,
+      newsletter: { enabled: false, welcomeCode: ' BIENVENUE10 ' },
+      reviews: { enabled: false },
+    };
+    expect(buildCatalog(products, off, images, now).features).toEqual({
+      newsletter: false,
+      reviews: false,
+      newsletterWelcomeCode: 'BIENVENUE10',
+    });
+  });
 });
 
 describe('buildClientCatalog (embedded rep-catalog)', () => {
   const thumbs = Object.fromEntries(products.fr.map((p) => [p.sku, `/_astro/${p.slug}_160.webp`]));
   it('is filtered to one locale and keyed by sku', () => {
     const c = buildClientCatalog(products.en, settings, 'en', thumbs);
+    const source = products.en.find((p) => p.sku === 'REP-HIB-100')!;
     expect(c.locale).toBe('en');
     expect(c.products['REP-HIB-100']).toEqual({
       sku: 'REP-HIB-100',
@@ -81,12 +102,12 @@ describe('buildClientCatalog (embedded rep-catalog)', () => {
       url: '/en/products/fleurs-d-hibiscus-bissap-100g/',
       name: 'Hibiscus flowers (bissap) 100 g',
       weightGrams: 100,
-      unitAmount: 650,
+      unitAmount: toCents(source.price),
       stock: 'in_stock',
       image: '/_astro/fleurs-d-hibiscus-bissap-100g_160.webp',
       category: 'infusions',
       categoryName: 'infusions',
-      keywords: [],
+      keywords: source.keywords,
       related: ['REP-BAO-100', 'REP-SOU-T200'],
       featured: true,
     });

@@ -62,7 +62,7 @@ export async function verifyEvent(
 export function orderEmails(
   session: Stripe.Checkout.Session,
   eventId: string,
-  env: Pick<AppEnv, 'ORDER_EMAIL_TO'>,
+  env: Pick<AppEnv, 'ORDER_EMAIL_TO'> & Partial<Pick<AppEnv, 'SITE_URL'>>,
 ): MailMessage[] {
   const summary = summariseSession(session);
   const messages: MailMessage[] = [];
@@ -77,7 +77,7 @@ export function orderEmails(
     });
   }
   if (customerEmail) {
-    const customer = renderCustomerEmail(summary);
+    const customer = renderCustomerEmail(summary, env.SITE_URL || undefined);
     messages.push({
       to: customerEmail,
       ...customer,

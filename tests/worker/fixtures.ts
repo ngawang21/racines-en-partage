@@ -4,7 +4,16 @@ import type Stripe from 'stripe';
 import { vi } from 'vitest';
 import { createApp, type AppDeps } from '../../worker/app';
 import type { WorkerCatalog } from '../../worker/catalog';
-import type { AppEnv, MailMessage, Mailer, RateLimiter, StripeLike } from '../../worker/types';
+import type {
+  AppEnv,
+  Audience,
+  Captcha,
+  MailMessage,
+  Mailer,
+  RateLimiter,
+  ReviewRepo,
+  StripeLike,
+} from '../../worker/types';
 
 export const NOW = new Date('2026-11-01T18:00:00.000Z');
 
@@ -80,14 +89,16 @@ export function catalogFixture(overrides: Partial<WorkerCatalog> = {}): WorkerCa
         image: 'https://racinesenpartage.fr/_astro/souchet-poudre-100.webp',
       },
     ],
+    features: { newsletter: true, reviews: true, newsletterWelcomeCode: '' },
     ...overrides,
   };
 }
 
 export const ENV: AppEnv = {
   SITE_URL: 'https://racinesenpartage.fr',
-  ORDER_EMAIL_TO: 'racinesenpartage@outlook.com',
+  ORDER_EMAIL_TO: 'racinesenpartage@gmail.com',
   STRIPE_WEBHOOK_SECRET: 'whsec_test_secret',
+  FORMS_SECRET: 'test-forms-secret-0123456789abcdef',
 };
 
 export const SESSION_ID = 'cs_test_a1B2c3D4e5F6g7H8';
@@ -189,6 +200,16 @@ export function fakeStripe() {
     async (_id: string, _params?: Stripe.Checkout.SessionRetrieveParams) =>
       ({ ...sessionFixture(), line_items: undefined }) as unknown as Stripe.Checkout.Session,
   );
+  /** No session by default; tests queue pages with mockResolvedValueOnce. */
+  const list = vi.fn(
+    async (_params?: Stripe.Checkout.SessionListParams) =>
+      ({
+        object: 'list',
+        data: [],
+        has_more: false,
+        url: '/v1/checkout/sessions',
+      }) as Stripe.ApiList<Stripe.Checkout.Session>,
+  );
   const listLineItems = vi.fn(
     async (_id: string, _params?: Stripe.Checkout.SessionListLineItemsParams) =>
       sessionFixture().line_items as Stripe.ApiList<Stripe.LineItem>,
@@ -204,10 +225,10 @@ export function fakeStripe() {
       JSON.parse(payload) as Stripe.Event,
   );
   const stripe: StripeLike = {
-    checkout: { sessions: { create, retrieve, listLineItems, update } },
+    checkout: { sessions: { create, retrieve, list, listLineItems, update } },
     webhooks: { constructEventAsync },
   };
-  return { stripe, create, retrieve, listLineItems, update, constructEventAsync };
+  return { stripe, create, retrieve, list, listLineItems, update, constructEventAsync };
 }
 
 /** A Workers rate limiting binding that allows `allowed` calls, then refuses. */
@@ -228,6 +249,42 @@ export function fakeMailer() {
   });
   const mailer: Mailer = { send };
   return { mailer, sent, send };
+}
+
+/** A page of `sessions.list` as Stripe returns it. */
+export function sessionPage(
+  data: Stripe.Checkout.Session[],
+  hasMore = false,
+): Stripe.ApiList<Stripe.Checkout.Session> {
+  return { object: 'list', data, has_more: hasMore, url: '/v1/checkout/sessions' };
+}
+
+/** A Turnstile check answering `ok`. */
+export function fakeCaptcha(ok = true) {
+  const verify = vi.fn(async (_token: string | undefined, _ip: string | null) => ok);
+  const captcha: Captcha = { verify };
+  return { captcha, verify };
+}
+
+export function fakeAudience() {
+  const added: string[] = [];
+  const addContact = vi.fn(async (email: string) => {
+    added.push(email);
+  });
+  const audience: Audience = { addContact };
+  return { audience, added, addContact };
+}
+
+/** A repository that remembers the files it holds; a second write of a path is `exists`. */
+export function fakeRepo() {
+  const files = new Map<string, { content: string; message: string }>();
+  const createFile = vi.fn(async (path: string, content: string, message: string) => {
+    if (files.has(path)) return 'exists' as const;
+    files.set(path, { content, message });
+    return 'created' as const;
+  });
+  const repo: ReviewRepo = { createFile };
+  return { repo, files, createFile };
 }
 
 export function makeApp(overrides: Partial<AppDeps> = {}, catalog = catalogFixture()) {

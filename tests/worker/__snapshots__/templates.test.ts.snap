@@ -1,5 +1,79 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`newsletter confirmation > EN without a code matches the snapshot > newsletter-en.html 1`] = `
+"<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Please confirm your newsletter subscription</title></head>
+<body style="margin:0;padding:0;background:#fbf6ea;color:#163a1c;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;">
+<div style="display:none;max-height:0;overflow:hidden;">Thank you for your interest in Racines en Partage! To receive our news (new arrivals, recipes, offers), please confirm your e-mail address.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbf6ea;">
+<tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #d8b98e;border-radius:8px;overflow:hidden;">
+<tr><td style="background:#163a1c;color:#fbf6ea;padding:20px 28px;font-family:Georgia, 'Times New Roman', serif;font-size:22px;letter-spacing:0.5px;">Racines en Partage</td></tr>
+<tr><td style="height:4px;line-height:4px;font-size:0;background:#e03a3a;">&nbsp;</td></tr>
+<tr><td style="padding:28px;font-size:15px;line-height:1.55;color:#163a1c;"><h1 style="margin:0 0 12px;font-family:Georgia, 'Times New Roman', serif;font-size:24px;font-weight:normal;color:#163a1c;">One more click</h1>
+<p style="margin:0 0 12px;">Thank you for your interest in Racines en Partage! To receive our news (new arrivals, recipes, offers), please confirm your e-mail address.</p>
+<p style="margin:20px 0;"><a href="https://racinesenpartage.fr/api/newsletter/confirm?t=abc.def" style="display:inline-block;background:#e03a3a;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:999px;font-weight:bold;">Confirm my subscription</a></p>
+
+<p style="margin:0 0 12px;"><span style="color:#4a5d4c;font-size:13px;">This link stays valid for 48 hours. If you did not ask to subscribe, simply ignore this e-mail: you will not receive anything.</span></p>
+<p style="margin:0 0 12px;">Warm wishes,<br>Racines en Partage</p></td></tr>
+<tr><td style="background:#d8b98e;color:#163a1c;padding:16px 28px;font-size:12px;line-height:1.5;">Racines en Partage · 9 Rue du Marché, 95400 Arnouville · <a href="mailto:racinesenpartage@gmail.com" style="color:#163a1c;">racinesenpartage@gmail.com</a></td></tr>
+</table></td></tr></table></body></html>"
+`;
+
+exports[`newsletter confirmation > EN without a code matches the snapshot > newsletter-en.txt 1`] = `
+"One more click
+
+Thank you for your interest in Racines en Partage! To receive our news (new arrivals, recipes, offers), please confirm your e-mail address.
+
+Confirm my subscription: https://racinesenpartage.fr/api/newsletter/confirm?t=abc.def
+
+This link stays valid for 48 hours. If you did not ask to subscribe, simply ignore this e-mail: you will not receive anything.
+
+Warm wishes,
+Racines en Partage
+"
+`;
+
+exports[`newsletter confirmation > FR with a welcome code matches the snapshot > newsletter-fr.html 1`] = `
+"<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Confirmez votre inscription à la newsletter</title></head>
+<body style="margin:0;padding:0;background:#fbf6ea;color:#163a1c;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;">
+<div style="display:none;max-height:0;overflow:hidden;">Merci de votre intérêt pour Racines en Partage ! Pour recevoir nos nouvelles (arrivages, recettes, offres), confirmez votre adresse e-mail.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbf6ea;">
+<tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #d8b98e;border-radius:8px;overflow:hidden;">
+<tr><td style="background:#163a1c;color:#fbf6ea;padding:20px 28px;font-family:Georgia, 'Times New Roman', serif;font-size:22px;letter-spacing:0.5px;">Racines en Partage</td></tr>
+<tr><td style="height:4px;line-height:4px;font-size:0;background:#e03a3a;">&nbsp;</td></tr>
+<tr><td style="padding:28px;font-size:15px;line-height:1.55;color:#163a1c;"><h1 style="margin:0 0 12px;font-family:Georgia, 'Times New Roman', serif;font-size:24px;font-weight:normal;color:#163a1c;">Encore un clic</h1>
+<p style="margin:0 0 12px;">Merci de votre intérêt pour Racines en Partage ! Pour recevoir nos nouvelles (arrivages, recettes, offres), confirmez votre adresse e-mail.</p>
+<p style="margin:20px 0;"><a href="https://racinesenpartage.fr/api/newsletter/confirm?t=abc.def" style="display:inline-block;background:#e03a3a;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:999px;font-weight:bold;">Confirmer mon inscription</a></p>
+<p style="margin:0 0 12px;">Pour vous souhaiter la bienvenue, voici votre code de réduction à saisir au paiement : <strong>BIENVENUE10</strong></p>
+<p style="margin:0 0 12px;"><span style="color:#4a5d4c;font-size:13px;">Ce lien reste valable 48 heures. Si vous n’avez pas demandé cette inscription, ignorez simplement cet e-mail : vous ne recevrez rien.</span></p>
+<p style="margin:0 0 12px;">À très bientôt,<br>Racines en Partage</p></td></tr>
+<tr><td style="background:#d8b98e;color:#163a1c;padding:16px 28px;font-size:12px;line-height:1.5;">Racines en Partage · 9 Rue du Marché, 95400 Arnouville · <a href="mailto:racinesenpartage@gmail.com" style="color:#163a1c;">racinesenpartage@gmail.com</a></td></tr>
+</table></td></tr></table></body></html>"
+`;
+
+exports[`newsletter confirmation > FR with a welcome code matches the snapshot > newsletter-fr.txt 1`] = `
+"Encore un clic
+
+Merci de votre intérêt pour Racines en Partage ! Pour recevoir nos nouvelles (arrivages, recettes, offres), confirmez votre adresse e-mail.
+
+Confirmer mon inscription : https://racinesenpartage.fr/api/newsletter/confirm?t=abc.def
+
+Pour vous souhaiter la bienvenue, voici votre code de réduction à saisir au paiement : BIENVENUE10
+
+Ce lien reste valable 48 heures. Si vous n’avez pas demandé cette inscription, ignorez simplement cet e-mail : vous ne recevrez rien.
+
+À très bientôt,
+Racines en Partage
+"
+`;
+
 exports[`order e-mails > EN customer e-mail (home, discount, free shipping) matches the snapshot > customer-en.html 1`] = `
 "<!doctype html>
 <html lang="en">
@@ -21,10 +95,11 @@ exports[`order e-mails > EN customer e-mail (home, discount, free shipping) matc
 <h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Delivery: Home delivery (Colissimo)</h2>
 <p style="margin:0 0 12px;padding:12px 16px;background:#fbf6ea;border-left:3px solid #e03a3a;">John Smith<br>1 Place de la Mairie<br>Bât. B<br>75001 Paris<br>France</p>
 <h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">What happens next?</h2><p style="margin:0 0 12px;">We prepare your parcel and ship it with Colissimo. You will receive the tracking number as soon as it has been dispatched.</p>
+<p style="margin:0 0 12px;">Find your order at any time: <a href="https://racinesenpartage.fr/en/my-order/" style="color:#163a1c;">https://racinesenpartage.fr/en/my-order/</a></p>
 <h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Any questions?</h2>
-<p style="margin:0 0 12px;">Simply reply to this e-mail, write to <a href="mailto:racinesenpartage@outlook.com" style="color:#163a1c;">racinesenpartage@outlook.com</a> or call us on 07 75 68 91 08.</p>
+<p style="margin:0 0 12px;">Simply reply to this e-mail, write to <a href="mailto:racinesenpartage@gmail.com" style="color:#163a1c;">racinesenpartage@gmail.com</a> or call us on 07 75 68 91 08.</p>
 <p style="margin:0 0 12px;">Warm wishes,<br>Racines en Partage</p></td></tr>
-<tr><td style="background:#d8b98e;color:#163a1c;padding:16px 28px;font-size:12px;line-height:1.5;">Racines en Partage · 9 Rue du Marché, 95400 Arnouville · <a href="mailto:racinesenpartage@outlook.com" style="color:#163a1c;">racinesenpartage@outlook.com</a></td></tr>
+<tr><td style="background:#d8b98e;color:#163a1c;padding:16px 28px;font-size:12px;line-height:1.5;">Racines en Partage · 9 Rue du Marché, 95400 Arnouville · <a href="mailto:racinesenpartage@gmail.com" style="color:#163a1c;">racinesenpartage@gmail.com</a></td></tr>
 </table></td></tr></table></body></html>"
 `;
 
@@ -52,8 +127,10 @@ France
 What happens next?
 We prepare your parcel and ship it with Colissimo. You will receive the tracking number as soon as it has been dispatched.
 
+Find your order at any time: https://racinesenpartage.fr/en/my-order/
+
 Any questions?
-Simply reply to this e-mail, write to racinesenpartage@outlook.com or call us on 07 75 68 91 08.
+Simply reply to this e-mail, write to racinesenpartage@gmail.com or call us on 07 75 68 91 08.
 
 Warm wishes,
 Racines en Partage
@@ -81,10 +158,11 @@ exports[`order e-mails > FR customer e-mail (relay) matches the snapshot > custo
 <h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Livraison : Point Relais Mondial Relay</h2>
 <p style="margin:0 0 12px;padding:12px 16px;background:#fbf6ea;border-left:3px solid #e03a3a;">Tabac de la Gare<br>12 Avenue de la Gare, Galerie marchande<br>95400 Arnouville<br>France</p>
 <h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Et maintenant ?</h2><p style="margin:0 0 12px;">Nous préparons votre colis et le confions à Mondial Relay. Vous recevrez un SMS et un e-mail de Mondial Relay dès qu’il vous attend dans votre Point Relais. Pensez à vous munir d’une pièce d’identité pour le retirer.</p>
+<p style="margin:0 0 12px;">Retrouver ma commande à tout moment : <a href="https://racinesenpartage.fr/ma-commande/" style="color:#163a1c;">https://racinesenpartage.fr/ma-commande/</a></p>
 <h2 style="margin:24px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:18px;font-weight:normal;color:#163a1c;border-bottom:1px solid #d8b98e;padding-bottom:4px;">Une question ?</h2>
-<p style="margin:0 0 12px;">Répondez simplement à cet e-mail, écrivez-nous à <a href="mailto:racinesenpartage@outlook.com" style="color:#163a1c;">racinesenpartage@outlook.com</a> ou appelez-nous au 07 75 68 91 08.</p>
+<p style="margin:0 0 12px;">Répondez simplement à cet e-mail, écrivez-nous à <a href="mailto:racinesenpartage@gmail.com" style="color:#163a1c;">racinesenpartage@gmail.com</a> ou appelez-nous au 07 75 68 91 08.</p>
 <p style="margin:0 0 12px;">À très bientôt,<br>Racines en Partage</p></td></tr>
-<tr><td style="background:#d8b98e;color:#163a1c;padding:16px 28px;font-size:12px;line-height:1.5;">Racines en Partage · 9 Rue du Marché, 95400 Arnouville · <a href="mailto:racinesenpartage@outlook.com" style="color:#163a1c;">racinesenpartage@outlook.com</a></td></tr>
+<tr><td style="background:#d8b98e;color:#163a1c;padding:16px 28px;font-size:12px;line-height:1.5;">Racines en Partage · 9 Rue du Marché, 95400 Arnouville · <a href="mailto:racinesenpartage@gmail.com" style="color:#163a1c;">racinesenpartage@gmail.com</a></td></tr>
 </table></td></tr></table></body></html>"
 `;
 
@@ -111,8 +189,10 @@ France
 Et maintenant ?
 Nous préparons votre colis et le confions à Mondial Relay. Vous recevrez un SMS et un e-mail de Mondial Relay dès qu’il vous attend dans votre Point Relais. Pensez à vous munir d’une pièce d’identité pour le retirer.
 
+Retrouver ma commande à tout moment : https://racinesenpartage.fr/ma-commande/
+
 Une question ?
-Répondez simplement à cet e-mail, écrivez-nous à racinesenpartage@outlook.com ou appelez-nous au 07 75 68 91 08.
+Répondez simplement à cet e-mail, écrivez-nous à racinesenpartage@gmail.com ou appelez-nous au 07 75 68 91 08.
 
 À très bientôt,
 Racines en Partage
@@ -144,7 +224,7 @@ exports[`order e-mails > FR owner e-mail (relay) matches the snapshot > owner-fr
 <p style="margin:0 0 12px;padding:12px 16px;border:2px solid #163a1c;border-radius:6px;font-size:13px;line-height:1.4;">N° du Point Relais<br><strong style="font-family:Georgia, 'Times New Roman', serif;font-size:26px;letter-spacing:1px;color:#163a1c;">FR-012345</strong></p>
 <p style="margin:0 0 12px;padding:12px 16px;background:#fbf6ea;border-left:3px solid #e03a3a;">Tabac de la Gare<br>12 Avenue de la Gare, Galerie marchande<br>95400 Arnouville<br>France</p>
 <p style="margin:0 0 12px;">Avant d’imprimer l’étiquette, vérifiez ce Point Relais avec son ID dans votre espace Mondial Relay.</p></td></tr>
-<tr><td style="background:#d8b98e;color:#163a1c;padding:16px 28px;font-size:12px;line-height:1.5;">Racines en Partage · 9 Rue du Marché, 95400 Arnouville · <a href="mailto:racinesenpartage@outlook.com" style="color:#163a1c;">racinesenpartage@outlook.com</a></td></tr>
+<tr><td style="background:#d8b98e;color:#163a1c;padding:16px 28px;font-size:12px;line-height:1.5;">Racines en Partage · 9 Rue du Marché, 95400 Arnouville · <a href="mailto:racinesenpartage@gmail.com" style="color:#163a1c;">racinesenpartage@gmail.com</a></td></tr>
 </table></td></tr></table></body></html>"
 `;
 
@@ -181,5 +261,158 @@ France
 Avant d’imprimer l’étiquette, vérifiez ce Point Relais avec son ID dans votre espace Mondial Relay.
 
 Paiement dans Stripe : https://dashboard.stripe.com/test/payments/pi_3TestPaymentIntent
+"
+`;
+
+exports[`owner e-mails from the forms > contact matches the snapshot and escapes the message > contact.html 1`] = `
+"<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Message du site de Awa Diallo</title></head>
+<body style="margin:0;padding:0;background:#fbf6ea;color:#163a1c;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;">
+<div style="display:none;max-height:0;overflow:hidden;">Message du site de Awa Diallo</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbf6ea;">
+<tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #d8b98e;border-radius:8px;overflow:hidden;">
+<tr><td style="background:#163a1c;color:#fbf6ea;padding:20px 28px;font-family:Georgia, 'Times New Roman', serif;font-size:22px;letter-spacing:0.5px;">Racines en Partage</td></tr>
+<tr><td style="height:4px;line-height:4px;font-size:0;background:#e03a3a;">&nbsp;</td></tr>
+<tr><td style="padding:28px;font-size:15px;line-height:1.55;color:#163a1c;"><h1 style="margin:0 0 12px;font-family:Georgia, 'Times New Roman', serif;font-size:24px;font-weight:normal;color:#163a1c;">Nouveau message du site</h1>
+<p style="margin:0 0 12px;">De : Awa Diallo &lt;<a href="mailto:awa.diallo@example.com" style="color:#163a1c;">awa.diallo@example.com</a>&gt;<br>Langue : français</p>
+<p style="margin:0 0 12px;padding:12px 16px;background:#fbf6ea;border-left:3px solid #e03a3a;">Bonjour !<br>Avez-vous du moringa en 500 g ? &lt;b&gt;merci&lt;/b&gt; &amp; &quot;bises&quot;</p>
+<p style="margin:0 0 12px;">Répondez directement à cet e-mail pour lui écrire.</p></td></tr>
+<tr><td style="background:#d8b98e;color:#163a1c;padding:16px 28px;font-size:12px;line-height:1.5;">Racines en Partage · 9 Rue du Marché, 95400 Arnouville · <a href="mailto:racinesenpartage@gmail.com" style="color:#163a1c;">racinesenpartage@gmail.com</a></td></tr>
+</table></td></tr></table></body></html>"
+`;
+
+exports[`owner e-mails from the forms > contact matches the snapshot and escapes the message > contact.txt 1`] = `
+"Nouveau message du site
+
+De : Awa Diallo <awa.diallo@example.com>
+Langue : français
+
+Bonjour !
+Avez-vous du moringa en 500 g ? <b>merci</b> & "bises"
+
+Répondez directement à cet e-mail pour lui écrire.
+"
+`;
+
+exports[`owner e-mails from the forms > stock alert matches the snapshot > stock-alert.html 1`] = `
+"<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alerte de stock : Poudre de souchet 100 g pour john@example.com</title></head>
+<body style="margin:0;padding:0;background:#fbf6ea;color:#163a1c;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;">
+<div style="display:none;max-height:0;overflow:hidden;">Alerte de stock : Poudre de souchet 100 g pour john@example.com</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbf6ea;">
+<tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #d8b98e;border-radius:8px;overflow:hidden;">
+<tr><td style="background:#163a1c;color:#fbf6ea;padding:20px 28px;font-family:Georgia, 'Times New Roman', serif;font-size:22px;letter-spacing:0.5px;">Racines en Partage</td></tr>
+<tr><td style="height:4px;line-height:4px;font-size:0;background:#e03a3a;">&nbsp;</td></tr>
+<tr><td style="padding:28px;font-size:15px;line-height:1.55;color:#163a1c;"><h1 style="margin:0 0 12px;font-family:Georgia, 'Times New Roman', serif;font-size:24px;font-weight:normal;color:#163a1c;">Alerte de retour en stock</h1>
+<p style="margin:0 0 12px;">Demande d’alerte de retour en stock.</p>
+<p style="margin:0 0 12px;padding:12px 16px;background:#fbf6ea;border-left:3px solid #e03a3a;">Produit : Poudre de souchet 100 g (REP-SOU-P100)<br>E-mail : john@example.com<br>Langue : anglais</p>
+<p style="margin:0 0 12px;">Quand le produit revient, répondez à cet e-mail pour prévenir la personne. Rien n’est enregistré sur le site.</p></td></tr>
+<tr><td style="background:#d8b98e;color:#163a1c;padding:16px 28px;font-size:12px;line-height:1.5;">Racines en Partage · 9 Rue du Marché, 95400 Arnouville · <a href="mailto:racinesenpartage@gmail.com" style="color:#163a1c;">racinesenpartage@gmail.com</a></td></tr>
+</table></td></tr></table></body></html>"
+`;
+
+exports[`owner e-mails from the forms > stock alert matches the snapshot > stock-alert.txt 1`] = `
+"Alerte de retour en stock
+
+Demande d’alerte de retour en stock.
+
+Produit : Poudre de souchet 100 g (REP-SOU-P100)
+E-mail : john@example.com
+Langue : anglais
+
+Quand le produit revient, répondez à cet e-mail pour prévenir la personne. Rien n’est enregistré sur le site.
+"
+`;
+
+exports[`review invitation > EN matches the snapshot > invitation-en.html 1`] = `
+"<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How are you enjoying your order?</title></head>
+<body style="margin:0;padding:0;background:#fbf6ea;color:#163a1c;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;">
+<div style="display:none;max-height:0;overflow:hidden;">Your order reached you a few days ago. We hope you are enjoying it!</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbf6ea;">
+<tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #d8b98e;border-radius:8px;overflow:hidden;">
+<tr><td style="background:#163a1c;color:#fbf6ea;padding:20px 28px;font-family:Georgia, 'Times New Roman', serif;font-size:22px;letter-spacing:0.5px;">Racines en Partage</td></tr>
+<tr><td style="height:4px;line-height:4px;font-size:0;background:#e03a3a;">&nbsp;</td></tr>
+<tr><td style="padding:28px;font-size:15px;line-height:1.55;color:#163a1c;"><h1 style="margin:0 0 12px;font-family:Georgia, 'Times New Roman', serif;font-size:24px;font-weight:normal;color:#163a1c;">How are you enjoying your order?</h1>
+<p style="margin:0 0 12px;">Hello,</p>
+<p style="margin:0 0 12px;">Your order reached you a few days ago. We hope you are enjoying it!</p>
+<p style="margin:0 0 12px;">You ordered:</p><ul style="margin:0 0 12px;padding-left:20px;"><li style="margin:0 0 4px;">Moringa powder 100 g</li></ul>
+<p style="margin:0 0 12px;">A few words from you help other customers choose, and help us do better. It takes a minute.</p>
+<p style="margin:20px 0;"><a href="https://racinesenpartage.fr/en/review/?t=abc.def" style="display:inline-block;background:#e03a3a;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:999px;font-weight:bold;">Leave a review</a></p>
+<p style="margin:0 0 12px;"><span style="color:#4a5d4c;font-size:13px;">We read every review before it goes online. This personal link stays valid for 60 days.</span></p>
+<p style="margin:0 0 12px;">Thank you, and warm wishes,<br>Racines en Partage</p></td></tr>
+<tr><td style="background:#d8b98e;color:#163a1c;padding:16px 28px;font-size:12px;line-height:1.5;">Racines en Partage · 9 Rue du Marché, 95400 Arnouville · <a href="mailto:racinesenpartage@gmail.com" style="color:#163a1c;">racinesenpartage@gmail.com</a></td></tr>
+</table></td></tr></table></body></html>"
+`;
+
+exports[`review invitation > EN matches the snapshot > invitation-en.txt 1`] = `
+"Hello,
+
+Your order reached you a few days ago. We hope you are enjoying it!
+
+You ordered:
+- Moringa powder 100 g
+
+A few words from you help other customers choose, and help us do better. It takes a minute.
+
+Leave a review: https://racinesenpartage.fr/en/review/?t=abc.def
+
+We read every review before it goes online. This personal link stays valid for 60 days.
+
+Thank you, and warm wishes,
+Racines en Partage
+"
+`;
+
+exports[`review invitation > FR matches the snapshot > invitation-fr.html 1`] = `
+"<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Votre avis compte pour nous</title></head>
+<body style="margin:0;padding:0;background:#fbf6ea;color:#163a1c;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;">
+<div style="display:none;max-height:0;overflow:hidden;">Votre commande vous est parvenue il y a quelques jours. Nous espérons que vous l’appréciez !</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbf6ea;">
+<tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #d8b98e;border-radius:8px;overflow:hidden;">
+<tr><td style="background:#163a1c;color:#fbf6ea;padding:20px 28px;font-family:Georgia, 'Times New Roman', serif;font-size:22px;letter-spacing:0.5px;">Racines en Partage</td></tr>
+<tr><td style="height:4px;line-height:4px;font-size:0;background:#e03a3a;">&nbsp;</td></tr>
+<tr><td style="padding:28px;font-size:15px;line-height:1.55;color:#163a1c;"><h1 style="margin:0 0 12px;font-family:Georgia, 'Times New Roman', serif;font-size:24px;font-weight:normal;color:#163a1c;">Votre avis compte pour nous</h1>
+<p style="margin:0 0 12px;">Bonjour Awa Diallo,</p>
+<p style="margin:0 0 12px;">Votre commande vous est parvenue il y a quelques jours. Nous espérons que vous l’appréciez !</p>
+<p style="margin:0 0 12px;">Vous avez commandé :</p><ul style="margin:0 0 12px;padding-left:20px;"><li style="margin:0 0 4px;">Poudre de moringa 100 g</li><li style="margin:0 0 4px;">Poudre de baobab 100 g</li></ul>
+<p style="margin:0 0 12px;">Quelques mots de votre part aideront d’autres gourmands à choisir, et nous aident à progresser. Cela prend une minute.</p>
+<p style="margin:20px 0;"><a href="https://racinesenpartage.fr/avis/?t=abc.def" style="display:inline-block;background:#e03a3a;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:999px;font-weight:bold;">Donner mon avis</a></p>
+<p style="margin:0 0 12px;"><span style="color:#4a5d4c;font-size:13px;">Nous lisons chaque avis avant sa mise en ligne. Ce lien personnel reste valable 60 jours.</span></p>
+<p style="margin:0 0 12px;">Merci et à très bientôt,<br>Racines en Partage</p></td></tr>
+<tr><td style="background:#d8b98e;color:#163a1c;padding:16px 28px;font-size:12px;line-height:1.5;">Racines en Partage · 9 Rue du Marché, 95400 Arnouville · <a href="mailto:racinesenpartage@gmail.com" style="color:#163a1c;">racinesenpartage@gmail.com</a></td></tr>
+</table></td></tr></table></body></html>"
+`;
+
+exports[`review invitation > FR matches the snapshot > invitation-fr.txt 1`] = `
+"Bonjour Awa Diallo,
+
+Votre commande vous est parvenue il y a quelques jours. Nous espérons que vous l’appréciez !
+
+Vous avez commandé :
+- Poudre de moringa 100 g
+- Poudre de baobab 100 g
+
+Quelques mots de votre part aideront d’autres gourmands à choisir, et nous aident à progresser. Cela prend une minute.
+
+Donner mon avis : https://racinesenpartage.fr/avis/?t=abc.def
+
+Nous lisons chaque avis avant sa mise en ligne. Ce lien personnel reste valable 60 jours.
+
+Merci et à très bientôt,
+Racines en Partage
 "
 `;

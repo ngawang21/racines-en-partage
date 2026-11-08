@@ -1,8 +1,11 @@
 // Order e-mails (spec 6.3): the owner's, always in French, and the customer's,
-// in the checkout locale. HTML with inline styles plus a plain-text twin.
-import { INTL_LOCALE } from '../../src/consts';
+// in the checkout locale. Also the review invitation, the newsletter
+// confirmation and the contact and stock-alert e-mails to the owner (spec 2.1
+// to 2.3). HTML with inline styles plus a plain-text twin.
+import { INTL_LOCALE, SITE } from '../../src/consts';
 import { escapeHtml } from '../../src/i18n/fallback';
 import { formatPhone, formatPrice } from '../../src/i18n/format';
+import { ROUTES } from '../../src/i18n/routing';
 import { frenchTypographyHtml, frenchTypographyText } from '../../src/i18n/typography';
 import type { OrderSummary, PostalAddress } from '../orders';
 import { SHOP, STRIPE_DASHBOARD_PAYMENT_URL } from '../shop';
@@ -157,6 +160,10 @@ function totalsTable(rows: Array<[string, string]>): string {
 /** The relay point ID, large, above the point's details: what the label needs. */
 function relayIdBox(id: string): string {
   return `<p style="margin:0 0 12px;padding:12px 16px;border:2px solid ${C.forest};border-radius:6px;font-size:13px;line-height:1.4;">N° du Point Relais<br><strong style="font-family:${SERIF};font-size:26px;letter-spacing:1px;color:${C.forest};">${esc(id)}</strong></p>`;
+}
+
+function link(href: string, label = href): string {
+  return `<a href="${esc(href)}" style="color:${C.forest};">${esc(label)}</a>`;
 }
 
 function button(href: string, label: string): string {
@@ -322,6 +329,8 @@ interface CustomerStrings {
   method: Record<Delivery['method'], string>;
   next: string;
   nextBy: Record<Delivery['method'], string>;
+  /** Before the order lookup link. */
+  lookup: string;
   contactTitle: string;
   /** Around the e-mail link and the phone number: "{before}{email}{between}{phone}{after}". */
   contact: { before: string; between: string; after: string };
@@ -351,6 +360,7 @@ const CUSTOMER: Record<Locale, CustomerStrings> = {
       pickup:
         'Nous vous contactons très vite par téléphone ou par e-mail pour convenir d’un rendez-vous de retrait.',
     },
+    lookup: 'Retrouver ma commande à tout moment : ',
     contactTitle: 'Une question ?',
     contact: {
       before: 'Répondez simplement à cet e-mail, écrivez-nous à ',
@@ -380,6 +390,7 @@ const CUSTOMER: Record<Locale, CustomerStrings> = {
       home: 'We prepare your parcel and ship it with Colissimo. You will receive the tracking number as soon as it has been dispatched.',
       pickup: 'We will contact you shortly by phone or e-mail to arrange a collection time.',
     },
+    lookup: 'Find your order at any time: ',
     contactTitle: 'Any questions?',
     contact: {
       before: 'Simply reply to this e-mail, write to ',
@@ -390,8 +401,17 @@ const CUSTOMER: Record<Locale, CustomerStrings> = {
   },
 };
 
-export function renderCustomerEmail(summary: OrderSummary): RenderedEmail {
+/** The order lookup page of a locale, on the shop's origin. */
+export function lookupUrl(locale: Locale, siteUrl: string = SITE.url): string {
+  return `${siteUrl.replace(/\/+$/, '')}${ROUTES.lookup[locale]}`;
+}
+
+export function renderCustomerEmail(
+  summary: OrderSummary,
+  siteUrl: string = SITE.url,
+): RenderedEmail {
   const locale = summary.locale;
+  const lookup = lookupUrl(locale, siteUrl);
   const t = CUSTOMER[locale];
   const c = summary.customer;
   const subject = t.subject(summary.number);
@@ -421,6 +441,7 @@ export function renderCustomerEmail(summary: OrderSummary): RenderedEmail {
       subheading(`${t.delivery}${colon(locale)}${methodLabel}`),
       deliveryLines.length ? block(deliveryLines) : '',
       next ? subheading(t.next) + paragraph(esc(next)) : '',
+      paragraph(`${esc(t.lookup)}${link(lookup)}`),
       subheading(t.contactTitle),
       paragraph(
         `${esc(t.contact.before)}<a href="mailto:${esc(SHOP.email)}" style="color:${C.forest};">${esc(SHOP.email)}</a>${esc(t.contact.between)}${esc(phone)}${esc(t.contact.after)}`,
@@ -444,6 +465,8 @@ export function renderCustomerEmail(summary: OrderSummary): RenderedEmail {
     ...deliveryLines,
     ...(next ? ['', t.next, next] : []),
     '',
+    `${t.lookup}${lookup}`,
+    '',
     t.contactTitle,
     `${t.contact.before}${SHOP.email}${t.contact.between}${phone}${t.contact.after}`,
     '',
@@ -452,4 +475,248 @@ export function renderCustomerEmail(summary: OrderSummary): RenderedEmail {
   ].join('\n');
 
   return typeset(locale, { subject, html, text });
+}
+
+// Review invitation (FR or EN) -----------------------------------------------
+
+interface InvitationStrings {
+  subject: string;
+  greeting: (name: string | null) => string;
+  intro: string;
+  products: string;
+  ask: string;
+  button: string;
+  moderation: string;
+  validity: string;
+  signature: string;
+}
+
+const INVITATION: Record<Locale, InvitationStrings> = {
+  fr: {
+    subject: 'Votre avis compte pour nous',
+    greeting: (name) => (name ? `Bonjour ${name},` : 'Bonjour,'),
+    intro:
+      'Votre commande vous est parvenue il y a quelques jours. Nous espérons que vous l’appréciez !',
+    products: 'Vous avez commandé :',
+    ask: 'Quelques mots de votre part aideront d’autres gourmands à choisir, et nous aident à progresser. Cela prend une minute.',
+    button: 'Donner mon avis',
+    moderation: 'Nous lisons chaque avis avant sa mise en ligne.',
+    validity: 'Ce lien personnel reste valable 60 jours.',
+    signature: 'Merci et à très bientôt,\nRacines en Partage',
+  },
+  en: {
+    subject: 'How are you enjoying your order?',
+    greeting: (name) => (name ? `Hello ${name},` : 'Hello,'),
+    intro: 'Your order reached you a few days ago. We hope you are enjoying it!',
+    products: 'You ordered:',
+    ask: 'A few words from you help other customers choose, and help us do better. It takes a minute.',
+    button: 'Leave a review',
+    moderation: 'We read every review before it goes online.',
+    validity: 'This personal link stays valid for 60 days.',
+    signature: 'Thank you, and warm wishes,\nRacines en Partage',
+  },
+};
+
+export function renderReviewInvitation(input: {
+  locale: Locale;
+  name: string | null;
+  products: string[];
+  url: string;
+}): RenderedEmail {
+  const { locale, url } = input;
+  const t = INVITATION[locale];
+  const list = input.products.map((p) => `<li style="margin:0 0 4px;">${esc(p)}</li>`).join('');
+  const html = layout(
+    locale,
+    t.subject,
+    t.intro,
+    [
+      heading(t.subject),
+      paragraph(esc(t.greeting(input.name))),
+      paragraph(esc(t.intro)),
+      input.products.length
+        ? paragraph(esc(t.products)) + `<ul style="margin:0 0 12px;padding-left:20px;">${list}</ul>`
+        : '',
+      paragraph(esc(t.ask)),
+      button(url, t.button),
+      paragraph(
+        `<span style="color:${C.muted};font-size:13px;">${esc(t.moderation)} ${esc(t.validity)}</span>`,
+      ),
+      paragraph(esc(t.signature).replace('\n', '<br>')),
+    ].join('\n'),
+  );
+  const text = [
+    t.greeting(input.name),
+    '',
+    t.intro,
+    ...(input.products.length ? ['', t.products, ...input.products.map((p) => `- ${p}`)] : []),
+    '',
+    t.ask,
+    '',
+    `${t.button}${colon(locale)}${url}`,
+    '',
+    `${t.moderation} ${t.validity}`,
+    '',
+    t.signature,
+    '',
+  ].join('\n');
+  return typeset(locale, { subject: t.subject, html, text });
+}
+
+// Newsletter confirmation (FR or EN) -----------------------------------------
+
+interface ConfirmationStrings {
+  subject: string;
+  heading: string;
+  intro: string;
+  button: string;
+  welcome: string;
+  validity: string;
+  ignore: string;
+  signature: string;
+}
+
+const CONFIRMATION: Record<Locale, ConfirmationStrings> = {
+  fr: {
+    subject: 'Confirmez votre inscription à la newsletter',
+    heading: 'Encore un clic',
+    intro:
+      'Merci de votre intérêt pour Racines en Partage ! Pour recevoir nos nouvelles (arrivages, recettes, offres), confirmez votre adresse e-mail.',
+    button: 'Confirmer mon inscription',
+    welcome:
+      'Pour vous souhaiter la bienvenue, voici votre code de réduction à saisir au paiement : ',
+    validity: 'Ce lien reste valable 48 heures.',
+    ignore:
+      'Si vous n’avez pas demandé cette inscription, ignorez simplement cet e-mail : vous ne recevrez rien.',
+    signature: 'À très bientôt,\nRacines en Partage',
+  },
+  en: {
+    subject: 'Please confirm your newsletter subscription',
+    heading: 'One more click',
+    intro:
+      'Thank you for your interest in Racines en Partage! To receive our news (new arrivals, recipes, offers), please confirm your e-mail address.',
+    button: 'Confirm my subscription',
+    welcome: 'To welcome you, here is your discount code to enter at checkout: ',
+    validity: 'This link stays valid for 48 hours.',
+    ignore:
+      'If you did not ask to subscribe, simply ignore this e-mail: you will not receive anything.',
+    signature: 'Warm wishes,\nRacines en Partage',
+  },
+};
+
+export function renderNewsletterConfirmation(input: {
+  locale: Locale;
+  url: string;
+  welcomeCode?: string;
+}): RenderedEmail {
+  const { locale, url } = input;
+  const t = CONFIRMATION[locale];
+  const code = input.welcomeCode?.trim() ?? '';
+  const html = layout(
+    locale,
+    t.subject,
+    t.intro,
+    [
+      heading(t.heading),
+      paragraph(esc(t.intro)),
+      button(url, t.button),
+      code ? paragraph(`${esc(t.welcome)}<strong>${esc(code)}</strong>`) : '',
+      paragraph(
+        `<span style="color:${C.muted};font-size:13px;">${esc(t.validity)} ${esc(t.ignore)}</span>`,
+      ),
+      paragraph(esc(t.signature).replace('\n', '<br>')),
+    ].join('\n'),
+  );
+  const text = [
+    t.heading,
+    '',
+    t.intro,
+    '',
+    `${t.button}${colon(locale)}${url}`,
+    ...(code ? ['', `${t.welcome}${code}`] : []),
+    '',
+    `${t.validity} ${t.ignore}`,
+    '',
+    t.signature,
+    '',
+  ].join('\n');
+  return typeset(locale, { subject: t.subject, html, text });
+}
+
+// Contact and stock alert, to the owner (French) -------------------------------
+
+/** French typography on the shop's own words only; the customer's text stays as typed. */
+const frLabel = (text: string) => frenchTypographyText(text, { nonBreakingHyphens: false });
+
+const languageName = (locale: Locale) => (locale === 'en' ? 'anglais' : 'français');
+
+export function renderContactEmail(input: {
+  name: string;
+  email: string;
+  message: string;
+  locale: Locale;
+}): RenderedEmail {
+  const subject = `Message du site de ${input.name}`;
+  const fromLabel = frLabel('De : ');
+  const languageLine = frLabel(`Langue : ${languageName(input.locale)}`);
+  const reply = 'Répondez directement à cet e-mail pour lui écrire.';
+  const html = layout(
+    'fr',
+    subject,
+    subject,
+    [
+      heading(frLabel('Nouveau message du site')),
+      paragraph(
+        `${esc(fromLabel)}${esc(input.name)} &lt;${link(`mailto:${input.email}`, input.email)}&gt;<br>${esc(languageLine)}`,
+      ),
+      block(input.message.split('\n')),
+      paragraph(esc(frLabel(reply))),
+    ].join('\n'),
+  );
+  const text = [
+    frLabel('Nouveau message du site'),
+    '',
+    `${fromLabel}${input.name} <${input.email}>`,
+    languageLine,
+    '',
+    input.message,
+    '',
+    frLabel(reply),
+    '',
+  ].join('\n');
+  return { subject, html, text };
+}
+
+export function renderStockAlertEmail(input: {
+  email: string;
+  name: string;
+  product: string;
+  sku: string;
+  locale: Locale;
+}): RenderedEmail {
+  const subject = `${frLabel('Alerte de stock : ')}${input.product} pour ${input.email}`;
+  const intro = `Demande d’alerte de retour en stock${input.name ? ` de ${input.name}` : ''}.`;
+  const lines = [
+    `${frLabel(`Produit : ${input.product}`)} (${input.sku})`,
+    `${frLabel('E-mail : ')}${input.email}`,
+    frLabel(`Langue : ${languageName(input.locale)}`),
+  ];
+  const note = frLabel(
+    'Quand le produit revient, répondez à cet e-mail pour prévenir la personne. Rien n’est enregistré sur le site.',
+  );
+  const html = layout(
+    'fr',
+    subject,
+    subject,
+    [
+      heading(frLabel('Alerte de retour en stock')),
+      paragraph(esc(intro)),
+      block(lines),
+      paragraph(esc(note)),
+    ].join('\n'),
+  );
+  const text = [frLabel('Alerte de retour en stock'), '', intro, '', ...lines, '', note, ''].join(
+    '\n',
+  );
+  return { subject, html, text };
 }

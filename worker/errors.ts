@@ -23,6 +23,12 @@ export const ERROR_CODES = [
   'EMAIL_FAILED',
   'RATE_LIMITED',
   'INTERNAL_ERROR',
+  'CAPTCHA_FAILED',
+  'INVALID_TOKEN',
+  'ALREADY_REVIEWED',
+  'ORDER_NOT_FOUND',
+  'MAIL_FAILED',
+  'FEATURE_DISABLED',
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
