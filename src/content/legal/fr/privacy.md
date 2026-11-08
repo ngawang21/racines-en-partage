@@ -13,6 +13,7 @@ updated: '2026-11-08'
 Nous collectons uniquement les données nécessaires à chaque service :
 
 - **Commande** : nom, adresse e-mail, téléphone, adresse de facturation, adresse de livraison ou Point Relais choisi, et le contenu de la commande. Elles servent à préparer et livrer votre commande, à vous envoyer la confirmation, à vous permettre de la retrouver avec son numéro et votre adresse e-mail, et à répondre à vos questions. Base légale : l'exécution du contrat de vente et nos obligations comptables.
+- **Espace client** : adresse e-mail, utilisée pour vous envoyer un lien de connexion valable 15 minutes et retrouver vos commandes ; un cookie de session strictement nécessaire, `rep_session`, conservé 30 jours, signé, ne contenant que votre adresse e-mail. Base légale : l'exécution du contrat.
 - **Invitation à donner votre avis** : environ une semaine après la commande, nous vous envoyons un e-mail d'invitation. Base légale : notre intérêt légitime à recueillir l'avis de nos clients ; vous pouvez simplement l'ignorer.
 - **Avis clients** : prénom ou pseudonyme, note, titre et texte de l'avis, langue, date et numéro de commande. Nous lisons chaque avis avant de le publier ; seuls le prénom ou pseudonyme, la note, le titre, le texte, la date et notre éventuelle réponse sont publiés. Base légale : votre consentement, donné en envoyant l'avis.
 - **Lettre d'information** : adresse e-mail et langue, enregistrées seulement après que vous avez cliqué sur le lien de confirmation reçu par e-mail. Chaque message comporte un lien de désinscription. Base légale : votre consentement.
@@ -33,7 +34,7 @@ Certains de ces prestataires sont établis aux États-Unis ; les transferts sont
 
 ## Panier et cookies
 
-Votre panier est enregistré dans le stockage local de votre navigateur (localStorage), sur votre appareil uniquement : il ne nous est pas transmis avant la commande. Le site n'utilise ni cookie publicitaire ni outil de mesure d'audience qui vous suit : la mesure d'audience Cloudflare Web Analytics et la vérification anti-robots Cloudflare Turnstile fonctionnent sans cookie et sans suivi individuel. Aucun bandeau de consentement n'est donc nécessaire.
+Votre panier est enregistré dans le stockage local de votre navigateur (localStorage), sur votre appareil uniquement : il ne nous est pas transmis avant la commande. Le site utilise un seul cookie, `rep_session`, strictement nécessaire à l'espace client : il est déposé quand vous vous connectez avec le lien reçu par e-mail, dure 30 jours et est supprimé quand vous vous déconnectez ; il ne demande pas de consentement. Le site n'utilise ni cookie publicitaire ni outil de mesure d'audience qui vous suit : la mesure d'audience Cloudflare Web Analytics et la vérification anti-robots Cloudflare Turnstile fonctionnent sans cookie et sans suivi individuel. Aucun bandeau de consentement n'est donc nécessaire.
 
 ## Durées de conservation
 

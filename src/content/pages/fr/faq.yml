@@ -23,8 +23,8 @@ items:
       livraison en Point Relais coûte 4,90 € et la livraison à domicile 6,90 €.
   - question: Puis-je retirer ma commande sur place ?
     answer: >-
-      Oui, le retrait est gratuit au 9 Rue du Marché, à Arnouville (95), sur
-      rendez-vous. Choisissez « Retrait gratuit à Arnouville » au moment de
+      Oui, le retrait est gratuit au 9 Rue du Marché, 95400 Arnouville,
+      France, sur rendez-vous. Choisissez « Retrait gratuit à Arnouville » au moment de
       commander : nous vous contactons dès que votre commande est prête.
   - question: Quels moyens de paiement acceptez-vous ?
     answer: >-
@@ -33,10 +33,16 @@ items:
       Nous ne voyons jamais vos données bancaires.
   - question: Comment retrouver ma commande ?
     answer: >-
-      Rendez-vous sur la page « Suivre ma commande » (/ma-commande/), dont le
-      lien figure en bas de chaque page. Saisissez le numéro de commande indiqué
-      dans l’e-mail de confirmation et l’adresse e-mail utilisée pour commander :
-      vous retrouvez le détail de votre commande, sans créer de compte.
+      Le plus simple : ouvrez « Mon espace » (/mon-compte/) et saisissez
+      l’adresse e-mail utilisée pour commander. Vous recevez un lien de
+      connexion par e-mail, sans mot de passe, et toutes vos commandes
+      s’affichent. Vous pouvez aussi utiliser la page « Suivre ma commande »
+      (/ma-commande/) avec le numéro de commande indiqué dans l’e-mail de
+      confirmation et votre adresse e-mail.
+  - question: Faut-il créer un compte ?
+    answer: >-
+      Non. Vous commandez en invité ; pour retrouver vos commandes, demandez un
+      lien de connexion dans Mon espace.
   - question: Puis-je retourner un produit ?
     answer: >-
       Nos produits sont des denrées alimentaires : une fois le sachet ouvert, ils

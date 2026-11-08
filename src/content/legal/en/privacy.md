@@ -15,6 +15,7 @@ This English version is provided for convenience; the French version is the bind
 We only collect the data each service needs:
 
 - **Orders**: name, e-mail address, phone number, billing address, delivery address or chosen pickup point, and the content of the order. It is used to pack and deliver your order, send you the confirmation, let you find it again with its number and your e-mail address, and answer your questions. Legal basis: performance of the sales contract and our accounting obligations.
+- **Customer space**: e-mail address, used to send you a sign-in link valid for 15 minutes and to find your orders; a strictly necessary session cookie, `rep_session`, kept for 30 days, signed, holding only your e-mail address. Legal basis: performance of the contract.
 - **Review invitation**: about a week after the order, we send you an e-mail inviting you to review it. Legal basis: our legitimate interest in hearing from our customers; you may simply ignore it.
 - **Customer reviews**: first name or pseudonym, rating, title and text of the review, language, date and order number. We read every review before publishing it; only the first name or pseudonym, the rating, the title, the text, the date and any reply from us are published. Legal basis: your consent, given by sending the review.
 - **Newsletter**: e-mail address and language, saved only after you click the confirmation link we send by e-mail. Every message includes an unsubscribe link. Legal basis: your consent.
@@ -35,7 +36,7 @@ Some of these providers are based in the United States; transfers are covered by
 
 ## Basket and cookies
 
-Your basket is saved in your browser's local storage (localStorage), on your device only: it is not sent to us before you order. The website uses no advertising cookie and no audience measurement tool that tracks you: Cloudflare Web Analytics and the Cloudflare Turnstile anti-bot check work without cookies and without individual tracking, so no consent banner is needed.
+Your basket is saved in your browser's local storage (localStorage), on your device only: it is not sent to us before you order. The website uses a single cookie, `rep_session`, strictly necessary for the customer space: it is set when you sign in with the link received by e-mail, lasts 30 days and is deleted when you sign out; it needs no consent. The website uses no advertising cookie and no audience measurement tool that tracks you: Cloudflare Web Analytics and the Cloudflare Turnstile anti-bot check work without cookies and without individual tracking, so no consent banner is needed.
 
 ## Retention periods
 

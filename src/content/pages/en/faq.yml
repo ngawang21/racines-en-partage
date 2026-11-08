@@ -23,7 +23,8 @@ items:
       delivery costs €4.90 and home delivery €6.90.
   - question: Can I collect my order in person?
     answer: >-
-      Yes, pickup is free at 9 Rue du Marché, Arnouville (95), by appointment.
+      Yes, pickup is free at 9 Rue du Marché, 95400 Arnouville, France, by
+      appointment.
       Choose "Free pickup in Arnouville" when you order: we will contact you as
       soon as your order is ready.
   - question: Which payment methods do you accept?
@@ -33,10 +34,15 @@ items:
       never see your card details.
   - question: How can I find my order?
     answer: >-
-      Go to the "Track my order" page (/en/my-order/), linked at the bottom of
-      every page. Enter the order number shown in your confirmation e-mail and
-      the e-mail address you ordered with: you will see the details of your
-      order, without creating an account.
+      The easiest way: open "My account" (/en/account/) and enter the e-mail
+      address you ordered with. You receive a sign-in link by e-mail, no
+      password needed, and all your orders are listed. You can also use the
+      "Track my order" page (/en/my-order/) with the order number shown in
+      your confirmation e-mail and your e-mail address.
+  - question: Do I need to create an account?
+    answer: >-
+      No. You order as a guest; to find your orders, ask for a sign-in link in
+      My account.
   - question: Can I return a product?
     answer: >-
       Our products are food: once a pouch is opened it cannot be taken back, for

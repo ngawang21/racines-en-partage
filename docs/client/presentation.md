@@ -99,6 +99,14 @@ Votre promesse « 100 % végétal, sans additif ni conservateur » est en tête
 du bandeau de la page d'accueil, sur chaque fiche produit et dans « Notre
 histoire ».
 
+**Votre carte de visite**
+
+La page racinesenpartage.fr/carte/ montre votre carte de visite, recto et
+verso : votre logo, votre téléphone, votre e-mail et un QR code vers le
+site, avec les fichiers prêts pour l'imprimeur et une fiche contact à
+enregistrer dans un téléphone. Je vous propose trois modèles (médaillon,
+kraft, forêt) : vous choisissez, et c'est celui-là qui sera publié.
+
 **Être trouvée sur Google**
 
 Chaque page est préparée pour les moteurs de recherche (titres,
@@ -132,9 +140,16 @@ liste de toutes vos commandes est dans Stripe, sur ordinateur ou dans
 l'application Stripe sur téléphone. C'est aussi là que vous faites un
 remboursement ou que vous créez un code promo.
 
-Si une cliente a perdu son e-mail de confirmation, elle retrouve sa commande
-sur la page « Suivre ma commande », avec son numéro de commande et son
-e-mail.
+**Vos clientes et clients retrouvent leurs commandes**
+
+Dans « Mon espace », une cliente tape son adresse e-mail et reçoit un lien
+de connexion par e-mail, valable 15 minutes. Pas de mot de passe à créer ni
+à oublier : elle clique, et toutes ses commandes passées s'affichent, avec
+un bouton « Commander à nouveau » et un autre pour donner son avis. Elle
+commande toujours en invitée, sans créer de compte. Pour vous, il n'y a
+rien à gérer : les commandes viennent directement de Stripe. Et si elle n'a
+pas sa boîte mail sous la main, la page « Suivre ma commande » reste là,
+avec son numéro de commande et son e-mail.
 
 ## 3. Votre banque Hello Bank
 
