@@ -5,7 +5,8 @@ import { SITE, type Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
 import type { Settings } from '../content/schemas';
 import { interpolate, pickLabel } from '../i18n/fallback';
-import { formatPhone, phoneE164 } from '../i18n/format';
+import { addressLine as postalLine, displayPhone } from '../cart/address';
+import { phoneE164 } from '../i18n/format';
 import { routePath } from '../i18n/routing';
 import Icon from './Icon.astro';
 import NewsletterSignup from './forms/NewsletterSignup.astro';
@@ -17,11 +18,12 @@ interface Props {
 }
 const { locale, t, settings } = Astro.props;
 const { brand } = settings;
-const addressLine = `${brand.address.street}, ${brand.address.postcode} ${brand.address.city}`;
+const addressLine = postalLine(brand.address, locale);
 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressLine)}`;
 const shopLinks = [
   { href: routePath('shop', locale), label: t.nav.shop },
   { href: routePath('recipes', locale), label: t.footer.recipes },
+  { href: routePath('account', locale), label: t.footer.account },
   { href: routePath('lookup', locale), label: t.footer.lookup },
   { href: routePath('about', locale), label: t.nav.about },
   { href: routePath('faq', locale), label: t.nav.faq },
@@ -31,6 +33,7 @@ const legalLinks = [
   { href: routePath('legal', locale), label: t.footer.legal },
   { href: routePath('terms', locale), label: t.footer.terms },
   { href: routePath('privacy', locale), label: t.footer.privacy },
+  { href: routePath('card', locale), label: t.footer.card },
 ];
 const year = new Date().getFullYear();
 ---
@@ -39,12 +42,12 @@ const year = new Date().getFullYear();
   <div class="kente" aria-hidden="true"></div>
   {
     settings.newsletter.enabled && (
-      <div class="container footer-nl">
+      <div class="container-wide footer-nl">
         <NewsletterSignup {locale} {t} {settings} variant="footer" />
       </div>
     )
   }
-  <div class="container grid">
+  <div class="container-wide grid">
     <div class="brand-block">
       <a class="brand" href={routePath('home', locale)}>
         <Image src={medallion} alt="" width={56} height={56} densities={[1, 2]} />
@@ -67,7 +70,7 @@ const year = new Date().getFullYear();
         <li>
           <a href={`tel:${phoneE164(brand.phone)}`}>
             <Icon name="phone" size={18} />
-            <span>{formatPhone(brand.phone)}</span>
+            <span>{displayPhone(brand.phone, locale)}</span>
           </a>
         </li>
         <li>
@@ -116,7 +119,7 @@ const year = new Date().getFullYear();
       </ul>
     </nav>
   </div>
-  <div class="container bottom">
+  <div class="container-wide bottom">
     <p>{interpolate(t.footer.copyright, { year })}</p>
   </div>
 </footer>
@@ -196,6 +199,7 @@ const year = new Date().getFullYear();
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
+    min-width: 44px;
     min-height: 44px;
     color: var(--cream-muted);
     line-height: 1.35;
@@ -219,11 +223,12 @@ const year = new Date().getFullYear();
     margin-top: var(--space-12);
     border-top: 1px solid rgba(251, 246, 234, 0.14);
   }
-  /* The newsletter landing page has its own band: no second signup here. */
-  :global(body:has(.nl-landing)) .footer-nl {
+  /* A page with its own newsletter band (recipes, the newsletter landing
+     page) shows no second signup here. */
+  :global(body:has(main .nl-band)) .footer-nl {
     display: none;
   }
-  :global(body:has(.nl-landing)) .footer-nl + .grid {
+  :global(body:has(main .nl-band)) .footer-nl + .grid {
     margin-top: 0;
     border-top: 0;
   }

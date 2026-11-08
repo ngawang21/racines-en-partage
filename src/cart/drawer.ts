@@ -14,7 +14,7 @@ export interface Drawer {
   render(cart: CartState): void;
 }
 
-const CLOSE_FALLBACK_MS = 400;
+const CLOSE_FALLBACK_MS = 300;
 
 export function createDrawer(ctx: CartContext): Drawer | null {
   const dialog = document.getElementById('cart-drawer') as HTMLDialogElement | null;

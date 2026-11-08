@@ -108,6 +108,10 @@ describe('footer', () => {
         .querySelectorAll('.site-footer nav a')
         .map((a) => a.getAttribute('href'));
       expect(hrefs, path).toContain(routePath('lookup', locale));
+      // "Mon espace" comes right above "Suivre ma commande".
+      expect(hrefs.indexOf(routePath('account', locale)), path).toBe(
+        hrefs.indexOf(routePath('lookup', locale)) - 1,
+      );
       expect(hrefs, path).toContain(routePath('recipes', locale));
     }
   });
@@ -238,6 +242,62 @@ describe('new pages', () => {
       ])
         expect(d.querySelector(`[data-thanks] [${hook}]`), hook).not.toBeNull();
       expect(d.querySelectorAll('[data-thanks] [data-next]').length).toBe(3);
+    }
+  });
+});
+
+describe('customer space', () => {
+  it('the account page: hidden states, the sign-in form, the order template, noindex', () => {
+    for (const locale of LOCALES) {
+      const d = page('account', locale);
+      const root = d.querySelector('[data-account]');
+      expect(root, locale).not.toBeNull();
+      for (const state of ['out', 'in'])
+        expect(root!.querySelector(`[data-account-state="${state}"]`)?.hasAttribute('hidden')).toBe(
+          true,
+        );
+      const form = root!.querySelector('form[data-form="account_login"]');
+      expect(form!.querySelector('input[name="email"][type="email"][required]')).not.toBeNull();
+      expectFormShell(form!, `account ${locale}`);
+      expectDescribedErrors(form!, `account ${locale}`);
+      const template = root!.querySelector('template[data-account-order]');
+      for (const hook of [
+        'data-o-reorder',
+        'data-o-review',
+        'data-thanks-lines',
+        'data-thanks-total',
+      ])
+        expect(template!.querySelector(`[${hook}]`), hook).not.toBeNull();
+      expect(template!.querySelector('[data-next]')).toBeNull();
+      expect(JSON.parse(d.querySelector('script#rep-account-strings')!.text).greeting).toBeTruthy();
+      expect(d.querySelector('meta[name="robots"]')?.getAttribute('content')).toContain('noindex');
+      // The order lookup page links to the space.
+      expect(
+        page('lookup', locale).querySelector(
+          `[data-lookup] a[href="${routePath('account', locale)}"]`,
+        ),
+      ).not.toBeNull();
+    }
+  });
+});
+
+describe('address and phone (spec 8.4)', () => {
+  it('the footer and the contact cards print the country; the phone is national in French, international in English', () => {
+    for (const locale of LOCALES) {
+      for (const key of ['home', 'contact'] as const) {
+        const d = page(key, locale);
+        const footer = d.querySelector('.site-footer')!;
+        expect(footer.text, `${key} ${locale}`).toContain('Arnouville, France');
+        const tel = footer.querySelector('a[href^="tel:"]')!;
+        expect(tel.getAttribute('href')).toMatch(/^tel:\+33\d{9}$/);
+        expect(tel.text.trim()).toMatch(
+          locale === 'fr' ? /^0\d( \d{2}){4}$/ : /^\+33 \d( \d{2}){4}$/,
+        );
+      }
+      const contact = page('contact', locale);
+      expect(contact.querySelector('.contact address')?.text).toContain('France');
+      const big = contact.querySelector('.contact a.big[href^="tel:"]')!;
+      expect(big.text.trim().startsWith(locale === 'fr' ? '0' : '+33')).toBe(true);
     }
   });
 });

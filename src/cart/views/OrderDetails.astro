@@ -7,6 +7,7 @@ import Icon from '../../components/Icon.astro';
 import type { Locale } from '../../consts';
 import type { LocaleContent } from '../../content/locale-schema';
 import { loadSettings } from '../../i18n/locale';
+import { countryName } from '../address';
 
 interface Props {
   locale: Locale;
@@ -15,14 +16,16 @@ interface Props {
   next?: boolean;
   /** "Un récapitulatif a été envoyé à ..." under the totals. */
   emailNote?: boolean;
+  /** Prefix of the heading ids; a template cloned several times stamps its own. */
+  idPrefix?: string;
 }
-const { t, next = true, emailNote = true } = Astro.props;
+const { locale, t, next = true, emailNote = true, idPrefix = 'thanks' } = Astro.props;
 const { address } = (await loadSettings()).brand;
 ---
 
 <div class="thanks-layout" data-thanks-order hidden>
-  <section class="summary-card" aria-labelledby="thanks-lines-title">
-    <h2 id="thanks-lines-title" class="co-title">{t.thanks.linesTitle}</h2>
+  <section class="summary-card" aria-labelledby={`${idPrefix}-lines-title`}>
+    <h2 id={`${idPrefix}-lines-title`} class="co-title">{t.thanks.linesTitle}</h2>
     <ul class="order-lines" role="list" data-thanks-lines></ul>
     <dl class="summary-rows">
       <div class="summary-row">
@@ -46,8 +49,8 @@ const { address } = (await loadSettings()).brand;
   </section>
 
   <div class="thanks-side">
-    <section class="summary-card" aria-labelledby="thanks-delivery-title">
-      <h2 id="thanks-delivery-title" class="co-title">{t.thanks.deliveryTitle}</h2>
+    <section class="summary-card" aria-labelledby={`${idPrefix}-delivery-title`}>
+      <h2 id={`${idPrefix}-delivery-title`} class="co-title">{t.thanks.deliveryTitle}</h2>
       <p class="thanks-method" data-thanks-method></p>
       <div class="relay-chosen thanks-relay" data-thanks-relay hidden>
         <span class="relay-chosen-icon" aria-hidden="true"><Icon name="pin" /></span>
@@ -61,14 +64,16 @@ const { address } = (await loadSettings()).brand;
         {address.street}
         <br />
         {address.postcode}{' '}{address.city}
+        <br />
+        {countryName(address.country, locale)}
       </address>
     </section>
 
     <slot name="side" />
     {
       next && (
-        <section class="summary-card thanks-next" aria-labelledby="thanks-next-title">
-          <h2 id="thanks-next-title" class="co-title">
+        <section class="summary-card thanks-next" aria-labelledby={`${idPrefix}-next-title`}>
+          <h2 id={`${idPrefix}-next-title`} class="co-title">
             {t.thanks.nextTitle}
           </h2>
           <ol class="next-steps" role="list">

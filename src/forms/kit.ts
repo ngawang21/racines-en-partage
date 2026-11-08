@@ -102,7 +102,8 @@ export function setStatus(form: HTMLElement, text: string, kind: 'info' | 'error
 
 /** Busy: aria-disabled (not disabled, which would drop the focus) and a status line. */
 export function setBusy(form: HTMLFormElement, busy: boolean, s: FormStrings): void {
-  form.toggleAttribute('aria-busy', busy);
+  if (busy) form.setAttribute('aria-busy', 'true');
+  else form.removeAttribute('aria-busy');
   for (const btn of form.querySelectorAll<HTMLButtonElement>('[data-form-submit]')) {
     if (busy) btn.setAttribute('aria-disabled', 'true');
     else btn.removeAttribute('aria-disabled');

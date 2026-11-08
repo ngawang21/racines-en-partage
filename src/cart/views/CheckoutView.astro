@@ -12,6 +12,7 @@ import { loadSettings } from '../../i18n/locale';
 import { routePath } from '../../i18n/routing';
 import { getClientCatalog } from '../catalog';
 import { pageStrings, serializeStrings } from '../strings';
+import { countryName } from '../address';
 
 interface Props {
   locale: Locale;
@@ -125,6 +126,8 @@ const wholePrice = (cents: number) => formatPrice(cents, locale).replace(/[,.]00
                         {address.street}
                         <br />
                         {address.postcode} {address.city}
+                        <br />
+                        {countryName(address.country, locale)}
                       </address>
                       <p class="method-note">{t.checkout.pickupNote}</p>
                     </div>

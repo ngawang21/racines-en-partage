@@ -1,0 +1,159 @@
+---
+// Customer space (spec iteration 3, 8.6): no password. Logged out, an e-mail
+// form asks for a sign-in link (POST /api/account/login, enhanced by
+// src/forms/forms.ts); the link brings the customer back with ?t=, which
+// src/cart/page-account.ts strips and trades for a session cookie, then lists
+// the orders of that e-mail (GET /api/account/orders), each card expanding to
+// the shared order renderer, with "Commander à nouveau" and "Donner mon avis".
+import Icon from '../../components/Icon.astro';
+import FormFoot from '../../components/forms/FormFoot.astro';
+import type { Locale } from '../../consts';
+import type { LocaleContent } from '../../content/locale-schema';
+import { loadSettings } from '../../i18n/locale';
+import { routePath } from '../../i18n/routing';
+import { pageStrings, serializeStrings } from '../strings';
+import OrderDetails from './OrderDetails.astro';
+
+interface Props {
+  locale: Locale;
+  t: LocaleContent;
+}
+const { locale, t } = Astro.props;
+const a = t.account;
+const settings = await loadSettings();
+const siteKey = settings.forms.turnstileSiteKey.trim();
+const noscript = t.forms.noscript.split(/(\{email\})/);
+// Strings the client needs with their {tokens} (escaped by serializeStrings).
+const accountStrings = {
+  greeting: a.greeting,
+  orderDate: a.orderDate,
+  reordered: a.reordered,
+  reorderMissing: a.reorderMissing,
+  reorderNone: a.reorderNone,
+  reorderOf: a.reorderOf,
+  reviewOf: a.reviewOf,
+  alreadyReviewed: a.alreadyReviewed,
+  expired: a.expired,
+  loadFailed: a.loadFailed,
+  signingIn: a.signingIn,
+  loading: a.loading,
+  loggedOut: a.loggedOut,
+};
+---
+
+<section class="container account" data-account>
+  <header class="lookup-head">
+    <span class="thanks-mark" aria-hidden="true"><Icon name="leaf" size={28} /></span>
+    <h1 id="account-title" class="rep-title" tabindex="-1">{a.title}</h1>
+  </header>
+
+  <noscript>
+    <p class="form-noscript account-narrow">
+      {
+        noscript.map((part) =>
+          part === '{email}' ? (
+            <a href={`mailto:${settings.brand.email}`}>{settings.brand.email}</a>
+          ) : (
+            part
+          ),
+        )
+      }
+    </p>
+  </noscript>
+  <p class="account-loading" role="status" data-account-loading></p>
+
+  <div class="account-out" data-account-state="out" hidden>
+    <p class="notice account-notice" data-account-notice hidden></p>
+    <form
+      class="rep-form lookup-form"
+      data-form="account_login"
+      data-turnstile-sitekey={siteKey || undefined}
+      aria-labelledby="account-title"
+      novalidate
+    >
+      <p class="form-lead account-lead">{a.lead}</p>
+      <div class="form-fields" data-form-fields>
+        <div class="form-field">
+          <label for="account-email">{a.email}</label>
+          <input
+            id="account-email"
+            name="email"
+            type="email"
+            inputmode="email"
+            autocomplete="email"
+            spellcheck="false"
+            required
+            maxlength="254"
+            aria-describedby="account-email-hint account-email-error"
+          />
+          <p id="account-email-hint" class="form-hint">{a.noPassword}</p>
+          <p id="account-email-error" class="field-error" data-field-error></p>
+        </div>
+        {siteKey && <div class="form-turnstile" data-turnstile />}
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary btn-block" data-form-submit>
+            {a.submit}
+          </button>
+        </div>
+      </div>
+      <FormFoot {t} {settings} success={a.sent} />
+    </form>
+  </div>
+
+  <div class="account-in" data-account-state="in" hidden>
+    <div class="account-bar">
+      <p class="account-greeting" data-account-greeting></p>
+      <button type="button" class="btn btn-secondary" data-account-logout>{a.logout}</button>
+    </div>
+    <h2 class="account-orders-title">{a.ordersTitle}</h2>
+    <p class="account-empty" data-account-empty hidden>{a.empty}</p>
+    <ol class="account-orders" role="list" data-account-orders></ol>
+  </div>
+
+  <template data-account-order>
+    <li class="account-order">
+      <article class="account-card" aria-labelledby="__ID__-title">
+        <header class="account-order-head">
+          <div class="account-order-name">
+            <p class="eyebrow" data-o-date></p>
+            <h3 id="__ID__-title" class="account-order-number" data-o-number></h3>
+          </div>
+          <span class="badge" data-o-status></span>
+        </header>
+        <dl class="account-order-facts">
+          <div>
+            <dt>{t.cart.total}</dt>
+            <dd class="price" data-o-total></dd>
+          </div>
+          <div>
+            <dt>{t.thanks.deliveryTitle}</dt>
+            <dd data-o-delivery></dd>
+          </div>
+        </dl>
+        <div class="account-order-actions">
+          <button type="button" class="btn btn-primary" data-o-reorder>{a.reorder}</button>
+          <button type="button" class="btn btn-secondary" data-o-review hidden>{a.review}</button>
+        </div>
+        <p class="form-status" role="status" data-o-message></p>
+        <details class="account-order-details" data-o-details>
+          <summary>
+            <span>{a.details}</span>
+            <Icon name="chevron" size={18} />
+          </summary>
+          <p class="form-hint account-omitted" data-o-omitted hidden>{a.linesOmitted}</p>
+          <OrderDetails {locale} {t} idPrefix="__ID__" next={false} emailNote={false} />
+        </details>
+      </article>
+    </li>
+  </template>
+
+  <p class="lookup-help">
+    <a href={routePath('lookup', locale)}>{t.footer.lookup}</a>
+  </p>
+</section>
+<script type="application/json" id="rep-page-strings" set:html={serializeStrings(pageStrings(t))} />
+<script
+  type="application/json"
+  id="rep-account-strings"
+  set:html={serializeStrings(accountStrings)}
+/>

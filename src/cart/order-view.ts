@@ -6,6 +6,7 @@ import { nowrapWeight } from '../i18n/format';
 import type { OrderSummary } from './api';
 import type { CartContext } from './context';
 import { h } from './dom';
+import { relayAddressLines } from './address';
 import { displayCase } from './relay';
 
 export function renderOrder(root: HTMLElement, order: OrderSummary, ctx: CartContext): void {
@@ -77,10 +78,7 @@ export function renderOrder(root: HTMLElement, order: OrderSummary, ctx: CartCon
     const point = order.delivery.relay;
     set('[data-thanks-relay-name]', displayCase(point.name));
     q<HTMLElement>('[data-thanks-relay-address]')?.replaceChildren(
-      displayCase(point.address1),
-      ...(point.address2 ? [h('br'), displayCase(point.address2)] : []),
-      h('br'),
-      `${point.postcode} ${displayCase(point.city)}`,
+      ...relayAddressLines(point, ctx.locale).flatMap((line, i) => (i ? [h('br'), line] : [line])),
     );
     relay.hidden = false;
   }

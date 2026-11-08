@@ -79,3 +79,13 @@ export function readJson<T>(id: string): T | null {
 
 export const prefersReducedMotion = (): boolean =>
   window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+
+/** Template ids carry "__ID__"; each clone gets its own prefix. */
+export function stampIds(root: DocumentFragment, prefix: string): void {
+  for (const el of root.querySelectorAll('*')) {
+    for (const attr of ['id', 'for', 'aria-describedby', 'aria-labelledby']) {
+      const v = el.getAttribute(attr);
+      if (v?.includes('__ID__')) el.setAttribute(attr, v.replaceAll('__ID__', prefix));
+    }
+  }
+}

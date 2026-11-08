@@ -19,6 +19,7 @@ const { locale, t } = Astro.props;
 const l = t.lookup;
 const { email } = (await loadSettings()).brand;
 const help = l.help.split(/(\{contact\})/);
+const accountHint = l.accountHint.split(/(\{account\})/);
 const noscript = t.forms.noscript.split(/(\{email\})/);
 ---
 
@@ -91,6 +92,13 @@ const noscript = t.forms.noscript.split(/(\{email\})/);
       {
         help.map((part) =>
           part === '{contact}' ? <a href={routePath('contact', locale)}>{l.contactLink}</a> : part,
+        )
+      }
+    </p>
+    <p class="lookup-help lookup-account">
+      {
+        accountHint.map((part) =>
+          part === '{account}' ? <a href={routePath('account', locale)}>{l.accountLink}</a> : part,
         )
       }
     </p>

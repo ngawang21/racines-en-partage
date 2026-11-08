@@ -6,7 +6,8 @@ import Icon from '../../components/Icon.astro';
 import OrderDetails from './OrderDetails.astro';
 import type { Locale } from '../../consts';
 import type { LocaleContent } from '../../content/locale-schema';
-import { formatPhone, phoneE164 } from '../../i18n/format';
+import { phoneE164 } from '../../i18n/format';
+import { displayPhone } from '../address';
 import { loadSettings } from '../../i18n/locale';
 import { routePath } from '../../i18n/routing';
 import { pageStrings, serializeStrings } from '../strings';
@@ -39,7 +40,7 @@ const contactParts = t.thanks.nextContact.split(/(\{email\}|\{phone\})/);
         part === '{email}' ? (
           <a href={`mailto:${email}`}>{email}</a>
         ) : part === '{phone}' ? (
-          <a href={`tel:${phoneE164(phone)}`}>{formatPhone(phone)}</a>
+          <a href={`tel:${phoneE164(phone)}`}>{displayPhone(phone, locale)}</a>
         ) : (
           part
         ),

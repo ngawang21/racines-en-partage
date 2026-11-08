@@ -49,10 +49,17 @@ export async function initThanks(ctx: CartContext): Promise<void> {
   }
   const { order } = lookup;
   const lead = q<HTMLElement>('[data-thanks-lead]');
+  try {
+    renderOrder(root, order, ctx);
+  } catch {
+    // A payload the renderer does not expect: say so rather than half a page.
+    q<HTMLElement>('[data-thanks-order]')?.setAttribute('hidden', '');
+    if (lead) lead.textContent = tt.loadFailed;
+    return;
+  }
   if (lead)
     lead.textContent =
       order.status === 'paid' ? tt.lead : order.status === 'pending' ? tt.pending : tt.unpaid;
-  renderOrder(root, order, ctx);
   // Paid, or placed with a payment still clearing: the cart has become this
   // order. Only on the first visit, so a cart filled since is never wiped.
   if (order.status !== 'unpaid' && claimOrderClear(localStorageOrNull(), sessionId))

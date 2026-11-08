@@ -67,9 +67,11 @@ html.has-drawer {
   text-decoration-color: var(--kraft);
   text-underline-offset: 4px;
 }
-.text-link:hover {
-  color: var(--forest);
-  text-decoration-color: var(--gold);
+@media (hover: hover) {
+  .text-link:hover {
+    color: var(--forest);
+    text-decoration-color: var(--gold);
+  }
 }
 .icon-flip {
   transform: rotate(180deg);
@@ -142,8 +144,10 @@ html.has-drawer {
   color: var(--forest);
   transition: background-color var(--dur-fast) var(--ease-out);
 }
-.qty-btn:hover:not([aria-disabled='true']):not(:disabled) {
-  background: rgba(22, 58, 28, 0.07);
+@media (hover: hover) {
+  .qty-btn:hover:not([aria-disabled='true']):not(:disabled) {
+    background: rgba(22, 58, 28, 0.07);
+  }
 }
 .qty-btn[aria-disabled='true'],
 .qty-btn:disabled {
@@ -295,9 +299,11 @@ html.has-drawer {
   line-height: var(--lh-snug);
   text-decoration: none;
 }
-a.cart-line-name:hover {
-  text-decoration: underline;
-  text-decoration-color: var(--gold);
+@media (hover: hover) {
+  a.cart-line-name:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--gold);
+  }
 }
 .cart-line-meta {
   color: var(--ink-2);
@@ -332,9 +338,11 @@ a.cart-line-name:hover {
   text-decoration-color: var(--kraft);
   text-underline-offset: 3px;
 }
-.cart-line-remove:hover {
-  color: var(--hibiscus-deep);
-  text-decoration-color: currentColor;
+@media (hover: hover) {
+  .cart-line-remove:hover {
+    color: var(--hibiscus-deep);
+    text-decoration-color: currentColor;
+  }
 }
 .cart-line-total {
   font-size: var(--fs-1);
@@ -423,18 +431,19 @@ a.cart-line-name:hover {
   overscroll-behavior: contain;
 }
 .cart-drawer[open] {
-  animation: rep-drawer-in var(--dur-slow) var(--ease-out);
+  /* Under 300 ms with a strong ease-out: quick to arrive, soft to land. */
+  animation: rep-drawer-in var(--dur-base) var(--ease-out-strong);
 }
 .cart-drawer.is-closing {
-  animation: rep-drawer-out var(--dur-base) cubic-bezier(0.4, 0, 1, 1) forwards;
+  animation: rep-drawer-out 200ms var(--ease-out-strong) forwards;
 }
 .cart-drawer::backdrop {
   background: rgba(22, 58, 28, 0.32);
   backdrop-filter: blur(2px);
-  animation: rep-fade-in var(--dur-slow) var(--ease-out);
+  animation: rep-fade-in var(--dur-base) var(--ease-out-strong);
 }
 .cart-drawer.is-closing::backdrop {
-  animation: rep-fade-out var(--dur-base) ease-in forwards;
+  animation: rep-fade-out 200ms var(--ease-out-strong) forwards;
 }
 @keyframes rep-drawer-in {
   from {
@@ -482,6 +491,7 @@ a.cart-line-name:hover {
 }
 .cd-title:focus-visible {
   outline: 3px solid var(--hibiscus);
+  outline-offset: 2px;
 }
 .cd-count {
   font-family: var(--font-body);
@@ -498,14 +508,22 @@ a.cart-line-name:hover {
   height: 44px;
   flex: none;
   padding: 0;
-  border: 0;
+  /* A visible handle: the close control reads as a button, not a stray glyph. */
+  border: 1px solid var(--line);
   border-radius: var(--radius-pill);
-  background: transparent;
+  background: var(--paper);
   color: var(--forest);
-  transition: background-color var(--dur-fast) var(--ease-out);
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-press) var(--ease-out-strong);
 }
-.cd-close:hover {
-  background: rgba(22, 58, 28, 0.07);
+.cd-close:active {
+  transform: scale(0.97);
+}
+@media (hover: hover) {
+  .cd-close:hover {
+    background: rgba(22, 58, 28, 0.07);
+  }
 }
 .cd-free {
   padding: var(--space-4) var(--space-6);
@@ -775,8 +793,10 @@ a.cart-line-name:hover {
     background-color var(--dur-fast) var(--ease-out),
     box-shadow var(--dur-base) var(--ease-out);
 }
-.method:hover {
-  border-color: rgba(22, 58, 28, 0.35);
+@media (hover: hover) {
+  .method:hover {
+    border-color: rgba(22, 58, 28, 0.35);
+  }
 }
 .method.is-selected {
   border-color: var(--forest);
@@ -1035,9 +1055,11 @@ a.cart-line-name:hover {
   text-decoration-color: var(--gold);
   text-underline-offset: 3px;
 }
-.relay-change:hover:not(:disabled) {
-  background: transparent;
-  color: var(--forest-2);
+@media (hover: hover) {
+  .relay-change:hover:not(:disabled) {
+    background: transparent;
+    color: var(--forest-2);
+  }
 }
 @media (min-width: 640px) {
   .relay-chosen {
@@ -1150,10 +1172,15 @@ a.cart-line-name:hover {
   border-left-color: var(--kraft) !important;
   font-family: var(--font-body) !important;
 }
-.relay-widget .PR-List-Item:hover,
 .relay-widget .PR-List-Item.PR-Selected {
   background: var(--paper) !important;
   border-left-color: var(--forest) !important;
+}
+@media (hover: hover) {
+  .relay-widget .PR-List-Item:hover {
+    background: var(--paper) !important;
+    border-left-color: var(--forest) !important;
+  }
 }
 
 /* ----------------------------------------------------------------- thanks */
@@ -1884,7 +1911,7 @@ a.cart-line-name:hover {
 }
 .star-input:focus-visible + .star {
   outline: 3px solid var(--hibiscus);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 .star-rating[aria-invalid='true'] .star svg {
   stroke: var(--hibiscus-deep);
@@ -1964,4 +1991,194 @@ a.cart-line-name:hover {
 /* The landing page ends on its band: it meets the footer's kente strip. */
 main:has(> .nl-landing:last-child) + .site-footer {
   margin-top: 0;
+}
+/* Reduced motion: the 200 ms closing animations stop too. */
+@media (prefers-reduced-motion: reduce) {
+  .cart-drawer.is-closing,
+  .cart-drawer.is-closing::backdrop {
+    animation-duration: 0ms;
+  }
+}
+
+/* ------------------------------------------------- busy submit buttons */
+
+/* While a form is sending, its button shows a small spinner and stays
+   readable (the global disabled opacity would wash it out). */
+[aria-busy='true'] [data-form-submit],
+[data-landing-confirm][aria-disabled='true'],
+[data-o-review][aria-disabled='true'],
+[data-account-logout][aria-disabled='true'] {
+  opacity: 0.85;
+  cursor: progress;
+}
+[aria-busy='true'] [data-form-submit]::after,
+[data-landing-confirm][aria-disabled='true']::after,
+[data-o-review][aria-disabled='true']::after,
+[data-account-logout][aria-disabled='true']::after {
+  content: '';
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: rep-spin 0.7s linear infinite;
+}
+@keyframes rep-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [aria-busy='true'] [data-form-submit]::after,
+  [data-landing-confirm][aria-disabled='true']::after,
+  [data-o-review][aria-disabled='true']::after,
+  [data-account-logout][aria-disabled='true']::after {
+    animation: none;
+    border-right-color: currentColor;
+    opacity: 0.5;
+  }
+}
+
+/* ------------------------------------------------------- customer space */
+
+.account [hidden] {
+  display: none !important;
+}
+.account {
+  padding-block: var(--space-8) var(--space-16);
+}
+@media (min-width: 900px) {
+  .account {
+    padding-block: var(--space-12) var(--space-24);
+  }
+}
+.account-loading {
+  color: var(--ink-2);
+  text-align: center;
+}
+.account-out,
+.account-narrow {
+  max-width: 30rem;
+  margin-inline: auto;
+}
+.account-notice {
+  margin-bottom: var(--space-6);
+}
+.account-in {
+  display: grid;
+  gap: var(--space-6);
+  max-width: 64rem;
+  margin-inline: auto;
+}
+.account-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-6);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--gold);
+}
+.account-greeting {
+  font-size: var(--fs-1);
+  line-height: var(--lh-snug);
+}
+.account-orders-title {
+  font-size: var(--fs-3);
+}
+.account-empty {
+  padding: var(--space-6);
+  border: 1px solid var(--kraft);
+  border-radius: var(--radius-l);
+  background: var(--paper);
+  line-height: var(--lh-body);
+}
+.account-orders {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.account-card {
+  display: grid;
+  gap: var(--space-4);
+  padding: clamp(var(--space-4), 3vw, var(--space-6));
+  border: 1px solid rgba(185, 142, 94, 0.45);
+  border-radius: var(--radius-l);
+  background: var(--paper);
+}
+.account-order-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+.account-order-name {
+  display: grid;
+  gap: 2px;
+}
+.account-order-number {
+  font-size: var(--fs-2);
+}
+.account-order-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-8);
+  margin: 0;
+}
+.account-order-facts dt {
+  color: var(--ink-2);
+  font-size: var(--fs--1);
+}
+.account-order-facts dd {
+  margin: 0;
+  font-weight: 600;
+}
+.account-order-facts .price {
+  font-size: var(--fs-1);
+}
+.account-order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+}
+.account-order-details {
+  border-top: 1px solid var(--line);
+}
+.account-order-details summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 48px;
+  color: var(--forest);
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.account-order-details summary::-webkit-details-marker {
+  display: none;
+}
+.account-order-details summary svg {
+  flex: none;
+  transform: rotate(90deg);
+  transition: transform var(--dur-base) var(--ease-out-strong);
+}
+.account-order-details[open] summary svg {
+  transform: rotate(-90deg);
+}
+.account-order-details .thanks-layout {
+  margin-top: var(--space-2);
+}
+.account-order-details .summary-card {
+  background: var(--cream);
+}
+.account-order-details .co-title {
+  font-size: var(--fs-1);
+}
+.account-omitted {
+  margin-bottom: var(--space-3);
 }

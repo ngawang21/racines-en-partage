@@ -1,4 +1,5 @@
-// Contact, newsletter and stock-alert forms (spec iteration 3, 2.2 and 2.3).
+// Contact, newsletter, stock-alert and customer-space sign-in forms (spec
+// iteration 3, 2.2, 2.3 and 8.6).
 // Plain HTML forms rendered by src/components/forms/*.astro; this module,
 // loaded by src/cart/ui.ts on the first focus (or submit) inside one of them,
 // posts them as JSON to the Worker and shows the answer inline.
@@ -18,13 +19,14 @@ import {
 } from './kit';
 import { mountTurnstile, type TurnstileWidget } from './turnstile';
 
-type Kind = 'contact' | 'newsletter' | 'stock_alert';
-const KINDS: readonly Kind[] = ['contact', 'newsletter', 'stock_alert'];
+type Kind = 'contact' | 'newsletter' | 'stock_alert' | 'account_login';
+const KINDS: readonly Kind[] = ['contact', 'newsletter', 'stock_alert', 'account_login'];
 
 const ENDPOINT: Record<Kind, string> = {
   contact: '/api/contact',
   stock_alert: '/api/contact',
   newsletter: '/api/newsletter',
+  account_login: '/api/account/login',
 };
 
 function pageLocale(): 'fr' | 'en' {
@@ -33,7 +35,8 @@ function pageLocale(): 'fr' | 'en' {
 
 /** The request body of each kind (the Worker contract of spec section 5). */
 export function bodyOf(kind: Kind, form: HTMLFormElement, locale: 'fr' | 'en') {
-  if (kind === 'newsletter') return { email: value(form, 'email'), locale };
+  if (kind === 'newsletter' || kind === 'account_login')
+    return { email: value(form, 'email'), locale };
   if (kind === 'stock_alert')
     return {
       kind,

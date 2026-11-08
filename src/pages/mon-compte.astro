@@ -1,0 +1,17 @@
+---
+import AccountView from '../cart/views/AccountView.astro';
+import Base from '../layouts/Base.astro';
+import { loadLocale } from '../i18n/locale';
+
+const locale = 'fr' as const;
+const t = await loadLocale(locale);
+---
+
+<Base
+  {locale}
+  routeKey="account"
+  title={t.account.metaTitle}
+  description={t.account.metaDescription}
+>
+  <AccountView {locale} {t} />
+</Base>

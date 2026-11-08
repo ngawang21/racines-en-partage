@@ -37,6 +37,8 @@ const KNOWN_CODES = [
   'ORDER_NOT_FOUND',
   'MAIL_FAILED',
   'FEATURE_DISABLED',
+  // Customer space (spec iteration 3, 8.6).
+  'UNAUTHENTICATED',
 ] as const;
 
 /** A Worker code, `NETWORK` (no response) or `UNKNOWN` (anything else, an HTML 5xx page). */
@@ -51,7 +53,8 @@ export interface ApiError {
 export interface OrderSummary {
   status: 'paid' | 'pending' | 'unpaid';
   number: string;
-  lines: Array<{ name: string; quantity: number; unitAmount: number }>;
+  /** `sku` when the API sends it (customer space orders), for "Commander à nouveau". */
+  lines: Array<{ name: string; quantity: number; unitAmount: number; sku?: string }>;
   amounts: {
     subtotal: number;
     shipping: number;
@@ -141,6 +144,7 @@ export const ERROR_KEY: Record<ApiErrorCode, string> = {
   ORDER_NOT_FOUND: 'orderNotFound',
   MAIL_FAILED: 'mailFailed',
   FEATURE_DISABLED: 'featureDisabled',
+  UNAUTHENTICATED: 'unauthenticated',
   NETWORK: 'network',
   UNKNOWN: 'generic',
 };
@@ -319,4 +323,68 @@ export function claimOrderClear(storage: StorageLike | null, sessionId: string):
     // Storage refused: clear, as before.
   }
   return true;
+}
+
+// ------------------------------------------------------------ customer space
+
+/** One order of GET /api/account/orders: a public order plus its id, date and review flag. */
+export interface AccountOrder extends OrderSummary {
+  /** Checkout Session id, for POST /api/account/review-token. */
+  id: string;
+  /** Order day, "YYYY-MM-DD" (UTC), or '' when the API sent no date. */
+  day: string;
+  reviewable: boolean;
+  /** Older orders come without their lines (the API attaches them to the 20 most recent). */
+  linesOmitted: boolean;
+}
+
+/** "YYYY-MM-DD" from unix seconds, milliseconds or an ISO string; '' otherwise. */
+export function orderDay(value: unknown): string {
+  let date: Date | null = null;
+  if (typeof value === 'number' && Number.isFinite(value))
+    date = new Date(value < 1e12 ? value * 1000 : value);
+  else if (typeof value === 'string' && value) date = new Date(value);
+  if (!date || Number.isNaN(date.getTime())) return '';
+  return date.toISOString().slice(0, 10);
+}
+
+/** Shape check of one order of the customer space; null drops it. */
+export function parseAccountOrder(data: unknown): AccountOrder | null {
+  const base = parseOrder(data);
+  if (!base) return null;
+  const o = data as Record<string, unknown>;
+  const id = typeof o.id === 'string' ? o.id : typeof o.sessionId === 'string' ? o.sessionId : '';
+  return {
+    ...base,
+    id,
+    day: orderDay(o.created ?? o.createdAt ?? o.date),
+    reviewable: o.reviewable === true && id !== '',
+    linesOmitted: o.linesOmitted === true,
+  };
+}
+
+export type AccountOrders =
+  { status: 'ok'; email: string; orders: AccountOrder[] } | { status: 'error'; error: ApiError };
+
+/** GET /api/account/orders with the session cookie; 401 UNAUTHENTICATED without one. */
+export async function getAccountOrders(fetchImpl: typeof fetch = fetch): Promise<AccountOrders> {
+  let response: Response;
+  try {
+    response = await fetchImpl('/api/account/orders', {
+      headers: { Accept: 'application/json' },
+      credentials: 'same-origin',
+    });
+  } catch {
+    return { status: 'error', error: { code: 'NETWORK', status: 0, skus: [] } };
+  }
+  const data: unknown = await response.json().catch(() => null);
+  if (!response.ok) return { status: 'error', error: parseApiError(response.status, data) };
+  const body = (data ?? {}) as { email?: unknown; orders?: unknown };
+  if (!Array.isArray(body.orders))
+    return { status: 'error', error: { code: 'UNKNOWN', status: response.status, skus: [] } };
+  return {
+    status: 'ok',
+    email: typeof body.email === 'string' ? body.email : '',
+    orders: body.orders.map(parseAccountOrder).filter((o): o is AccountOrder => o !== null),
+  };
 }

@@ -65,8 +65,9 @@ beforeAll(() => {
 
 describe('routes', () => {
   it('builds every route of spec section 3 in both locales', () => {
-    // 11 routes of spec section 3 plus recipes, lookup, review and newsletter (iteration 3).
-    expect(PAGES.length).toBe(2 * (15 + productSlugs.length + categorySlugs.length));
+    // 11 routes of spec section 3, plus recipes, lookup, review, newsletter,
+    // account and the business card page (iteration 3).
+    expect(PAGES.length).toBe(2 * (17 + productSlugs.length + categorySlugs.length));
     for (const p of ALL) expect(existsSync(join(dist, p.file)), p.file).toBe(true);
   });
   it('writes catalog.json, the sitemap and robots.txt', () => {

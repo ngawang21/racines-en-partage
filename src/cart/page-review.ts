@@ -17,7 +17,7 @@ import {
 import { decodeReviewToken, isExpired } from '../forms/review-token';
 import { postJson } from './api';
 import type { CartContext } from './context';
-import { readJson } from './dom';
+import { readJson, stampIds } from './dom';
 import type { ClientProduct } from '../catalog/build';
 
 interface ReviewStrings {
@@ -25,16 +25,6 @@ interface ReviewStrings {
   success: string;
   ratingRequired: string;
   textMax: number;
-}
-
-/** Template ids carry "__ID__"; each clone gets its own prefix. */
-function stampIds(root: DocumentFragment, prefix: string): void {
-  for (const el of root.querySelectorAll('*')) {
-    for (const attr of ['id', 'for', 'aria-describedby', 'aria-labelledby']) {
-      const v = el.getAttribute(attr);
-      if (v?.includes('__ID__')) el.setAttribute(attr, v.replaceAll('__ID__', prefix));
-    }
-  }
 }
 
 function bindForm(

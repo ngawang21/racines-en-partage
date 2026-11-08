@@ -480,3 +480,25 @@ test('the forms module loads on the first focus, not with the page', async ({ pa
   await form.getByLabel('Votre nom').focus();
   await expect(form).toHaveAttribute('data-enhanced', 'true');
 });
+
+test('thanks page renders a relay without address1 and prints the country', async ({ page }) => {
+  const order = {
+    ...orderFixture([{ name: 'Poudre de moringa 100 g', quantity: 1, unitAmount: 890 }]),
+    delivery: {
+      method: 'relay',
+      relay: {
+        id: 'FR-012345',
+        name: 'TABAC DE LA GARE',
+        postcode: '95400',
+        city: 'ARNOUVILLE',
+        country: 'FR',
+      },
+    },
+  };
+  await page.route('**/api/orders/cs_test_123', (route) => json(route, 200, order));
+  await page.goto('/merci/?session_id=cs_test_123');
+  await expect(page.locator('[data-thanks-order]')).toBeVisible();
+  await expect(page.locator('[data-thanks-relay-address]')).toHaveText(/95400 Arnouville\s*France/);
+  await expect(page.locator('[data-thanks-loading]')).toBeEmpty();
+  await expect(page.locator('[data-thanks-lead]')).toContainText('paiement');
+});

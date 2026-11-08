@@ -29,6 +29,10 @@
 /site.webmanifest
   Content-Type: application/manifest+json; charset=utf-8
 
+# Contact card offered on /carte/ (written by pnpm card).
+/racines-en-partage.vcf
+  Content-Type: text/vcard; charset=utf-8
+
 # checkout and admin route blocks are appended by other workers
 
 # checkout routes (wave 2B)

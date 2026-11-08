@@ -9,8 +9,9 @@ import { itemCount, type CartState } from './store';
 import { takeUrlToken } from './url-token';
 
 /** The forms src/forms/forms.ts enhances (the lookup and review pages load their own). */
-const ENHANCED_FORMS =
-  'form[data-form="contact"], form[data-form="newsletter"], form[data-form="stock_alert"]';
+const ENHANCED_FORMS = ['contact', 'newsletter', 'stock_alert', 'account_login']
+  .map((kind) => `form[data-form="${kind}"]`)
+  .join(', ');
 
 /**
  * The forms module loads on the first focus inside one of those forms (or a
@@ -98,7 +99,9 @@ function syncStepButtons(input: HTMLInputElement, max: number): void {
 
 function init(): void {
   // Bearer tokens leave the address bar before any other script reads it.
-  const bearerPage = document.querySelector('[data-review-page], [data-newsletter-landing]');
+  const bearerPage = document.querySelector(
+    '[data-review-page], [data-newsletter-landing], [data-account]',
+  );
   const status = new URLSearchParams(window.location.search).get('status');
   const token = bearerPage ? takeUrlToken('t') : null;
 
@@ -110,6 +113,7 @@ function init(): void {
   if (!ctx) return;
   const { store } = ctx;
   const drawer: Drawer | null = createDrawer(ctx);
+  ctx.openDrawer = (opener) => drawer?.open(opener);
 
   // A paused shop keeps products visible but no button may add them.
   if (!ctx.shopOpen)
@@ -207,6 +211,8 @@ function init(): void {
     void import('./page-lookup').then((m) => m.initLookup(ctx));
   if (document.querySelector('[data-review-page]'))
     void import('./page-review').then((m) => m.initReview(ctx, token));
+  if (document.querySelector('[data-account]'))
+    void import('./page-account').then((m) => m.initAccount(ctx, token));
 }
 
 init();

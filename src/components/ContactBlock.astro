@@ -5,7 +5,8 @@
 import type { Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
 import type { ContactPage, Settings } from '../content/schemas';
-import { formatPhone, phoneE164 } from '../i18n/format';
+import { addressLines, displayPhone } from '../cart/address';
+import { phoneE164 } from '../i18n/format';
 import Icon from './Icon.astro';
 import ContactForm from './forms/ContactForm.astro';
 
@@ -19,10 +20,9 @@ const { page, settings, t, locale } = Astro.props;
 const { brand } = settings;
 // Break the address before the "@" on narrow screens, never inside a word.
 const [emailUser, emailHost] = brand.email.split('@');
-const street = brand.address.street;
-const city = `${brand.address.postcode} ${brand.address.city}`;
+const [street, city, country] = addressLines(brand.address, locale);
 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-  `${brand.name}, ${street}, ${city}, France`,
+  `${brand.name}, ${street}, ${city}, ${country}`,
 )}`;
 ---
 
@@ -35,7 +35,9 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
       <div class="card">
         <dt><Icon name="phone" size={20} />{t.footer.phone}</dt>
         <dd>
-          <a class="big" href={`tel:${phoneE164(brand.phone)}`}>{formatPhone(brand.phone)}</a>
+          <a class="big" href={`tel:${phoneE164(brand.phone)}`}
+            >{displayPhone(brand.phone, locale)}</a
+          >
         </dd>
       </div>
       <div class="card">
@@ -57,7 +59,7 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
         <dt><Icon name="pin" size={20} />{t.footer.address}</dt>
         <dd>
           <address>
-            {brand.name}<br />{street}<br />{city}
+            {brand.name}<br />{street}<br />{city}<br />{country}
           </address>
           <a class="link-arrow" href={mapsUrl} rel="noopener" target="_blank">
             {page.mapsLabel}

@@ -22,6 +22,8 @@ export interface CartContext {
   announce(message: string): void;
   /** "1 article", "3 articles". */
   itemsLabel(count: number): string;
+  /** Opens the cart drawer (set by ui.ts once the drawer exists; a no-op before). */
+  openDrawer(opener?: HTMLElement | null): void;
 }
 
 function localStorageOrNull(): Storage | null {
@@ -77,6 +79,7 @@ export function getContext(): CartContext | null {
     fmt: interpolate,
     path: (key) => routePath(key, locale),
     announce,
+    openDrawer: () => {},
     itemsLabel: (count) =>
       // French uses the singular for 0 and 1, English for 1 only.
       interpolate(
