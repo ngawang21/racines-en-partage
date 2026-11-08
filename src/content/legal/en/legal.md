@@ -1,14 +1,14 @@
 ---
 title: Legal notice
 description: Legal notice of racinesenpartage.fr, publisher, host and intellectual property.
-updated: '2026-11-01'
+updated: '2026-11-08'
 ---
 
 This English version is provided for convenience; the French version is the binding one.
 
 ## Publisher
 
-The website racinesenpartage.fr is published by {company}, SIREN {siren}, registered at {address}.
+The website racinesenpartage.fr is published by {company}, SIREN {siren}, SIRET {siret}, registered at {address}.
 
 - Phone: {phone}
 - E-mail: {email}

@@ -8,6 +8,11 @@ la suite. Vous m'avez demandé un site où l'on voit vos produits, où l'on
 paie, et où l'on choisit la livraison Mondial Relay. C'est exactement le
 cœur de ce que j'ai construit.
 
+Mise à jour du 8 novembre : merci pour votre fiche produits, vos prix, votre
+SIRET et votre nouvelle adresse Gmail. Tout est maintenant sur le site. Vous
+trouverez plus bas la réponse à votre question sur Hello Bank, les
+nouveautés, et la liste (plus courte) de ce qu'il me manque.
+
 ## 1. Ce que contient votre site
 
 **Les pages**
@@ -15,8 +20,9 @@ cœur de ce que j'ai construit.
 - Une page d'accueil chaleureuse, dans les couleurs de vos sachets (kraft,
   crème, vert profond, rouge hibiscus), avec vos photos et votre devise
   « Deux terres. Un rituel. Un bien-être à partager. »
-- La boutique, avec vos 10 produits rangés en quatre familles : poudres,
-  tisanes, graines et tubercules, cacao.
+- La boutique, avec vos 11 produits rangés en quatre familles : poudres,
+  tisanes, graines et tubercules, cacao. La poudre de baobab existe
+  maintenant en 100 g et en 200 g, comme le moringa.
 - Une page par produit : photos, prix, origine, ingrédients, conseils
   d'utilisation, petite recette, conservation, valeurs nutritionnelles quand
   elles sont confirmées.
@@ -57,6 +63,42 @@ texte, vous indiquez qu'un produit est épuisé, vous enregistrez : le site
 est à jour environ 2 minutes plus tard. Un guide pas à pas vous
 accompagne.
 
+**Les nouveautés de novembre**
+
+J'ai regardé les sites que vous aimez (Kasana, l'Herboristerie du Valmont,
+Thés et Traditions) et j'ai ajouté ce qui fait une vraie boutique :
+
+- **Des avis clients vérifiés, que vous validez.** Une semaine après sa
+  commande, la cliente reçoit un e-mail qui l'invite à donner son avis sur
+  chaque produit. Rien n'est publié sans vous : vous lisez l'avis dans
+  l'administration, vous cochez « Publié », et il apparaît sur la fiche
+  produit avec la mention « Achat vérifié ». Vous pouvez aussi répondre.
+- **Une lettre d'information avec double confirmation.** Un petit champ en
+  bas de chaque page : la personne laisse son e-mail, reçoit un e-mail de
+  confirmation, et n'est inscrite qu'après avoir cliqué. Vous écrivez vos
+  messages dans Resend, qui ajoute lui-même le lien de désinscription.
+- **Retrouver ma commande.** Avec son numéro de commande et son e-mail, la
+  cliente retrouve le détail de sa commande, sans créer de compte.
+- **Un formulaire de contact.** Les messages arrivent dans votre boîte
+  Gmail ; vous répondez simplement à l'e-mail.
+- **L'alerte retour en stock.** Quand un produit est épuisé, la cliente
+  laisse son e-mail et vous recevez sa demande ; vous la prévenez quand le
+  produit revient.
+- **Une recherche.** Une loupe en haut de chaque page. Elle connaît aussi
+  les autres noms de vos produits : bissap, foléré, zobo, karkadé, tchongon,
+  chufa, amande de terre, tsampa, ispaghul, pain de singe.
+- **Une page Recettes**, qui rassemble toutes les petites recettes des
+  fiches produits.
+- **Le prix au kilo** à côté de chaque prix, comme la loi le demande
+  (« 60,00 €/kg » pour le moringa 100 g).
+- **Les formats** : sur la fiche du moringa et du baobab, deux boutons
+  « 100 g » et « 200 g » pour passer d'un format à l'autre, et le prix au
+  kilo montre l'économie du grand format.
+
+Votre promesse « 100 % végétal, sans additif ni conservateur » est en tête
+du bandeau de la page d'accueil, sur chaque fiche produit et dans « Notre
+histoire ».
+
 **Être trouvée sur Google**
 
 Chaque page est préparée pour les moteurs de recherche (titres,
@@ -77,7 +119,7 @@ sur Google Maps (fiche d'établissement à Arnouville).
 5. Elle revient sur votre site, sur une page de remerciement avec son
    numéro de commande. Elle reçoit un e-mail de confirmation.
 6. Vous recevez au même moment un e-mail « Nouvelle commande » dans votre
-   boîte Outlook : les produits, le montant, le nom, le téléphone, et le
+   boîte Gmail : les produits, le montant, le nom, le téléphone, et le
    Point Relais choisi (nom, adresse, numéro).
 7. Vous préparez le colis. Dans votre espace Mondial Relay, vous créez
    l'étiquette avec les informations de l'e-mail, vous l'imprimez et vous
@@ -90,55 +132,95 @@ liste de toutes vos commandes est dans Stripe, sur ordinateur ou dans
 l'application Stripe sur téléphone. C'est aussi là que vous faites un
 remboursement ou que vous créez un code promo.
 
-## 3. Ce que ça coûte
+Si une cliente a perdu son e-mail de confirmation, elle retrouve sa commande
+sur la page « Suivre ma commande », avec son numéro de commande et son
+e-mail.
+
+## 3. Votre banque Hello Bank
+
+Vous m'avez demandé : « Est-ce possible de relier ma banque Hello Bank à ce
+site ? ». Oui, et il n'y a rien à construire. Le site n'encaisse pas
+l'argent lui-même : c'est Stripe qui reçoit les paiements, puis les verse
+sur votre compte bancaire. Stripe accepte n'importe quel compte bancaire
+français, Hello Bank compris.
+
+- Dans votre tableau de bord Stripe, allez dans **Paramètres**, puis
+  **Comptes bancaires et devises**, et saisissez l'IBAN de votre compte
+  Hello Bank (il est dans votre application Hello Bank, rubrique RIB).
+- Les virements sont **automatiques** : Stripe vous verse les ventes
+  chaque jour ou chaque semaine, selon le rythme que vous choisissez dans
+  ce même écran.
+- Le **premier virement** arrive environ **7 jours** après votre premier
+  paiement encaissé (c'est le délai habituel de Stripe pour un nouveau
+  compte), puis le rythme normal prend le relais.
+- Stripe retire ses frais avant le virement : **1,5 % + 0,25 €** par
+  paiement par carte européenne (à vérifier sur stripe.com/fr/pricing).
+  Pour une commande de 30 €, vous recevez environ 29,30 €.
+
+## 4. Ce que ça coûte
 
 Pas d'abonnement, pas de frais mensuels pour le site.
 
-| Poste                              | Coût                                           | Remarque                                                                                 |
-| ---------------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Nom de domaine racinesenpartage.fr | Environ 8 € par an                             | Chez OVHcloud, à votre nom                                                               |
-| Hébergement du site                | 0 €                                            | Cloudflare, gratuit à votre échelle                                                      |
-| Administration du site             | 0 €                                            | Outil libre et gratuit                                                                   |
-| E-mails de commande                | 0 €                                            | Jusqu'à 3 000 e-mails par mois                                                           |
-| Paiement par carte                 | 1,5 % + 0,25 € par paiement (carte européenne) | Stripe, à vérifier sur stripe.com/fr/pricing. Exemple : 0,70 € pour une commande de 30 € |
-| Étiquette Mondial Relay            | À partir de 3,09 € HT environ par colis        | Compte prépayé, à vérifier à l'ouverture                                                 |
-| Étiquette Colissimo                | Selon le poids                                 | La Poste, à vérifier                                                                     |
-| Médiateur de la consommation       | Selon le médiateur choisi                      | Obligatoire, voir plus bas                                                               |
+| Poste                                | Coût                                           | Remarque                                                                                 |
+| ------------------------------------ | ---------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Nom de domaine racinesenpartage.fr   | Environ 8 € par an                             | Chez OVHcloud, à votre nom                                                               |
+| Hébergement du site                  | 0 €                                            | Cloudflare, gratuit à votre échelle                                                      |
+| Administration du site               | 0 €                                            | Outil libre et gratuit                                                                   |
+| E-mails de commande                  | 0 €                                            | Jusqu'à 3 000 e-mails par mois                                                           |
+| Lettre d'information                 | 0 €                                            | Resend, offre gratuite (nombre d'abonnés et d'envois à vérifier)                         |
+| Protection anti-robots, statistiques | 0 €                                            | Cloudflare Turnstile et Web Analytics, gratuits                                          |
+| Paiement par carte                   | 1,5 % + 0,25 € par paiement (carte européenne) | Stripe, à vérifier sur stripe.com/fr/pricing. Exemple : 0,70 € pour une commande de 30 € |
+| Étiquette Mondial Relay              | À partir de 3,09 € HT environ par colis        | Compte prépayé, à vérifier à l'ouverture                                                 |
+| Étiquette Colissimo                  | Selon le poids                                 | La Poste, à vérifier                                                                     |
+| Médiateur de la consommation         | Selon le médiateur choisi                      | Obligatoire, voir plus bas                                                               |
 
 Les frais de port payés par vos clients (4,90 € ou 6,90 €) couvrent tout ou
 partie de l'étiquette.
 
-## 4. Ce dont j'ai besoin de vous
+## 5. Ce dont j'ai besoin de vous
 
-| #   | Quoi                                                                                                                                                                             | Pourquoi                                                                                                                                                                       |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | Votre numéro SIREN, votre statut (micro-entreprise ou autre) et votre situation TVA : franchise (« TVA non applicable, art. 293 B du CGI ») ou TVA facturée                      | Obligatoire dans les mentions légales et les CGV. Le site ne peut pas ouvrir sans ces informations                                                                             |
-| 2   | Les prix définitifs des 10 produits (tableau ci-dessous)                                                                                                                         | Les prix actuels sont provisoires                                                                                                                                              |
-| 3   | L'origine des tubercules de souchet et des fleurs d'hibiscus                                                                                                                     | Elle n'est pas indiquée sur les étiquettes                                                                                                                                     |
-| 4   | Les corrections de trois étiquettes (voir ci-dessous)                                                                                                                            | Pour que le site et les sachets disent la même chose, et la vérité                                                                                                             |
-| 5   | Votre compte Stripe, ouvert par vous (pièce d'identité, informations de l'entreprise, RIB), puis une invitation pour moi avec le rôle « Developer »                              | Stripe exige que la titulaire ouvre elle-même le compte                                                                                                                        |
-| 6   | Votre compte Mondial Relay « Offre Start » (sans engagement, sans abonnement, compte prépayé) et le code client qu'il vous donne                                                 | Ce code fait fonctionner la carte des Points Relais sur votre site                                                                                                             |
-| 7   | Votre accord sur le nom de domaine racinesenpartage.fr (aussi possibles : racines-en-partage.fr et .com)                                                                         | Libre le 1er novembre 2026, à réserver vite                                                                                                                                    |
-| 8   | L'adresse de votre compte Instagram                                                                                                                                              | Lien sur le site, et lien du site dans votre bio                                                                                                                               |
-| 9   | Votre texte « Notre histoire » et, si vous le souhaitez, une photo de vous                                                                                                       | J'ai préparé une première version à relire et corriger                                                                                                                         |
-| 10  | Le choix d'un médiateur de la consommation                                                                                                                                       | Obligatoire pour toute boutique qui vend aux particuliers. La liste officielle est publiée par la CECMC (sur economie.gouv.fr). Certains demandent une cotisation : à comparer |
-| 11  | La relecture et la validation des CGV                                                                                                                                            | Elles engagent votre entreprise                                                                                                                                                |
-| 12  | Une confirmation : vos produits ont-ils été déclarés à la DGCCRF comme compléments alimentaires (procédure en ligne « Téléicare »), ou sont-ils vendus comme aliments courants ? | La réponse change les mentions obligatoires. Votre fournisseur ou l'ESAT peut le savoir. Procédure à vérifier                                                                  |
+Merci : votre SIRET, vos prix, vos origines et votre adresse Gmail sont
+réglés. Voici ce qu'il reste.
 
-**Prix provisoires à confirmer**
+| #   | Quoi                                                                                                                                                                                                                          | Pourquoi                                                                                                                                                                       |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Votre statut (micro-entreprise ou autre) et votre situation TVA : franchise (« TVA non applicable, art. 293 B du CGI ») ou TVA facturée                                                                                       | Obligatoire dans les mentions légales et les CGV                                                                                                                               |
+| 2   | Le prix de la poudre de cacao et celui des grués de cacao                                                                                                                                                                     | Ce sont les deux seuls prix qui manquent sur votre fiche. Le site ne peut pas ouvrir avec des prix provisoires                                                                 |
+| 3   | Une photo du sachet de poudre de baobab 200 g                                                                                                                                                                                 | En attendant, la fiche montre la photo du sachet de 100 g                                                                                                                      |
+| 4   | Les corrections de trois étiquettes (voir ci-dessous)                                                                                                                                                                         | Pour que le site et les sachets disent la même chose, et la vérité                                                                                                             |
+| 5   | Votre compte Stripe, ouvert par vous (pièce d'identité, informations de l'entreprise, IBAN Hello Bank), puis une invitation pour moi avec le rôle « Developer »                                                               | Stripe exige que la titulaire ouvre elle-même le compte                                                                                                                        |
+| 6   | Votre compte Mondial Relay « Offre Start » (sans engagement, sans abonnement, compte prépayé) et le code client qu'il vous donne                                                                                              | Ce code fait fonctionner la carte des Points Relais sur votre site                                                                                                             |
+| 7   | Un widget Cloudflare Turnstile, gratuit : dans votre compte Cloudflare, rubrique Turnstile, « Ajouter un widget » pour racinesenpartage.fr, puis envoyez-moi la « clé de site » (la clé secrète, nous la saisissons ensemble) | Il protège le formulaire de contact, la lettre d'information et l'alerte de stock contre les robots, sans bandeau ni case à cocher pour vos clients                            |
+| 8   | Une audience Resend : dans Resend, rubrique Audiences, créez une audience « Lettre d'information » et envoyez-moi son identifiant (le nom de la rubrique peut changer, je vous guide)                                         | C'est la liste de vos abonnés à la lettre d'information                                                                                                                        |
+| 9   | Votre accord sur le nom de domaine racinesenpartage.fr (aussi possibles : racines-en-partage.fr et .com)                                                                                                                      | Libre le 1er novembre 2026, à réserver vite                                                                                                                                    |
+| 10  | L'adresse de votre compte Instagram                                                                                                                                                                                           | Lien sur le site, et lien du site dans votre bio                                                                                                                               |
+| 11  | Votre texte « Notre histoire » et, si vous le souhaitez, une photo de vous                                                                                                                                                    | J'ai préparé une première version à relire et corriger                                                                                                                         |
+| 12  | Le choix d'un médiateur de la consommation                                                                                                                                                                                    | Obligatoire pour toute boutique qui vend aux particuliers. La liste officielle est publiée par la CECMC (sur economie.gouv.fr). Certains demandent une cotisation : à comparer |
+| 13  | La relecture et la validation des CGV et de la politique de confidentialité (qui parle maintenant des avis et de la lettre d'information)                                                                                     | Elles engagent votre entreprise                                                                                                                                                |
+| 14  | Une confirmation : vos produits ont-ils été déclarés à la DGCCRF comme compléments alimentaires (procédure en ligne « Téléicare »), ou sont-ils vendus comme aliments courants ?                                              | La réponse change les mentions obligatoires. Votre fournisseur ou l'ESAT peut le savoir. Procédure à vérifier                                                                  |
 
-| Produit                          | Prix provisoire |
-| -------------------------------- | --------------- |
-| Poudre de moringa 100 g          | 8,90 €          |
-| Poudre de moringa 200 g          | 15,90 €         |
-| Poudre de baobab 100 g           | 7,90 €          |
-| Poudre de souchet 100 g          | 6,90 €          |
-| Tubercules de souchet 200 g      | 7,90 €          |
-| Poudre d'orge grillée 100 g      | 5,90 €          |
-| Fleurs d'hibiscus (bissap) 100 g | 6,50 €          |
-| Téguments de psyllium 200 g      | 9,90 €          |
-| Poudre de cacao 100 g            | 6,90 €          |
-| Grués de cacao 100 g             | 7,90 €          |
+Le jeton GitHub qui permet au site d'enregistrer les avis de vos clientes,
+c'est moi qui m'en occupe : vous n'avez rien à créer.
+
+**Vos prix**
+
+| Produit                          | Prix                            |
+| -------------------------------- | ------------------------------- |
+| Fleurs d'hibiscus (bissap) 100 g | 4,00 €                          |
+| Poudre de moringa 100 g          | 6,00 €                          |
+| Poudre de moringa 200 g          | 11,00 €                         |
+| Poudre de baobab 100 g           | 6,00 €                          |
+| Poudre de baobab 200 g (nouveau) | 12,00 €                         |
+| Poudre d'orge grillée 100 g      | 5,00 €                          |
+| Téguments de psyllium 200 g      | 7,00 €                          |
+| Poudre de souchet 100 g          | 5,00 €                          |
+| Tubercules de souchet 200 g      | 7,00 €                          |
+| Poudre de cacao 100 g            | 6,90 €, provisoire, à confirmer |
+| Grués de cacao 100 g             | 7,90 €, provisoire, à confirmer |
+
+Le site affiche aussi le prix au kilo : 60,00 €/kg pour le moringa 100 g,
+55,00 €/kg pour le 200 g. Dès que j'ai vos deux prix de cacao, je les
+saisis et la boutique peut ouvrir.
 
 **Les trois étiquettes à vérifier avec votre fournisseur**
 
@@ -157,15 +239,67 @@ partie de l'étiquette.
   le tableau du moringa en attendant votre confirmation.
 
 Les « bienfaits » écrits sur les étiquettes sont encadrés par le règlement
-européen sur les allégations nutritionnelles et de santé. Certaines phrases
-ne sont pas autorisées en l'état (« favorise le transit », « aide à la
-digestion », « contribue à maintenir un taux de cholestérol normal » sur le
-psyllium, « antioxydant », « bonne hydratation », « bonne énergie », indice
-glycémique). Je les ai retirées du site et j'ai gardé ce qui est factuel :
-le goût, l'usage, « riche en fibres » quand le tableau le confirme. Nous en
-parlons de vive voix ; à terme, les étiquettes devront suivre.
+européen sur les allégations nutritionnelles et de santé (règlement
+1924/2006). Certaines phrases ne sont pas autorisées en l'état (« favorise
+le transit », « aide à la digestion », « contribue à maintenir un taux de
+cholestérol normal » sur le psyllium, « antioxydant », « bonne
+hydratation », « bonne énergie », indice glycémique). Je les ai retirées du
+site et j'ai gardé ce qui est factuel : le goût, l'usage, « source de
+protéines végétales » et « riche en fibres » quand le tableau nutritionnel
+affiché le confirme (moringa, orge grillée). Nous en parlons de vive voix ;
+à terme, les étiquettes devront suivre.
 
-## 5. Les prochaines étapes
+**Votre fiche produits : les phrases que je n'ai pas reprises**
+
+J'ai réécrit les descriptions avec vos mots : les noms du bissap (bissap,
+foléré, dah, wonjo, zobo, karkadé), le « pain de singe », l'amande de terre,
+la noix tigrée, le chufa et le tchongon, l'« arbre de vie », le goût
+délicatement toasté de la tsampa, l'ispaghul, votre conseil de conservation
+de l'hibiscus. Quelques phrases restent de côté, toujours pour la même
+raison : le règlement européen 1924/2006 n'autorise une allégation que si
+elle figure dans la liste officielle, et une allégation nutritionnelle
+(« riche en », « source de ») seulement si un tableau nutritionnel affiché
+la prouve.
+
+- « Contribuent au fonctionnement normal du transit intestinal »
+  (psyllium) : allégation de santé non autorisée en l'état.
+- « Fibres prébiotiques », « favoriser un environnement propice à certaines
+  bactéries du microbiote » (psyllium) : allégations de santé non
+  autorisées.
+- « Riches en fibres solubles » (psyllium), « riche en fibres » (baobab,
+  poudre de souchet) : pas de tableau nutritionnel sur ces sachets pour le
+  prouver.
+- « Riche en vitamine C » (hibiscus), « vitamine C » (baobab), « vitamine
+  E » (poudre de souchet), « riches en vitamines E et C » (tubercules),
+  « vitamines et minéraux » (moringa) : il faut une quantité chiffrée sur
+  l'étiquette ; nous n'en avons pas.
+- Les listes de minéraux (calcium, fer, magnésium, potassium, zinc,
+  phosphore, oligo-éléments) : même raison.
+- « Antioxydants naturels (polyphénols, anthocyanes) » (hibiscus),
+  « composés antioxydants, polyphénols, flavonoïdes » (baobab) : aucune
+  allégation autorisée pour ces composés.
+- « Boisson désaltérante et bénéfique pour l'organisme » (hibiscus) :
+  allégation de santé générale, interdite sans allégation autorisée qui
+  l'accompagne.
+- « Naturellement pauvre en matières grasses » (baobab) : allégation
+  nutritionnelle sans tableau pour la prouver.
+- « La forme la plus complète », « assimilation rapide par l'organisme »,
+  dose adaptée « à ses objectifs » (moringa) : allégations non autorisées,
+  et vocabulaire de complément alimentaire.
+- « Valeurs nutritionnelles indicatives » de la tsampa (350 à 370 kcal,
+  etc.) : un tableau donne des valeurs précises, pas des fourchettes ; le
+  site garde le tableau de l'étiquette.
+- « Sans lactose » (souchet) : un produit végétal n'en contient jamais ; le
+  présenter comme une particularité peut induire en erreur (règlement
+  1169/2011, article 7).
+- « Sans sucre ajouté » (grués de cacao, étiquette) : allégation
+  nutritionnelle, et le tableau des grués n'est pas encore le bon.
+
+Une petite question : le début de votre texte sur le moringa était coupé
+(« ...puis broyées »). J'ai écrit « Nos feuilles de moringa du Niger sont
+séchées puis broyées en une poudre fine ». Dites-moi si c'est juste.
+
+## 6. Les prochaines étapes
 
 Les délais sont indicatifs ; ils dépendent surtout des validations de
 Stripe et de Mondial Relay.
@@ -173,7 +307,7 @@ Stripe et de Mondial Relay.
 | Étape                                                                        | Qui                     | Délai indicatif                                                             |
 | ---------------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------- |
 | 1. Vous découvrez le site sur une adresse de test et me faites vos retours   | Vous et moi             | Semaine 1                                                                   |
-| 2. Vous m'envoyez les informations de la partie 4                            | Vous                    | Semaine 1                                                                   |
+| 2. Vous m'envoyez les informations de la partie 5                            | Vous                    | Semaine 1                                                                   |
 | 3. Nous réservons le nom de domaine ensemble, à votre nom                    | Vous et moi, 20 minutes | Semaine 1                                                                   |
 | 4. Vous ouvrez vos comptes Stripe et Mondial Relay ; je vous guide si besoin | Vous                    | Semaines 1 à 2 (validation par Stripe : souvent quelques jours, à vérifier) |
 | 5. Je branche tout et je passe des commandes de test, sans argent réel       | Moi                     | 1 à 2 jours après l'étape 4                                                 |
@@ -181,7 +315,7 @@ Stripe et de Mondial Relay.
 | 7. Ouverture de la boutique, inscription sur Google, Bing et Google Maps     | Moi, avec vous          | Semaines 2 à 3                                                              |
 | 8. Prise en main de l'administration, avec le guide                          | Vous et moi, 1 heure    | À l'ouverture                                                               |
 
-## 6. Comment on travaillera ensuite
+## 7. Comment on travaillera ensuite
 
 **Le site est à vous.** Les comptes importants (Stripe, Mondial Relay, nom
 de domaine, hébergement) sont à votre nom dès le départ. À la fin du

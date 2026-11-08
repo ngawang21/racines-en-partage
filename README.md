@@ -11,14 +11,19 @@ for delivery. The owner edits products, prices, photos, texts and stock
 herself through a git-backed CMS.
 
 - Production: https://racinesenpartage.fr
-- Design: `docs/superpowers/specs/2026-11-01-racines-en-partage-shop-design.md`
+- Design: `docs/superpowers/specs/2026-11-01-racines-en-partage-shop-design.md`,
+  iteration 3: `docs/superpowers/specs/2026-11-08-iteration-3-features-design.md`
 - Build plan and worker contracts:
   `docs/superpowers/plans/2026-11-01-racines-en-partage-implementation-plan.md`
 
 ## What the site contains
 
-- Home, shop with four categories, ten product pages, our story, FAQ,
-  contact.
+- Home, shop with four categories, eleven product pages (moringa and baobab
+  in 100 g and 200 g formats), recipes, our story, FAQ, contact with a form.
+- Customer reviews invited by e-mail a week after the order and published
+  once the owner approves them in the CMS; newsletter with double opt-in
+  (Resend); order lookup by number and e-mail; client-side search over
+  names and regional keywords; back-in-stock alert; price per kilo.
 - Cart, checkout and thank-you pages (noindex).
 - Legal notice, terms of sale and privacy policy, written in Markdown with
   placeholders filled from the shop settings.
@@ -52,7 +57,7 @@ CMS: Sveltia at `/admin/`.
 | `pnpm deploy`       | `wrangler deploy` (Workers Builds does this on push)              |
 | `pnpm og`           | regenerate the Open Graph images after a product change           |
 | `pnpm brand <png>`  | regenerate logo, medallion and icons from the owner's master logo |
-| `pnpm launch-check` | fails while the SIREN, the prices or a legal TODO is pending      |
+| `pnpm launch-check` | fails while the SIRET, the prices or a legal TODO is pending      |
 
 ## Layout
 

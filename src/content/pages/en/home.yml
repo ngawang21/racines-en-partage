@@ -17,12 +17,12 @@ hero:
     Three Racines en Partage kraft pouches, roasted barley, hibiscus and
     moringa, resting on sand among palm leaves
 reassurance:
+  - icon: leaf
+    text: 100% plant-based, no additives or preservatives
   - icon: pin
     text: Packed in France by ESAT Les Oliviers
-  - icon: leaf
-    text: No additives, no preservatives
   - icon: truck
-    text: Delivery to pickup points
+    text: Pickup point delivery, free from €49
   - icon: lock
     text: Secure payment
 featuredTitle: Our essentials
@@ -30,7 +30,7 @@ storyTitle: Two lands
 storyBody: >-
   Racines en Partage was born between two lands: West Africa, where moringa,
   bissap and tiger nut are part of everyday life, and France, where we live. We
-  choose products from Niger, Senegal, Côte d’Ivoire and India, then have them
+  choose products from Niger, Senegal, Cameroon, Côte d’Ivoire and India, then have them
   packed in the Paris region. Our philosophy: taking care of ourselves by sharing
   the taste and the know-how of our homelands.
 storyLands:

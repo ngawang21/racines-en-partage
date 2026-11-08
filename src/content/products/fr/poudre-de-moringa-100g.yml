@@ -1,7 +1,7 @@
-order: 3
+order: 4
 sku: REP-MOR-100
 category: poudres
-price: 8.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
+price: 6.00
 weightGrams: 100
 origin: Niger
 originCountryCode: NE
@@ -24,9 +24,14 @@ related: [poudre-de-moringa-200g, poudre-de-baobab-100g]
 name: Poudre de moringa
 tagline: Le vert franc des feuilles du Niger, dans une poudre fine.
 description: >-
-  Des feuilles de moringa séchées puis broyées, rien d’autre. Sa saveur
-  végétale, légèrement herbacée, se glisse dans un smoothie, un yaourt ou une
-  sauce. Le format 100 g, idéal pour faire connaissance.
+  Ajoutez une touche de moringa à vos recettes ! Nos feuilles de moringa du
+  Niger sont séchées puis broyées en une poudre fine, rien d’autre. Surnommé
+  « arbre de vie », le moringa est consommé depuis longtemps dans plusieurs
+  régions d’Afrique de l’Ouest, notamment au Niger, au Mali, en Côte d’Ivoire
+  et au Sénégal. Source de protéines végétales et riche en fibres, sa poudre à
+  la saveur légèrement herbacée se glisse dans un smoothie, un yaourt ou une
+  sauce, selon vos habitudes et vos envies. Le format 100 g, idéal pour faire
+  connaissance.
 ingredients: >-
   100 % feuilles de Moringa (Moringa oleifera) séchées et broyées. Sans
   additif. Sans colorant. Sans conservateur.
@@ -53,6 +58,12 @@ benefits:
   - Source de protéines végétales
   - Feuilles séchées et réduites en poudre, sans rien ajouter
   - Goût herbacé, entre épinard et thé vert
+keywords:
+  - arbre de vie
+  - Moringa oleifera
+  - feuilles de moringa
+  - poudre verte
+  - smoothie
 storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
 seoTitle: Poudre de moringa du Niger 100 g
 seoDescription: >-

@@ -1,7 +1,7 @@
-order: 4
+order: 5
 sku: REP-MOR-200
 category: poudres
-price: 15.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
+price: 11.00
 weightGrams: 200
 origin: Niger
 originCountryCode: NE
@@ -25,8 +25,10 @@ name: Poudre de moringa
 tagline: Le grand format pour un rituel de chaque jour.
 description: >-
   La même poudre de feuilles de moringa du Niger, en sachet de 200 g pour celles
-  et ceux qui en ont fait une habitude. Un verre d’eau le matin, un smoothie,
-  une soupe : elle trouve sa place partout.
+  et ceux qui en ont fait une habitude. Surnommé « arbre de vie », le moringa
+  est consommé depuis longtemps au Niger, au Mali, en Côte d’Ivoire et au
+  Sénégal. Source de protéines végétales et riche en fibres, sa poudre trouve sa
+  place partout : un smoothie, une soupe, une sauce, un yaourt.
 ingredients: >-
   100 % feuilles de moringa séchées, broyées. Produit fini vendu en poudre (non
   en feuilles entières). Sans additifs, sans conservateur, sans colorant, sans
@@ -39,6 +41,12 @@ benefits:
   - Source de protéines végétales
   - Feuilles séchées et réduites en poudre, sans rien ajouter
   - Format 200 g pour un usage quotidien
+keywords:
+  - arbre de vie
+  - Moringa oleifera
+  - feuilles de moringa
+  - poudre verte
+  - grand format
 storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
 seoTitle: Poudre de moringa du Niger 200 g
 seoDescription: >-

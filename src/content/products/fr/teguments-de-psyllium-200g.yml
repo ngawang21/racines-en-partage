@@ -1,7 +1,7 @@
-order: 7
+order: 8
 sku: REP-PSY-200
 category: graines
-price: 9.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
+price: 7.00
 weightGrams: 200
 origin: Inde
 originCountryCode: IN
@@ -13,21 +13,31 @@ nutritionVerified: false # no table printed on the label
 free_from: [additifs, gluten]
 related: [poudre-d-orge-grillee-100g, poudre-de-souchet-100g]
 name: Téguments de psyllium
-tagline: L’enveloppe des graines de psyllium blond, riche en fibres.
+tagline: L’enveloppe des graines de psyllium blond, aussi appelée ispaghul.
 description: >-
-  Les téguments sont la fine enveloppe des graines de psyllium. Au contact d’un
-  liquide, ils forment un gel doux et neutre en goût. On les ajoute à un grand
-  verre d’eau, à un yaourt, ou à une pâte à pain sans gluten pour la lier.
+  Les téguments de psyllium, aussi appelés ispaghul ou cosses de psyllium, sont
+  les fines enveloppes de la graine de Plantago ovata, venue d’Inde. Au contact
+  de l’eau, ils gonflent et forment un gel doux, neutre en goût. On les ajoute à
+  un grand verre d’eau, à un yaourt, ou à une pâte à pain sans gluten pour la
+  lier. Veillez à les consommer avec suffisamment d’eau et à suivre les
+  instructions figurant sur l’emballage.
 ingredients: Téguments de Psyllium 100 % naturels, sans additif, sans gluten.
 usage:
   - À incorporer dans vos boissons, préparations crues ou cuites ou recettes selon vos envies.
-  - À consommer avec une quantité suffisante d'eau.
+  - À consommer avec une quantité suffisante d’eau.
 benefits:
   - Enveloppes des graines de Plantago ovata
   - Forme un gel doux, au goût neutre
   - 100 % naturel
+keywords:
+  - ispaghul
+  - cosses de psyllium
+  - psyllium blond
+  - Plantago ovata
+  - fibres
+  - pain sans gluten
 storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
 seoTitle: Téguments de psyllium blond d’Inde 200 g
 seoDescription: >-
-  Téguments de psyllium d’Inde, 100 % naturels, sans additif. Riches en fibres
-  alimentaires, pour vos boissons, yaourts et pains maison.
+  Téguments de psyllium blond d’Inde, aussi appelés ispaghul, 100 % naturels et
+  sans additif. Pour vos boissons, yaourts et pains maison.

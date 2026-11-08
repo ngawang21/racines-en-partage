@@ -1,4 +1,4 @@
-order: 9
+order: 10
 sku: REP-CAC-G100
 category: cacao
 price: 7.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
@@ -36,9 +36,15 @@ usage:
   - À ajouter dans vos yaourts, smoothies, porridges, céréales ou desserts.
   - À utiliser en pâtisserie (cookies, muffins, gâteaux).
 benefits:
-  - Fèves de cacao concassées, sans sucre ajouté
+  - Fèves de cacao concassées, sans rien ajouter
   - Croquant et amertume franche
   - Goût intense et naturel
+keywords:
+  - nibs
+  - fèves
+  - fèves de cacao
+  - éclats de cacao
+  - grué
 storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
 seoTitle: Grués de cacao de Côte d’Ivoire 100 g
 seoDescription: >-

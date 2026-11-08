@@ -1,7 +1,7 @@
 order: 2
 sku: REP-BAO-100
 category: poudres
-price: 7.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
+price: 6.00
 weightGrams: 100
 origin: Sénégal
 originCountryCode: SN
@@ -11,14 +11,16 @@ stock: in_stock
 featured: true
 nutritionVerified: false # no table printed on the label
 free_from: [additifs, conservateurs, colorants]
-related: [fleurs-d-hibiscus-bissap-100g, poudre-de-moringa-100g]
+related: [poudre-de-baobab-200g, fleurs-d-hibiscus-bissap-100g, poudre-de-moringa-100g]
 name: Poudre de baobab
-tagline: La pulpe acidulée du fruit du baobab, du Sénégal.
+tagline: La pulpe acidulée du « pain de singe », le fruit du baobab du Sénégal.
 description: >-
-  La pulpe du fruit du baobab sèche naturellement dans sa coque. Séparée des
-  graines et des fibres, elle devient une poudre claire au goût acidulé,
-  presque d’agrume. Délicieuse dans une boisson fraîche, un porridge ou une
-  compote.
+  Notre poudre de baobab (Adansonia digitata) du Sénégal est obtenue à partir
+  de la pulpe du fruit, séchée puis broyée. Aussi appelé « pain de singe », le
+  fruit du baobab renferme une pulpe naturellement poudreuse au goût acidulé et
+  légèrement sucré, avec des notes de citron et de poire. Sans additifs ni
+  conservateurs, elle s’incorpore selon vos envies dans une boisson fraîche, un
+  porridge, une compote ou vos préparations.
 ingredients: 100 % pulpe de fruit de baobab en poudre. Sans additif. Sans colorant. Sans conservateur.
 usage:
   - À incorporer dans les boissons et jus de fruits, les smoothies, les yaourts et compotes, les céréales et porridges, les préparations et desserts.
@@ -40,8 +42,15 @@ recipe:
 benefits:
   - Pulpe du fruit du baobab, séchée et tamisée
   - Goût acidulé, légèrement sucré
+  - Sans additifs ni conservateurs
 storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
+keywords:
+  - pain de singe
+  - Adansonia digitata
+  - fruit du baobab
+  - pulpe de baobab
+  - bouye
 seoTitle: Poudre de baobab du Sénégal 100 g
 seoDescription: >-
-  Poudre de pulpe de fruit de baobab du Sénégal, sans additif ni conservateur.
-  Goût acidulé, recette de boisson fraîche incluse.
+  Poudre de pulpe de baobab, le « pain de singe », du Sénégal. Sans additif ni
+  conservateur. Goût acidulé, recette de boisson fraîche incluse.

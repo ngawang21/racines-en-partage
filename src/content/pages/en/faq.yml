@@ -31,6 +31,12 @@ items:
       Payments are handled by Stripe, a secure platform: debit or credit card (CB, Visa,
       Mastercard) and, depending on your device, Apple Pay or Google Pay. We
       never see your card details.
+  - question: How can I find my order?
+    answer: >-
+      Go to the "Track my order" page (/en/my-order/), linked at the bottom of
+      every page. Enter the order number shown in your confirmation e-mail and
+      the e-mail address you ordered with: you will see the details of your
+      order, without creating an account.
   - question: Can I return a product?
     answer: >-
       Our products are food: once a pouch is opened it cannot be taken back, for
@@ -45,11 +51,23 @@ items:
   - question: Where do your products come from?
     answer: >-
       The origin is stated on every product page: moringa and tiger nut from
-      Niger, baobab from Senegal, cacao from Côte d’Ivoire, psyllium from India,
-      roasted barley from Germany. Every pouch is packed in France by ESAT Les
+      Niger, baobab from Senegal, hibiscus from Cameroon, cacao from Côte
+      d’Ivoire, psyllium from India, roasted barley from Germany. All our
+      products are 100% plant-based, with no additive and no preservative. Every pouch is packed in France by ESAT Les
       Oliviers in Gennevilliers.
+  - question: Can I review a product?
+    answer: >-
+      With pleasure! About a week after your order, you receive an e-mail
+      inviting you to review each product you ordered. We read every review
+      before it goes online; reviews marked "Verified purchase" come from an
+      order placed on the site.
+  - question: Can I hear about your news?
+    answer: >-
+      Yes, sign up to our newsletter at the bottom of every page. You receive a
+      confirmation e-mail: your subscription is confirmed when you click the
+      link inside. Every message includes an unsubscribe link.
   - question: Do you sell to businesses?
     answer: >-
       Grocers, restaurants, works councils: write to us at
-      racinesenpartage@outlook.com or call +33 7 75 68 91 08, we will be glad to
+      racinesenpartage@gmail.com or call +33 7 75 68 91 08, we will be glad to
       answer.

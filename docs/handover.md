@@ -13,19 +13,21 @@ developer's side and are transferred at handover.
 
 ## 1. Accounts matrix
 
-| Service                                                                 | Holder                                 | From day one or transferred                           | Admin                       | Developer access during support                                    |
-| ----------------------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------- | --------------------------- | ------------------------------------------------------------------ |
-| GitHub repository `racines-en-partage`                                  | Marie, account `racinesenpartage`      | Transferred from `ngawang21` at handover              | Marie                       | Collaborator (write)                                               |
-| GitHub OAuth App (CMS sign-in)                                          | Marie, account `racinesenpartage`      | Created under her account, or transferred at handover | Marie                       | None needed                                                        |
-| Cloudflare (zone, Worker, secrets, Email Routing, Authenticator Worker) | Marie                                  | Day one                                               | Marie (super administrator) | Member, Administrator role (role names to verify)                  |
-| OVHcloud (domain `racinesenpartage.fr`)                                 | Marie's business as registrant         | Day one                                               | Marie                       | Technical contact                                                  |
-| Stripe                                                                  | Marie                                  | Day one (only she can activate it)                    | Marie (Owner)               | Developer role                                                     |
-| Mondial Relay Offre Start                                               | Marie                                  | Day one                                               | Marie                       | None                                                               |
-| Resend                                                                  | Marie (`racinesenpartage@outlook.com`) | Day one                                               | Marie                       | Team member if the free plan allows it (to verify), otherwise none |
-| Outlook `racinesenpartage@outlook.com`                                  | Marie                                  | Already hers                                          | Marie                       | None                                                               |
-| Google Search Console, Business Profile                                 | Marie                                  | Day one                                               | Marie (owner)               | User (full)                                                        |
-| Bing Webmaster Tools                                                    | Marie                                  | Day one                                               | Marie                       | User                                                               |
-| Instagram                                                               | Marie                                  | Already hers                                          | Marie                       | None                                                               |
+| Service                                                                  | Holder                               | From day one or transferred                           | Admin                       | Developer access during support                                    |
+| ------------------------------------------------------------------------ | ------------------------------------ | ----------------------------------------------------- | --------------------------- | ------------------------------------------------------------------ |
+| GitHub repository `racines-en-partage`                                   | Marie, account `racinesenpartage`    | Transferred from `ngawang21` at handover              | Marie                       | Collaborator (write)                                               |
+| GitHub OAuth App (CMS sign-in)                                           | Marie, account `racinesenpartage`    | Created under her account, or transferred at handover | Marie                       | None needed                                                        |
+| Cloudflare (zone, Worker, secrets, Email Routing, Authenticator Worker)  | Marie                                | Day one                                               | Marie (super administrator) | Member, Administrator role (role names to verify)                  |
+| OVHcloud (domain `racinesenpartage.fr`)                                  | Marie's business as registrant       | Day one                                               | Marie                       | Technical contact                                                  |
+| Stripe                                                                   | Marie                                | Day one (only she can activate it)                    | Marie (Owner)               | Developer role                                                     |
+| Mondial Relay Offre Start                                                | Marie                                | Day one                                               | Marie                       | None                                                               |
+| Resend (sending domain, API key, newsletter audience)                    | Marie (`racinesenpartage@gmail.com`) | Day one                                               | Marie                       | Team member if the free plan allows it (to verify), otherwise none |
+| Cloudflare Turnstile widget (contact, newsletter, stock alert forms)     | Marie, in her Cloudflare account     | Day one                                               | Marie                       | Through the Cloudflare membership                                  |
+| GitHub fine-grained token `GITHUB_TOKEN` (reviews written by the Worker) | Developer (`ngawang21`)              | Replaced by a token of `racinesenpartage` at handover | Developer, then Marie       | Holder during support                                              |
+| Gmail `racinesenpartage@gmail.com`                                       | Marie                                | Already hers                                          | Marie                       | None                                                               |
+| Google Search Console, Business Profile                                  | Marie                                | Day one                                               | Marie (owner)               | User (full)                                                        |
+| Bing Webmaster Tools                                                     | Marie                                | Day one                                               | Marie                       | User                                                               |
+| Instagram                                                                | Marie                                | Already hers                                          | Marie                       | None                                                               |
 
 Passwords are never shared. Each person signs in with their own account and
 the access listed above. Marie turns on two-factor authentication on GitHub,
@@ -37,7 +39,7 @@ phone.
 1. Final payment received; both parties sign the rights assignment
    (section 3).
 2. Marie creates the GitHub account `racinesenpartage` with
-   `racinesenpartage@outlook.com` and enables two-factor authentication.
+   `racinesenpartage@gmail.com` and enables two-factor authentication.
 3. Developer: repository Settings, Danger Zone, Transfer ownership, new
    owner `racinesenpartage`. The repository stays private.
 4. Marie accepts the transfer, then invites the developer back as a
@@ -53,16 +55,22 @@ phone.
    ownership to `racinesenpartage`. Or create a new one under her account and
    replace `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` in the Authenticator
    Worker.
-8. Push a trivial commit and check that the build and deploy run.
-9. Marie signs in to `/admin/` with her account, changes one product text,
-   saves, and sees it online about 2 minutes later.
-10. Check each row of the matrix: Marie is admin everywhere, auto-renewal of
+8. Reviews token: Marie (signed in as `racinesenpartage`) creates a
+   fine-grained personal access token limited to the repository
+   `racinesenpartage/racines-en-partage`, permission Contents read and write;
+   the developer stores it as the Worker secret `GITHUB_TOKEN`, updates the
+   variable `GITHUB_REPO`, then revokes the developer's own token. Send a
+   test review through an invitation link and check the commit appears.
+9. Push a trivial commit and check that the build and deploy run.
+10. Marie signs in to `/admin/` with her account, changes one product text,
+    saves, and sees it online about 2 minutes later.
+11. Check each row of the matrix: Marie is admin everywhere, auto-renewal of
     the domain is on with her payment method, Stripe payouts go to her IBAN.
-11. Developer deletes local copies of secrets (`.dev.vars`) that hold live
+12. Developer deletes local copies of secrets (`.dev.vars`) that hold live
     values.
-12. Hand over the documents: `docs/guide-proprietaire.md`,
+13. Hand over the documents: `docs/guide-proprietaire.md`,
     `docs/client/presentation.md`, this file.
-13. End of support: Marie removes the developer from GitHub, Cloudflare,
+14. End of support: Marie removes the developer from GitHub, Cloudflare,
     Stripe, Search Console and Bing, and replaces the technical contact at
     OVHcloud. Section 4 says when.
 
@@ -153,11 +161,15 @@ widget, one small change per month, a reply within two working days.
 - Follow orders, refund, create promo codes in Stripe.
 - Create Mondial Relay labels from the order e-mail.
 - Change her contact details in the CMS settings.
+- Publish or refuse customer reviews (CMS, "Avis clients"), answer them.
+- Write and send newsletters in Resend Broadcasts to the newsletter audience.
+- Answer contact form messages and back-in-stock alerts from her Gmail inbox.
 
 ### What needs a developer
 
 - A new delivery method or country, a new page type, any new feature
-  (customer accounts, stock counters, newsletter: see spec section 11).
+  (customer accounts, stock counters: see spec section 11 and the iteration 3
+  spec, section 3).
 - Wording of the order e-mails (templates live in `worker/email/`).
 - CSP changes, Stripe API or library upgrades, a broken build that is not a
   content error.
@@ -190,6 +202,7 @@ outside it is needed.
 | Colissimo labels                                | Per parcel (to verify)                                                                     | La Poste                            |
 | Consumer mediator                               | Depends on the mediator chosen (to verify)                                                 | Mediator                            |
 | Hosting, CMS, e-mail sending, e-mail forwarding | 0 EUR at her scale                                                                         | Cloudflare, GitHub, Sveltia, Resend |
+| Newsletter audience, Turnstile, Web Analytics   | 0 EUR at her scale (Resend free plan contact and sending limits to verify)                 | Resend, Cloudflare                  |
 
 No monthly software fee. Shipping costs are charged to customers (4.90 EUR
 relay, 6.90 EUR home, editable in the CMS).

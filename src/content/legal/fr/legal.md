@@ -1,12 +1,12 @@
 ---
 title: Mentions légales
 description: Mentions légales du site racinesenpartage.fr, éditeur, hébergeur et propriété intellectuelle.
-updated: '2026-11-01'
+updated: '2026-11-08'
 ---
 
 ## Éditeur du site
 
-Le site racinesenpartage.fr est édité par {company}, SIREN {siren}, dont le siège est situé au {address}.
+Le site racinesenpartage.fr est édité par {company}, SIREN {siren}, SIRET {siret}, dont le siège est situé au {address}.
 
 - Téléphone : {phone}
 - E-mail : {email}

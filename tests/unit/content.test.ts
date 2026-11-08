@@ -63,6 +63,19 @@ describe('settings', () => {
     expect(settings.launch.pricesConfirmed).toBe(false);
     expect(settings.brand.siret).toBe('911 858 843 00020');
   });
+  it('carries a SIRET with a valid Luhn checksum (the launch check runs the same test)', () => {
+    const luhn = (digits: string) =>
+      [...digits].reverse().reduce((sum, c, i) => {
+        const d = Number(c) * (i % 2 === 1 ? 2 : 1);
+        return sum + (d > 9 ? d - 9 : d);
+      }, 0) %
+        10 ===
+      0;
+    const siret = settings.brand.siret.replace(/\s/g, '');
+    expect(siret).toMatch(/^\d{14}$/);
+    expect(luhn(siret)).toBe(true);
+    expect(luhn('91185884300021')).toBe(false);
+  });
   it('rejects a malformed SIREN, phone or duplicate method', () => {
     const raw = readYaml(join(CONTENT, 'settings/shop.yml')) as any;
     expect(() =>
@@ -83,7 +96,7 @@ describe('settings', () => {
 
 describe('product schema', () => {
   it('every French file is valid and has an English twin', () => {
-    expect(frProducts.size).toBe(10);
+    expect(frProducts.size).toBe(11);
     for (const [slug, raw] of frProducts)
       expect(() => productSchema.parse(raw), slug).not.toThrow();
     expect([...enProducts.keys()]).toEqual([...frProducts.keys()]);
@@ -138,21 +151,113 @@ describe('catalogue cross checks', () => {
   });
 });
 
-describe('seed catalogue (spec appendix A)', () => {
-  it('carries the ten SKUs, prices and weights', () => {
+describe('seed catalogue (spec appendix A, owner sheet of 2026-11-08)', () => {
+  it('carries the eleven SKUs, the owner prices and the weights', () => {
     const rows = Object.fromEntries(productsFr.map((p) => [p.sku, [p.price, p.weightGrams]]));
     expect(rows).toEqual({
-      'REP-MOR-100': [8.9, 100],
-      'REP-MOR-200': [15.9, 200],
-      'REP-BAO-100': [7.9, 100],
-      'REP-SOU-P100': [6.9, 100],
-      'REP-SOU-T200': [7.9, 200],
-      'REP-ORG-100': [5.9, 100],
-      'REP-HIB-100': [6.5, 100],
-      'REP-PSY-200': [9.9, 200],
+      'REP-MOR-100': [6, 100],
+      'REP-MOR-200': [11, 200],
+      'REP-BAO-100': [6, 100],
+      'REP-BAO-200': [12, 200],
+      'REP-SOU-P100': [5, 100],
+      'REP-SOU-T200': [7, 200],
+      'REP-ORG-100': [5, 100],
+      'REP-HIB-100': [4, 100],
+      'REP-PSY-200': [7, 200],
+      // Placeholders: the owner's sheet has no cacao prices yet.
       'REP-CAC-P100': [6.9, 100],
       'REP-CAC-G100': [7.9, 100],
     });
+  });
+  it('keeps the placeholder comment on the two cacao prices only', () => {
+    const placeholder = /^price: .*# placeholder/m;
+    for (const slug of frProducts.keys()) {
+      const src = readFileSync(join(CONTENT, 'products/fr', `${slug}.yml`), 'utf8');
+      expect(placeholder.test(src), slug).toBe(slug.includes('cacao'));
+      expect(src, slug).not.toMatch(/owner to confirm/);
+    }
+  });
+  it('carries the owner origins', () => {
+    expect(bySlug.get('fleurs-d-hibiscus-bissap-100g')).toMatchObject({
+      origin: 'Cameroun',
+      originCountryCode: 'CM',
+    });
+    expect(bySlug.get('tubercules-de-souchet-200g')).toMatchObject({
+      origin: 'Niger',
+      originCountryCode: 'NE',
+    });
+  });
+  it('adds the baobab 200 g format next to the 100 g one', () => {
+    const b100 = bySlug.get('poudre-de-baobab-100g')!;
+    const b200 = bySlug.get('poudre-de-baobab-200g')!;
+    expect(b200).toMatchObject({
+      sku: 'REP-BAO-200',
+      price: 12,
+      weightGrams: 200,
+      category: b100.category,
+      name: b100.name,
+      featured: false,
+      images: ['/src/assets/products/baobab-200.webp'],
+    });
+    expect(b200.order).toBe(b100.order! + 1);
+    expect(b200.related).toEqual(['poudre-de-baobab-100g', 'poudre-de-moringa-200g']);
+    expect(enProducts.has('poudre-de-baobab-200g')).toBe(true);
+  });
+  it('gives every product search keywords in both languages', () => {
+    for (const locale of [productsFr, productsEn]) {
+      for (const p of locale) {
+        expect(p.keywords.length, p.slug).toBeGreaterThan(0);
+        expect(
+          p.keywords.every((k) => k.trim() !== ''),
+          p.slug,
+        ).toBe(true);
+      }
+    }
+    for (const [slug, raw] of enProducts)
+      expect((raw as { keywords?: string[] }).keywords?.length, slug).toBeGreaterThan(0);
+    const kw = (slug: string) => bySlug.get(slug)!.keywords;
+    expect(kw('fleurs-d-hibiscus-bissap-100g')).toEqual(
+      expect.arrayContaining(['bissap', 'foléré', 'dah', 'wonjo', 'zobo', 'karkadé']),
+    );
+    expect(kw('tubercules-de-souchet-200g')).toEqual(
+      expect.arrayContaining(['tchongon', 'chufa', 'amande de terre', 'noix tigrée', 'horchata']),
+    );
+    expect(kw('poudre-d-orge-grillee-100g')).toContain('tsampa');
+    expect(kw('teguments-de-psyllium-200g')).toContain('ispaghul');
+    expect(kw('poudre-de-baobab-100g')).toContain('pain de singe');
+    expect(kw('grues-de-cacao-100g')).toContain('nibs');
+  });
+  it('prints no health or nutrition claim the displayed tables do not support', () => {
+    const forbidden = [
+      /transit/i,
+      /vitamine/i,
+      /vitamin/i,
+      /antioxyd/i,
+      /antioxid/i,
+      /polyph[ée]nol/i,
+      /microbiot/i,
+      /pr[ée]biotique/i,
+      /prebiotic/i,
+      /assimilation/i,
+      /b[ée]n[ée]fique/i,
+      /d[ée]salt[ée]rant/i,
+      /min[ée]ra(l|ux)/i,
+      /sans sucre ajout/i,
+      /no added sugar/i,
+    ];
+    const rich = /riche en fibres|rich in fibre|source de protéines|source of plant protein/i;
+    for (const p of [...productsFr, ...productsEn]) {
+      const { nutrition: _n, ...rest } = p;
+      const printed = JSON.stringify(rest);
+      for (const re of forbidden) expect(printed, `${p.slug}: ${re}`).not.toMatch(re);
+      if (rich.test(printed)) {
+        expect(p.nutritionVerified, p.slug).toBe(true);
+        expect(
+          Number.parseFloat(p.nutrition!.fibre.replace(',', '.')),
+          p.slug,
+        ).toBeGreaterThanOrEqual(6);
+      }
+    }
   });
   it('features moringa 100 g, baobab, souchet tubercules and hibiscus', () => {
     expect(
@@ -172,6 +277,7 @@ describe('seed catalogue (spec appendix A)', () => {
     expect(unverified.sort()).toEqual([
       'grues-de-cacao-100g',
       'poudre-de-baobab-100g',
+      'poudre-de-baobab-200g',
       'poudre-de-souchet-100g',
       'teguments-de-psyllium-200g',
       'tubercules-de-souchet-200g',
@@ -180,6 +286,7 @@ describe('seed catalogue (spec appendix A)', () => {
   it('pairs the related products both ways', () => {
     const pairs = [
       ['poudre-de-moringa-100g', 'poudre-de-moringa-200g'],
+      ['poudre-de-baobab-100g', 'poudre-de-baobab-200g'],
       ['poudre-de-cacao-100g', 'grues-de-cacao-100g'],
       ['poudre-de-souchet-100g', 'tubercules-de-souchet-200g'],
       ['fleurs-d-hibiscus-bissap-100g', 'poudre-de-baobab-100g'],
@@ -218,7 +325,7 @@ describe('merge', () => {
   it('ignores shared fields written in the English file', () => {
     const fr = frProducts.get('poudre-de-baobab-100g');
     const merged = mergeProduct('poudre-de-baobab-100g', fr, { price: 1, name: 'Baobab' });
-    expect(merged.price).toBe(7.9);
+    expect(merged.price).toBe(6);
     expect(merged.name).toBe('Baobab');
   });
   it('fills empty or missing English fields from French', () => {
@@ -373,6 +480,44 @@ describe('pages', () => {
     const home = mergePage('home', pages('fr').get('home'));
     for (const slug of home.recipeProducts) expect(bySlug.get(slug)?.recipe, slug).toBeDefined();
   });
+  it('the home reassurance strip carries the owner promise, in order', () => {
+    const items = (locale: string) =>
+      mergePage(
+        'home',
+        pages('fr').get('home'),
+        locale === 'fr' ? undefined : pages(locale).get('home'),
+      ).reassurance;
+    expect(items('fr')).toEqual([
+      { icon: 'leaf', text: '100 % végétal, sans additif ni conservateur' },
+      { icon: 'pin', text: 'Conditionné en France par l’ESAT Les Oliviers' },
+      { icon: 'truck', text: 'Livraison en Point Relais, offerte dès 49 €' },
+      { icon: 'lock', text: 'Paiement sécurisé' },
+    ]);
+    expect(items('en').map((i) => i.icon)).toEqual(['leaf', 'pin', 'truck', 'lock']);
+    expect(items('en')[0]!.text).toMatch(/100% plant-based/);
+  });
+  it('the about page states the promise and the FAQ the new services', () => {
+    const about = mergePage('about', pages('fr').get('about'));
+    expect(about.sections.map((s) => s.body).join(' ')).toContain(
+      'Tous nos produits sont 100 % végétaux, sans additif ni conservateur.',
+    );
+    const faq = (locale: string) =>
+      mergePage(
+        'faq',
+        pages('fr').get('faq'),
+        locale === 'fr' ? undefined : pages(locale).get('faq'),
+      );
+    const questions = faq('fr').items.map((i) => i.question);
+    for (const q of [
+      'Comment retrouver ma commande ?',
+      'Puis-je donner mon avis sur un produit ?',
+      'Puis-je recevoir vos nouveautés ?',
+    ])
+      expect(questions).toContain(q);
+    expect(JSON.stringify(faq('fr'))).toContain('/ma-commande/');
+    expect(JSON.stringify(faq('en'))).toContain('/en/my-order/');
+    expect(faq('en').items).toHaveLength(faq('fr').items.length);
+  });
   it('the about images exist', () => {
     for (const s of mergePage('about', pages('fr').get('about')).sections) {
       if (s.image) expect(assetExists(s.image), s.image).toBe(true);
@@ -403,8 +548,14 @@ describe('legal texts', () => {
         }
       }
     }
-    expect(read('fr', 'legal')).toContain('{siren}');
-    expect(read('fr', 'legal')).toContain('{host}');
+    for (const locale of ['fr', 'en']) {
+      expect(read(locale, 'legal')).toContain('SIREN {siren}, SIRET {siret}');
+      expect(read(locale, 'legal')).toContain('{host}');
+      for (const key of ['terms', 'privacy']) {
+        expect(read(locale, key), key).toContain('SIREN {siren}');
+        expect(read(locale, key), key).not.toContain('{siret}');
+      }
+    }
   });
   it('the CGV flag the missing mediator', () => {
     expect(read('fr', 'terms')).toContain('TODO médiateur');
@@ -487,5 +638,17 @@ describe('writing rules', () => {
     ];
     const emDash = String.fromCharCode(0x2014);
     for (const f of targets) expect(readFileSync(f, 'utf8'), f).not.toContain(emDash);
+  });
+  it('the old Outlook address is gone from the content and the owner documents', () => {
+    const targets = [
+      ...files(CONTENT, /\.(yml|md|json)$/),
+      ...[
+        'README.md',
+        'docs/client/presentation.md',
+        'docs/legal-notes.md',
+        'docs/handover.md',
+      ].map((f) => join(ROOT, f)),
+    ];
+    for (const f of targets) expect(readFileSync(f, 'utf8'), f).not.toContain('@outlook.com');
   });
 });

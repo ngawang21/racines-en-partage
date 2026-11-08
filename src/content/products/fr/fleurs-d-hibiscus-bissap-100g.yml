@@ -1,9 +1,10 @@
-order: 6
+order: 7
 sku: REP-HIB-100
 category: infusions
-price: 6.50 # placeholder, to confirm with the owner (launch.pricesConfirmed)
+price: 4.00
 weightGrams: 100
-origin: Afrique de l’Ouest # not printed on the label, owner to confirm
+origin: Cameroun
+originCountryCode: CM
 images:
   - /src/assets/products/hibiscus-100.webp
 stock: in_stock
@@ -21,11 +22,16 @@ nutrition:
 free_from: [additifs, conservateurs, colorants, gluten]
 related: [poudre-de-baobab-100g, tubercules-de-souchet-200g]
 name: Fleurs d’hibiscus (bissap)
-tagline: Les calices rouge profond du bissap, chaud ou glacé.
+tagline: Les calices rouge rubis du bissap, du Cameroun, à boire chaud ou glacé.
 description: >-
-  Les calices séchés de la fleur d’hibiscus donnent le bissap, la boisson rouge
-  rubis que l’on partage de Dakar à Abidjan. Infusées, elles offrent un goût
-  fruité et acidulé, à boire chaud en hiver ou glacé avec de la menthe en été.
+  Préparez chez vous une infusion colorée et parfumée avec nos fleurs
+  d’hibiscus (Hibiscus sabdariffa) du Cameroun, cultivées avec soin et séchées
+  délicatement pour préserver leur couleur vive, du rouge rubis au pourpre
+  sombre, et leur parfum fruité. Ce sont les calices, la partie qui protège la
+  fleur, qui donnent cette boisson connue sous bien des noms en Afrique : bissap
+  en Côte d’Ivoire et au Sénégal, foléré au Cameroun, dah en Guinée, wonjo en
+  Gambie, zobo au Nigeria ou encore karkadé en Égypte et au Soudan. Elle se
+  déguste chaude ou froide, selon vos envies.
 ingredients: 100 % fleurs d’hibiscus séchées (calices). Sans additifs, sans conservateur, sans colorant, sans gluten.
 usage:
   - À incorporer dans vos boissons, infusions, sirops, jus ou recettes selon vos envies.
@@ -41,11 +47,24 @@ recipe:
     - Filtrez et dégustez chaud ou froid.
     - Vous pouvez ajouter un peu de miel, de menthe ou de citron selon vos goûts.
 benefits:
-  - Fleurs entières séchées, sans rien d'autre
-  - Infusion rouge rubis, chaude ou glacée
-  - Goût fruité et rafraîchissant
-storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
-seoTitle: Fleurs d’hibiscus séchées pour bissap 100 g
+  - Fleurs d’hibiscus 100 % naturelles
+  - Séchage soigné pour préserver arôme et couleur
+  - Un calibre et une fraîcheur maîtrisés
+storage: >-
+  Conservez les fleurs non utilisées dans un récipient hermétique, à l’abri de
+  la lumière et de l’humidité, pour garder intactes leurs qualités aromatiques
+  et leur couleur vive.
+keywords:
+  - bissap
+  - foléré
+  - dah
+  - wonjo
+  - zobo
+  - karkadé
+  - tisane
+  - infusion
+  - Hibiscus sabdariffa
+seoTitle: Fleurs d’hibiscus séchées du Cameroun pour bissap 100 g
 seoDescription: >-
-  Calices d’hibiscus séchés pour préparer le bissap, chaud ou glacé. Sans
-  additifs ni conservateur. Recette d’infusion incluse.
+  Calices d’hibiscus séchés du Cameroun pour préparer le bissap (foléré, zobo,
+  karkadé), chaud ou glacé. Sans additifs ni conservateur. Recette incluse.

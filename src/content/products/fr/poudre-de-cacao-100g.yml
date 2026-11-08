@@ -1,4 +1,4 @@
-order: 10
+order: 11
 sku: REP-CAC-P100
 category: cacao
 price: 6.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
@@ -42,6 +42,11 @@ recipe:
     - Laissez frémir 10 minutes en remuant.
     - Dégustez bien chaud.
 benefits: []
+keywords:
+  - cacao pur
+  - cacao non sucré
+  - chocolat chaud
+  - pâtisserie
 storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
 seoTitle: Poudre de cacao pur de Côte d’Ivoire 100 g
 seoDescription: >-

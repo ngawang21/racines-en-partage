@@ -1,7 +1,7 @@
 order: 1
 sku: REP-ORG-100
 category: poudres
-price: 5.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
+price: 5.00
 weightGrams: 100
 origin: Allemagne, Sonam’Tsampa
 originCountryCode: DE
@@ -25,11 +25,15 @@ nutrition:
 free_from: [additifs, conservateurs, colorants]
 related: [teguments-de-psyllium-200g, poudre-de-moringa-200g]
 name: Poudre d’orge grillée
-tagline: La tsampa, farine d’orge grillée au parfum de pain chaud.
+tagline: La tsampa, une poudre d’orge grillée au goût délicatement toasté.
 description: >-
-  Des grains d’orge grillés puis moulus finement : une poudre au goût toasté,
-  proche du pain sortant du four. Elle se délaie dans une boisson chaude, épaissit
-  une soupe ou enrichit une pâte à crêpes.
+  Et si votre prochain coup de cœur se trouvait dans votre cuisine ? Notre
+  tsampa est une poudre d’orge grillée au goût délicatement toasté, avec une
+  texture polyvalente qui se prête à de nombreuses préparations. Source de
+  protéines végétales et riche en fibres, elle s’incorpore au petit-déjeuner,
+  dans un smoothie ou une pâte, ou sert à préparer des galettes. Elle accompagne
+  aussi le thé, le fromage blanc et le yaourt. L’orge contient du gluten :
+  déconseillée aux personnes atteintes de la maladie cœliaque.
 ingredients: 100 % orge grillée (sans additifs, sans conservateur, sans colorant).
 usage:
   - À incorporer dans vos boissons, préparations culinaires (soupes, porridges, bouillies, crêpes, etc.) ou à saupoudrer sur vos plats.
@@ -37,10 +41,18 @@ usage:
   - Dans vos yaourts, soupes ou desserts.
 benefits:
   - Riche en fibres
-  - Grains d'orge torréfiés puis moulus, sans rien ajouter
-  - Goût grillé, proche du café d'orge
+  - Grains d’orge torréfiés puis moulus, sans rien ajouter
+  - Goût grillé, proche du café d’orge
+keywords:
+  - tsampa
+  - orge
+  - farine
+  - farine d’orge
+  - orge grillée
+  - Sonam’Tsampa
 storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
 seoTitle: Poudre d’orge grillée (tsampa) 100 g
 seoDescription: >-
-  Poudre d’orge grillée Sonam’Tsampa, au goût toasté. Pour vos boissons,
-  porridges, soupes et crêpes. Sans additifs ni conservateur.
+  Tsampa, poudre d’orge grillée Sonam’Tsampa au goût délicatement toasté. Pour
+  vos petits-déjeuners, smoothies, galettes et soupes. Sans additifs ni
+  conservateur.

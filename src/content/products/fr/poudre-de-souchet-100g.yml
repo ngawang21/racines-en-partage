@@ -1,7 +1,7 @@
-order: 5
+order: 6
 sku: REP-SOU-P100
 category: poudres
-price: 6.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
+price: 5.00
 weightGrams: 100
 origin: Niger
 originCountryCode: NE
@@ -15,9 +15,12 @@ related: [tubercules-de-souchet-200g, poudre-de-cacao-100g]
 name: Poudre de souchet
 tagline: La douceur naturelle du souchet, prête à mélanger.
 description: >-
-  Le souchet est un petit tubercule au goût doux de noisette et d’amande. Broyé
-  en poudre, il se mélange aux boissons, aux pâtes à gâteaux et aux porridges,
-  et apporte une rondeur naturellement sucrée.
+  Notre poudre de souchet (Cyperus esculentus) du Niger est obtenue à partir de
+  tubercules séchés et broyés. Aussi appelé amande de terre, noix tigrée, chufa
+  en Espagne ou tchongon en Côte d’Ivoire, le souchet se distingue par sa
+  texture fine et sa saveur douce, légèrement sucrée, avec des notes de
+  noisette. À incorporer selon vos envies dans vos boissons, vos porridges, vos
+  pâtes à gâteaux et vos préparations culinaires.
 ingredients: Produit 100 % végétal, sans gluten. Poudre obtenue après broyage des tubercules de souchet.
 usage:
   - À incorporer dans vos boissons, préparations crues ou cuites ou recettes selon vos envies.
@@ -25,9 +28,16 @@ howMade: La poudre de souchet est obtenue après broyage des tubercules de souch
 benefits:
   - Sans gluten
   - Tubercules de souchet broyés, sans rien ajouter
-  - Goût doux de noisette et d'amande
+  - Goût doux de noisette et d’amande
+keywords:
+  - amande de terre
+  - noix tigrée
+  - chufa
+  - tchongon
+  - Cyperus esculentus
+  - farine de souchet
 storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
 seoTitle: Poudre de souchet du Niger 100 g
 seoDescription: >-
-  Poudre de tubercules de souchet du Niger, 100 % végétale. Goût doux de
-  noisette pour vos boissons, pâtisseries et porridges.
+  Poudre de souchet du Niger, l’amande de terre ou tchongon, 100 % végétale.
+  Goût doux de noisette pour vos boissons, pâtisseries et porridges.

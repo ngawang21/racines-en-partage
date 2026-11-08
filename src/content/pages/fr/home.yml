@@ -4,7 +4,7 @@ seoDescription: >-
   additifs, conditionnés en France par l’ESAT Les Oliviers. Livraison en Point
   Relais Mondial Relay.
 hero:
-  eyebrow: Tisanes, poudres et graines d'Afrique de l'Ouest
+  eyebrow: Tisanes, poudres et graines d’Afrique de l’Ouest
   title: Deux terres. Un rituel.
   titleAccent: Un bien-être à partager.
   lead: >-
@@ -18,12 +18,12 @@ hero:
     Trois sachets kraft Racines en Partage, orge grillée, hibiscus et moringa,
     posés sur le sable entre des feuilles de palmier
 reassurance:
+  - icon: leaf
+    text: 100 % végétal, sans additif ni conservateur
   - icon: pin
     text: Conditionné en France par l’ESAT Les Oliviers
-  - icon: leaf
-    text: Sans additifs ni conservateurs
   - icon: truck
-    text: Livraison en Point Relais
+    text: Livraison en Point Relais, offerte dès 49 €
   - icon: lock
     text: Paiement sécurisé
 featuredTitle: Nos incontournables
@@ -32,8 +32,8 @@ storyTitle: Deux terres
 storyBody: >-
   Racines en Partage est née entre deux terres : l’Afrique de l’Ouest, où le
   moringa, le bissap et le souchet font partie du quotidien, et la France, où
-  nous vivons. Nous choisissons des produits du Niger, du Sénégal, de Côte
-  d’Ivoire et d’Inde, puis nous les faisons conditionner en Île-de-France. Notre
+  nous vivons. Nous choisissons des produits du Niger, du Sénégal, du
+  Cameroun, de Côte d’Ivoire et d’Inde, puis nous les faisons conditionner en Île-de-France. Notre
   philosophie : partager le goût et les savoir-faire de nos
   terroirs.
 storyLands:

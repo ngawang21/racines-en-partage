@@ -1,9 +1,10 @@
-order: 8
+order: 9
 sku: REP-SOU-T200
 category: graines
-price: 7.90 # placeholder, to confirm with the owner (launch.pricesConfirmed)
+price: 7.00
 weightGrams: 200
-origin: Afrique de l’Ouest # not printed on the label, owner to confirm
+origin: Niger
+originCountryCode: NE
 images:
   - /src/assets/products/souchet-tubercules-200.webp
 stock: in_stock
@@ -21,11 +22,15 @@ nutrition:
 free_from: [additifs, conservateurs, colorants]
 related: [poudre-de-souchet-100g, fleurs-d-hibiscus-bissap-100g]
 name: Tubercules de souchet
-tagline: Les petits tubercules entiers, pour un lait de souchet maison.
+tagline: Le tchongon du Niger, entier, pour un lait de souchet maison.
 description: >-
-  Entiers et séchés, les tubercules de souchet se croquent après trempage ou se
-  mixent en horchata, ce lait végétal doux et frais. Leur goût rappelle la
-  noisette et l’amande.
+  Le souchet (Cyperus esculentus) est un petit tubercule rond et ferme, à la
+  peau striée, qui nous vient du Niger. Il est aussi connu sous les noms
+  d’amande de terre, de noix tigrée, de pois sucré ou de chufa ; en Afrique de
+  l’Ouest, on l’appelle notamment tchongon en Côte d’Ivoire. Sa saveur
+  naturellement douce, entre noisette et amande, et sa texture croquante
+  permettent de le déguster tel quel ou après trempage, ou de le mixer en
+  horchata, ce lait végétal doux et frais.
 ingredients: 100 % tubercules de souchet (sans additifs, sans conservateur, sans colorant).
 usage:
   - À incorporer dans vos boissons, préparations culinaires ou recettes selon vos envies.
@@ -42,9 +47,19 @@ recipe:
 benefits:
   - Tubercules entiers, séchés, sans rien ajouter
   - Sans gluten
-  - Goût de noisette et d'amande, pour un lait de souchet maison
+  - Goût de noisette et d’amande, pour un lait de souchet maison
+keywords:
+  - tchongon
+  - amande de terre
+  - noix tigrée
+  - pois sucré
+  - chufa
+  - Cyperus esculentus
+  - horchata
+  - lait végétal
+  - lait de souchet
 storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
 seoTitle: Tubercules de souchet entiers 200 g
 seoDescription: >-
-  Tubercules de souchet entiers et séchés, sans additifs. Recette d’horchata,
-  le lait de souchet maison, incluse.
+  Tubercules de souchet (tchongon, amande de terre) entiers et séchés du Niger,
+  sans additifs. Recette d’horchata, le lait de souchet maison, incluse.

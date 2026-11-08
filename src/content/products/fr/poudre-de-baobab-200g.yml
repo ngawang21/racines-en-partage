@@ -1,0 +1,43 @@
+order: 3
+sku: REP-BAO-200
+category: poudres
+price: 12.00
+weightGrams: 200
+origin: Sénégal
+originCountryCode: SN
+images:
+  # Copy of the 100 g photo until the owner sends a photo of the 200 g pouch.
+  - /src/assets/products/baobab-200.webp
+stock: in_stock
+featured: false
+nutritionVerified: false # no table printed on the label
+free_from: [additifs, conservateurs, colorants]
+related: [poudre-de-baobab-100g, poudre-de-moringa-200g]
+name: Poudre de baobab
+tagline: Le grand format, pour le baobab de tous les jours.
+description: >-
+  La même poudre de pulpe de baobab du Sénégal, en sachet de 200 g pour celles
+  et ceux qui en ont fait une habitude. Aussi appelé « pain de singe », le fruit
+  du baobab renferme une pulpe naturellement poudreuse au goût acidulé et
+  légèrement sucré, avec des notes de citron et de poire. Une boisson fraîche,
+  un porridge, une compote : elle trouve sa place partout.
+ingredients: 100 % pulpe de fruit de baobab en poudre. Sans additif. Sans colorant. Sans conservateur.
+usage:
+  - À incorporer dans les boissons et jus de fruits, les smoothies, les yaourts et compotes, les céréales et porridges, les préparations et desserts.
+  - Mélangez bien avant de servir.
+benefits:
+  - Pulpe du fruit du baobab, séchée et tamisée
+  - Goût acidulé, légèrement sucré
+  - Format 200 g pour un usage quotidien
+storage: Conserver dans un endroit sec, à l’abri de la chaleur et de l’humidité. Bien refermer après ouverture.
+keywords:
+  - pain de singe
+  - Adansonia digitata
+  - fruit du baobab
+  - pulpe de baobab
+  - bouye
+  - grand format
+seoTitle: Poudre de baobab du Sénégal 200 g
+seoDescription: >-
+  Poudre de pulpe de baobab du Sénégal en grand format 200 g, sans additif ni
+  conservateur. Conditionnée en France par l’ESAT Les Oliviers.

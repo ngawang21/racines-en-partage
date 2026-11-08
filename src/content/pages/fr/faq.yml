@@ -31,6 +31,12 @@ items:
       Le paiement passe par Stripe, une plateforme sécurisée : carte bancaire
       (CB, Visa, Mastercard) et, selon votre appareil, Apple Pay ou Google Pay.
       Nous ne voyons jamais vos données bancaires.
+  - question: Comment retrouver ma commande ?
+    answer: >-
+      Rendez-vous sur la page « Suivre ma commande » (/ma-commande/), dont le
+      lien figure en bas de chaque page. Saisissez le numéro de commande indiqué
+      dans l’e-mail de confirmation et l’adresse e-mail utilisée pour commander :
+      vous retrouvez le détail de votre commande, sans créer de compte.
   - question: Puis-je retourner un produit ?
     answer: >-
       Nos produits sont des denrées alimentaires : une fois le sachet ouvert, ils
@@ -47,11 +53,23 @@ items:
   - question: D’où viennent vos produits ?
     answer: >-
       L’origine est indiquée sur chaque fiche produit : moringa et souchet du
-      Niger, baobab du Sénégal, cacao de Côte d’Ivoire, psyllium d’Inde, orge
-      grillée d’Allemagne. Tous les sachets sont conditionnés en France par l’ESAT
+      Niger, baobab du Sénégal, hibiscus du Cameroun, cacao de Côte d’Ivoire,
+      psyllium d’Inde, orge grillée d’Allemagne. Tous nos produits sont 100 %
+      végétaux, sans additif ni conservateur. Tous les sachets sont conditionnés en France par l’ESAT
       Les Oliviers, à Gennevilliers.
+  - question: Puis-je donner mon avis sur un produit ?
+    answer: >-
+      Avec plaisir ! Environ une semaine après votre commande, vous recevez un
+      e-mail qui vous invite à donner votre avis sur chaque produit commandé.
+      Nous lisons chaque avis avant sa mise en ligne ; les avis marqués
+      « Achat vérifié » viennent d’une commande passée sur le site.
+  - question: Puis-je recevoir vos nouveautés ?
+    answer: >-
+      Oui, inscrivez-vous à notre lettre d’information en bas de chaque page.
+      Vous recevez un e-mail de confirmation : votre inscription est validée
+      quand vous cliquez sur le lien qu’il contient. Chaque message comporte un
+      lien de désinscription.
   - question: Vendez-vous aux professionnels ?
     answer: >-
-      Épiceries, restaurants, CSE : écrivez-nous à
-      racinesenpartage@outlook.com ou appelez le 07 75 68 91 08, nous vous
-      répondrons avec plaisir.
+      Épiceries, restaurants, CSE : écrivez-nous à racinesenpartage@gmail.com
+      ou appelez le 07 75 68 91 08, nous vous répondrons avec plaisir.
