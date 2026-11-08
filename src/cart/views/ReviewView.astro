@@ -1,0 +1,171 @@
+---
+// Review page (spec iteration 3, 2.1 step 2), reached from the invitation
+// e-mail with ?t=<token>. src/cart/page-review.ts decodes the token payload
+// (display only, the Worker verifies it), clones the template below once per
+// ordered product and posts each form to POST /api/reviews.
+import Icon from '../../components/Icon.astro';
+import type { Locale } from '../../consts';
+import type { LocaleContent } from '../../content/locale-schema';
+import { REVIEW_LIMITS } from '../../content/schemas';
+import { interpolate } from '../../i18n/fallback';
+import { loadSettings } from '../../i18n/locale';
+import { routePath } from '../../i18n/routing';
+import { serializeStrings } from '../strings';
+
+interface Props {
+  locale: Locale;
+  t: LocaleContent;
+}
+const { locale, t } = Astro.props;
+const r = t.forms.review;
+const { email } = (await loadSettings()).brand;
+const noscript = t.forms.noscript.split(/(\{email\})/);
+const [authorMin, authorMax] = REVIEW_LIMITS.author;
+const [textMin, textMax] = REVIEW_LIMITS.text;
+const STAR = 'M12 3.2l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6-4.5-4.2 6.1-.7z';
+// Strings the client needs with their {tokens} (escaped by serializeStrings).
+const reviewStrings = {
+  counter: r.counter,
+  success: r.success,
+  ratingRequired: r.ratingRequired,
+  textMax,
+};
+---
+
+<section class="container review-page" data-review-page>
+  <header class="thanks-head">
+    <span class="thanks-mark" aria-hidden="true"><Icon name="flower" size={30} /></span>
+    <h1 class="rep-title">{r.title}</h1>
+    <p class="lead">{r.lead}</p>
+  </header>
+
+  <noscript>
+    <p class="form-noscript review-narrow">
+      {
+        noscript.map((part) =>
+          part === '{email}' ? <a href={`mailto:${email}`}>{email}</a> : part,
+        )
+      }
+    </p>
+  </noscript>
+  <div class="notice review-notice review-narrow" role="alert" data-review-invalid hidden>
+    <p>{r.invalid}</p>
+    <a class="text-link" href={routePath('contact', locale)}>{r.contactLink}</a>
+  </div>
+  <div class="notice review-notice review-narrow" role="alert" data-review-expired hidden>
+    <p>{r.expired}</p>
+    <a class="text-link" href={routePath('contact', locale)}>{r.contactLink}</a>
+  </div>
+
+  <div class="review-list" data-review-list></div>
+
+  <template data-review-template>
+    <article class="review-card" aria-labelledby="__ID__-name">
+      <div class="review-product">
+        <img class="review-thumb" alt="" width="64" height="80" data-review-image />
+        <h2 id="__ID__-name" class="review-product-name" data-review-name></h2>
+      </div>
+      <form
+        class="rep-form review-form"
+        data-form="review"
+        aria-labelledby="__ID__-name"
+        novalidate
+      >
+        <div class="form-fields" data-form-fields>
+          <fieldset class="stars" aria-describedby="__ID__-rating-error" data-review-stars>
+            <legend>{r.rating}</legend>
+            <div class="stars-row">
+              {
+                [1, 2, 3, 4, 5].map((n) => (
+                  <>
+                    <input
+                      class="star-input visually-hidden"
+                      type="radio"
+                      name="rating"
+                      value={n}
+                      id={`__ID__-r${n}`}
+                    />
+                    <label class="star" for={`__ID__-r${n}`}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="30"
+                        height="30"
+                        aria-hidden="true"
+                        focusable="false"
+                      >
+                        <path d={STAR} />
+                      </svg>
+                      <span class="visually-hidden">{interpolate(r.star, { count: n })}</span>
+                    </label>
+                  </>
+                ))
+              }
+            </div>
+            <p id="__ID__-rating-error" class="field-error" data-field-error></p>
+          </fieldset>
+          <div class="form-field">
+            <label for="__ID__-author">{r.author}</label>
+            <input
+              id="__ID__-author"
+              name="author"
+              type="text"
+              autocomplete="given-name"
+              required
+              minlength={authorMin}
+              maxlength={authorMax}
+              aria-describedby="__ID__-author-hint __ID__-author-error"
+            />
+            <p id="__ID__-author-hint" class="form-hint">{r.authorHint}</p>
+            <p id="__ID__-author-error" class="field-error" data-field-error></p>
+          </div>
+          <div class="form-field">
+            <label for="__ID__-title">{r.titleField}</label>
+            <input
+              id="__ID__-title"
+              name="title"
+              type="text"
+              maxlength={REVIEW_LIMITS.title}
+              aria-describedby="__ID__-title-error"
+            />
+            <p id="__ID__-title-error" class="field-error" data-field-error></p>
+          </div>
+          <div class="form-field">
+            <label for="__ID__-text">{r.text}</label>
+            <textarea
+              id="__ID__-text"
+              name="text"
+              rows="6"
+              required
+              minlength={textMin}
+              maxlength={textMax}
+              aria-describedby="__ID__-text-hint __ID__-text-error"></textarea>
+            <p class="form-hint review-hint">
+              <span id="__ID__-text-hint"
+                >{interpolate(r.textHint, { min: textMin, max: textMax })}</span
+              >
+              <span class="review-counter" data-review-counter></span>
+            </p>
+            <p id="__ID__-text-error" class="field-error" data-field-error></p>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" data-form-submit>{r.submit}</button>
+          </div>
+        </div>
+        <p class="form-status" role="status" data-form-status></p>
+        <div class="form-done" tabindex="-1" data-form-done hidden>
+          <span class="form-done-mark" aria-hidden="true"><Icon name="check" size={20} /></span>
+          <p data-form-done-text></p>
+        </div>
+      </form>
+    </article>
+  </template>
+
+  <div class="thanks-actions">
+    <a class="btn btn-secondary" href={routePath('shop', locale)}>{t.thanks.backToShop}</a>
+  </div>
+</section>
+<script
+  type="application/json"
+  id="rep-review-strings"
+  set:html={serializeStrings(reviewStrings)}
+/>

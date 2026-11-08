@@ -1,0 +1,25 @@
+---
+// Honeypot field `website`: invisible, out of the tab order and hidden from
+// assistive technology. A person never fills it; the Worker answers 202 and
+// sends nothing when a bot does.
+import type { LocaleContent } from '../../content/locale-schema';
+
+interface Props {
+  t: LocaleContent;
+  id: string;
+}
+const { t, id } = Astro.props;
+---
+
+<div class="form-hp" aria-hidden="true">
+  <label for={id}>{t.forms.honeypot}</label>
+  <input
+    id={id}
+    name="website"
+    type="text"
+    tabindex="-1"
+    autocomplete="off"
+    aria-hidden="true"
+    data-honeypot
+  />
+</div>

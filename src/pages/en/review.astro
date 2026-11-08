@@ -1,0 +1,17 @@
+---
+import ReviewView from '../../cart/views/ReviewView.astro';
+import Base from '../../layouts/Base.astro';
+import { loadLocale } from '../../i18n/locale';
+
+const locale = 'en' as const;
+const t = await loadLocale(locale);
+---
+
+<Base
+  {locale}
+  routeKey="review"
+  title={t.forms.review.metaTitle}
+  description={t.forms.review.metaDescription}
+>
+  <ReviewView {locale} {t} />
+</Base>

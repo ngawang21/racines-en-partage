@@ -1,9 +1,16 @@
 ---
-// "Prévenez-moi du retour" for an out-of-stock product (spec iteration 3,
-// 2.10). Stub: the forms-and-cart owner fills it.
+// "Prévenez-moi du retour" (spec iteration 3, 2.10), mounted by the product
+// page under the disabled add button when the stock is `out`: one e-mail
+// field, consent, honeypot, Turnstile when configured. Posted to
+// POST /api/contact with kind "stock_alert" by src/forms/forms.ts.
 import type { Locale } from '../../consts';
 import type { LocaleContent } from '../../content/locale-schema';
 import type { Settings } from '../../content/schemas';
+import { interpolate } from '../../i18n/fallback';
+import Icon from '../Icon.astro';
+import Consent from './Consent.astro';
+import FormFoot from './FormFoot.astro';
+import Honeypot from './Honeypot.astro';
 
 interface Props {
   locale: Locale;
@@ -13,9 +20,46 @@ interface Props {
   productName: string;
 }
 const { locale, t, settings, sku, productName } = Astro.props;
-void locale;
-void t;
-void settings;
-void sku;
-void productName;
+const f = t.forms.stock;
+const siteKey = settings.forms.turnstileSiteKey.trim();
+const id = `stock-${sku.toLowerCase().replace(/[^a-z0-9-]/g, '-')}`;
 ---
+
+<form
+  class="rep-form stock-alert"
+  data-form="stock_alert"
+  data-sku={sku}
+  data-turnstile-sitekey={siteKey || undefined}
+  aria-labelledby={`${id}-title`}
+  novalidate
+>
+  <p id={`${id}-title`} class="stock-alert-title">
+    <Icon name="mail" size={18} />
+    <span>{f.title}</span>
+  </p>
+  <p class="stock-alert-lead">{interpolate(f.lead, { name: productName })}</p>
+  <div class="form-fields" data-form-fields>
+    <div class="form-field">
+      <label for={`${id}-email`}>{f.email}</label>
+      <div class="nl-row">
+        <input
+          id={`${id}-email`}
+          name="email"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          spellcheck="false"
+          required
+          maxlength="254"
+          aria-describedby={`${id}-email-error`}
+        />
+        <button type="submit" class="btn btn-secondary" data-form-submit>{f.submit}</button>
+      </div>
+      <p id={`${id}-email-error`} class="field-error" data-field-error></p>
+    </div>
+    <Honeypot {t} id={`${id}-website`} />
+    <Consent {locale} {t} text={f.consent} />
+    {siteKey && <div class="form-turnstile" data-turnstile />}
+  </div>
+  <FormFoot {t} {settings} success={f.success} />
+</form>

@@ -1,0 +1,17 @@
+---
+import NewsletterView from '../../cart/views/NewsletterView.astro';
+import Base from '../../layouts/Base.astro';
+import { loadLocale } from '../../i18n/locale';
+
+const locale = 'en' as const;
+const t = await loadLocale(locale);
+---
+
+<Base
+  {locale}
+  routeKey="newsletter"
+  title={t.forms.landing.metaTitle}
+  description={t.forms.landing.metaDescription}
+>
+  <NewsletterView {locale} {t} />
+</Base>

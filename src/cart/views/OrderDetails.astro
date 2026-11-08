@@ -1,0 +1,104 @@
+---
+// Order panel shared by the thanks page and the order lookup page: lines,
+// amounts, delivery (Point Relais, pickup address) and, on the thanks page,
+// the next steps. Static shell, hidden until src/cart/order-view.ts fills it
+// from a public order.
+import Icon from '../../components/Icon.astro';
+import type { Locale } from '../../consts';
+import type { LocaleContent } from '../../content/locale-schema';
+import { loadSettings } from '../../i18n/locale';
+
+interface Props {
+  locale: Locale;
+  t: LocaleContent;
+  /** "Et maintenant ?" card (thanks page only). */
+  next?: boolean;
+  /** "Un récapitulatif a été envoyé à ..." under the totals. */
+  emailNote?: boolean;
+}
+const { t, next = true, emailNote = true } = Astro.props;
+const { address } = (await loadSettings()).brand;
+---
+
+<div class="thanks-layout" data-thanks-order hidden>
+  <section class="summary-card" aria-labelledby="thanks-lines-title">
+    <h2 id="thanks-lines-title" class="co-title">{t.thanks.linesTitle}</h2>
+    <ul class="order-lines" role="list" data-thanks-lines></ul>
+    <dl class="summary-rows">
+      <div class="summary-row">
+        <dt>{t.cart.subtotal}</dt>
+        <dd class="price" data-thanks-subtotal></dd>
+      </div>
+      <div class="summary-row">
+        <dt>{t.cart.shipping}</dt>
+        <dd class="price" data-thanks-shipping></dd>
+      </div>
+      <div class="summary-row" data-thanks-discount-row hidden>
+        <dt>{t.thanks.discount}</dt>
+        <dd class="price" data-thanks-discount></dd>
+      </div>
+      <div class="summary-row is-total">
+        <dt>{t.cart.total}</dt>
+        <dd class="price" data-thanks-total></dd>
+      </div>
+    </dl>
+    {emailNote && <p class="muted thanks-email" data-thanks-email hidden />}
+  </section>
+
+  <div class="thanks-side">
+    <section class="summary-card" aria-labelledby="thanks-delivery-title">
+      <h2 id="thanks-delivery-title" class="co-title">{t.thanks.deliveryTitle}</h2>
+      <p class="thanks-method" data-thanks-method></p>
+      <div class="relay-chosen thanks-relay" data-thanks-relay hidden>
+        <span class="relay-chosen-icon" aria-hidden="true"><Icon name="pin" /></span>
+        <div class="relay-chosen-body">
+          <p class="eyebrow">{t.checkout.relayChosen}</p>
+          <p class="relay-name" data-thanks-relay-name></p>
+          <p class="relay-address" data-thanks-relay-address></p>
+        </div>
+      </div>
+      <address class="pickup-address" data-thanks-pickup hidden>
+        {address.street}
+        <br />
+        {address.postcode}{' '}{address.city}
+      </address>
+    </section>
+
+    <slot name="side" />
+    {
+      next && (
+        <section class="summary-card thanks-next" aria-labelledby="thanks-next-title">
+          <h2 id="thanks-next-title" class="co-title">
+            {t.thanks.nextTitle}
+          </h2>
+          <ol class="next-steps" role="list">
+            <li>
+              <>
+                <Icon name="leaf" size={20} />
+                <span>{t.thanks.nextPreparation}</span>
+              </>
+            </li>
+            <li data-next="relay" hidden>
+              <>
+                <Icon name="pin" size={20} />
+                <span>{t.thanks.nextRelay}</span>
+              </>
+            </li>
+            <li data-next="home" hidden>
+              <>
+                <Icon name="truck" size={20} />
+                <span>{t.thanks.nextHome}</span>
+              </>
+            </li>
+            <li data-next="pickup" hidden>
+              <>
+                <Icon name="phone" size={20} />
+                <span>{t.thanks.nextPickup}</span>
+              </>
+            </li>
+          </ol>
+        </section>
+      )
+    }
+  </div>
+</div>

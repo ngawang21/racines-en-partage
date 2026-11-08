@@ -1,4 +1,6 @@
-/* Cart, drawer, checkout and thanks (owner: wave 2B). Imported by
+/* Cart, drawer, checkout, thanks, cross-sell, the enhanced forms (contact,
+   newsletter, stock alert, order lookup, review) and their pages (owner:
+   wave 2B, then iteration 3 forms and cart). Imported by
    CartDrawer.astro, so it ships with every page. Tokens only (tokens.css);
    every duration above 150 ms uses --dur-base or --dur-slow, which drop to 0
    under prefers-reduced-motion. */
@@ -34,7 +36,12 @@
 .cart-drawer [hidden],
 .cart-page [hidden],
 .checkout [hidden],
-.thanks [hidden] {
+.thanks [hidden],
+.lookup [hidden],
+.review-page [hidden],
+.nl-landing [hidden],
+.rep-form [hidden],
+.cross-sell[hidden] {
   display: none !important;
 }
 
@@ -1284,4 +1291,657 @@ a.cart-line-name:hover {
 }
 .thanks-actions [hidden] {
   display: none;
+}
+
+/* ------------------------------------------------- cart line unit price */
+
+.cart-line-kilo {
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.cart-line-kilo:empty {
+  display: none;
+}
+
+/* ------------------------------------------------------------ cross-sell */
+
+.cross-sell {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--line);
+}
+.cd-cross-sell {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+}
+.cross-sell-title {
+  color: var(--ink-2);
+  font-family: var(--font-body);
+  font-size: var(--fs--1);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cross-sell-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 640px) {
+  .cart-page .cross-sell-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.cross-sell-item {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3);
+  border: 1px solid rgba(185, 142, 94, 0.45);
+  border-radius: var(--radius-m);
+  background: var(--paper);
+}
+.cross-sell-media {
+  display: block;
+  width: 56px;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius-s);
+  overflow: hidden;
+  background: var(--cream);
+}
+.cross-sell-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cross-sell-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.cross-sell-name {
+  color: var(--forest);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+}
+@media (hover: hover) {
+  .cross-sell-name:hover {
+    text-decoration-color: var(--gold);
+  }
+}
+.cross-sell-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+}
+.cross-sell-price .price {
+  font-size: var(--fs-0);
+}
+.cross-sell-kilo {
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.btn.cross-sell-add {
+  min-height: 44px;
+  padding-inline: var(--space-3) var(--space-4);
+  gap: var(--space-1);
+  font-size: var(--fs--1);
+}
+.btn.cross-sell-add svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* --------------------------------------------------------- enhanced forms */
+
+.rep-form {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.form-title {
+  font-size: var(--fs-3);
+}
+.form-lead {
+  margin-top: calc(var(--space-2) * -1);
+  color: var(--ink-2);
+  line-height: var(--lh-snug);
+}
+.form-fields {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.form-row {
+  display: grid;
+  gap: var(--space-4);
+}
+@media (min-width: 640px) {
+  .form-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.form-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.form-field > label,
+.stars legend {
+  color: var(--forest);
+  font-size: var(--fs--1);
+  font-weight: 600;
+}
+.rep-form input:not([type='radio']),
+.rep-form textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px var(--space-3);
+  border: 1px solid rgba(22, 58, 28, 0.32);
+  border-radius: var(--radius-s);
+  background: var(--cream);
+  color: var(--forest);
+  font: inherit;
+  line-height: 1.4;
+  transition: border-color var(--dur-fast) ease;
+}
+.rep-form textarea {
+  min-height: 9rem;
+  resize: vertical;
+}
+.rep-form input:not([type='radio']):focus,
+.rep-form textarea:focus {
+  border-color: var(--forest);
+}
+.rep-form input[aria-invalid='true'],
+.rep-form textarea[aria-invalid='true'] {
+  border-color: var(--hibiscus-deep);
+}
+.form-hint {
+  color: var(--ink-2);
+  font-size: var(--fs--1);
+  line-height: var(--lh-snug);
+}
+.rep-form .field-error {
+  margin-top: 0;
+}
+.form-consent {
+  color: var(--ink-2);
+  font-size: var(--fs--1);
+  line-height: var(--lh-snug);
+}
+.form-consent a,
+.form-noscript a,
+.lookup-help a {
+  color: var(--forest);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--kraft);
+  text-underline-offset: 3px;
+}
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.form-status {
+  color: var(--ink-2);
+  font-size: var(--fs--1);
+  font-weight: 500;
+  line-height: var(--lh-snug);
+}
+.form-status:empty {
+  display: none;
+}
+.form-status.is-error {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid rgba(184, 38, 46, 0.35);
+  border-radius: var(--radius-s);
+  background: rgba(224, 58, 58, 0.07);
+  color: var(--hibiscus-deep);
+}
+.form-done {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid rgba(62, 122, 42, 0.35);
+  border-radius: var(--radius-m);
+  background: rgba(62, 122, 42, 0.08);
+  color: var(--forest);
+  font-weight: 500;
+  line-height: var(--lh-snug);
+}
+.form-done:focus {
+  outline: none;
+}
+.form-done:focus-visible {
+  outline: 3px solid var(--hibiscus);
+  outline-offset: 2px;
+}
+.form-done-mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--leaf-ink);
+  color: var(--cream);
+}
+.form-noscript {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--kraft);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--forest);
+  font-size: var(--fs--1);
+}
+/* Honeypot: off screen, not display:none (some bots skip hidden fields). */
+.form-hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.form-turnstile:empty {
+  display: none;
+}
+/* Field and button on one line (newsletter, stock alert), stacked when narrow. */
+.nl-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.nl-row input {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+.nl-row .btn {
+  flex: none;
+}
+
+/* Contact page form card. */
+.contact-form {
+  padding: clamp(var(--space-6), 4vw, var(--space-8));
+  border: 1px solid rgba(185, 142, 94, 0.45);
+  border-radius: var(--radius-l);
+  background: var(--paper);
+}
+
+/* Stock alert, under the disabled add button of an out-of-stock product. */
+.stock-alert {
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-6);
+  border: 1px solid rgba(185, 142, 94, 0.45);
+  border-radius: var(--radius-m);
+  background: var(--paper);
+}
+.stock-alert-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--forest);
+  font-weight: 600;
+}
+.stock-alert-title svg {
+  flex: none;
+  color: var(--leaf);
+}
+.stock-alert-lead {
+  color: var(--ink-2);
+  font-size: var(--fs--1);
+  line-height: var(--lh-snug);
+}
+
+/* ------------------------------------------------------------- newsletter */
+
+.nl-form {
+  gap: var(--space-4) var(--space-12);
+  align-items: center;
+}
+.nl-text {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+.nl-title {
+  font-size: var(--fs-2);
+}
+.nl-lead {
+  line-height: var(--lh-snug);
+}
+.nl-body {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.nl-body .form-fields {
+  gap: var(--space-2);
+}
+@media (min-width: 900px) {
+  .nl-form {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 30rem);
+  }
+}
+
+/* Footer variant, on the forest band. */
+.nl--footer .nl-title {
+  color: var(--cream);
+}
+.nl--footer .nl-lead,
+.nl--footer .form-consent {
+  color: var(--cream-muted);
+}
+.nl--footer .form-consent a {
+  color: var(--cream);
+  text-decoration-color: var(--gold);
+}
+.nl--footer input:not([type='radio']) {
+  border-color: rgba(251, 246, 234, 0.4);
+  background: rgba(251, 246, 234, 0.08);
+  color: var(--cream);
+}
+.nl--footer input::placeholder {
+  color: var(--cream-muted);
+  opacity: 1;
+}
+.nl--footer input:focus {
+  border-color: var(--cream);
+}
+.nl--footer input[aria-invalid='true'] {
+  border-color: var(--hibiscus);
+}
+.nl--footer .btn-primary {
+  background: var(--cream);
+  border-color: var(--cream);
+  color: var(--forest);
+}
+@media (hover: hover) {
+  .nl--footer .btn-primary:hover:not(:disabled) {
+    background: var(--paper);
+    border-color: var(--paper);
+  }
+}
+/* Errors on forest: cream text with a hibiscus rule (red text would not contrast). */
+.nl--footer .field-error:not(:empty),
+.nl--footer .form-status.is-error {
+  padding: 0 0 0 var(--space-3);
+  border: 0;
+  border-left: 3px solid var(--hibiscus);
+  border-radius: 0;
+  background: none;
+  color: var(--cream);
+}
+.nl--footer .form-status {
+  color: var(--cream-muted);
+}
+.nl--footer .form-done {
+  border-color: rgba(251, 246, 234, 0.3);
+  background: rgba(251, 246, 234, 0.08);
+  color: var(--cream);
+}
+.nl--footer .form-done-mark {
+  background: var(--gold);
+  color: var(--forest);
+}
+.nl--footer .form-noscript {
+  border-color: rgba(251, 246, 234, 0.3);
+  background: transparent;
+  color: var(--cream);
+}
+.nl--footer .form-noscript a {
+  color: var(--cream);
+}
+
+/* Band variant: a full cream band between two gold hairlines. */
+.nl-band {
+  padding-block: clamp(var(--space-12), 6vw, var(--space-16));
+  border-block: 1px solid var(--gold);
+  background: var(--cream);
+}
+.nl-band .nl-title {
+  font-size: var(--fs-4);
+}
+.nl-band .nl-lead {
+  color: var(--ink-2);
+  font-size: var(--fs-1);
+}
+.nl-mark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--space-2);
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--hibiscus);
+}
+
+/* --------------------------------------- lookup, review, newsletter pages */
+
+.lookup,
+.review-page,
+.nl-landing-head {
+  padding-block: var(--space-8) var(--space-16);
+}
+@media (min-width: 900px) {
+  .lookup,
+  .review-page,
+  .nl-landing-head {
+    padding-block: var(--space-12) var(--space-24);
+  }
+}
+.lookup-head {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+  max-width: 40rem;
+  margin: 0 auto var(--space-8);
+  text-align: center;
+}
+.lookup-search {
+  max-width: 30rem;
+  margin-inline: auto;
+}
+.lookup-form {
+  padding: clamp(var(--space-6), 4vw, var(--space-8));
+  border: 1px solid rgba(185, 142, 94, 0.45);
+  border-radius: var(--radius-l);
+  background: var(--paper);
+}
+.lookup-help {
+  margin-top: var(--space-6);
+  color: var(--ink-2);
+  font-size: var(--fs--1);
+  text-align: center;
+}
+.lookup-result-head {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+.lookup-result-head .thanks-number:focus {
+  outline: none;
+}
+.lookup-result-head .thanks-number:focus-visible {
+  outline: 3px solid var(--hibiscus);
+  outline-offset: 4px;
+}
+.lookup .co-title {
+  font-size: var(--fs-2);
+}
+.lookup-carrier .summary-note {
+  font-size: var(--fs-0);
+}
+
+.review-narrow,
+.review-list {
+  max-width: 44rem;
+  margin-inline: auto;
+}
+.review-notice {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+  font-size: var(--fs-0);
+}
+.review-list {
+  display: grid;
+  gap: var(--space-6);
+}
+.review-list:empty {
+  display: none;
+}
+.review-card {
+  display: grid;
+  gap: var(--space-6);
+  padding: clamp(var(--space-6), 4vw, var(--space-8));
+  border: 1px solid rgba(185, 142, 94, 0.45);
+  border-radius: var(--radius-l);
+  background: var(--paper);
+}
+.review-product {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.review-thumb {
+  flex: none;
+  width: 64px;
+  height: 80px;
+  object-fit: cover;
+  border: 1px solid var(--kraft);
+  border-radius: var(--radius-s);
+  background: var(--cream);
+}
+.review-product-name {
+  font-size: var(--fs-2);
+}
+.review-hint {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-4);
+}
+.review-counter {
+  font-variant-numeric: tabular-nums;
+}
+.review-page .thanks-actions {
+  margin-top: var(--space-12);
+}
+
+/* Star rating: five radios, the labels draw the stars. */
+.stars {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.stars legend {
+  margin-bottom: var(--space-1);
+  padding: 0;
+}
+.stars-row {
+  display: flex;
+  gap: 2px;
+}
+.star {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+.star svg {
+  fill: transparent;
+  stroke: var(--kraft-ink);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  transition:
+    fill var(--dur-fast) ease,
+    transform var(--dur-press) var(--ease-out-strong);
+}
+.star-input:focus-visible + .star {
+  outline: 3px solid var(--hibiscus);
+  outline-offset: 1px;
+}
+.stars[aria-invalid='true'] .star svg {
+  stroke: var(--hibiscus-deep);
+}
+/* Hover previews a rating; the chosen stars stay gold (declared last). */
+@media (hover: hover) {
+  .stars-row:has(.star:nth-of-type(1):hover) .star:nth-of-type(-n + 1) svg,
+  .stars-row:has(.star:nth-of-type(2):hover) .star:nth-of-type(-n + 2) svg,
+  .stars-row:has(.star:nth-of-type(3):hover) .star:nth-of-type(-n + 3) svg,
+  .stars-row:has(.star:nth-of-type(4):hover) .star:nth-of-type(-n + 4) svg,
+  .stars-row:has(.star:nth-of-type(5):hover) .star:nth-of-type(-n + 5) svg {
+    fill: var(--kraft);
+  }
+}
+.stars-row:has(.star-input[value='1']:checked) .star:nth-of-type(-n + 1) svg,
+.stars-row:has(.star-input[value='2']:checked) .star:nth-of-type(-n + 2) svg,
+.stars-row:has(.star-input[value='3']:checked) .star:nth-of-type(-n + 3) svg,
+.stars-row:has(.star-input[value='4']:checked) .star:nth-of-type(-n + 4) svg,
+.stars-row:has(.star-input[value='5']:checked) .star:nth-of-type(-n + 5) svg {
+  fill: var(--gold);
+  stroke: var(--kraft-ink);
+}
+.star:active svg {
+  transform: scale(0.9);
+}
+
+.nl-status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: var(--space-6);
+  border-radius: var(--radius-l);
+  line-height: var(--lh-body);
+}
+.nl-status.is-ok {
+  border: 1px solid rgba(62, 122, 42, 0.35);
+  background: rgba(62, 122, 42, 0.08);
+}
+.nl-status.is-invalid {
+  border: 1px solid var(--kraft);
+  background: var(--paper);
+}
+.nl-status-title {
+  margin-bottom: var(--space-2);
+  font-size: var(--fs-2);
+}
+.nl-landing-head .thanks-head {
+  margin-bottom: var(--space-8);
+}
+.nl-landing-head .thanks-actions {
+  margin-top: var(--space-8);
+}
+/* The landing page ends on the band: no gap before the footer. */
+.nl-landing .nl-band {
+  border-bottom: 0;
+}
+/* The landing page ends on its band: it meets the footer's kente strip. */
+main:has(> .nl-landing:last-child) + .site-footer {
+  margin-top: 0;
 }

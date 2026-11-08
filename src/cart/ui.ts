@@ -1,7 +1,8 @@
 // Cart client entry, bundled by Astro from CartScripts.astro (external module
 // script: the CSP has no 'unsafe-inline'). Runs on every page: header badge,
-// add-to-cart delegation, quantity steppers, drawer. The cart, checkout and
-// thanks pages load their own module on demand.
+// add-to-cart delegation, quantity steppers, drawer. The cart, checkout,
+// thanks, order lookup and review pages, and the forms, load their own
+// module on demand.
 import { getContext } from './context';
 import { createDrawer, type Drawer } from './drawer';
 import { itemCount, type CartState } from './store';
@@ -64,6 +65,10 @@ function syncStepButtons(input: HTMLInputElement, max: number): void {
 }
 
 function init(): void {
+  // Contact, newsletter and stock-alert forms, the newsletter landing page.
+  if (document.querySelector('form[data-form], [data-newsletter-landing]'))
+    void import('../forms/forms').then((m) => m.initForms());
+
   const ctx = getContext();
   if (!ctx) return;
   const { store } = ctx;
@@ -100,16 +105,27 @@ function init(): void {
       const input = qtyInputFor(sku);
       const quantity = input ? clampInput(input, store.maxQuantity) : 1;
       const before = store.getCart().lines.find((l) => l.sku === sku)?.quantity ?? 0;
+      const suggestion = add.closest('[data-cross-sell]');
       store.addLine(sku, quantity);
       const after = store.getCart().lines.find((l) => l.sku === sku)?.quantity ?? 0;
       add.classList.add('is-added');
       window.setTimeout(() => add.classList.remove('is-added'), 1200);
       bump();
-      drawer?.open(add);
       const message =
         after > before
           ? ctx.fmt(ctx.t.cart.added, { name: product.name })
           : ctx.fmt(ctx.t.cart.maxReached, { max: store.maxQuantity });
+      if (suggestion) {
+        // A cross-sell suggestion leaves its list once in the cart (the render
+        // above ran synchronously): the focus moves to the new cart line, in
+        // the drawer or on the cart page, and no drawer opens over the page.
+        const scope = suggestion.closest('#cart-drawer, [data-cart-page]') ?? document;
+        scope
+          .querySelector<HTMLElement>(`li[data-sku="${CSS.escape(sku)}"] .cart-line-name`)
+          ?.focus();
+      } else {
+        drawer?.open(add);
+      }
       ctx.announce(message);
       return;
     }
@@ -150,6 +166,10 @@ function init(): void {
     void import('./page-checkout').then((m) => m.initCheckout(ctx));
   if (document.querySelector('[data-thanks]'))
     void import('./page-thanks').then((m) => m.initThanks(ctx));
+  if (document.querySelector('[data-lookup]'))
+    void import('./page-lookup').then((m) => m.initLookup(ctx));
+  if (document.querySelector('[data-review-page]'))
+    void import('./page-review').then((m) => m.initReview(ctx));
 }
 
 init();

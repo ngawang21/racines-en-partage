@@ -1,0 +1,49 @@
+---
+// Newsletter landing page (spec iteration 3, 2.2): GET /api/newsletter/confirm
+// redirects here with ?status=ok or ?status=invalid. Without a status (or
+// without JavaScript) the page invites to sign up; src/forms/forms.ts shows
+// the block whose data-landing-when names the status.
+import Icon from '../../components/Icon.astro';
+import NewsletterSignup from '../../components/forms/NewsletterSignup.astro';
+import type { Locale } from '../../consts';
+import type { LocaleContent } from '../../content/locale-schema';
+import { loadSettings } from '../../i18n/locale';
+import { routePath } from '../../i18n/routing';
+
+interface Props {
+  locale: Locale;
+  t: LocaleContent;
+}
+const { locale, t } = Astro.props;
+const settings = await loadSettings();
+const l = t.forms.landing;
+---
+
+<div class="nl-landing" data-newsletter-landing>
+  <section class="container nl-landing-head">
+    <header class="thanks-head">
+      <span class="thanks-mark" aria-hidden="true"><Icon name="mail" size={28} /></span>
+      <h1 class="rep-title">{l.title}</h1>
+      <p class="lead" data-landing-when="none">{l.neutral}</p>
+    </header>
+    <div class="nl-status is-ok" data-landing-when="ok" hidden>
+      <span class="form-done-mark" aria-hidden="true"><Icon name="check" size={20} /></span>
+      <div>
+        <h2 class="nl-status-title">{l.okTitle}</h2>
+        <p>{l.ok}</p>
+      </div>
+    </div>
+    <div class="nl-status is-invalid" data-landing-when="invalid" hidden>
+      <div>
+        <h2 class="nl-status-title">{l.invalidTitle}</h2>
+        <p>{l.invalid}</p>
+      </div>
+    </div>
+    <div class="thanks-actions">
+      <a class="btn btn-primary" href={routePath('shop', locale)}>{l.toShop}</a>
+    </div>
+  </section>
+  <div data-landing-when="none invalid">
+    <NewsletterSignup {locale} {t} {settings} variant="band" />
+  </div>
+</div>

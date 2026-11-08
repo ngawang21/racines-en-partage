@@ -1,8 +1,14 @@
 ---
-// Contact form (spec iteration 3, 2.3). Stub: the forms-and-cart owner fills it.
+// Contact form (spec iteration 3, 2.3): name, e-mail, message, consent with
+// the privacy link, honeypot, Turnstile when the settings carry a site key.
+// Posted as JSON to POST /api/contact by src/forms/forms.ts; without
+// JavaScript, a note gives the e-mail address instead.
 import type { Locale } from '../../consts';
 import type { LocaleContent } from '../../content/locale-schema';
 import type { Settings } from '../../content/schemas';
+import Consent from './Consent.astro';
+import FormFoot from './FormFoot.astro';
+import Honeypot from './Honeypot.astro';
 
 interface Props {
   locale: Locale;
@@ -10,7 +16,68 @@ interface Props {
   settings: Settings;
 }
 const { locale, t, settings } = Astro.props;
-void locale;
-void t;
-void settings;
+const f = t.forms.contact;
+const siteKey = settings.forms.turnstileSiteKey.trim();
 ---
+
+<form
+  class="rep-form contact-form"
+  data-form="contact"
+  data-turnstile-sitekey={siteKey || undefined}
+  aria-labelledby="contact-form-title"
+  novalidate
+>
+  <h2 id="contact-form-title" class="form-title">{f.title}</h2>
+  <p class="form-lead">{f.lead}</p>
+  <div class="form-fields" data-form-fields>
+    <div class="form-row">
+      <div class="form-field">
+        <label for="contact-name">{f.name}</label>
+        <input
+          id="contact-name"
+          name="name"
+          type="text"
+          autocomplete="name"
+          required
+          maxlength="80"
+          aria-describedby="contact-name-error"
+        />
+        <p id="contact-name-error" class="field-error" data-field-error></p>
+      </div>
+      <div class="form-field">
+        <label for="contact-email">{f.email}</label>
+        <input
+          id="contact-email"
+          name="email"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          spellcheck="false"
+          required
+          maxlength="254"
+          aria-describedby="contact-email-error"
+        />
+        <p id="contact-email-error" class="field-error" data-field-error></p>
+      </div>
+    </div>
+    <div class="form-field">
+      <label for="contact-message">{f.message}</label>
+      <textarea
+        id="contact-message"
+        name="message"
+        rows="6"
+        required
+        minlength="10"
+        maxlength="3000"
+        aria-describedby="contact-message-error"></textarea>
+      <p id="contact-message-error" class="field-error" data-field-error></p>
+    </div>
+    <Honeypot {t} id="contact-website" />
+    <Consent {locale} {t} text={f.consent} />
+    {siteKey && <div class="form-turnstile" data-turnstile />}
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" data-form-submit>{f.submit}</button>
+    </div>
+  </div>
+  <FormFoot {t} {settings} success={f.success} />
+</form>

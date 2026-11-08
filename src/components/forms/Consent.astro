@@ -1,0 +1,27 @@
+---
+// A consent sentence with its "{privacy}" token rendered as a link to the
+// privacy page of the locale.
+import type { Locale } from '../../consts';
+import type { LocaleContent } from '../../content/locale-schema';
+import { routePath } from '../../i18n/routing';
+
+interface Props {
+  locale: Locale;
+  t: LocaleContent;
+  text: string;
+}
+const { locale, t, text } = Astro.props;
+const parts = text.split(/(\{privacy\})/);
+---
+
+<p class="form-consent">
+  {
+    parts.map((part) =>
+      part === '{privacy}' ? (
+        <a href={routePath('privacy', locale)}>{t.forms.privacyLink}</a>
+      ) : (
+        part
+      ),
+    )
+  }
+</p>

@@ -1,11 +1,13 @@
 ---
-// Contact details (spec 5.4): address with a Google Maps link (no embed),
+// Contact page body: the contact form (spec iteration 3, 2.3) next to the
+// contact details (spec 5.4): address with a Google Maps link (no embed),
 // phone, e-mail, Instagram when set, and the hours text.
 import type { Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
 import type { ContactPage, Settings } from '../content/schemas';
 import { formatPhone, phoneE164 } from '../i18n/format';
 import Icon from './Icon.astro';
+import ContactForm from './forms/ContactForm.astro';
 
 interface Props {
   page: ContactPage;
@@ -13,7 +15,7 @@ interface Props {
   t: LocaleContent;
   locale: Locale;
 }
-const { page, settings, t } = Astro.props;
+const { page, settings, t, locale } = Astro.props;
 const { brand } = settings;
 // Break the address before the "@" on narrow screens, never inside a word.
 const [emailUser, emailHost] = brand.email.split('@');
@@ -25,67 +27,72 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
 ---
 
 <div class="contact">
-  <dl class="cards">
-    <div class="card">
-      <dt><Icon name="phone" size={20} />{t.footer.phone}</dt>
-      <dd>
-        <a class="big" href={`tel:${phoneE164(brand.phone)}`}>{formatPhone(brand.phone)}</a>
-      </dd>
-    </div>
-    <div class="card">
-      <dt><Icon name="mail" size={20} />{t.footer.email}</dt>
-      <dd>
-        <a class="big email" href={`mailto:${brand.email}`}>
-          {emailUser}
-          {
-            emailHost && (
-              <>
-                <wbr />@{emailHost}
-              </>
-            )
-          }
-        </a>
-      </dd>
-    </div>
-    <div class="card card-wide">
-      <dt><Icon name="pin" size={20} />{t.footer.address}</dt>
-      <dd>
-        <address>
-          {brand.name}<br />{street}<br />{city}
-        </address>
-        <a class="link-arrow" href={mapsUrl} rel="noopener" target="_blank">
-          {page.mapsLabel}
-          <span class="visually-hidden">{t.a11y.newTab}</span>
-          <Icon name="chevron" />
-        </a>
-      </dd>
-    </div>
-    {
-      brand.instagram && (
-        <div class="card">
-          <dt>
-            <Icon name="instagram" size={20} />
-            {t.footer.instagram}
-          </dt>
-          <dd>
-            <a class="link-arrow" href={brand.instagram} rel="noopener" target="_blank">
-              {brand.instagram.replace(/^https?:\/\/(www\.)?/, '')}
-              <span class="visually-hidden">{t.a11y.newTab}</span>
-            </a>
-          </dd>
-        </div>
-      )
-    }
-  </dl>
+  <div class="contact-main">
+    <ContactForm {locale} {t} {settings} />
+  </div>
+  <div class="contact-side">
+    <dl class="cards">
+      <div class="card">
+        <dt><Icon name="phone" size={20} />{t.footer.phone}</dt>
+        <dd>
+          <a class="big" href={`tel:${phoneE164(brand.phone)}`}>{formatPhone(brand.phone)}</a>
+        </dd>
+      </div>
+      <div class="card">
+        <dt><Icon name="mail" size={20} />{t.footer.email}</dt>
+        <dd>
+          <a class="big email" href={`mailto:${brand.email}`}>
+            {emailUser}
+            {
+              emailHost && (
+                <>
+                  <wbr />@{emailHost}
+                </>
+              )
+            }
+          </a>
+        </dd>
+      </div>
+      <div class="card card-wide">
+        <dt><Icon name="pin" size={20} />{t.footer.address}</dt>
+        <dd>
+          <address>
+            {brand.name}<br />{street}<br />{city}
+          </address>
+          <a class="link-arrow" href={mapsUrl} rel="noopener" target="_blank">
+            {page.mapsLabel}
+            <span class="visually-hidden">{t.a11y.newTab}</span>
+            <Icon name="chevron" />
+          </a>
+        </dd>
+      </div>
+      {
+        brand.instagram && (
+          <div class="card">
+            <dt>
+              <Icon name="instagram" size={20} />
+              {t.footer.instagram}
+            </dt>
+            <dd>
+              <a class="link-arrow" href={brand.instagram} rel="noopener" target="_blank">
+                {brand.instagram.replace(/^https?:\/\/(www\.)?/, '')}
+                <span class="visually-hidden">{t.a11y.newTab}</span>
+              </a>
+            </dd>
+          </div>
+        )
+      }
+    </dl>
 
-  <aside class="hours" aria-labelledby="contact-hours">
-    <h2 id="contact-hours">{t.footer.hours}</h2>
-    <p>{page.hours}</p>
-    <p class="packed">
-      <Icon name="leaf" size={20} />
-      <span>{t.footer.packagedBy}</span>
-    </p>
-  </aside>
+    <aside class="hours" aria-labelledby="contact-hours">
+      <h2 id="contact-hours">{t.footer.hours}</h2>
+      <p>{page.hours}</p>
+      <p class="packed">
+        <Icon name="leaf" size={20} />
+        <span>{t.footer.packagedBy}</span>
+      </p>
+    </aside>
+  </div>
 </div>
 
 <style>
@@ -96,21 +103,25 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
   }
   @media (min-width: 960px) {
     .contact {
-      grid-template-columns: minmax(0, 1fr) 360px;
+      grid-template-columns: minmax(0, 1fr) 380px;
       gap: var(--space-12);
     }
+  }
+  .contact-side {
+    display: grid;
+    gap: var(--space-6);
+    align-content: start;
   }
   .cards {
     display: grid;
     gap: var(--space-4);
     margin: 0;
   }
-  @media (min-width: 640px) {
+  /* Two columns on tablets; the narrow side column of a wide screen stacks them. */
+  @media (min-width: 640px) and (max-width: 959px) {
     .cards {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-  }
-  @media (min-width: 640px) {
     .card-wide {
       grid-column: 1 / -1;
     }
@@ -153,8 +164,10 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
     font-variant-numeric: lining-nums;
     transition: text-decoration-color var(--dur-fast) ease;
   }
-  .big:hover {
-    text-decoration-color: var(--kraft-deep);
+  @media (hover: hover) {
+    .big:hover {
+      text-decoration-color: var(--kraft-deep);
+    }
   }
   /* Inline-block so it wraps at the <wbr> before "@" yet keeps a 44 px target. */
   .email {

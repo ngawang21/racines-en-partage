@@ -1,0 +1,12 @@
+---
+import LookupView from '../../cart/views/LookupView.astro';
+import Base from '../../layouts/Base.astro';
+import { loadLocale } from '../../i18n/locale';
+
+const locale = 'en' as const;
+const t = await loadLocale(locale);
+---
+
+<Base {locale} routeKey="lookup" title={t.lookup.metaTitle} description={t.lookup.metaDescription}>
+  <LookupView {locale} {t} />
+</Base>

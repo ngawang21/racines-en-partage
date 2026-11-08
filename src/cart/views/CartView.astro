@@ -24,6 +24,10 @@ const { locale, t, shopOpen } = Astro.props;
   <div class="cart-layout" data-cart-page-content hidden>
     <div class="cart-layout-main">
       <ul class="cart-lines cart-lines--page" role="list" data-cart-page-lines></ul>
+      <section class="cross-sell" aria-labelledby="cart-page-xs" data-cross-sell hidden>
+        <h2 id="cart-page-xs" class="cross-sell-title">{t.cart.crossSellTitle}</h2>
+        <ul class="cross-sell-list" role="list" data-cross-sell-list></ul>
+      </section>
       <a class="text-link back-link" href={routePath('shop', locale)}>
         <Icon name="chevron" size={18} class="icon-flip" />
         {t.cart.continue}

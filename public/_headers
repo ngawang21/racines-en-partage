@@ -2,13 +2,18 @@
 # from this origin only; inline styles allowed (Astro scoped styles), no
 # inline script (JSON-LD and JSON data blocks are not executed). Route blocks
 # below detach the CSP with "! Content-Security-Policy" before relaxing it.
+# Iteration 3: Cloudflare Turnstile on the forms (script and its iframe from
+# challenges.cloudflare.com, loaded only when a site key is set) and the
+# Cloudflare Web Analytics beacon (script from static.cloudflareinsights.com,
+# reports to cloudflareinsights.com, only when a token is set). The checkout
+# blocks repeat both, since the footer form and the beacon are on every page.
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
+  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com; font-src 'self'; connect-src 'self' https://cloudflareinsights.com; frame-src https://challenges.cloudflare.com; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
 
 # Fingerprinted build assets never change.
 /_astro/*
@@ -37,11 +42,11 @@
 # scripts/relay-capture.mjs. Everything else stays as strict as the global block.
 /commande/*
   ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://widget.mondialrelay.com; style-src 'self' 'unsafe-inline' https://widget.mondialrelay.com https://fonts.googleapis.com; img-src 'self' data: https://widget.mondialrelay.com https://www.mondialrelay.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://widget.mondialrelay.com; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://widget.mondialrelay.com https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://widget.mondialrelay.com https://fonts.googleapis.com; img-src 'self' data: https://widget.mondialrelay.com https://www.mondialrelay.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://widget.mondialrelay.com https://cloudflareinsights.com; frame-src https://challenges.cloudflare.com; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
 
 /en/checkout/*
   ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://widget.mondialrelay.com; style-src 'self' 'unsafe-inline' https://widget.mondialrelay.com https://fonts.googleapis.com; img-src 'self' data: https://widget.mondialrelay.com https://www.mondialrelay.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://widget.mondialrelay.com; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://widget.mondialrelay.com https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://widget.mondialrelay.com https://fonts.googleapis.com; img-src 'self' data: https://widget.mondialrelay.com https://www.mondialrelay.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://widget.mondialrelay.com https://cloudflareinsights.com; frame-src https://challenges.cloudflare.com; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
 
 # admin route
 # Sveltia CMS at /admin/: the script is pinned to one version on unpkg (with

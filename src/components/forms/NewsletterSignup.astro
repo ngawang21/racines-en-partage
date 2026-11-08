@@ -1,9 +1,18 @@
 ---
-// Newsletter signup (spec iteration 3, 2.2). Stub: the forms-and-cart owner
-// fills it. `variant` "footer" renders inline in the footer, "band" a full band.
+// Newsletter signup (spec iteration 3, 2.2): one e-mail field, consent with
+// the privacy link, Turnstile when the settings carry a site key. `footer`:
+// compact inline block on the forest footer; `band`: a full cream band with
+// title and lead (recipes page, newsletter landing page). Renders nothing
+// when `settings.newsletter.enabled` is false. Posted to POST /api/newsletter
+// by src/forms/forms.ts; the customer then confirms by e-mail.
+// Only the band form is a named landmark: the footer one sits in the footer
+// landmark, and a page with both would carry two landmarks of the same name.
 import type { Locale } from '../../consts';
 import type { LocaleContent } from '../../content/locale-schema';
 import type { Settings } from '../../content/schemas';
+import Icon from '../Icon.astro';
+import Consent from './Consent.astro';
+import FormFoot from './FormFoot.astro';
 
 interface Props {
   locale: Locale;
@@ -12,8 +21,63 @@ interface Props {
   variant: 'footer' | 'band';
 }
 const { locale, t, settings, variant } = Astro.props;
-void locale;
-void t;
-void settings;
-void variant;
+const f = t.forms.newsletter;
+const siteKey = settings.forms.turnstileSiteKey.trim();
+const id = `nl-${variant}`;
 ---
+
+{
+  settings.newsletter.enabled && (
+    <div class:list={['nl', `nl--${variant}`, variant === 'band' && 'nl-band']}>
+      <div class:list={[variant === 'band' && 'container nl-band-inner']}>
+        <form
+          class="rep-form nl-form"
+          data-form="newsletter"
+          data-turnstile-sitekey={siteKey || undefined}
+          aria-labelledby={variant === 'band' ? `${id}-title` : undefined}
+          novalidate
+        >
+          <div class="nl-text">
+            {variant === 'band' && (
+              <span class="nl-mark" aria-hidden="true">
+                <Icon name="mail" size={22} />
+              </span>
+            )}
+            <h2 id={`${id}-title`} class="nl-title">
+              {f.title}
+            </h2>
+            <p class="nl-lead">{f.lead}</p>
+          </div>
+          <div class="nl-body">
+            <div class="form-fields" data-form-fields>
+              <div class="nl-row">
+                <label class="visually-hidden" for={`${id}-email`}>
+                  {f.email}
+                </label>
+                <input
+                  id={`${id}-email`}
+                  name="email"
+                  type="email"
+                  inputmode="email"
+                  autocomplete="email"
+                  spellcheck="false"
+                  placeholder={f.email}
+                  required
+                  maxlength="254"
+                  aria-describedby={`${id}-email-error`}
+                />
+                <button type="submit" class="btn btn-primary" data-form-submit>
+                  {f.submit}
+                </button>
+              </div>
+              <p id={`${id}-email-error`} class="field-error" data-field-error />
+              <Consent {locale} {t} text={f.consent} />
+              {siteKey && <div class="form-turnstile" data-turnstile />}
+            </div>
+            <FormFoot {t} {settings} success={f.success} />
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}

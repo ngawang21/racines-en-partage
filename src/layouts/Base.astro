@@ -95,6 +95,9 @@ const defaultCrumbs: Crumb[] | undefined =
 
 const announcement = pickLabel(settings.shop.announcement, locale).trim();
 const shopOpen = settings.shop.open;
+// Cloudflare Web Analytics (spec iteration 3, 2.11): cookieless beacon, only
+// when the owner has set the token; the CSP allows its two hosts.
+const analyticsToken = settings.analytics.cloudflareToken.trim();
 ---
 
 <!doctype html>
@@ -152,6 +155,16 @@ const shopOpen = settings.shop.open;
     <Footer {locale} {t} {settings} />
     <CartDrawer {locale} />
     <CartScripts {locale} />
+    {
+      analyticsToken && (
+        <script
+          is:inline
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={JSON.stringify({ token: analyticsToken })}
+        />
+      )
+    }
   </body>
 </html>
 

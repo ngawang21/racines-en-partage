@@ -1,5 +1,6 @@
 // Cart page: renders the browser cart into the static shell of CartView.astro.
 import type { CartContext } from './context';
+import { renderCrossSell } from './cross-sell-view';
 import { renderFreeShipping } from './free-shipping';
 import { bindLineEvents, renderLines } from './lines';
 import type { CartState } from './store';
@@ -17,6 +18,7 @@ export function initCartPage(ctx: CartContext): void {
   const alert = q<HTMLElement>('[data-cart-page-alert]');
   const checkout = q<HTMLAnchorElement>('[data-cart-page-checkout]');
   const free = q<HTMLElement>('[data-free-shipping]');
+  const crossSell = q<HTMLElement>('[data-cross-sell]');
   const heading = root.querySelector<HTMLElement>('h1');
   if (!list) return;
 
@@ -38,6 +40,7 @@ export function initCartPage(ctx: CartContext): void {
     if (count) count.textContent = hasLines ? ctx.itemsLabel(totals.itemCount) : '';
     if (subtotal) subtotal.textContent = ctx.price(totals.subtotal);
     renderFreeShipping(free, totals, ctx);
+    renderCrossSell(crossSell, cart, ctx);
     const blocked = totals.unknownSkus.length > 0 || totals.outOfStockSkus.length > 0;
     if (alert) alert.hidden = !blocked;
     if (checkout) {

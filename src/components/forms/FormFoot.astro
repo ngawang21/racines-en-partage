@@ -1,0 +1,28 @@
+---
+// The common end of an enhanced form: the note shown without JavaScript, the
+// status line (sending, API errors) and the success block that replaces the
+// fields. See src/forms/kit.ts for the hooks.
+import type { LocaleContent } from '../../content/locale-schema';
+import type { Settings } from '../../content/schemas';
+import Icon from '../Icon.astro';
+
+interface Props {
+  t: LocaleContent;
+  settings: Settings;
+  success: string;
+}
+const { t, settings, success } = Astro.props;
+const { email } = settings.brand;
+const noscript = t.forms.noscript.split(/(\{email\})/);
+---
+
+<noscript>
+  <p class="form-noscript">
+    {noscript.map((part) => (part === '{email}' ? <a href={`mailto:${email}`}>{email}</a> : part))}
+  </p>
+</noscript>
+<p class="form-status" role="status" data-form-status></p>
+<div class="form-done" tabindex="-1" data-form-done hidden>
+  <span class="form-done-mark" aria-hidden="true"><Icon name="check" size={20} /></span>
+  <p data-form-done-text>{success}</p>
+</div>

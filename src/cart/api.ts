@@ -30,6 +30,13 @@ const KNOWN_CODES = [
   'EMAIL_FAILED',
   'RATE_LIMITED',
   'INTERNAL_ERROR',
+  // Iteration 3: forms, reviews, order lookup.
+  'CAPTCHA_FAILED',
+  'ALREADY_REVIEWED',
+  'INVALID_TOKEN',
+  'ORDER_NOT_FOUND',
+  'MAIL_FAILED',
+  'FEATURE_DISABLED',
 ] as const;
 
 /** A Worker code, `NETWORK` (no response) or `UNKNOWN` (anything else, an HTML 5xx page). */
@@ -128,6 +135,12 @@ export const ERROR_KEY: Record<ApiErrorCode, string> = {
   EMAIL_FAILED: 'generic',
   RATE_LIMITED: 'rateLimited',
   INTERNAL_ERROR: 'generic',
+  CAPTCHA_FAILED: 'captchaFailed',
+  ALREADY_REVIEWED: 'alreadyReviewed',
+  INVALID_TOKEN: 'invalidToken',
+  ORDER_NOT_FOUND: 'orderNotFound',
+  MAIL_FAILED: 'mailFailed',
+  FEATURE_DISABLED: 'featureDisabled',
   NETWORK: 'network',
   UNKNOWN: 'generic',
 };
@@ -167,6 +180,50 @@ export async function postCheckout(
   if (response.ok && data && typeof (data as { url?: unknown }).url === 'string')
     return { ok: true, url: (data as { url: string }).url };
   return { ok: false, error: parseApiError(response.status, data) };
+}
+
+export type PostResult =
+  { ok: true; status: number; data: unknown } | { ok: false; error: ApiError };
+
+/** POST a JSON body to a same-origin API route; any non-2xx answer becomes an ApiError. */
+export async function postJson(
+  path: string,
+  body: unknown,
+  fetchImpl: typeof fetch = fetch,
+): Promise<PostResult> {
+  let response: Response;
+  try {
+    response = await fetchImpl(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(body),
+      credentials: 'same-origin',
+    });
+  } catch {
+    return { ok: false, error: { code: 'NETWORK', status: 0, skus: [] } };
+  }
+  const data: unknown = await response.json().catch(() => null);
+  if (response.ok) return { ok: true, status: response.status, data };
+  return { ok: false, error: parseApiError(response.status, data) };
+}
+
+/**
+ * POST /api/orders/lookup (spec iteration 3, 2.6): `found` with the same
+ * public order as GET /api/orders/:id, or the API error (ORDER_NOT_FOUND,
+ * RATE_LIMITED, VALIDATION_ERROR, NETWORK...). A 2xx with a malformed body is
+ * reported as UNKNOWN.
+ */
+export async function lookupOrder(
+  number: string,
+  email: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ status: 'found'; order: OrderSummary } | { status: 'error'; error: ApiError }> {
+  const result = await postJson('/api/orders/lookup', { number, email }, fetchImpl);
+  if (!result.ok) return { status: 'error', error: result.error };
+  const order = parseOrder(result.data);
+  return order
+    ? { status: 'found', order }
+    : { status: 'error', error: { code: 'UNKNOWN', status: result.status, skus: [] } };
 }
 
 /** Basic shape check of GET /api/orders/:id, so the page never renders half an object. */

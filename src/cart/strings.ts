@@ -31,6 +31,23 @@ export function pageStrings(t: LocaleContent): PageStrings {
   return { checkout: t.checkout, thanks: t.thanks, errors: t.errors };
 }
 
+/** Strings of the enhanced forms (src/forms/kit.ts), embedded on every page as #rep-form-strings. */
+export interface FormStrings {
+  forms: Pick<
+    LocaleContent['forms'],
+    'required' | 'emailInvalid' | 'tooShort' | 'tooLong' | 'validation' | 'sending'
+  >;
+  errors: LocaleContent['errors'];
+}
+
+export function formStrings(t: LocaleContent): FormStrings {
+  const { required, emailInvalid, tooShort, tooLong, validation, sending } = t.forms;
+  return {
+    forms: { required, emailInvalid, tooShort, tooLong, validation, sending },
+    errors: t.errors,
+  };
+}
+
 /**
  * serializeForScript, with the `{` of every `{token}` written as `{`.
  * JSON.parse restores it, and the built HTML holds no raw interpolation token

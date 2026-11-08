@@ -1,0 +1,119 @@
+---
+// Order lookup page (spec iteration 3, 2.6): order number and e-mail, then
+// the order rendered by src/cart/order-view.ts (the thanks page renderer)
+// into the shared OrderDetails shell. src/cart/page-lookup.ts posts the form
+// to POST /api/orders/lookup.
+import Icon from '../../components/Icon.astro';
+import type { Locale } from '../../consts';
+import type { LocaleContent } from '../../content/locale-schema';
+import { loadSettings } from '../../i18n/locale';
+import { routePath } from '../../i18n/routing';
+import { pageStrings, serializeStrings } from '../strings';
+import OrderDetails from './OrderDetails.astro';
+
+interface Props {
+  locale: Locale;
+  t: LocaleContent;
+}
+const { locale, t } = Astro.props;
+const l = t.lookup;
+const { email } = (await loadSettings()).brand;
+const help = l.help.split(/(\{contact\})/);
+const noscript = t.forms.noscript.split(/(\{email\})/);
+---
+
+<section class="container lookup" data-lookup>
+  <header class="lookup-head">
+    <span class="thanks-mark" aria-hidden="true"><Icon name="truck" size={28} /></span>
+    <h1 id="lookup-title" class="rep-title">{l.title}</h1>
+    <p class="lead">{l.lead}</p>
+  </header>
+
+  <div class="lookup-search" data-lookup-search>
+    <form
+      class="rep-form lookup-form"
+      aria-labelledby="lookup-title"
+      data-lookup-form
+      data-searching={l.searching}
+      novalidate
+    >
+      <div class="form-fields" data-form-fields>
+        <div class="form-field">
+          <label for="lookup-number">{l.number}</label>
+          <input
+            id="lookup-number"
+            name="number"
+            type="text"
+            autocomplete="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            required
+            minlength="4"
+            maxlength="40"
+            aria-describedby="lookup-number-hint lookup-number-error"
+          />
+          <p id="lookup-number-hint" class="form-hint">{l.numberHint}</p>
+          <p id="lookup-number-error" class="field-error" data-field-error></p>
+        </div>
+        <div class="form-field">
+          <label for="lookup-email">{l.email}</label>
+          <input
+            id="lookup-email"
+            name="email"
+            type="email"
+            inputmode="email"
+            autocomplete="email"
+            spellcheck="false"
+            required
+            maxlength="254"
+            aria-describedby="lookup-email-error"
+          />
+          <p id="lookup-email-error" class="field-error" data-field-error></p>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary btn-block" data-form-submit>
+            {l.submit}
+          </button>
+        </div>
+      </div>
+      <noscript>
+        <p class="form-noscript">
+          {
+            noscript.map((part) =>
+              part === '{email}' ? <a href={`mailto:${email}`}>{email}</a> : part,
+            )
+          }
+        </p>
+      </noscript>
+      <p class="form-status" role="status" data-form-status></p>
+    </form>
+    <p class="lookup-help">
+      {
+        help.map((part) =>
+          part === '{contact}' ? <a href={routePath('contact', locale)}>{l.contactLink}</a> : part,
+        )
+      }
+    </p>
+  </div>
+
+  <div class="lookup-result" data-lookup-result hidden>
+    <div class="lookup-result-head">
+      <p class="thanks-number" tabindex="-1" data-thanks-number hidden></p>
+      <button type="button" class="btn btn-secondary" data-lookup-again>{l.again}</button>
+    </div>
+    <OrderDetails {locale} {t} next={false} emailNote={false}>
+      <section
+        slot="side"
+        class="summary-card lookup-carrier"
+        aria-labelledby="lookup-carrier-title"
+      >
+        <h2 id="lookup-carrier-title" class="visually-hidden">{t.thanks.nextTitle}</h2>
+        <p class="summary-note">
+          <Icon name="truck" size={20} />
+          <span>{l.carrier}</span>
+        </p>
+      </section>
+    </OrderDetails>
+  </div>
+</section>
+<script type="application/json" id="rep-page-strings" set:html={serializeStrings(pageStrings(t))} />

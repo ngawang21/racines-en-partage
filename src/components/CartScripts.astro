@@ -1,10 +1,12 @@
 ---
-// Embeds the client catalogue and the cart strings as JSON data blocks (not
-// executable, so the strict CSP allows them inline) and loads the cart
-// client as an external module. Base.astro mounts it after <CartDrawer />.
+// Embeds the client catalogue, the cart strings and the form strings as JSON
+// data blocks (not executable, so the strict CSP allows them inline) and
+// loads the cart client as an external module, which also loads the forms
+// module (src/forms/forms.ts) where a form exists. Base.astro mounts it after
+// <CartDrawer />.
 import type { Locale } from '../consts';
 import { getClientCatalog, serializeForScript } from '../cart/catalog';
-import { cartStrings, serializeStrings } from '../cart/strings';
+import { cartStrings, formStrings, serializeStrings } from '../cart/strings';
 import { loadLocale } from '../i18n/locale';
 
 interface Props {
@@ -16,6 +18,7 @@ const [catalog, t] = await Promise.all([getClientCatalog(locale), loadLocale(loc
 
 <script type="application/json" id="rep-catalog" set:html={serializeForScript(catalog)} />
 <script type="application/json" id="rep-strings" set:html={serializeStrings(cartStrings(t))} />
+<script type="application/json" id="rep-form-strings" set:html={serializeStrings(formStrings(t))} />
 <script>
   import '../cart/ui.ts';
 </script>

@@ -46,6 +46,15 @@ const shopOpen = settings.shop.open;
 
     <div class="cd-body">
       <ul class="cart-lines" role="list" data-drawer-lines hidden></ul>
+      <section
+        class="cross-sell cd-cross-sell"
+        aria-labelledby="cart-drawer-xs"
+        data-cross-sell
+        hidden
+      >
+        <h3 id="cart-drawer-xs" class="cross-sell-title">{t.cart.crossSellTitle}</h3>
+        <ul class="cross-sell-list" role="list" data-cross-sell-list></ul>
+      </section>
       <div class="cart-empty cd-empty" data-drawer-empty>
         <span class="cart-empty-mark" aria-hidden="true"><Icon name="flower" size={28} /></span>
         <p class="cart-empty-title">{t.cart.empty}</p>

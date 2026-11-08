@@ -1,6 +1,8 @@
-// dist/_headers (copied from public/_headers): the strict global CSP, the two
-// checkout relaxations limited to the hosts the Mondial Relay loader names,
-// and the admin block pinned to the Sveltia version of public/admin/index.html.
+// dist/_headers (copied from public/_headers): the strict global CSP with the
+// Turnstile and Web Analytics hosts (iteration 3), the two checkout
+// relaxations limited to the hosts the Mondial Relay loader names plus the
+// same two services, and the admin block pinned to the Sveltia version of
+// public/admin/index.html.
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,6 +14,7 @@ import {
   PLUGIN_URL,
   REMOTE_HOSTS,
 } from '../../src/cart/relay-widget';
+import { TURNSTILE_SRC } from '../../src/forms/turnstile';
 import { headersFor, parseCsp, parseHeaders } from '../../scripts/lib/headers.mjs';
 
 const dist = fileURLToPath(new URL('../../dist/', import.meta.url));
@@ -21,6 +24,19 @@ const rules = parseHeaders(text);
 const CSP = 'content-security-policy';
 const CHECKOUT_PATTERNS = ['/commande/*', '/en/checkout/*'];
 const CHECKOUT_PATHS = ['/commande/', '/en/checkout/'];
+
+/** Remote hosts every page may use: Turnstile (forms) and Cloudflare Web Analytics. */
+const SERVICES: Record<string, readonly string[]> = {
+  'script-src': ['https://challenges.cloudflare.com', 'https://static.cloudflareinsights.com'],
+  'frame-src': ['https://challenges.cloudflare.com'],
+  'connect-src': ['https://cloudflareinsights.com'],
+};
+const withServices = (hosts: Record<string, readonly string[]>) => {
+  const out: Record<string, string[]> = {};
+  for (const directive of new Set([...Object.keys(hosts), ...Object.keys(SERVICES)]))
+    out[directive] = [...(hosts[directive] ?? []), ...(SERVICES[directive] ?? [])].sort();
+  return out;
+};
 
 /** Sources of a directive without keywords and schemes ('self', 'unsafe-inline', data:). */
 const hostsOf = (sources: string[] = []) => sources.filter((s) => s.startsWith('https://')).sort();
@@ -47,10 +63,19 @@ function ruleCsp(pattern: string): Map<string, string[]> {
 }
 
 describe('dist/_headers', () => {
-  it('global block: script-src is self only, HSTS covers subdomains', () => {
+  it('global block: self plus the Turnstile and analytics hosts only, HSTS covers subdomains', () => {
     const csp = ruleCsp('/*');
-    expect(csp.get('script-src')).toEqual(["'self'"]);
-    expect(csp.get('connect-src')).toEqual(["'self'"]);
+    expect(csp.get('script-src')![0]).toBe("'self'");
+    expect(csp.get('connect-src')![0]).toBe("'self'");
+    expect(csp.get('script-src')).not.toContain("'unsafe-inline'");
+    expect(csp.get('script-src')).not.toContain("'unsafe-eval'");
+    for (const [directive, sources] of csp)
+      expect(hostsOf(sources), directive).toEqual([...(SERVICES[directive] ?? [])].sort());
+    expect(csp.get('frame-src')).toEqual(['https://challenges.cloudflare.com']);
+    expect(csp.get('default-src')).toEqual(["'self'"]);
+    expect(csp.get('form-action')).toEqual(["'none'"]);
+    // The Turnstile loader uses the allowed host.
+    expect(SERVICES['script-src']).toContain(new URL(TURNSTILE_SRC).origin);
     const hsts = rules
       .find((r) => r.pattern === '/*')!
       .set.find((h) => h.name === 'strict-transport-security');
@@ -69,16 +94,16 @@ describe('dist/_headers', () => {
   });
 
   for (const pattern of CHECKOUT_PATTERNS) {
-    it(`${pattern}: detaches the global CSP first, then allows exactly REMOTE_HOSTS`, () => {
+    it(`${pattern}: detaches the global CSP first, then allows exactly REMOTE_HOSTS and the services`, () => {
       const lines = rawBlock(pattern);
       expect(lines[0]).toBe('! Content-Security-Policy');
       const csp = ruleCsp(pattern);
       expect(csp.get('script-src')![0]).toBe("'self'");
       expect(csp.get('script-src')).not.toContain("'unsafe-inline'");
       expect(csp.get('script-src')).not.toContain("'unsafe-eval'");
-      const expected = REMOTE_HOSTS as Record<string, readonly string[]>;
+      const expected = withServices(REMOTE_HOSTS as Record<string, readonly string[]>);
       for (const [directive, sources] of csp) {
-        expect(hostsOf(sources), directive).toEqual([...(expected[directive] ?? [])].sort());
+        expect(hostsOf(sources), directive).toEqual(expected[directive] ?? []);
       }
       for (const directive of Object.keys(expected)) {
         expect(csp.has(directive), directive).toBe(true);
@@ -123,7 +148,20 @@ describe('dist/_headers', () => {
     const adminCsp = rules.find((r) => r.pattern === '/admin/*')!.set.find((h) => h.name === CSP)!;
     for (const path of CHECKOUT_PATHS) expect(one(path), path).toBe(checkoutCsp.value);
     expect(one('/admin/')).toBe(adminCsp.value);
-    for (const path of ['/', '/boutique/', '/en/', '/merci/', '/panier/']) {
+    for (const path of [
+      '/',
+      '/boutique/',
+      '/en/',
+      '/merci/',
+      '/panier/',
+      '/contact/',
+      '/ma-commande/',
+      '/en/my-order/',
+      '/avis/',
+      '/en/review/',
+      '/newsletter/',
+      '/en/newsletter/',
+    ]) {
       expect(one(path), path).toBe(globalCsp.value);
     }
     // Two identical checkout blocks.

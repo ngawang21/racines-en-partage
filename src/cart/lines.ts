@@ -1,10 +1,17 @@
 // Cart line items shared by the drawer, the cart page and the checkout
 // summary. Keyed updates: an existing <li> is patched in place so the focus
 // stays on the stepper button the customer is pressing.
+import type { ClientProduct } from '../catalog/build';
 import type { CartContext } from './context';
-import { nowrapWeight } from '../i18n/format';
+import { formatUnitPrice, nowrapWeight } from '../i18n/format';
 import { h, icon } from './dom';
 import type { CartLine } from './store';
+
+/** "89,00 €/kg" (spec iteration 3, 2.4), or '' when the weight is unknown. */
+export function unitPriceText(product: ClientProduct, ctx: CartContext): string {
+  if (!(product.weightGrams > 0) || !Number.isInteger(product.unitAmount)) return '';
+  return formatUnitPrice(product.unitAmount, product.weightGrams, ctx.locale);
+}
 
 export type LineVariant = 'drawer' | 'page' | 'summary';
 
@@ -101,6 +108,7 @@ function buildLine(line: CartLine, ctx: CartContext, variant: LineVariant): HTML
       { class: 'cart-line-body' },
       title,
       h('p', { class: 'cart-line-meta', 'data-line-meta': true }),
+      h('p', { class: 'cart-line-kilo', 'data-line-kilo': true }),
       h('p', { class: 'cart-line-status', 'data-line-status': true, hidden: true }),
       h('div', { class: 'cart-line-actions', 'data-line-actions': true }, stepper, remove),
     ),
@@ -124,6 +132,9 @@ function updateLine(li: HTMLLIElement, line: CartLine, ctx: CartContext, opts: L
       ? `${line.quantity} × ${ctx.price(product.unitAmount)}`
       : ctx.fmt(ctx.t.cart.unitPrice, { price: ctx.price(product.unitAmount) });
   if (meta.textContent !== metaText) meta.textContent = metaText;
+  const kilo = li.querySelector<HTMLElement>('[data-line-kilo]')!;
+  const kiloText = product ? unitPriceText(product, ctx) : '';
+  if (kilo.textContent !== kiloText) kilo.textContent = kiloText;
 
   const status = li.querySelector<HTMLElement>('[data-line-status]')!;
   const statusText = !product

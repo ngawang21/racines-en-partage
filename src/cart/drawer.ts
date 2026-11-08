@@ -2,6 +2,7 @@
 // makes the page inert (focus stays inside), Escape and a backdrop click
 // close it, and the focus returns to the control that opened it.
 import type { CartContext } from './context';
+import { renderCrossSell } from './cross-sell-view';
 import { renderFreeShipping } from './free-shipping';
 import { bindLineEvents, renderLines } from './lines';
 import type { CartState } from './store';
@@ -26,6 +27,7 @@ export function createDrawer(ctx: CartContext): Drawer | null {
   const count = q<HTMLElement>('[data-drawer-count]');
   const subtotal = q<HTMLElement>('[data-drawer-subtotal]');
   const free = q<HTMLElement>('[data-free-shipping]');
+  const crossSell = q<HTMLElement>('[data-cross-sell]');
   let opener: HTMLElement | null = null;
   let closing = false;
 
@@ -98,6 +100,7 @@ export function createDrawer(ctx: CartContext): Drawer | null {
       if (count) count.textContent = hasLines ? ctx.itemsLabel(totals.itemCount) : '';
       if (subtotal) subtotal.textContent = ctx.price(totals.subtotal);
       renderFreeShipping(free, totals, ctx);
+      renderCrossSell(crossSell, cart, ctx);
     },
   };
 }

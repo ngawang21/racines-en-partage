@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { parse, type HTMLElement } from 'node-html-parser';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { settingsSchema } from '../../src/content/schemas';
+import { formatPhone } from '../../src/i18n/format';
 import { ROUTES, isIndexable, routePath, routeUrl, type RouteKey } from '../../src/i18n/routing';
 import { CONTENT, readYaml, yamlFolder } from '../unit/helpers';
 
@@ -64,7 +65,8 @@ beforeAll(() => {
 
 describe('routes', () => {
   it('builds every route of spec section 3 in both locales', () => {
-    expect(PAGES.length).toBe(2 * (11 + productSlugs.length + categorySlugs.length));
+    // 11 routes of spec section 3 plus recipes, lookup, review and newsletter (iteration 3).
+    expect(PAGES.length).toBe(2 * (15 + productSlugs.length + categorySlugs.length));
     for (const p of ALL) expect(existsSync(join(dist, p.file)), p.file).toBe(true);
   });
   it('writes catalog.json, the sitemap and robots.txt', () => {
@@ -95,7 +97,7 @@ describe('seo', () => {
       expect(data['@graph'][0]['@type'], p.file).toBe('OnlineStore');
     }
   });
-  it('a robots meta on every page, noindex exactly on cart, checkout, thanks and 404', () => {
+  it('a robots meta on every page, noindex exactly on the NOINDEX_ROUTES (cart, checkout, thanks, review, newsletter, 404)', () => {
     for (const p of ALL) {
       const robots =
         doc(p.file).querySelector('meta[name="robots"]')?.getAttribute('content') ?? '';
@@ -196,8 +198,8 @@ describe('hygiene', () => {
   it('the legal pages carry the contact details from the settings', () => {
     for (const locale of LOCALES) {
       const text = read(fileOf(routePath('legal', locale)));
-      expect(text).toContain('racinesenpartage@outlook.com');
-      expect(text).toContain('07 75 68 91 08');
+      expect(text).toContain(settings.brand.email);
+      expect(text).toContain(formatPhone(settings.brand.phone));
       expect(text).toContain('Cloudflare');
     }
   });
