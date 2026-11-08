@@ -423,3 +423,19 @@ a separate entry in `worker/` deployed with the static assets by one
   language switch and empties the paid cart on arrival, cart re-read on a
   restored page, a `bfcache` Playwright project. Gates: unit 293, worker
   395, build 49 (1 skipped), e2e 156 (2 skipped).
+- 2026-11-09, design pass 5 round 4: third independent rating 7.8/10
+  (`out/review/13/rating-3.md`, local). Applied: Mondial Relay step on brand
+  (own stylesheet, widget theme off, no Google Fonts request, Google hosts
+  removed from the checkout CSP), relay error next to the postcode field,
+  closed points listed last with the date and unselectable, map-failure note
+  only on failure; visible quantity cap under the stepper and on cart lines;
+  phone checkout sticky total and pay bar; payment error with the phone
+  number and the kept basket; thanks page title by state; account and lookup
+  pages on the page edge; recipe anchor focus without a ring; shop five
+  columns from 1280 px with featured products first and a balanced-columns
+  rule against lone cards, category pages with the chip row; engagements
+  band in two columns with the three commitments; each fact once on the
+  home; hero no-break spaces, product kicker removed, FAQ "Nous écrire",
+  business card out of the footer; search with one-typo tolerance and
+  synonyms; phone menu language buttons at 44 px. Gates: unit 309, worker
+  395, build 49 (1 skipped), e2e 172 (2 skipped).
