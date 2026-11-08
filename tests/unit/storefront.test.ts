@@ -95,6 +95,10 @@ describe('publishedReviews and reviewsFor', () => {
   it('keeps published reviews of shown products, newest first', () => {
     expect(shown.map((r) => r.id)).toEqual(['new', 'b', 'old']);
   });
+  it('shows none when the owner turned reviews off', () => {
+    expect(publishedReviews(list, new Set(['a', 'b']), false)).toEqual([]);
+    expect(publishedReviews(list, new Set(['a', 'b']), true)).toEqual(shown);
+  });
   it('filters one product, keeping the order', () => {
     expect(reviewsFor('a', shown).map((r) => r.id)).toEqual(['new', 'old']);
     expect(reviewsFor('zzz', shown)).toEqual([]);

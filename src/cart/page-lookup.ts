@@ -7,6 +7,7 @@ import {
   liveRevalidation,
   readFormStrings,
   setBusy,
+  setFieldError,
   setStatus,
   validateFields,
   value,
@@ -24,6 +25,8 @@ export function initLookup(ctx: CartContext): void {
   if (!root || !form || !search || !result || !s || !ctx.t.thanks) return;
   form.noValidate = true;
   liveRevalidation(form, s);
+  // The static shell, restored when the page is left (see pagehide below).
+  const blank = result.innerHTML;
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -50,9 +53,24 @@ export function initLookup(ctx: CartContext): void {
     result.querySelector<HTMLElement>('[data-thanks-number]')?.focus();
   });
 
-  result.querySelector('[data-lookup-again]')?.addEventListener('click', () => {
+  const showForm = () => {
     result.hidden = true;
     search.hidden = false;
+  };
+  // Delegated: the result's content is replaced on pagehide.
+  result.addEventListener('click', (event) => {
+    if (!(event.target as Element).closest('[data-lookup-again]')) return;
+    showForm();
     form.querySelector<HTMLInputElement>('input[name="number"]')?.focus();
+  });
+
+  // Leaving the page: no order, number or address may come back from the
+  // back/forward cache on a shared device.
+  window.addEventListener('pagehide', () => {
+    form.reset();
+    for (const el of form.querySelectorAll('[aria-invalid]')) setFieldError(el, '');
+    setStatus(form, '');
+    result.innerHTML = blank;
+    showForm();
   });
 }

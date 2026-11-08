@@ -207,15 +207,22 @@ describe('new pages', () => {
       expect(d.querySelector('meta[name="robots"]')?.getAttribute('content')).toContain('noindex');
     }
   });
-  it('newsletter landing: a block per status, noindex', () => {
+  it('newsletter landing: a confirm button and a block per state, noindex', () => {
     for (const locale of LOCALES) {
       const d = page('newsletter', locale);
       const root = d.querySelector('[data-newsletter-landing]');
       expect(root).not.toBeNull();
-      for (const status of ['ok', 'invalid'])
-        expect(root!.querySelector(`[data-landing-when="${status}"]`)?.hasAttribute('hidden')).toBe(
-          true,
-        );
+      for (const state of ['confirm', 'ok', 'invalid', 'disabled'])
+        expect(
+          root!.querySelector(`[data-landing-when="${state}"]`)?.hasAttribute('hidden'),
+          state,
+        ).toBe(true);
+      const confirm = root!.querySelector(
+        '[data-landing-when="confirm"] button[data-landing-confirm]',
+      );
+      expect(confirm?.getAttribute('type')).toBe('button');
+      expect(root!.querySelector('[data-landing-error]')?.getAttribute('data-retry')).toBeTruthy();
+      expect(root!.querySelector('noscript')).not.toBeNull();
       expect(d.querySelector('meta[name="robots"]')?.getAttribute('content')).toContain('noindex');
       expect(root!.querySelector(`a[href="${routePath('shop', locale)}"]`)).not.toBeNull();
     }

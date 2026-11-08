@@ -88,7 +88,7 @@ const weight = formatWeight(product.weightGrams, locale);
     }
     /* Room at the end of the page so the bar never hides the footer. */
     :global(body:has(.sticky-buy.is-visible)) {
-      padding-bottom: 76px;
+      padding-bottom: calc(76px + env(safe-area-inset-bottom));
     }
   }
   @media (prefers-reduced-motion: reduce) {

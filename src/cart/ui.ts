@@ -6,6 +6,32 @@
 import { getContext } from './context';
 import { createDrawer, type Drawer } from './drawer';
 import { itemCount, type CartState } from './store';
+import { takeUrlToken } from './url-token';
+
+/** The forms src/forms/forms.ts enhances (the lookup and review pages load their own). */
+const ENHANCED_FORMS =
+  'form[data-form="contact"], form[data-form="newsletter"], form[data-form="stock_alert"]';
+
+/**
+ * The forms module loads on the first focus inside one of those forms (or a
+ * submit before any focus, such as an autofilled field and Enter), never on
+ * page load. A submit that arrives first is replayed once the module is in.
+ */
+function lazyForms(): void {
+  let loading: Promise<void> | null = null;
+  const load = () => (loading ??= import('../forms/forms').then((m) => m.initForms()));
+  document.addEventListener('focusin', (event) => {
+    if ((event.target as Element | null)?.closest?.(ENHANCED_FORMS)) void load();
+  });
+  document.addEventListener('submit', (event) => {
+    const form = (event.target as Element | null)?.closest?.<HTMLFormElement>(ENHANCED_FORMS);
+    if (!form || form.dataset.enhanced) return;
+    event.preventDefault();
+    void load().then(() => {
+      if (form.dataset.enhanced) form.requestSubmit();
+    });
+  });
+}
 
 function renderBadges(cart: CartState): void {
   const count = itemCount(cart);
@@ -29,7 +55,13 @@ function bump(): void {
   }
 }
 
-function qtyInputFor(sku: string): HTMLInputElement | null {
+/**
+ * The quantity input that goes with an add button: the product page stepper,
+ * except for buttons in the search dialog or a cross-sell list, which always
+ * add one.
+ */
+function qtyInputFor(sku: string, add: Element): HTMLInputElement | null {
+  if (add.closest('dialog[data-search], [data-cross-sell]')) return null;
   return document.querySelector<HTMLInputElement>(`input[data-qty-for="${CSS.escape(sku)}"]`);
 }
 
@@ -65,9 +97,14 @@ function syncStepButtons(input: HTMLInputElement, max: number): void {
 }
 
 function init(): void {
-  // Contact, newsletter and stock-alert forms, the newsletter landing page.
-  if (document.querySelector('form[data-form], [data-newsletter-landing]'))
-    void import('../forms/forms').then((m) => m.initForms());
+  // Bearer tokens leave the address bar before any other script reads it.
+  const bearerPage = document.querySelector('[data-review-page], [data-newsletter-landing]');
+  const status = new URLSearchParams(window.location.search).get('status');
+  const token = bearerPage ? takeUrlToken('t') : null;
+
+  if (document.querySelector(ENHANCED_FORMS)) lazyForms();
+  const landing = document.querySelector<HTMLElement>('[data-newsletter-landing]');
+  if (landing) void import('../forms/landing').then((m) => m.initLanding(landing, token, status));
 
   const ctx = getContext();
   if (!ctx) return;
@@ -102,7 +139,7 @@ function init(): void {
       const sku = add.dataset.sku;
       const product = sku ? ctx.catalog.products[sku] : undefined;
       if (!sku || !product || product.stock === 'out') return;
-      const input = qtyInputFor(sku);
+      const input = qtyInputFor(sku, add);
       const quantity = input ? clampInput(input, store.maxQuantity) : 1;
       const before = store.getCart().lines.find((l) => l.sku === sku)?.quantity ?? 0;
       const suggestion = add.closest('[data-cross-sell]');
@@ -169,7 +206,7 @@ function init(): void {
   if (document.querySelector('[data-lookup]'))
     void import('./page-lookup').then((m) => m.initLookup(ctx));
   if (document.querySelector('[data-review-page]'))
-    void import('./page-review').then((m) => m.initReview(ctx));
+    void import('./page-review').then((m) => m.initReview(ctx, token));
 }
 
 init();

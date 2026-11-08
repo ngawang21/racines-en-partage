@@ -29,8 +29,12 @@ import { toYaml } from './yaml';
 /** The invitation link works for 60 days. */
 export const REVIEW_TOKEN_TTL_SECONDS = 60 * 24 * 60 * 60;
 const DAY_MS = 24 * 60 * 60 * 1000;
-/** Sessions created between 8 and 7 days before the run get their invitation. */
-export const INVITE_WINDOW_DAYS = { from: 8, to: 7 } as const;
+/**
+ * Sessions created between 10 and 7 days before the run get their
+ * invitation: a session missed by a failed run is retried for two more days,
+ * and `metadata.review_invited` keeps it from being invited twice.
+ */
+export const INVITE_WINDOW_DAYS = { from: 10, to: 7 } as const;
 /** 100 sessions per page; 10 pages is far above a day of this shop's orders. */
 export const MAX_INVITE_PAGES = 10;
 /** Session metadata set once the invitation is out. */
@@ -42,6 +46,8 @@ export const REVIEWS_DIR = 'src/content/reviews';
 
 /** Payload of the review invitation token. */
 export interface ReviewToken {
+  /** Token type: a newsletter token cannot post a review. */
+  t: 'review';
   /** Checkout Session id. */
   s: string;
   /** SKUs of the order. */
@@ -54,6 +60,7 @@ export function isReviewToken(value: unknown): value is ReviewToken {
   if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
   return (
+    v.t === 'review' &&
     typeof v.s === 'string' &&
     SESSION_ID_PATTERN.test(v.s) &&
     Array.isArray(v.k) &&
@@ -66,6 +73,8 @@ export function isReviewToken(value: unknown): value is ReviewToken {
 // POST /api/reviews ----------------------------------------------------------
 
 const [AUTHOR_MIN, AUTHOR_MAX] = REVIEW_LIMITS.author;
+/** A first name or pseudonym: letters (accents included), digits, spaces, ' - . only. */
+export const AUTHOR_TEXT = /^[\p{L}\p{M}\d '.-]+$/u;
 const [TEXT_MIN, TEXT_MAX] = REVIEW_LIMITS.text;
 
 export const reviewRequestSchema = z.object({
@@ -75,8 +84,14 @@ export const reviewRequestSchema = z.object({
   author: z
     .string()
     .max(1000)
-    .transform((v) => cleanText(v))
-    .pipe(z.string().min(AUTHOR_MIN).max(AUTHOR_MAX)),
+    .transform((v) => cleanText(v).replace(/[\u2018\u2019]/g, "'"))
+    .pipe(
+      z
+        .string()
+        .min(AUTHOR_MIN)
+        .max(AUTHOR_MAX)
+        .regex(AUTHOR_TEXT, 'Letters, digits, spaces, apostrophes, hyphens and dots only'),
+    ),
   title: z
     .string()
     .max(1000)
@@ -304,6 +319,7 @@ export async function inviteReviews(deps: InviteDeps, now: Date): Promise<Invite
       }
       const products = [...new Set(summary.lines.map((l) => l.name).filter(Boolean))];
       const payload: ReviewToken = {
+        t: 'review',
         s: brief.id,
         k: skus,
         l: summary.locale,
@@ -321,6 +337,7 @@ export async function inviteReviews(deps: InviteDeps, now: Date): Promise<Invite
         ...email,
         ...(deps.env.ORDER_EMAIL_TO ? { replyTo: deps.env.ORDER_EMAIL_TO } : {}),
         idempotencyKey: `${brief.id}:review`,
+        template: 'review_invitation',
       });
     } catch (err) {
       logError('review.invite_failed', { sessionId: brief.id, error: describeError(err) });

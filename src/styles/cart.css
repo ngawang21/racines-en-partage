@@ -1438,7 +1438,7 @@ a.cart-line-name:hover {
   min-width: 0;
 }
 .form-field > label,
-.stars legend {
+.star-rating legend {
   color: var(--forest);
   font-size: var(--fs--1);
   font-weight: 600;
@@ -1502,7 +1502,9 @@ a.cart-line-name:hover {
   line-height: var(--lh-snug);
 }
 .form-status:empty {
-  display: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 .form-status.is-error {
   padding: var(--space-3) var(--space-4);
@@ -1847,7 +1849,7 @@ a.cart-line-name:hover {
 }
 
 /* Star rating: five radios, the labels draw the stars. */
-.stars {
+.star-rating {
   display: grid;
   gap: var(--space-1);
   min-width: 0;
@@ -1855,7 +1857,7 @@ a.cart-line-name:hover {
   padding: 0;
   border: 0;
 }
-.stars legend {
+.star-rating legend {
   margin-bottom: var(--space-1);
   padding: 0;
 }
@@ -1884,7 +1886,7 @@ a.cart-line-name:hover {
   outline: 3px solid var(--hibiscus);
   outline-offset: 1px;
 }
-.stars[aria-invalid='true'] .star svg {
+.star-rating[aria-invalid='true'] .star svg {
   stroke: var(--hibiscus-deep);
 }
 /* Hover previews a rating; the chosen stars stay gold (declared last). */
@@ -1930,6 +1932,24 @@ a.cart-line-name:hover {
 .nl-status-title {
   margin-bottom: var(--space-2);
   font-size: var(--fs-2);
+}
+.nl-status [data-landing-focus]:focus {
+  outline: none;
+}
+.nl-status.is-confirm {
+  justify-content: center;
+  border: 1px solid rgba(185, 142, 94, 0.45);
+  background: var(--paper);
+  text-align: center;
+}
+.nl-confirm {
+  display: grid;
+  gap: var(--space-4);
+  justify-items: center;
+}
+.nl-status-narrow {
+  max-width: 40rem;
+  margin: 0 auto var(--space-6);
 }
 .nl-landing-head .thanks-head {
   margin-bottom: var(--space-8);

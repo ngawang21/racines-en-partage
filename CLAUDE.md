@@ -198,8 +198,14 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   `settings.newsletter.welcomeCode`, `settings.reviews.enabled`) reach the
   Worker through `features` in `dist/catalog.json`; the Worker also disables
   a route when its secret is missing (`FORMS_SECRET`, `RESEND_AUDIENCE_ID`,
-  `GITHUB_TOKEN`). Turnstile: the CMS site key and `TURNSTILE_SECRET_KEY` are
-  both set or both empty, otherwise every form fails with `CAPTCHA_FAILED`.
+  `GITHUB_TOKEN`). Turnstile is required in production: without
+  `TURNSTILE_SECRET_KEY` the contact and newsletter routes answer
+  `FEATURE_DISABLED` (local development sets `FORMS_ALLOW_WITHOUT_CAPTCHA`
+  in `.dev.vars`); the CMS site key and the secret are both set or both
+  empty, otherwise every form fails with `CAPTCHA_FAILED`. The optional
+  `FORMS_KV` binding (commented out in `wrangler.jsonc` until the namespace
+  exists) caps form-triggered e-mails at `FORMS_DAILY_LIMIT` a day so the
+  order e-mails keep their Resend quota.
 - Reviews reach the repository as commits made by the Worker through the
   GitHub Contents API (`GITHUB_TOKEN`, contents read and write on this
   repository only) with `published: false`; nothing shows until the owner

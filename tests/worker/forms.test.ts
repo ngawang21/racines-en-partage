@@ -1,13 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { parseCatalog, type WorkerCatalog } from '../../worker/catalog';
+import { budgetKey, createKvBudget, dailyLimit } from '../../worker/budget';
+import { MailerError, NullMailer } from '../../worker/email/resend';
 import { cleanText } from '../../worker/forms';
-import { MailerError } from '../../worker/email/resend';
 import { signToken, verifyToken } from '../../worker/tokens';
 import {
   ENV,
   NOW,
   catalogFixture,
   fakeAudience,
+  fakeBudget,
   fakeCaptcha,
   fakeLimiter,
   makeApp,
@@ -204,9 +206,12 @@ describe('POST /api/newsletter', () => {
     expect(m!.idempotencyKey).toMatch(/^newsletter:/);
     expect(m!.subject).toBe('Confirmez votre inscription à la newsletter');
     const url = m!.text.match(/https:\/\/\S+/)![0];
-    expect(url).toMatch(/^https:\/\/racinesenpartage\.fr\/api\/newsletter\/confirm\?t=[\w.-]+$/);
+    // The static page, not the API: a link scanner opening it subscribes nobody.
+    expect(url).toMatch(/^https:\/\/racinesenpartage\.fr\/newsletter\/\?t=[\w.-]+$/);
+    expect(m!.template).toBe('newsletter_confirmation');
     const token = new URL(url).searchParams.get('t')!;
     expect(await verifyToken(token, ENV.FORMS_SECRET!, NOW)).toEqual({
+      t: 'newsletter',
       m: 'awa.diallo@example.com',
       l: 'fr',
       e: NOW.getTime() / 1000 + 48 * 3600,
@@ -289,61 +294,63 @@ describe('POST /api/newsletter', () => {
   });
 });
 
-describe('GET /api/newsletter/confirm', () => {
+describe('POST /api/newsletter/confirm', () => {
   const token = (payload: object) => signToken(payload, ENV.FORMS_SECRET!);
   const valid = (l = 'fr') =>
-    token({ m: 'awa.diallo@example.com', l, e: NOW.getTime() / 1000 + 60 });
+    token({ t: 'newsletter', m: 'awa.diallo@example.com', l, e: NOW.getTime() / 1000 + 60 });
+  const confirm = async (
+    app: ReturnType<typeof makeApp>['app'],
+    t: unknown,
+    headers?: Record<string, string>,
+  ) => postJson(app, '/api/newsletter/confirm', { token: t }, headers);
 
-  it('adds the contact and redirects 303 to the newsletter page with status=ok', async () => {
+  it('200 { ok: true } and the contact added', async () => {
     const audience = fakeAudience();
-    const { app } = makeApp({ audience: audience.audience });
-    const res = await app.request(`/api/newsletter/confirm?t=${await valid()}`);
-    expect(res.status).toBe(303);
-    expect(res.headers.get('location')).toBe('https://racinesenpartage.fr/newsletter/?status=ok');
+    const { app, mail } = makeApp({ audience: audience.audience });
+    const res = await confirm(app, await valid('en'));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true });
     expect(audience.added).toEqual(['awa.diallo@example.com']);
+    expect(mail.sent).toHaveLength(0);
   });
 
-  it('English token: English page', async () => {
-    const { app } = makeApp({ audience: fakeAudience().audience });
-    const res = await app.request(`/api/newsletter/confirm?t=${await valid('en')}`);
-    expect(res.headers.get('location')).toBe(
-      'https://racinesenpartage.fr/en/newsletter/?status=ok',
-    );
+  it('does not spend the daily budget (it sends nothing)', async () => {
+    const budget = fakeBudget(0);
+    const { app } = makeApp({ audience: fakeAudience().audience, budget: budget.budget });
+    expect((await confirm(app, await valid())).status).toBe(200);
+    expect(budget.take).not.toHaveBeenCalled();
   });
 
-  it('invalid, tampered, expired or missing token: status=invalid, nothing added', async () => {
+  it('400 INVALID_TOKEN for an expired, tampered, foreign-type or malformed token', async () => {
     const audience = fakeAudience();
     const { app } = makeApp({ audience: audience.audience });
-    const expired = await token({ m: 'a@example.com', l: 'en', e: NOW.getTime() / 1000 });
-    const otherSecret = await signToken({ m: 'a@example.com', l: 'en', e: 9e9 }, 'nope');
-    const noEmail = await token({ m: 'nope', l: 'fr', e: 9e9 });
-    for (const [t, locale] of [
-      [expired, 'en'],
-      [otherSecret, 'en'],
-      [noEmail, 'fr'],
-      ['garbage', 'fr'],
-    ] as const) {
-      const res = await app.request(`/api/newsletter/confirm?t=${t}`);
-      expect(res.status).toBe(303);
-      expect(res.headers.get('location')).toBe(
-        `https://racinesenpartage.fr${locale === 'en' ? '/en' : ''}/newsletter/?status=invalid`,
-      );
+    const exp = NOW.getTime() / 1000;
+    const cases = [
+      await token({ t: 'newsletter', m: 'a@example.com', l: 'en', e: exp }),
+      await signToken({ t: 'newsletter', m: 'a@example.com', l: 'en', e: 9e9 }, 'nope'),
+      await token({ t: 'newsletter', m: 'nope', l: 'fr', e: 9e9 }),
+      // A review token cannot confirm a subscription, nor can an untyped one.
+      await token({ t: 'review', m: 'a@example.com', l: 'fr', e: 9e9 }),
+      await token({ m: 'a@example.com', l: 'fr', e: 9e9 }),
+      'garbage',
+    ];
+    for (const t of cases) {
+      const res = await confirm(app, t);
+      expect(res.status).toBe(400);
+      expect(await errorCode(res)).toBe('INVALID_TOKEN');
     }
-    const res = await app.request('/api/newsletter/confirm');
-    expect(res.headers.get('location')).toBe(
-      'https://racinesenpartage.fr/newsletter/?status=invalid',
-    );
+    const res = await postJson(app, '/api/newsletter/confirm', {});
+    expect(await errorCode(res)).toBe('VALIDATION_ERROR');
     expect(audience.added).toEqual([]);
   });
 
-  it('a Resend failure redirects with status=error', async () => {
+  it('502 MAIL_FAILED when Resend is unavailable', async () => {
     const audience = fakeAudience();
     audience.addContact.mockRejectedValueOnce(new MailerError('down', 500));
     const { app } = makeApp({ audience: audience.audience });
-    const res = await app.request(`/api/newsletter/confirm?t=${await valid()}`);
-    expect(res.headers.get('location')).toBe(
-      'https://racinesenpartage.fr/newsletter/?status=error',
-    );
+    const res = await confirm(app, await valid());
+    expect(res.status).toBe(502);
+    expect(await errorCode(res)).toBe('MAIL_FAILED');
   });
 
   it('404 FEATURE_DISABLED when the owner turned the newsletter off, nothing added', async () => {
@@ -354,7 +361,7 @@ describe('GET /api/newsletter/confirm', () => {
         features: { newsletter: false, reviews: true, newsletterWelcomeCode: '' },
       }),
     );
-    const res = await app.request(`/api/newsletter/confirm?t=${await valid()}`);
+    const res = await confirm(app, await valid());
     expect(res.status).toBe(404);
     expect(await errorCode(res)).toBe('FEATURE_DISABLED');
     expect(audience.added).toEqual([]);
@@ -362,15 +369,112 @@ describe('GET /api/newsletter/confirm', () => {
 
   it('404 FEATURE_DISABLED without an audience', async () => {
     const { app } = makeApp();
-    const res = await app.request(`/api/newsletter/confirm?t=${await valid()}`);
+    const res = await confirm(app, await valid());
     expect(res.status).toBe(404);
     expect(await errorCode(res)).toBe('FEATURE_DISABLED');
   });
 
-  it('405 for a POST', async () => {
+  it('403 from another origin; 405 for a GET (the old link shape)', async () => {
     const { app } = makeApp({ audience: fakeAudience().audience });
-    const res = await app.request('/api/newsletter/confirm', { method: 'POST' });
-    expect(res.status).toBe(405);
-    expect(res.headers.get('allow')).toBe('GET');
+    const res = await confirm(app, await valid(), { Origin: 'https://evil.example' });
+    expect(res.status).toBe(403);
+    const get = await app.request(`/api/newsletter/confirm?t=${await valid()}`);
+    expect(get.status).toBe(405);
+    expect(get.headers.get('allow')).toBe('POST');
+  });
+
+  it('rate limited by the forms limiter', async () => {
+    const forms = fakeLimiter(0);
+    const { app } = makeApp({
+      audience: fakeAudience().audience,
+      limiters: { forms: forms.limiter },
+    });
+    expect((await confirm(app, await valid())).status).toBe(429);
+  });
+});
+
+describe('production guards of the e-mail forms', () => {
+  it('without a Turnstile secret (captcha null): contact and newsletter are 404, logged', async () => {
+    const { app, mail } = makeApp({ captcha: null, audience: fakeAudience().audience });
+    for (const [path, body] of [
+      ['/api/contact', contact],
+      ['/api/newsletter', { email: 'a@example.com', locale: 'fr' }],
+    ] as const) {
+      const res = await postJson(app, path, body);
+      expect(res.status).toBe(404);
+      expect(await errorCode(res)).toBe('FEATURE_DISABLED');
+    }
+    expect(mail.sent).toHaveLength(0);
+    const logged = vi.mocked(console.error).mock.calls.map((c) => String(c[0]));
+    expect(logged.filter((l) => l.includes('TURNSTILE_SECRET_KEY'))).toHaveLength(2);
+  });
+
+  it('contact without RESEND_API_KEY (null mailer): 404 instead of a dropped message', async () => {
+    const { app } = makeApp({ mailer: new NullMailer() });
+    const res = await postJson(app, '/api/contact', contact);
+    expect(res.status).toBe(404);
+    expect(await errorCode(res)).toBe('FEATURE_DISABLED');
+  });
+
+  it('daily budget: one unit per e-mail, then 429 RATE_LIMITED and nothing sent', async () => {
+    const budget = fakeBudget(2);
+    const { app, mail } = makeApp({ budget: budget.budget, audience: fakeAudience().audience });
+    expect((await postJson(app, '/api/contact', contact)).status).toBe(202);
+    expect((await postJson(app, '/api/contact', stockAlert)).status).toBe(202);
+    const res = await postJson(app, '/api/newsletter', {
+      email: 'a@example.com',
+      locale: 'fr',
+    });
+    expect(res.status).toBe(429);
+    expect(await errorCode(res)).toBe('RATE_LIMITED');
+    expect(mail.sent).toHaveLength(2);
+    expect(budget.take).toHaveBeenCalledTimes(3);
+  });
+
+  it('the budget is not spent by a honeypot, an invalid body or a failed captcha', async () => {
+    const budget = fakeBudget(10);
+    const { app } = makeApp({ budget: budget.budget, captcha: fakeCaptcha(false).captcha });
+    await postJson(app, '/api/contact', { website: 'x' });
+    await postJson(app, '/api/contact', { ...contact, email: 'nope' });
+    await postJson(app, '/api/contact', contact);
+    expect(budget.take).not.toHaveBeenCalled();
+  });
+});
+
+describe('KV budget', () => {
+  function memoryStore() {
+    const data = new Map<string, string>();
+    const put = vi.fn(async (key: string, value: string, _o?: { expirationTtl?: number }) => {
+      data.set(key, value);
+    });
+    return { data, put, store: { get: async (k: string) => data.get(k) ?? null, put } };
+  }
+
+  it('counts per UTC day under forms:<day> with a two-day TTL, refuses past the limit', async () => {
+    const mem = memoryStore();
+    let now = new Date('2026-11-08T23:59:00Z');
+    const budget = createKvBudget(mem.store, 2, () => now);
+    expect(await budget.take()).toBe(true);
+    expect(await budget.take()).toBe(true);
+    expect(await budget.take()).toBe(false);
+    expect(mem.data.get('forms:2026-11-08')).toBe('2');
+    expect(mem.put).toHaveBeenCalledWith('forms:2026-11-08', '1', { expirationTtl: 172_800 });
+    now = new Date('2026-11-09T00:01:00Z');
+    expect(budgetKey(now)).toBe('forms:2026-11-09');
+    expect(await budget.take()).toBe(true);
+  });
+
+  it('a KV failure lets the form through (logged)', async () => {
+    const budget = createKvBudget(
+      { get: async () => Promise.reject(new Error('kv down')), put: async () => {} },
+      1,
+      () => NOW,
+    );
+    expect(await budget.take()).toBe(true);
+  });
+
+  it('FORMS_DAILY_LIMIT parses to a positive integer, 60 otherwise', () => {
+    expect(dailyLimit('25')).toBe(25);
+    for (const v of [undefined, '', '0', '-3', '2.5', 'abc']) expect(dailyLimit(v)).toBe(60);
   });
 });

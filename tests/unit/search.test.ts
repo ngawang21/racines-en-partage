@@ -79,5 +79,6 @@ describe('search', () => {
     expect(skus('')).toEqual([]);
     expect(skus('  ’ ')).toEqual([]);
     expect(skus('poudre', 2)).toEqual(['MOR-100', 'MOR-200']);
+    expect(skus('poudre', Number.POSITIVE_INFINITY)).toHaveLength(4);
   });
 });

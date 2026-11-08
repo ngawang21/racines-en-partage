@@ -38,6 +38,7 @@ const nowSeconds = NOW.getTime() / 1000;
 const reviewToken = (overrides: Partial<ReviewToken> = {}, secret = ENV.FORMS_SECRET!) =>
   signToken(
     {
+      t: 'review',
       s: SESSION_ID,
       k: ['REP-MOR-100', 'REP-BAO-100'],
       l: 'fr',
@@ -115,6 +116,18 @@ describe('POST /api/reviews', () => {
     });
   });
 
+  it('author accepts accents, apostrophes (typographic folded), hyphens and dots', async () => {
+    const repo = fakeRepo();
+    const { app } = makeApp({ reviewRepo: repo.repo });
+    const res = await postJson(
+      app,
+      '/api/reviews',
+      await review({ author: 'Marie-Ève O’Neil Jr.' }),
+    );
+    expect(res.status).toBe(201);
+    expect(parse([...repo.files.values()][0]!.content).author).toBe("Marie-Ève O'Neil Jr.");
+  });
+
   it('409 ALREADY_REVIEWED when the session says so, nothing committed', async () => {
     const repo = fakeRepo();
     const { app, stripe } = makeApp({ reviewRepo: repo.repo });
@@ -147,6 +160,22 @@ describe('POST /api/reviews', () => {
     ['no SKU list', () => reviewToken({ k: [] })],
     ['sku not in the order', () => reviewToken({ k: ['REP-BAO-100'] })],
     ['garbage', async () => 'abc.def'],
+    [
+      'a newsletter token',
+      () =>
+        signToken(
+          { t: 'newsletter', m: 'a@example.com', l: 'fr', e: nowSeconds + 3600 },
+          ENV.FORMS_SECRET!,
+        ),
+    ],
+    [
+      'no type',
+      () =>
+        signToken(
+          { s: SESSION_ID, k: ['REP-MOR-100'], l: 'fr', e: nowSeconds + 3600 },
+          ENV.FORMS_SECRET!,
+        ),
+    ],
   ])('400 INVALID_TOKEN: %s', async (_label, make) => {
     const repo = fakeRepo();
     const { app, stripe } = makeApp({ reviewRepo: repo.repo });
@@ -210,6 +239,9 @@ describe('POST /api/reviews', () => {
     ['author too short', { author: 'A' }, 'author'],
     ['author only tags', { author: '<i></i>' }, 'author'],
     ['author too long', { author: 'x'.repeat(41) }, 'author'],
+    ['author with a URL', { author: 'https://spam.example' }, 'author'],
+    ['author with an emoji', { author: 'Awa 🌿' }, 'author'],
+    ['author with punctuation', { author: 'Awa!' }, 'author'],
     ['title too long', { title: 'x'.repeat(81) }, 'title'],
     ['text too short', { text: 'Trop court' }, 'text'],
     ['text too long', { text: 'x'.repeat(1201) }, 'text'],
@@ -308,6 +340,7 @@ describe('inviteReviews (cron)', () => {
     expect(url).toMatch(/^https:\/\/racinesenpartage\.fr\/avis\/\?t=[\w.-]+$/);
     const token = await verifyToken(new URL(url).searchParams.get('t'), ENV.FORMS_SECRET!, RUN);
     expect(token).toEqual({
+      t: 'review',
       s: SESSION_ID,
       k: ['REP-MOR-100', 'REP-BAO-100'],
       l: 'fr',

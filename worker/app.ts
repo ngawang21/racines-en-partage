@@ -11,6 +11,7 @@ import {
   isAllowedOrigin,
   parseCheckoutRequest,
 } from './checkout';
+import type { FormsBudget } from './budget';
 import { ApiError, errorBody, handleError, notFound } from './errors';
 import {
   MAX_FORM_BYTES,
@@ -54,8 +55,14 @@ export interface AppDeps {
   now: () => Date;
   /** Workers rate limiting bindings; a missing one means no limit (tests, old wrangler). */
   limiters?: { checkout?: RateLimiter; orders?: RateLimiter; forms?: RateLimiter };
-  /** Turnstile check of the public forms; absent means no check. */
-  captcha?: Captcha;
+  /**
+   * Turnstile check of the contact and newsletter forms. Absent: no check
+   * (tests, `FORMS_ALLOW_WITHOUT_CAPTCHA`). Null: no secret in production,
+   * so those forms answer 404 FEATURE_DISABLED.
+   */
+  captcha?: Captcha | null;
+  /** Daily budget of form-triggered e-mails (KV); absent means no budget. */
+  budget?: FormsBudget;
   /** Newsletter contacts; absent disables the newsletter endpoints (404 FEATURE_DISABLED). */
   audience?: Audience;
   /** Where reviews are committed; absent disables POST /api/reviews (404 FEATURE_DISABLED). */
@@ -257,9 +264,10 @@ export function createApp(deps: AppDeps) {
     return c.json({ ok: true }, 202);
   });
 
-  // A link opened from an e-mail: no origin check, the signed token is the proof.
-  app.get('/api/newsletter/confirm', forms, async (c) => {
-    return c.redirect(await confirmNewsletter(c.req.query('t'), deps, catalog), 303);
+  // Posted by the static newsletter page; it sends no e-mail, so no budget.
+  app.post('/api/newsletter/confirm', forms, limit(MAX_FORM_BYTES), async (c) => {
+    await confirmNewsletter(await readJson(c, env.SITE_URL), deps, catalog);
+    return c.json({ ok: true });
   });
 
   app.post('/api/reviews', forms, limit(MAX_FORM_BYTES), async (c) => {
@@ -269,7 +277,7 @@ export function createApp(deps: AppDeps) {
 
   app.all('/api/contact', methodNotAllowed('POST'));
   app.all('/api/newsletter', methodNotAllowed('POST'));
-  app.all('/api/newsletter/confirm', methodNotAllowed('GET'));
+  app.all('/api/newsletter/confirm', methodNotAllowed('POST'));
   app.all('/api/reviews', methodNotAllowed('POST'));
   app.all('/api/health', methodNotAllowed('GET'));
   app.all('/api/checkout', methodNotAllowed('POST'));

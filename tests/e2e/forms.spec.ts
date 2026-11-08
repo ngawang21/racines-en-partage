@@ -116,22 +116,71 @@ test.describe('newsletter', () => {
     expect(calls).toEqual([{ email: 'sam@example.com', locale: 'en' }]);
   });
 
-  test('landing page shows the message of each status', async ({ page }) => {
-    const band = page.locator('.nl-band');
-    await page.goto(`${NEWSLETTER.fr}?status=ok`);
-    await expect(page.locator('[data-landing-when="ok"]')).toBeVisible();
-    await expect(page.locator('[data-landing-when="ok"]')).toContainText('Inscription confirmée');
-    await expect(page.locator('[data-landing-when="invalid"]')).toBeHidden();
-    await expect(band).toBeHidden();
+  test('landing page confirms with a POST and strips the token from the address', async ({
+    page,
+  }) => {
+    const calls = await mockApi(page, '/api/newsletter/confirm', 200, { ok: true });
+    await page.goto(`${NEWSLETTER.fr}?t=tok.en-123`);
+    const confirm = page.getByRole('button', { name: 'Confirmer mon inscription' });
+    await expect(confirm).toBeVisible();
+    // The token stays in memory and on the language pill, not in the address.
+    expect(new URL(page.url()).search).toBe('');
+    await expect(page.locator('a[hreflang="en"]').first()).toHaveAttribute(
+      'href',
+      /\/en\/newsletter\/\?t=tok\.en-123$/,
+    );
+    await expect(page.locator('.nl-band')).toBeHidden();
+    await confirm.click();
+    const ok = page.locator('[data-landing-when="ok"]');
+    await expect(ok).toContainText('Inscription confirmée');
+    await expect(ok.getByRole('heading')).toBeFocused();
+    await expect(confirm).toBeHidden();
+    expect(calls).toEqual([{ token: 'tok.en-123' }]);
+  });
 
-    await page.goto(`${NEWSLETTER.fr}?status=invalid`);
+  for (const [code, status, shown, text] of [
+    ['INVALID_TOKEN', 400, 'invalid', /no longer works/],
+    ['FEATURE_DISABLED', 404, 'disabled', /closed for now/],
+  ] as const) {
+    test(`landing page shows the ${shown} state for ${code}`, async ({ page }) => {
+      await mockApi(page, '/api/newsletter/confirm', status, { error: { code, message: 'x' } });
+      await page.goto(`${NEWSLETTER.en}?t=abc`);
+      await page.getByRole('button', { name: 'Confirm my subscription' }).click();
+      await expect(page.locator(`[data-landing-when="${shown}"]`)).toContainText(text);
+      await expect(page.locator('[data-landing-when="confirm"]')).toBeHidden();
+      await expect(page.locator('.nl-band')).toBeVisible({ visible: shown === 'invalid' });
+    });
+  }
+
+  test('landing page keeps the button for a retry after MAIL_FAILED or a network error', async ({
+    page,
+  }) => {
+    await mockApi(page, '/api/newsletter/confirm', 502, {
+      error: { code: 'MAIL_FAILED', message: 'x' },
+    });
+    await page.goto(`${NEWSLETTER.fr}?t=abc`);
+    const confirm = page.getByRole('button', { name: 'Confirmer mon inscription' });
+    await confirm.click();
+    await expect(page.locator('[data-landing-error]')).toHaveText(/Réessayez dans un instant/);
+    await expect(confirm).toBeVisible();
+    await page.unroute('**/api/newsletter/confirm');
+    await page.route('**/api/newsletter/confirm', (route) => route.abort());
+    await confirm.click();
+    await expect(page.locator('[data-landing-error]')).toHaveText(/Réessayez dans un instant/);
+    await expect(confirm).not.toHaveAttribute('aria-disabled', 'true');
+  });
+
+  test('landing page without a token is the invalid-link state; status=ok still reads', async ({
+    page,
+  }) => {
+    await page.goto(NEWSLETTER.fr);
     await expect(page.locator('[data-landing-when="invalid"]')).toContainText('ne fonctionne plus');
-    await expect(page.locator('[data-landing-when="ok"]')).toBeHidden();
-    await expect(band).toBeVisible();
+    await expect(page.locator('.nl-band')).toBeVisible();
+    await expect(page.locator('.lead[data-landing-when="initial"]')).toBeHidden();
 
-    await page.goto(NEWSLETTER.en);
-    await expect(page.locator('.lead[data-landing-when="none"]')).toBeVisible();
-    await expect(page.locator('[data-landing-when="ok"]')).toBeHidden();
+    await page.goto(`${NEWSLETTER.en}?status=ok`);
+    await expect(page.locator('[data-landing-when="ok"]')).toContainText('Subscription confirmed');
+    await expect(page.locator('.nl-band')).toBeHidden();
     await expect(page.getByRole('link', { name: 'Discover the shop' })).toBeVisible();
   });
 });
@@ -201,6 +250,37 @@ test.describe('order lookup', () => {
     await expect(result).toBeHidden();
   });
 
+  test('leaving the page clears the order and the address (back/forward cache)', async ({
+    page,
+  }) => {
+    await mockApi(
+      page,
+      '/api/orders/lookup',
+      200,
+      orderFixture([{ name: 'Poudre de moringa 100 g', quantity: 1, unitAmount: 890 }]),
+    );
+    await page.goto(LOOKUP.fr);
+    await page.locator('#lookup-number').fill('X9Y8Z7W6');
+    await page.locator('#lookup-email').fill('awa@exemple.fr');
+    await page.locator('[data-lookup-form] [data-form-submit]').click();
+    await expect(page.locator('[data-lookup-result] [data-thanks-lines] li')).toHaveCount(1);
+    await page.evaluate(() =>
+      window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: true })),
+    );
+    await expect(page.locator('[data-lookup-result]')).toBeHidden();
+    await expect(page.locator('[data-lookup-result] [data-thanks-lines] li')).toHaveCount(0);
+    await expect(page.locator('[data-lookup-result] [data-thanks-number]')).toBeEmpty();
+    await expect(page.locator('#lookup-email')).toHaveValue('');
+    await expect(page.locator('#lookup-number')).toHaveValue('');
+    // The page still works afterwards.
+    await page.locator('#lookup-number').fill('X9Y8Z7W6');
+    await page.locator('#lookup-email').fill('awa@exemple.fr');
+    await page.locator('[data-lookup-form] [data-form-submit]').click();
+    await expect(page.locator('[data-lookup-result] [data-thanks-lines] li')).toHaveCount(1);
+    await page.getByRole('button', { name: 'Rechercher une autre commande' }).click();
+    await expect(page.locator('#lookup-number')).toBeFocused();
+  });
+
   test('says when no order matches (404) and keeps the form', async ({ page }) => {
     await mockApi(page, '/api/orders/lookup', 404, {
       error: { code: 'ORDER_NOT_FOUND', message: 'x' },
@@ -238,6 +318,12 @@ test.describe('review page', () => {
         : json(route, 409, { error: { code: 'ALREADY_REVIEWED', message: 'x' } });
     });
     await page.goto(`${REVIEW.fr}?t=${token}`);
+    // A 60-day bearer link: read once, then gone from the address (and from
+    // what the analytics beacon sees), kept on the language pill.
+    await expect.poll(() => new URL(page.url()).search).toBe('');
+    expect(await page.locator('a[hreflang="en"]').first().getAttribute('href')).toBe(
+      `${REVIEW.en}?t=${token}`,
+    );
     const cards = page.locator('[data-review-list] article');
     await expect(cards).toHaveCount(2);
     await expect(cards.nth(0).getByRole('heading', { level: 2 })).toHaveText(
@@ -373,4 +459,24 @@ test('header search dialog finds a product by its regional name', async ({ page 
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
   await expect(open).toBeFocused();
+});
+
+test('the search dialog adds one, whatever the product page stepper says', async ({ page }) => {
+  const sku = 'REP-MOR-100';
+  await page.goto('/produits/poudre-de-moringa-100g/');
+  await page.locator(`input[data-qty-for="${sku}"]`).first().fill('3');
+  await page.locator('button[data-search-open]').click();
+  const dialog = page.locator('dialog#search-dialog');
+  await dialog.locator('[data-search-input]').fill('moringa');
+  await dialog.locator(`[data-search-results] button[data-sku="${sku}"]`).first().click();
+  await expect(page.locator('[data-cart-count]').first()).toHaveText('1');
+});
+
+test('the forms module loads on the first focus, not with the page', async ({ page }) => {
+  await page.goto(CONTACT.fr);
+  const form = page.locator('form[data-form="contact"]');
+  await page.waitForLoadState('networkidle');
+  await expect(form).not.toHaveAttribute('data-enhanced', 'true');
+  await form.getByLabel('Votre nom').focus();
+  await expect(form).toHaveAttribute('data-enhanced', 'true');
 });

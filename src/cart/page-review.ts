@@ -96,7 +96,8 @@ function bindForm(
   });
 }
 
-export function initReview(ctx: CartContext): void {
+/** `token`: the ?t= of the address, read and removed by src/cart/ui.ts (url-token.ts). */
+export function initReview(ctx: CartContext, token: string | null): void {
   const root = document.querySelector<HTMLElement>('[data-review-page]');
   const list = root?.querySelector<HTMLElement>('[data-review-list]');
   const template = root?.querySelector<HTMLTemplateElement>('template[data-review-template]');
@@ -108,7 +109,6 @@ export function initReview(ctx: CartContext): void {
     if (el) el.hidden = false;
   };
 
-  const token = new URLSearchParams(window.location.search).get('t');
   const payload = decodeReviewToken(token);
   if (!token || !payload) return show('[data-review-invalid]');
   if (isExpired(payload)) return show('[data-review-expired]');

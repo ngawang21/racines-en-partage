@@ -1,8 +1,7 @@
 // Contact, newsletter and stock-alert forms (spec iteration 3, 2.2 and 2.3).
 // Plain HTML forms rendered by src/components/forms/*.astro; this module,
-// loaded on demand by src/cart/ui.ts when a `form[data-form]` exists, posts
-// them as JSON to the Worker and shows the answer inline. It also reads the
-// ?status= of the newsletter landing page.
+// loaded by src/cart/ui.ts on the first focus (or submit) inside one of them,
+// posts them as JSON to the Worker and shows the answer inline.
 import { postJson } from '../cart/api';
 import {
   errorMessage,
@@ -68,7 +67,11 @@ function enhance(form: HTMLFormElement, kind: Kind, s: FormStrings): void {
       widget = mountTurnstile(box, siteKey, { action: kind.replace('_', '-'), language: locale });
     return widget;
   };
-  if (siteKey && box) form.addEventListener('focusin', () => ensureWidget(), { once: true });
+  if (siteKey && box) {
+    // The module itself loads on the first focus: mount now if that focus is here.
+    if (form.contains(document.activeElement)) ensureWidget();
+    else form.addEventListener('focusin', () => ensureWidget(), { once: true });
+  }
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -98,19 +101,7 @@ function enhance(form: HTMLFormElement, kind: Kind, s: FormStrings): void {
   });
 }
 
-/** /newsletter/?status=ok|invalid: shows the matching message, hides the others. */
-function initLanding(root: HTMLElement): void {
-  const status = new URLSearchParams(window.location.search).get('status');
-  const shown = status === 'ok' || status === 'invalid' ? status : 'none';
-  for (const el of root.querySelectorAll<HTMLElement>('[data-landing-when]')) {
-    const when = (el.dataset.landingWhen ?? '').split(/\s+/);
-    el.hidden = !when.includes(shown);
-  }
-}
-
 export function initForms(): void {
-  const landing = document.querySelector<HTMLElement>('[data-newsletter-landing]');
-  if (landing) initLanding(landing);
   const s = readFormStrings();
   if (!s) return;
   for (const form of document.querySelectorAll<HTMLFormElement>('form[data-form]')) {

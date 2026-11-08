@@ -142,8 +142,9 @@ export async function loadProduct(locale: Locale, slug: string): Promise<Product
 /**
  * The customer reviews the site shows (spec 2.1): `published` ones about a
  * product the site shows (a review of a hidden or deleted product is dropped),
- * newest first. Reviews are not translated: each keeps its language, and the
- * French ones get the French typography.
+ * newest first; none when `settings.reviews.enabled` is off. Reviews are not
+ * translated: each keeps its language, and the French ones get the French
+ * typography.
  */
 export function loadReviews(): Promise<Review[]> {
   // One read per production build (every product grid asks; an empty
@@ -157,9 +158,10 @@ export function loadReviews(): Promise<Review[]> {
 let reviewsOnce: Promise<Review[]> | undefined;
 
 async function readReviews(): Promise<Review[]> {
-  const [entries, products] = await Promise.all([
+  const [entries, products, settings] = await Promise.all([
     getCollection('reviews'),
     loadProducts(DEFAULT_LOCALE),
+    loadSettings(),
   ]);
   const all: Review[] = entries.map((e) => {
     const r = { ...e.data, id: e.id };
@@ -167,7 +169,7 @@ async function readReviews(): Promise<Review[]> {
     const fr = (v: string) => frenchTypographyText(v);
     return { ...r, author: fr(r.author), title: fr(r.title), text: fr(r.text), reply: fr(r.reply) };
   });
-  return publishedReviews(all, new Set(products.map((p) => p.slug)));
+  return publishedReviews(all, new Set(products.map((p) => p.slug)), settings.reviews.enabled);
 }
 
 export async function loadPage<K extends PageKey>(locale: Locale, key: K): Promise<PageContent<K>> {

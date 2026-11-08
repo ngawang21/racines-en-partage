@@ -160,12 +160,15 @@ export function reviewStats(reviews: readonly Pick<Review, 'rating'>[]): {
 
 /**
  * The reviews the site shows (spec 2.1): published ones about a product the
- * site shows, newest first (then by id, so the order is stable).
+ * site shows, newest first (then by id, so the order is stable). None at all
+ * when the owner turned reviews off (`settings.reviews.enabled`).
  */
 export function publishedReviews(
   reviews: readonly Review[],
   productSlugs: ReadonlySet<string>,
+  enabled = true,
 ): Review[] {
+  if (!enabled) return [];
   return reviews
     .filter((r) => r.published && productSlugs.has(r.product))
     .sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id));

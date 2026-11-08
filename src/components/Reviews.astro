@@ -66,19 +66,25 @@ const titleId = `${id}-title`;
             const foreign = r.locale !== locale;
             return (
               <li>
-                <article class="review" lang={foreign ? r.locale : undefined}>
+                <article class="review">
                   <div class="review-head">
                     <Stars rating={r.rating} label={ratingLabel(r.rating, t, locale)} size={16} />
                     {r.verified && (
-                      <span class="verified" lang={foreign ? locale : undefined}>
+                      <span class="verified">
                         <Icon name="shield" size={16} />
                         {t.reviews.verified}
                       </span>
                     )}
                   </div>
-                  {r.title && <h3 class="review-title">{r.title}</h3>}
-                  <p class="review-text">{r.text}</p>
-                  <p class="review-by" lang={foreign ? locale : undefined}>
+                  {r.title && (
+                    <h3 class="review-title" lang={r.locale}>
+                      {r.title}
+                    </h3>
+                  )}
+                  <p class="review-text" lang={r.locale}>
+                    {r.text}
+                  </p>
+                  <p class="review-by">
                     {interpolate(t.reviews.by, {
                       author: r.author,
                       date: formatDate(r.date, locale),
@@ -95,8 +101,10 @@ const titleId = `${id}-title`;
                     )}
                   </p>
                   {r.reply && (
-                    <blockquote class="reply" lang={foreign ? locale : undefined}>
-                      <p class="reply-title">{t.reviews.reply}</p>
+                    <blockquote class="reply">
+                      <p class="reply-title" lang={locale}>
+                        {t.reviews.reply}
+                      </p>
                       <p>{r.reply}</p>
                     </blockquote>
                   )}

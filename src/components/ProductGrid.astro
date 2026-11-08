@@ -3,7 +3,7 @@ import type { Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
 import type { Product } from '../content/schemas';
 import { reviewStats } from '../content/merge';
-import { loadReviews, reviewsFor } from '../i18n/locale';
+import { loadReviews, loadSettings, reviewsFor } from '../i18n/locale';
 import ProductCard from './ProductCard.astro';
 
 interface Props {
@@ -27,7 +27,8 @@ const {
   class: className,
   reveal = false,
 } = Astro.props;
-const reviews = await loadReviews();
+const [reviews, settings] = await Promise.all([loadReviews(), loadSettings()]);
+const showRatings = settings.reviews.enabled;
 ---
 
 <ul class:list={['product-grid', className]} role="list" {id} data-product-grid>
@@ -41,7 +42,7 @@ const reviews = await loadReviews();
           {shopOpen}
           {index}
           {headingLevel}
-          rating={reviewStats(reviewsFor(product.slug, reviews))}
+          rating={showRatings ? reviewStats(reviewsFor(product.slug, reviews)) : undefined}
         />
       </li>
     ))

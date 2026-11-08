@@ -336,5 +336,9 @@ a separate entry in `worker/` deployed with the static assets by one
   cross-sell, how-it-works band, Cloudflare Web Analytics switch, CMS
   collection "Avis clients" and new settings, owner guide recipes, privacy
   policy and legal notes updated, Hello Bank answer in the client letter.
-  Gates: unit 241, worker 332, build 47 (1 skipped: no out-of-stock product),
-  e2e 92 (2 skipped, same reason).
+  Security review (Turnstile required in production, KV daily e-mail
+  budget, POST confirmation, GitHub 422 handling, typed tokens, wider cron
+  window) and front-end review (reviews switch honoured, star contrast,
+  live regions, Safari accordion target, token stripped from the address,
+  search quantity bug) applied. Gates: unit 242, worker 351, build 47
+  (1 skipped: no out-of-stock product), e2e 106 (2 skipped, same reason).

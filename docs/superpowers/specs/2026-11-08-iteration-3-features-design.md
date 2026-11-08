@@ -150,12 +150,14 @@ relay text, and nothing is published without the owner.
   answers 202 `{ ok: true }` (no account enumeration) and sends a confirmation
   e-mail with the link `/api/newsletter/confirm?t=<token>` (payload
   `{ m: email, l: locale, e: expiry 48 h }`, same signing as 2.1).
-- `GET /api/newsletter/confirm?t=` verifies, creates the contact in the
-  Resend audience `RESEND_AUDIENCE_ID` (unsubscribed false, `first_name`
-  empty), and redirects 303 to `/newsletter/?status=ok` (EN
-  `/en/newsletter/?status=ok`); invalid or expired tokens redirect with
-  `status=invalid`. The static page reads the query string and shows the
-  matching message.
+- The e-mail links to the static page `/newsletter/?t=<token>` (EN
+  `/en/newsletter/?t=`), which shows a "Confirmer mon inscription" button;
+  the click does `POST /api/newsletter/confirm` `{ token }`, which verifies
+  and creates the contact in the Resend audience `RESEND_AUDIENCE_ID`
+  (200 `{ ok: true }`, 400 `INVALID_TOKEN`, 502 `MAIL_FAILED`, 404
+  `FEATURE_DISABLED`). A GET would let mail scanners that prefetch links
+  subscribe people without a click; the POST keeps the consent proof. The
+  page strips the token from the address once read.
 - Campaigns: the owner writes them in Resend Broadcasts (documented in the
   owner guide, with the legal footer and the unsubscribe link Resend adds).
   `settings.newsletter.welcomeCode` (optional) prints a promotion code in
@@ -315,14 +317,21 @@ are cookieless, Stripe's cookies live on Stripe's pages.
 | ------------------------------- | ---------------- | -------------------------------------------- |
 | `POST /api/contact`             | FORMS_LIMITER    | kinds contact and stock_alert, honeypot      |
 | `POST /api/newsletter`          | FORMS_LIMITER    | always 202, confirmation e-mail              |
-| `GET /api/newsletter/confirm`   | FORMS_LIMITER    | 303 to the static page                       |
+| `POST /api/newsletter/confirm`  | FORMS_LIMITER    | `{ token }`, adds the Resend contact         |
 | `POST /api/reviews`             | FORMS_LIMITER    | token, GitHub commit, session metadata       |
 | `POST /api/orders/lookup`       | ORDERS_LIMITER   | number plus e-mail                           |
 | scheduled (`0 9 * * *`)         |                  | review invitations                           |
 
 New secrets: `FORMS_SECRET` (32 random bytes, base64), `GITHUB_TOKEN`,
-`TURNSTILE_SECRET_KEY` (optional), `RESEND_AUDIENCE_ID` (optional, newsletter
-disabled without it). New variables: `GITHUB_REPO`. Origin check as for
+`TURNSTILE_SECRET_KEY` (required in production: without it the contact and
+newsletter routes answer `FEATURE_DISABLED`, unless the development-only var
+`FORMS_ALLOW_WITHOUT_CAPTCHA` is `true`), `RESEND_AUDIENCE_ID` (optional,
+newsletter disabled without it). New variables: `GITHUB_REPO`,
+`FORMS_DAILY_LIMIT` (default 60). Optional KV binding `FORMS_KV`: a daily
+counter of form-triggered e-mails, so a flood of forms can never use up the
+Resend quota the order e-mails need. Tokens carry a signed type
+(`t: 'review' | 'newsletter'`). The cron looks at sessions created 10 to 7
+days ago, so a failed run is retried on the following days. Origin check as for
 checkout. Error codes added: `CAPTCHA_FAILED`, `ALREADY_REVIEWED`,
 `INVALID_TOKEN`, `ORDER_NOT_FOUND`, `MAIL_FAILED`, `FEATURE_DISABLED`.
 Every new endpoint is covered by Worker tests with fakes (Stripe list, GitHub

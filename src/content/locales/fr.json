@@ -358,7 +358,11 @@
       "ok": "Merci ! Vous recevrez notre prochaine lettre : nouveautés, recettes et retours en stock.",
       "invalidTitle": "Ce lien ne fonctionne plus",
       "invalid": "Le lien de confirmation a expiré ou n’est pas valide. Inscrivez-vous à nouveau ci-dessous : nous vous envoyons un nouveau lien.",
-      "toShop": "Découvrir la boutique"
+      "toShop": "Découvrir la boutique",
+      "confirmLead": "Un dernier clic pour confirmer votre adresse e-mail et recevoir notre lettre.",
+      "confirm": "Confirmer mon inscription",
+      "retry": "La confirmation n’a pas abouti. Réessayez dans un instant.",
+      "disabled": "Les inscriptions à la lettre sont fermées pour le moment."
     }
   },
   "lookup": {

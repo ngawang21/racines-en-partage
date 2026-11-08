@@ -129,7 +129,13 @@ const shopHref = routePath('shop', locale);
         : []),
       { name: product.name, url: routeUrl('product', locale, slug) },
     ],
-    product: productGraphInput(product, settings, imageUrls, category?.name, reviews),
+    product: productGraphInput(
+      product,
+      settings,
+      imageUrls,
+      category?.name,
+      settings.reviews.enabled ? reviews : [],
+    ),
   }}
 >
   <div class="container product">
@@ -183,7 +189,11 @@ const shopHref = routePath('shop', locale);
             </p>
           </div>
           <p class:list={['badge', STOCK_CLASS[product.stock]]}>{stockLabel(product.stock, t)}</p>
-          <ReviewSummary {stats} {locale} {t} href="#reviews" size="md" class="price-reviews" />
+          {
+            settings.reviews.enabled && (
+              <ReviewSummary {stats} {locale} {t} href="#reviews" size="md" class="price-reviews" />
+            )
+          }
         </div>
 
         <Formats current={product} {formats} {locale} {t} />
@@ -347,7 +357,7 @@ const shopHref = routePath('shop', locale);
     </div>
   </div>
 
-  <Reviews {reviews} {locale} {t} />
+  {settings.reviews.enabled && <Reviews {reviews} {locale} {t} />}
 
   {
     related.length > 0 && (

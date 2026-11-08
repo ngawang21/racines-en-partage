@@ -17,8 +17,14 @@ export interface Env {
   GITHUB_TOKEN?: string;
   /** "owner/name" of the repository the reviews are committed to. */
   GITHUB_REPO?: string;
-  /** Turnstile secret; empty skips the captcha check. */
+  /** Turnstile secret; empty refuses the contact and newsletter forms (see below). */
   TURNSTILE_SECRET_KEY?: string;
+  /** 'true' lets the forms work without Turnstile: local development only, never deployed. */
+  FORMS_ALLOW_WITHOUT_CAPTCHA?: string;
+  /** Daily ceiling of form-triggered e-mails (default 60); needs FORMS_KV. */
+  FORMS_DAILY_LIMIT?: string;
+  /** KV namespace of the daily form budget; absent means no budget. */
+  FORMS_KV?: KVNamespace;
   /** Resend audience of the newsletter; empty disables the newsletter endpoints. */
   RESEND_AUDIENCE_ID?: string;
   /** Rate limiting bindings (wrangler.jsonc `ratelimits`); absent in tests and older wrangler. */
@@ -87,6 +93,8 @@ export interface MailMessage {
   replyTo?: string;
   /** Sent as the `Idempotency-Key` header, `<event id>:owner` or `<event id>:customer`. */
   idempotencyKey: string;
+  /** Which e-mail this is, for logs (never the subject, which may carry a name). */
+  template?: string;
 }
 
 /** Sends one e-mail; rejects when the provider refuses it. */

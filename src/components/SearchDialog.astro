@@ -207,15 +207,18 @@ const { locale, t } = Astro.props;
     color: var(--ink-2);
     font-size: var(--fs--1);
   }
-  .search-status:empty {
-    display: none;
-  }
   .search-hint[hidden] {
     display: none;
   }
   .search-status {
     margin-top: var(--space-2);
     font-weight: 600;
+  }
+  /* The live region stays rendered while empty (a region that appears with
+     its first message is often not announced); it just takes no room. */
+  .search-status:empty {
+    margin: 0;
+    padding: 0;
   }
   .search-label {
     margin-top: var(--space-4);

@@ -84,7 +84,7 @@ const aboutHref = routePath('about', locale);
     link={{ href: aboutHref, label: home.hero.cta.secondary }}
   />
 
-  <ReviewsBand {reviews} {products} {locale} {t} reveal />
+  {settings.reviews.enabled && <ReviewsBand {reviews} {products} {locale} {t} reveal />}
 
   <section class="container section" aria-labelledby="categories-title">
     <SectionHead id="categories-title" title={home.categoriesTitle} eyebrow={t.nav.shop} reveal />

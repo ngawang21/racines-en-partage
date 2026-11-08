@@ -373,6 +373,10 @@ export const localeSchema = z.object({
       invalidTitle: text,
       invalid: text,
       toShop: text,
+      confirmLead: text,
+      confirm: text,
+      retry: text,
+      disabled: text,
     }),
   }),
   /** Order lookup page (owner: forms and cart). */

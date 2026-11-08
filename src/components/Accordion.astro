@@ -4,7 +4,7 @@
 interface Props {
   title: string;
   open?: boolean;
-  /** Fragment target inside the panel: a link to "#recipe" opens it (Chromium, Firefox). */
+  /** Fragment target inside the panel: a link to "#recipe" opens it (accordion-target.ts for Safari). */
   id?: string;
   /** Heading level wrapping the summary text, for the document outline. */
   level?: 'h2' | 'h3';
@@ -24,6 +24,10 @@ const Heading = level;
     <slot />
   </div>
 </details>
+
+<script>
+  import '../scripts/accordion-target';
+</script>
 
 <style>
   .acc {

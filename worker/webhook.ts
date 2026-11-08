@@ -74,6 +74,7 @@ export function orderEmails(
       ...owner,
       ...(customerEmail ? { replyTo: customerEmail } : {}),
       idempotencyKey: `${eventId}:owner`,
+      template: 'order_owner',
     });
   }
   if (customerEmail) {
@@ -83,6 +84,7 @@ export function orderEmails(
       ...customer,
       ...(env.ORDER_EMAIL_TO ? { replyTo: env.ORDER_EMAIL_TO } : {}),
       idempotencyKey: `${eventId}:customer`,
+      template: 'order_customer',
     });
   }
   return messages;

@@ -13,7 +13,8 @@ import {
 } from './email/templates';
 import { ApiError } from './errors';
 import { describeError, logError, logInfo, maskEmail } from './log';
-import { expiresIn, peekToken, signToken, verifyToken } from './tokens';
+import { NullMailer } from './email/resend';
+import { expiresIn, signToken, verifyToken } from './tokens';
 import { MAX_TURNSTILE_TOKEN } from './turnstile';
 import type { Locale } from './types';
 import { isPermanentMailError } from './webhook';
@@ -109,6 +110,8 @@ export const newsletterRequestSchema = z.object({
 
 /** Payload of the newsletter confirmation token. */
 export interface NewsletterToken {
+  /** Token type: a review token cannot confirm a subscription. */
+  t: 'newsletter';
   m: string;
   l: Locale;
   e: number;
@@ -141,11 +144,26 @@ export function switchedOff(): ApiError {
   return new ApiError(404, 'FEATURE_DISABLED', 'This feature is turned off');
 }
 
+/** Refuses a form that would send e-mail without Turnstile in production. */
+function requireCaptchaSetup(deps: AppDeps, form: string): void {
+  if (deps.captcha === null) {
+    logError('config.missing', { name: 'TURNSTILE_SECRET_KEY', form });
+    throw new ApiError(404, 'FEATURE_DISABLED', 'This feature is not enabled');
+  }
+}
+
 async function checkCaptcha(deps: AppDeps, token: string | undefined, ip: string | null) {
   if (!deps.captcha) return;
   if (!(await deps.captcha.verify(token, ip))) {
     throw new ApiError(400, 'CAPTCHA_FAILED', 'Captcha check failed');
   }
+}
+
+/** One unit of the daily e-mail budget, or 429 once it is spent. */
+async function takeBudget(deps: AppDeps, form: string): Promise<void> {
+  if (!deps.budget || (await deps.budget.take())) return;
+  logError('forms.budget_exhausted', { form });
+  throw new ApiError(429, 'RATE_LIMITED', 'Daily form limit reached, try again tomorrow');
 }
 
 export async function handleContact(
@@ -160,6 +178,9 @@ export async function handleContact(
   }
   const to = deps.env.ORDER_EMAIL_TO;
   if (!to) throw featureDisabled('ORDER_EMAIL_TO');
+  // The message would only be logged: better to say the form is off.
+  if (deps.mailer instanceof NullMailer) throw featureDisabled('RESEND_API_KEY');
+  requireCaptchaSetup(deps, 'contact');
   const req = parseBody(contactRequestSchema, body, 'contact request');
   await checkCaptcha(deps, req.turnstile, ip);
 
@@ -184,12 +205,14 @@ export async function handleContact(
       locale: req.locale,
     });
   }
+  await takeBudget(deps, req.kind);
   try {
     await deps.mailer.send({
       to,
       ...email,
       replyTo: req.email,
       idempotencyKey: `${req.kind}:${crypto.randomUUID()}`,
+      template: req.kind,
     });
   } catch (err) {
     logError('contact.mail_failed', { kind: req.kind, error: describeError(err) });
@@ -198,9 +221,9 @@ export async function handleContact(
   logInfo('contact.sent', { kind: req.kind, locale: req.locale, sku: req.sku ?? null });
 }
 
-/** Absolute URL of the static newsletter page with its status. */
-export function newsletterPage(siteUrl: string, locale: Locale, status: string): string {
-  return `${siteUrl.replace(/\/+$/, '')}${ROUTES.newsletter[locale]}?status=${status}`;
+/** The confirmation link: the static newsletter page, which posts the token back. */
+export function newsletterConfirmUrl(siteUrl: string, locale: Locale, token: string): string {
+  return `${siteUrl.replace(/\/+$/, '')}${ROUTES.newsletter[locale]}?t=${token}`;
 }
 
 export async function handleNewsletter(
@@ -214,23 +237,25 @@ export async function handleNewsletter(
   if (!deps.audience) throw featureDisabled('RESEND_AUDIENCE_ID');
   const { features } = await loadCatalog();
   if (!features.newsletter) throw switchedOff();
+  requireCaptchaSetup(deps, 'newsletter');
   if (isHoneypotFilled(body)) {
     logInfo('newsletter.honeypot');
     return;
   }
   const req = parseBody(newsletterRequestSchema, body, 'newsletter request');
   await checkCaptcha(deps, req.turnstile, ip);
+  await takeBudget(deps, 'newsletter');
 
   const payload: NewsletterToken = {
+    t: 'newsletter',
     m: req.email,
     l: req.locale,
     e: expiresIn(deps.now(), NEWSLETTER_TOKEN_TTL_SECONDS),
   };
   const token = await signToken(payload, secret);
-  const site = deps.env.SITE_URL.replace(/\/+$/, '');
   const email = renderNewsletterConfirmation({
     locale: req.locale,
-    url: `${site}/api/newsletter/confirm?t=${token}`,
+    url: newsletterConfirmUrl(deps.env.SITE_URL, req.locale, token),
     welcomeCode: features.newsletterWelcomeCode,
   });
   try {
@@ -239,6 +264,7 @@ export async function handleNewsletter(
       ...email,
       ...(deps.env.ORDER_EMAIL_TO ? { replyTo: deps.env.ORDER_EMAIL_TO } : {}),
       idempotencyKey: `newsletter:${crypto.randomUUID()}`,
+      template: 'newsletter_confirmation',
     });
   } catch (err) {
     // A refused address answers like a sent one: the endpoint never tells which addresses work.
@@ -255,32 +281,40 @@ export async function handleNewsletter(
 function isNewsletterToken(value: unknown): value is NewsletterToken {
   if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
-  return typeof v.m === 'string' && emailField.safeParse(v.m).success && isLocaleValue(v.l);
+  return (
+    v.t === 'newsletter' &&
+    typeof v.m === 'string' &&
+    emailField.safeParse(v.m).success &&
+    isLocaleValue(v.l)
+  );
 }
 
-/** The redirect target of a confirmation link (303 to the static newsletter page). */
+export const confirmRequestSchema = z.object({ token: z.string().min(1).max(4096) });
+
+/**
+ * POST /api/newsletter/confirm `{ token }`, sent by the static newsletter
+ * page when the person clicks the button (a link scanner opening the e-mail
+ * link subscribes nobody). Resolves once the address is in the audience.
+ */
 export async function confirmNewsletter(
-  token: string | undefined,
+  body: unknown,
   deps: AppDeps,
   loadCatalog: () => Promise<WorkerCatalog>,
-): Promise<string> {
+): Promise<void> {
   const secret = deps.env.FORMS_SECRET;
   if (!secret) throw featureDisabled('FORMS_SECRET');
   if (!deps.audience) throw featureDisabled('RESEND_AUDIENCE_ID');
   if (!(await loadCatalog()).features.newsletter) throw switchedOff();
-  const site = deps.env.SITE_URL;
+  const { token } = parseBody(confirmRequestSchema, body, 'confirmation');
   const payload = await verifyToken<unknown>(token, secret, deps.now());
   if (!isNewsletterToken(payload)) {
-    // Unverified, only to answer in the reader's language.
-    const peeked = peekToken(token)?.l;
-    return newsletterPage(site, isLocaleValue(peeked) ? peeked : 'fr', 'invalid');
+    throw new ApiError(400, 'INVALID_TOKEN', 'Invalid or expired link');
   }
   try {
     await deps.audience.addContact(payload.m);
   } catch (err) {
     logError('newsletter.contact_failed', { to: maskEmail(payload.m), error: describeError(err) });
-    return newsletterPage(site, payload.l, 'error');
+    throw new ApiError(502, 'MAIL_FAILED', 'The subscription could not be saved');
   }
   logInfo('newsletter.confirmed', { locale: payload.l });
-  return newsletterPage(site, payload.l, 'ok');
 }

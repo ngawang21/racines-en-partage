@@ -115,7 +115,8 @@ export class NullMailer implements Mailer {
     logInfo('mail.skipped', {
       reason: 'RESEND_API_KEY is not set',
       to: maskEmail(message.to),
-      subject: message.subject,
+      // The template name, never the subject: a subject may carry a customer's name.
+      template: message.template ?? 'unknown',
       idempotencyKey: message.idempotencyKey.split(':')[0],
     });
   }

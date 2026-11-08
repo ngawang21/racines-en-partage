@@ -358,7 +358,11 @@
       "ok": "Thank you! You will receive our next letter: new products, recipes and restocks.",
       "invalidTitle": "This link no longer works",
       "invalid": "The confirmation link has expired or is not valid. Sign up again below: we will send you a new link.",
-      "toShop": "Discover the shop"
+      "toShop": "Discover the shop",
+      "confirmLead": "One last click to confirm your e-mail address and receive our letter.",
+      "confirm": "Confirm my subscription",
+      "retry": "The confirmation did not go through. Please try again in a moment.",
+      "disabled": "Newsletter sign-ups are closed for now."
     }
   },
   "lookup": {

@@ -1,7 +1,7 @@
 // Cloudflare Worker: static assets from dist/ plus the API in worker/ on /api/*.
 // Secrets (never in this file): STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
 // RESEND_API_KEY (optional), ORDER_EMAIL_TO, FORMS_SECRET, GITHUB_TOKEN,
-// TURNSTILE_SECRET_KEY (optional), RESEND_AUDIENCE_ID (optional).
+// TURNSTILE_SECRET_KEY (the forms are off without it), RESEND_AUDIENCE_ID (optional).
 // Local values go in .dev.vars.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
@@ -22,7 +22,15 @@
     "ORDER_EMAIL_FROM": "Racines en Partage <commandes@racinesenpartage.fr>",
     // Repository the review files are committed to (POST /api/reviews).
     "GITHUB_REPO": "ngawang21/racines-en-partage",
+    // Daily ceiling of e-mails sent by the contact, stock-alert and newsletter
+    // forms (counted in FORMS_KV when it is bound).
+    "FORMS_DAILY_LIMIT": "60",
   },
+  // Daily form budget (worker/budget.ts). Optional: without the binding no
+  // budget applies. It keeps form spam from eating the Resend quota the order
+  // e-mails need. Create the namespace (docs/deployment.md, section 18), then
+  // uncomment with its id; a deploy with a placeholder id would fail.
+  // "kv_namespaces": [{ "binding": "FORMS_KV", "id": "<id of the FORMS_KV namespace>" }],
   // Per-IP limits (worker/app.ts), keyed on CF-Connecting-IP: checkout; the
   // order page and the order lookup; the contact, newsletter and review forms.
   // Free; namespace_id is any integer unique to the account.

@@ -4,8 +4,10 @@
 // the dialog's <template>. The add buttons follow the cart contract, so the
 // cart script handles them. Escape and a backdrop click close the dialog
 // (native cancel plus a click on the dialog box itself); focus returns to the
-// button that opened it. Enter with a single result opens that product.
+// button that opened it. Enter opens the first result. The catalogue is the
+// one the cart context already parsed (getContext memoises it per page).
 import type { ClientCatalog, ClientProduct } from '../catalog/build';
+import { getContext } from '../cart/context';
 import type { Locale } from '../consts';
 import { formatPrice, formatUnitPrice } from '../i18n/format';
 import { buildIndex, search, type SearchIndex } from '../search/match';
@@ -13,7 +15,10 @@ import { buildIndex, search, type SearchIndex } from '../search/match';
 const LIMIT = 8;
 const SUGGESTIONS = 4;
 
+/** The cart context's catalogue; parsed here only when the context cannot be built. */
 function readCatalog(): ClientCatalog | null {
+  const shared = getContext()?.catalog;
+  if (shared) return shared;
   const el = document.getElementById('rep-catalog');
   if (!el?.textContent) return null;
   try {
@@ -98,16 +103,18 @@ function initSearch(): void {
       window.clearTimeout(statusTimer);
       status.textContent = '';
     } else {
-      shown = search(index, query, LIMIT);
+      // Every match is counted; the list shows the first LIMIT.
+      const matches = search(index, query, Number.POSITIVE_INFINITY);
+      shown = matches.slice(0, LIMIT);
       hint.hidden = true;
       label.hidden = true;
-      const one = locale === 'fr' ? shown.length <= 1 : shown.length === 1;
+      const total = matches.length;
+      const one = locale === 'fr' ? total <= 1 : total === 1;
       announce(
-        shown.length === 0
-          ? (strings.empty ?? '').replace('%q', query)
-          : ((one ? strings.resultsOne : strings.resultsMany) ?? '').replace(
-              '%n',
-              String(shown.length),
+        total === 0
+          ? (strings.empty ?? '').replace('%q', () => query)
+          : ((one ? strings.resultsOne : strings.resultsMany) ?? '').replace('%n', () =>
+              String(total),
             ),
       );
     }
@@ -147,7 +154,8 @@ function initSearch(): void {
   });
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (input.value.trim() !== '' && shown.length === 1) window.location.assign(shown[0]!.url);
+    const first = shown[0];
+    if (input.value.trim() !== '' && first) window.location.assign(first.url);
   });
   // Leaving the page by a result link: closed again when restored from the bfcache.
   window.addEventListener('pageshow', (event) => {

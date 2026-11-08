@@ -3,6 +3,7 @@ import { frenchTypographyText } from '../../src/i18n/typography';
 import type Stripe from 'stripe';
 import { vi } from 'vitest';
 import { createApp, type AppDeps } from '../../worker/app';
+import type { FormsBudget } from '../../worker/budget';
 import type { WorkerCatalog } from '../../worker/catalog';
 import type {
   AppEnv,
@@ -257,6 +258,14 @@ export function sessionPage(
   hasMore = false,
 ): Stripe.ApiList<Stripe.Checkout.Session> {
   return { object: 'list', data, has_more: hasMore, url: '/v1/checkout/sessions' };
+}
+
+/** A daily e-mail budget that grants `allowed` units, then refuses. */
+export function fakeBudget(allowed = Infinity) {
+  let used = 0;
+  const take = vi.fn(async () => used++ < allowed);
+  const budget: FormsBudget = { take };
+  return { budget, take };
 }
 
 /** A Turnstile check answering `ok`. */

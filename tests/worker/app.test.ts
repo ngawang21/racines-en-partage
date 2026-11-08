@@ -68,6 +68,7 @@ describe('API surface', () => {
     ['GET', '/api/newsletter', 'POST'],
     ['GET', '/api/reviews', 'POST'],
     ['GET', '/api/orders/lookup', 'POST'],
+    ['GET', '/api/newsletter/confirm', 'POST'],
   ])('405 METHOD_NOT_ALLOWED for %s %s', async (method, path, allow) => {
     const { app } = makeApp();
     const res = await app.request(path, { method });
@@ -308,10 +309,56 @@ describe('worker entry (index.ts)', () => {
     );
     expect(list).toHaveBeenCalledOnce();
     const url = new URL(String(list.mock.calls[0]![0]));
-    const gte = Date.UTC(2026, 10, 8, 9) / 1000 - 8 * 86_400;
-    expect(url.searchParams.get('created[gte]')).toBe(String(gte));
-    expect(url.searchParams.get('created[lt]')).toBe(String(gte + 86_400));
+    const run = Date.UTC(2026, 10, 8, 9) / 1000;
+    expect(url.searchParams.get('created[gte]')).toBe(String(run - 10 * 86_400));
+    expect(url.searchParams.get('created[lt]')).toBe(String(run - 7 * 86_400));
     expect(url.searchParams.get('status')).toBe('complete');
+    fetchSpy.mockRestore();
+  });
+
+  const contactRequest = () =>
+    workerRequest('https://racinesenpartage.fr/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: 'https://racinesenpartage.fr' },
+      body: JSON.stringify({
+        kind: 'contact',
+        locale: 'fr',
+        name: 'Awa',
+        email: 'awa@example.com',
+        message: 'Bonjour',
+      }),
+    });
+  const errors = () => vi.mocked(console.error).mock.calls.map((c) => String(c[0]));
+
+  it('contact without TURNSTILE_SECRET_KEY: 404 FEATURE_DISABLED, logged for the owner', async () => {
+    const res = await worker.fetch(
+      contactRequest(),
+      { ...env(fakeAssets()), ORDER_EMAIL_TO: 'o@example.com', RESEND_API_KEY: 're_x' },
+      ctx,
+    );
+    expect(res.status).toBe(404);
+    expect(errors().some((l) => l.includes('TURNSTILE_SECRET_KEY'))).toBe(true);
+  });
+
+  it('FORMS_ALLOW_WITHOUT_CAPTCHA=true skips Turnstile; FORMS_KV caps the day (429)', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    const kv = { get: vi.fn(async () => '5'), put: vi.fn(async () => {}) };
+    const res = await worker.fetch(
+      contactRequest(),
+      {
+        ...env(fakeAssets()),
+        ORDER_EMAIL_TO: 'o@example.com',
+        RESEND_API_KEY: 're_x',
+        FORMS_ALLOW_WITHOUT_CAPTCHA: 'true',
+        FORMS_DAILY_LIMIT: '5',
+        FORMS_KV: kv as unknown as KVNamespace,
+      },
+      ctx,
+    );
+    expect(res.status).toBe(429);
+    expect(kv.get).toHaveBeenCalledWith(expect.stringMatching(/^forms:\d{4}-\d{2}-\d{2}$/));
+    expect(errors().some((l) => l.includes('TURNSTILE_SECRET_KEY'))).toBe(false);
+    expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
 

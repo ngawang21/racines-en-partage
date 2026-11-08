@@ -20,7 +20,8 @@ invitations (`scheduled` in `index.ts`).
 | `reviews.ts`          | `POST /api/reviews` (token, session, GitHub commit) and `inviteReviews` (cron)                             |
 | `tokens.ts`           | `signToken`, `verifyToken`, `peekToken`: base64url JSON plus HMAC-SHA256 (WebCrypto)                       |
 | `yaml.ts`             | `toYaml`: flat mapping, every string quoted in the style Prettier keeps                                    |
-| `github.ts`           | GitHub Contents API client (`PUT`, 422 means the file exists)                                              |
+| `github.ts`           | GitHub Contents API client (`PUT`; a 422 about the missing `sha` means the file exists)                    |
+| `budget.ts`           | Daily budget of form e-mails in KV (`forms:<UTC day>`, `FORMS_DAILY_LIMIT`)                                |
 | `turnstile.ts`        | Turnstile `siteverify` client, skipped without a secret                                                    |
 | `webhook.ts`          | Signature check, paid-order handling, e-mails, `emails_sent` mark, error classes                           |
 | `catalog.ts`          | zod schema of `catalog.json` (checked against `WorkerCatalog` at compile time), cache                      |
@@ -32,17 +33,17 @@ invitations (`scheduled` in `index.ts`).
 
 ## Endpoints
 
-| Method and path               | Success                                                   |
-| ----------------------------- | --------------------------------------------------------- |
-| `POST /api/checkout`          | `200 { url }`: redirect the browser to Stripe Checkout    |
-| `GET /api/orders/:sessionId`  | `200 { status, number, lines, amounts, delivery, email }` |
-| `POST /api/webhooks/stripe`   | `200 { received: true }`                                  |
-| `GET /api/health`             | `200 { ok: true, version, catalogGeneratedAt }`           |
-| `POST /api/orders/lookup`     | `200` the same body as `GET /api/orders/:sessionId`       |
-| `POST /api/contact`           | `202 { ok: true }`                                        |
-| `POST /api/newsletter`        | `202 { ok: true }`                                        |
-| `GET /api/newsletter/confirm` | `303` to `/newsletter/?status=ok` (EN `/en/newsletter/`)  |
-| `POST /api/reviews`           | `201 { ok: true }`                                        |
+| Method and path                | Success                                                   |
+| ------------------------------ | --------------------------------------------------------- |
+| `POST /api/checkout`           | `200 { url }`: redirect the browser to Stripe Checkout    |
+| `GET /api/orders/:sessionId`   | `200 { status, number, lines, amounts, delivery, email }` |
+| `POST /api/webhooks/stripe`    | `200 { received: true }`                                  |
+| `GET /api/health`              | `200 { ok: true, version, catalogGeneratedAt }`           |
+| `POST /api/orders/lookup`      | `200` the same body as `GET /api/orders/:sessionId`       |
+| `POST /api/contact`            | `202 { ok: true }`                                        |
+| `POST /api/newsletter`         | `202 { ok: true }`                                        |
+| `POST /api/newsletter/confirm` | `200 { ok: true }`                                        |
+| `POST /api/reviews`            | `201 { ok: true }`                                        |
 
 `POST /api/checkout` takes
 `{ locale: 'fr' | 'en', items: [{ sku, quantity, unitAmount? }], delivery, acceptedTerms: true }`
@@ -122,40 +123,59 @@ needs `sku` (a catalogue SKU, else 409 `UNKNOWN_SKU`). `website` is the
 honeypot: filled, the answer is 202 and nothing is sent. One e-mail to
 `ORDER_EMAIL_TO` with reply-to the customer, subject "Message du site de
 <name>" or "Alerte de stock : <product> pour <email>", key
-`<kind>:<uuid>`. Mail failure: 502 `MAIL_FAILED`. Without `ORDER_EMAIL_TO`:
-404 `FEATURE_DISABLED`.
+`<kind>:<uuid>`. Mail failure: 502 `MAIL_FAILED`. Without `ORDER_EMAIL_TO`
+or `RESEND_API_KEY` (the message would only be logged): 404
+`FEATURE_DISABLED`.
 
 `POST /api/newsletter` (`FORMS_LIMITER`): `{ email, locale, turnstile?, website? }`.
 Always 202 once valid (a refused address answers like a sent one; a
 transient Resend failure is 502 `MAIL_FAILED`). The confirmation e-mail
-links to `<SITE_URL>/api/newsletter/confirm?t=<token>`, token payload
-`{ m: email, l: locale, e }`, valid 48 h, and prints
+links to the static page `<SITE_URL>/newsletter/?t=<token>` (EN
+`/en/newsletter/?t=`), token payload `{ t: 'newsletter', m: email, l: locale, e }`,
+valid 48 h, and prints
 `features.newsletterWelcomeCode` of `catalog.json` when set. Disabled (404
 `FEATURE_DISABLED`) without `FORMS_SECRET`, `RESEND_API_KEY` or
 `RESEND_AUDIENCE_ID` (logged as `config.missing`), or when
 `features.newsletter` is false (the owner's choice, not logged).
 
-`GET /api/newsletter/confirm?t=` (`FORMS_LIMITER`, no origin check): verifies
-the token, adds `{ email, unsubscribed: false }` to the audience (Resend's
-"already exists" counts as done), then 303 to
-`<SITE_URL>/newsletter/?status=ok` (EN `/en/newsletter/`). A bad or expired
-token gives `status=invalid` (language read from the unverified payload,
-French otherwise); a Resend failure gives `status=error`.
+`POST /api/newsletter/confirm` (`FORMS_LIMITER`, origin check, no daily
+budget since it sends nothing): `{ token }`, posted by the newsletter page
+when the person clicks "Confirmer mon inscription", so a link scanner
+opening the e-mail subscribes nobody. It verifies the token (type
+`newsletter` only), adds `{ email, unsubscribed: false }` to the audience
+(Resend's "already exists" counts as done) and answers `200 { ok: true }`.
+A bad, expired or review token is 400 `INVALID_TOKEN`; Resend unavailable
+is 502 `MAIL_FAILED`; disabled as above, 404 `FEATURE_DISABLED`.
 
 Turnstile (contact and newsletter): `turnstile` is checked with
 `siteverify` (`secret`, `response`, `remoteip` from `CF-Connecting-IP`);
 failure or outage is 400 `CAPTCHA_FAILED`. Without `TURNSTILE_SECRET_KEY`
-the check is skipped.
+both forms answer 404 `FEATURE_DISABLED` and log `config.missing`, unless
+`FORMS_ALLOW_WITHOUT_CAPTCHA` is `'true'` (local development only, in
+`.dev.vars`; never deployed), which skips the check.
+
+Daily budget: with the KV binding `FORMS_KV`, every e-mail the forms send
+(contact, stock alert, newsletter confirmation) first increments
+`forms:<UTC day>` (TTL 2 days); past `FORMS_DAILY_LIMIT` (default 60) the
+form answers 429 `RATE_LIMITED` and logs `forms.budget_exhausted`. It
+protects the Resend quota (100 a day on the free plan) the order e-mails
+need. A honeypot hit, an invalid body or a failed captcha spends nothing;
+review invitations are not counted. Without the binding no budget applies;
+a KV error lets the form through and is logged.
 
 `POST /api/reviews` (`FORMS_LIMITER`):
 `{ token, sku, rating, author, title?, text, locale }`. `rating` is an
 integer 1 to 5, `author` 2 to 40 characters, `title` up to 80, `text` 20
 to 1200 (`REVIEW_LIMITS` of `src/content/schemas.ts`, measured after
-cleaning). The token payload is `{ s: sessionId, k: [sku...], l: locale, e }`
-(60 days); a bad signature, an expired token, a SKU outside `k`, or a
-session that is gone or not this shop's is 400 `INVALID_TOKEN`. A SKU no
+cleaning). `author` also passes an allow-list after cleaning: letters
+(accents included), digits, spaces, apostrophes (typographic ones folded),
+hyphens and dots. The token payload is
+`{ t: 'review', s: sessionId, k: [sku...], l: locale, e }` (60 days); a bad
+signature, an expired token, a token of another type, a SKU outside `k`, or
+a session that is gone or not this shop's is 400 `INVALID_TOKEN`. A SKU no
 longer in the catalogue is 409 `UNKNOWN_SKU`. `metadata['reviewed_' + sku]`
-set, or GitHub answering 422 (the file exists), is 409 `ALREADY_REVIEWED`.
+set, or GitHub answering 422 about the missing `sha` (the file exists), is
+409 `ALREADY_REVIEWED`; any other 422 is a GitHub failure (below).
 Otherwise the Worker writes
 `src/content/reviews/<product slug>--<order number>.yml` on `main` (commit
 message `content: avis client sur <slug>`) with `product`, `rating`,
@@ -175,7 +195,8 @@ limit. No match: 404 `ORDER_NOT_FOUND`.
 ### Review invitations (cron)
 
 `scheduled` runs `inviteReviews` at `0 9 * * *` (UTC). It lists completed
-sessions created between 8 and 7 days before the run (100 per page, at most
+sessions created between 10 and 7 days before the run (so a failed run is
+retried on the next two days; 100 per page, at most
 10 pages), skips those already invited (`metadata.review_invited`), unpaid,
 not this shop's or without an e-mail, lists their lines, and sends the
 invitation (FR or EN per `metadata.locale`, link `/avis/?t=` or
@@ -222,52 +243,55 @@ localises by `code` (`ERROR_KEY` in `src/cart/api.ts`, every code of
 `ERROR_CODES` in `errors.ts` mapped, `tests/worker/error-contract.test.ts`);
 `message` is for developers.
 
-| Status | Code                     | When                                                                   |
-| ------ | ------------------------ | ---------------------------------------------------------------------- |
-| 400    | `VALIDATION_ERROR`       | Bad JSON or schema; `details.issues: [{ path, code, message }]`        |
-| 400    | `INVALID_SIGNATURE`      | Webhook signature missing, wrong or older than 300 s                   |
-| 400    | `CAPTCHA_FAILED`         | Turnstile token missing or refused (contact, newsletter)               |
-| 400    | `INVALID_TOKEN`          | Review token bad, expired, without that SKU, or its session is gone    |
-| 403    | `FORBIDDEN_ORIGIN`       | Checkout from another origin                                           |
-| 404    | `NOT_FOUND`              | Unknown `/api` path, no such order, or an order older than 48 h        |
-| 404    | `ORDER_NOT_FOUND`        | Lookup: no order of that number for that e-mail                        |
-| 404    | `FEATURE_DISABLED`       | Newsletter, reviews or contact without their secrets (logged)          |
-| 405    | `METHOD_NOT_ALLOWED`     | Wrong method (`Allow` header set)                                      |
-| 409    | `UNKNOWN_SKU`            | `details.skus` (checkout, stock alert, review)                         |
-| 409    | `OUT_OF_STOCK`           | `details.skus` (stock `out`; `low` passes)                             |
-| 409    | `PRICE_CHANGED`          | `details.skus` (the page showed another `unitAmount`)                  |
-| 409    | `ALREADY_REVIEWED`       | That product of that order already has a review                        |
-| 409    | `SHIPPING_UNAVAILABLE`   | `details: { method, reason: 'disabled' \| 'no_country' \| 'country' }` |
-| 413    | `PAYLOAD_TOO_LARGE`      | Checkout body over 32 KB (forms: 16 KB, webhook: 512 KB)               |
-| 415    | `UNSUPPORTED_MEDIA_TYPE` | POST body not `application/json`                                       |
-| 429    | `RATE_LIMITED`           | Over a per-IP limit (`Retry-After: 60`)                                |
-| 500    | `EMAIL_FAILED`           | Webhook: an order e-mail failed (Stripe retries)                       |
-| 500    | `INTERNAL_ERROR`         | Unexpected error (logged, never detailed in the response)              |
-| 502    | `INTERNAL_ERROR`         | Reviews: GitHub refused the file (expired token, outage)               |
-| 502    | `MAIL_FAILED`            | Contact or newsletter e-mail could not be sent                         |
-| 502    | `PAYMENT_PROVIDER_ERROR` | Stripe call failed (message never forwarded)                           |
-| 503    | `SHOP_CLOSED`            | `shop.open` is false                                                   |
-| 503    | `CATALOG_UNAVAILABLE`    | `/catalog.json` missing or invalid                                     |
+| Status | Code                     | When                                                                                          |
+| ------ | ------------------------ | --------------------------------------------------------------------------------------------- |
+| 400    | `VALIDATION_ERROR`       | Bad JSON or schema; `details.issues: [{ path, code, message }]`                               |
+| 400    | `INVALID_SIGNATURE`      | Webhook signature missing, wrong or older than 300 s                                          |
+| 400    | `CAPTCHA_FAILED`         | Turnstile token missing or refused (contact, newsletter)                                      |
+| 400    | `INVALID_TOKEN`          | Review or newsletter token bad, expired or of the other type; review SKU or session not valid |
+| 403    | `FORBIDDEN_ORIGIN`       | Checkout from another origin                                                                  |
+| 404    | `NOT_FOUND`              | Unknown `/api` path, no such order, or an order older than 48 h                               |
+| 404    | `ORDER_NOT_FOUND`        | Lookup: no order of that number for that e-mail                                               |
+| 404    | `FEATURE_DISABLED`       | A form without its secrets (logged) or turned off in the CMS settings                         |
+| 405    | `METHOD_NOT_ALLOWED`     | Wrong method (`Allow` header set)                                                             |
+| 409    | `UNKNOWN_SKU`            | `details.skus` (checkout, stock alert, review)                                                |
+| 409    | `OUT_OF_STOCK`           | `details.skus` (stock `out`; `low` passes)                                                    |
+| 409    | `PRICE_CHANGED`          | `details.skus` (the page showed another `unitAmount`)                                         |
+| 409    | `ALREADY_REVIEWED`       | That product of that order already has a review                                               |
+| 409    | `SHIPPING_UNAVAILABLE`   | `details: { method, reason: 'disabled' \| 'no_country' \| 'country' }`                        |
+| 413    | `PAYLOAD_TOO_LARGE`      | Checkout body over 32 KB (forms: 16 KB, webhook: 512 KB)                                      |
+| 415    | `UNSUPPORTED_MEDIA_TYPE` | POST body not `application/json`                                                              |
+| 429    | `RATE_LIMITED`           | Over a per-IP limit (`Retry-After: 60`) or the daily form budget                              |
+| 500    | `EMAIL_FAILED`           | Webhook: an order e-mail failed (Stripe retries)                                              |
+| 500    | `INTERNAL_ERROR`         | Unexpected error (logged, never detailed in the response)                                     |
+| 502    | `INTERNAL_ERROR`         | Reviews: GitHub refused the file (expired token, outage)                                      |
+| 502    | `MAIL_FAILED`            | Contact or newsletter e-mail not sent, or the contact not saved                               |
+| 502    | `PAYMENT_PROVIDER_ERROR` | Stripe call failed (message never forwarded)                                                  |
+| 503    | `SHOP_CLOSED`            | `shop.open` is false                                                                          |
+| 503    | `CATALOG_UNAVAILABLE`    | `/catalog.json` missing or invalid                                                            |
 
 ## Environment
 
-| Name                    | Kind             | Notes                                                            |
-| ----------------------- | ---------------- | ---------------------------------------------------------------- |
-| `ASSETS`                | binding          | `dist/`                                                          |
-| `CHECKOUT_LIMITER`      | binding          | Rate limit of `POST /api/checkout`, optional                     |
-| `ORDERS_LIMITER`        | binding          | Rate limit of the order page and the lookup, optional            |
-| `FORMS_LIMITER`         | binding          | Rate limit of the forms and reviews, optional                    |
-| `SITE_URL`              | var              | Success and cancel URLs (not on `*.workers.dev`), allowed origin |
-| `ORDER_EMAIL_FROM`      | var              | `Racines en Partage <commandes@racinesenpartage.fr>`             |
-| `STRIPE_SECRET_KEY`     | secret           | Without it, Stripe calls fail as 502                             |
-| `STRIPE_WEBHOOK_SECRET` | secret           | Without it, every webhook is 400                                 |
-| `RESEND_API_KEY`        | secret, optional | Without it, `NullMailer` logs a redacted line instead            |
-| `ORDER_EMAIL_TO`        | secret           | Owner inbox                                                      |
-| `FORMS_SECRET`          | secret           | HMAC key of the review and newsletter tokens                     |
-| `GITHUB_TOKEN`          | secret           | Fine-grained, contents read and write on `GITHUB_REPO` only      |
-| `GITHUB_REPO`           | var              | `ngawang21/racines-en-partage`                                   |
-| `TURNSTILE_SECRET_KEY`  | secret, optional | Without it the captcha check is skipped                          |
-| `RESEND_AUDIENCE_ID`    | secret, optional | Newsletter audience; without it the newsletter is disabled       |
+| Name                          | Kind             | Notes                                                                |
+| ----------------------------- | ---------------- | -------------------------------------------------------------------- |
+| `ASSETS`                      | binding          | `dist/`                                                              |
+| `CHECKOUT_LIMITER`            | binding          | Rate limit of `POST /api/checkout`, optional                         |
+| `ORDERS_LIMITER`              | binding          | Rate limit of the order page and the lookup, optional                |
+| `FORMS_LIMITER`               | binding          | Rate limit of the forms and reviews, optional                        |
+| `SITE_URL`                    | var              | Success and cancel URLs (not on `*.workers.dev`), allowed origin     |
+| `ORDER_EMAIL_FROM`            | var              | `Racines en Partage <commandes@racinesenpartage.fr>`                 |
+| `STRIPE_SECRET_KEY`           | secret           | Without it, Stripe calls fail as 502                                 |
+| `STRIPE_WEBHOOK_SECRET`       | secret           | Without it, every webhook is 400                                     |
+| `RESEND_API_KEY`              | secret, optional | Without it, `NullMailer` logs the template name and a masked address |
+| `ORDER_EMAIL_TO`              | secret           | Owner inbox                                                          |
+| `FORMS_SECRET`                | secret           | HMAC key of the review and newsletter tokens                         |
+| `GITHUB_TOKEN`                | secret           | Fine-grained, contents read and write on `GITHUB_REPO` only          |
+| `GITHUB_REPO`                 | var              | `ngawang21/racines-en-partage`                                       |
+| `TURNSTILE_SECRET_KEY`        | secret           | Without it the contact and newsletter forms answer 404               |
+| `FORMS_ALLOW_WITHOUT_CAPTCHA` | `.dev.vars` only | `'true'` skips Turnstile locally; never deployed                     |
+| `FORMS_DAILY_LIMIT`           | var              | Daily ceiling of form e-mails, `60`                                  |
+| `FORMS_KV`                    | binding          | KV namespace of the daily budget, optional                           |
+| `RESEND_AUDIENCE_ID`          | secret, optional | Newsletter audience; without it the newsletter is disabled           |
 
 Stripe API version: `2026-10-28.endive` (the version stripe 23.1.0 is
 generated for; see `stripe.ts`). Update it together with the SDK.

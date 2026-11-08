@@ -23,9 +23,15 @@ SITE_URL=http://localhost:8787
 # needed by POST /api/reviews. Leave unset locally unless testing reviews.
 # GITHUB_TOKEN=
 
-# Turnstile secret. Unset skips the captcha check; set it only together with
-# the site key in the CMS settings, or every form fails.
+# Turnstile secret; set it only together with the site key in the CMS
+# settings, or every form fails. Without it the contact and newsletter forms
+# answer 404 unless FORMS_ALLOW_WITHOUT_CAPTCHA is true.
 # TURNSTILE_SECRET_KEY=
+
+# Local development only: lets the forms work without Turnstile. NEVER set it
+# in the Cloudflare dashboard or in wrangler.jsonc (bots could spend the
+# Resend quota the order e-mails need).
+# FORMS_ALLOW_WITHOUT_CAPTCHA=true
 
 # Resend audience of the newsletter; unset disables the newsletter endpoints.
 # RESEND_AUDIENCE_ID=

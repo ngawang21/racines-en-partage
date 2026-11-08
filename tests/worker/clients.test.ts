@@ -1,6 +1,6 @@
 // The HTTP clients behind the injected services, against a fake fetch.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ResendAudience } from '../../worker/email/resend';
+import { NullMailer, ResendAudience } from '../../worker/email/resend';
 import { GitHubError, createGitHubRepo } from '../../worker/github';
 import { TURNSTILE_ENDPOINT, createTurnstile } from '../../worker/turnstile';
 
@@ -95,6 +95,15 @@ describe('GitHub Contents API', () => {
     expect(await createGitHubRepo('t', 'o/r', fetchImpl).createFile(path, 'x', 'm')).toBe('exists');
   });
 
+  it('a 422 that is not about the missing sha throws (nothing marked as reviewed)', async () => {
+    const { fetchImpl } = fakeFetch(
+      json({ message: 'path contains a malformed path component' }, 422),
+    );
+    await expect(
+      createGitHubRepo('t', 'o/r', fetchImpl).createFile(path, 'x', 'm'),
+    ).rejects.toMatchObject({ name: 'GitHubError', status: 422 });
+  });
+
   it('other statuses and network errors throw GitHubError', async () => {
     const { fetchImpl } = fakeFetch(json({}, 401), new Error('offline'));
     const repo = createGitHubRepo('t', 'o/r', fetchImpl);
@@ -137,5 +146,23 @@ describe('Resend audience', () => {
     await expect(audience.addContact('a@example.com')).rejects.toMatchObject({ status: 401 });
     await expect(audience.addContact('a@example.com')).rejects.toMatchObject({ status: 500 });
     await expect(audience.addContact('a@example.com')).rejects.toThrow('Resend request failed');
+  });
+});
+
+describe('NullMailer', () => {
+  it('logs the template and a masked address, never the subject', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await new NullMailer().send({
+      to: 'awa.diallo@example.com',
+      subject: 'Message du site de Awa Diallo',
+      html: '',
+      text: '',
+      idempotencyKey: 'contact:123',
+      template: 'contact',
+    });
+    const line = String(log.mock.calls[0]![0]);
+    expect(JSON.parse(line)).toMatchObject({ msg: 'mail.skipped', template: 'contact' });
+    expect(line).not.toContain('Awa Diallo');
+    expect(line).not.toContain('awa.diallo@example.com');
   });
 });

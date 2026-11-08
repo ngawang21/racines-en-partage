@@ -18,6 +18,14 @@ export class GitHubError extends Error {
   }
 }
 
+async function safeText(res: Response): Promise<string> {
+  try {
+    return (await res.text()).slice(0, 1000);
+  } catch {
+    return '';
+  }
+}
+
 export function createGitHubRepo(
   token: string,
   repo: string,
@@ -50,8 +58,9 @@ export function createGitHubRepo(
         throw new GitHubError(`GitHub request failed (${reason})`);
       }
       if (res.status === 200 || res.status === 201) return 'created';
-      // Creating a path that exists without its `sha` is refused with 422.
-      if (res.status === 422) return 'exists';
+      // Creating a path that exists without its `sha` is refused with 422 and a
+      // message about `sha`; any other 422 (bad path, bad content) is an error.
+      if (res.status === 422 && /\bsha\b/i.test(await safeText(res))) return 'exists';
       throw new GitHubError(`GitHub refused the file: HTTP ${res.status}`, res.status);
     },
   };

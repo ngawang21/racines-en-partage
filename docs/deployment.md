@@ -75,25 +75,28 @@ Analytics, add the site. It needs no cookie banner.
 Set in Workers & Pages, `racines-en-partage`, Settings, Variables and
 Secrets. Saving a secret deploys a new version of the Worker.
 
-| Name                         | Kind             | Value                                                                                                   | Comes from |
-| ---------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------- | ---------- |
-| `STRIPE_SECRET_KEY`          | secret           | `sk_test_...` first, then `sk_live_...`                                                                 | Section 8  |
-| `STRIPE_WEBHOOK_SECRET`      | secret           | `whsec_...` of the endpoint in the same mode as the key                                                 | Section 8  |
-| `RESEND_API_KEY`             | secret, optional | `re_...`                                                                                                | Section 6  |
-| `ORDER_EMAIL_TO`             | secret           | `racinesenpartage@gmail.com`                                                                            | Marie      |
-| `SITE_URL`                   | variable         | `https://racinesenpartage.fr`                                                                           | Fixed      |
-| `ORDER_EMAIL_FROM`           | variable         | `Racines en Partage <commandes@racinesenpartage.fr>` (display name and address, as in `wrangler.jsonc`) | Section 6  |
-| `PUBLIC_MONDIAL_RELAY_BRAND` | build variable   | `BDTEST`, then Marie's client code                                                                      | Section 9  |
-| `FORMS_SECRET`               | secret           | 32 random bytes, base64 (`openssl rand -base64 32`)                                                     | Section 13 |
-| `TURNSTILE_SECRET_KEY`       | secret, optional | Secret key of the Turnstile widget                                                                      | Section 14 |
-| `RESEND_AUDIENCE_ID`         | secret, optional | Id of the newsletter audience in Resend                                                                 | Section 15 |
-| `GITHUB_TOKEN`               | secret           | Fine-grained token, contents read and write on this repository only                                     | Section 16 |
-| `GITHUB_REPO`                | variable         | `ngawang21/racines-en-partage` (in `wrangler.jsonc`)                                                    | Section 16 |
+| Name                          | Kind             | Value                                                                                                   | Comes from |
+| ----------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------- | ---------- |
+| `STRIPE_SECRET_KEY`           | secret           | `sk_test_...` first, then `sk_live_...`                                                                 | Section 8  |
+| `STRIPE_WEBHOOK_SECRET`       | secret           | `whsec_...` of the endpoint in the same mode as the key                                                 | Section 8  |
+| `RESEND_API_KEY`              | secret, optional | `re_...`                                                                                                | Section 6  |
+| `ORDER_EMAIL_TO`              | secret           | `racinesenpartage@gmail.com`                                                                            | Marie      |
+| `SITE_URL`                    | variable         | `https://racinesenpartage.fr`                                                                           | Fixed      |
+| `ORDER_EMAIL_FROM`            | variable         | `Racines en Partage <commandes@racinesenpartage.fr>` (display name and address, as in `wrangler.jsonc`) | Section 6  |
+| `PUBLIC_MONDIAL_RELAY_BRAND`  | build variable   | `BDTEST`, then Marie's client code                                                                      | Section 9  |
+| `FORMS_SECRET`                | secret           | 32 random bytes, base64 (`openssl rand -base64 32`)                                                     | Section 13 |
+| `TURNSTILE_SECRET_KEY`        | secret           | Secret key of the Turnstile widget; without it the contact and newsletter forms answer 404              | Section 14 |
+| `RESEND_AUDIENCE_ID`          | secret, optional | Id of the newsletter audience in Resend                                                                 | Section 15 |
+| `GITHUB_TOKEN`                | secret           | Fine-grained token, contents read and write on this repository only                                     | Section 16 |
+| `GITHUB_REPO`                 | variable         | `ngawang21/racines-en-partage` (in `wrangler.jsonc`)                                                    | Section 16 |
+| `FORMS_DAILY_LIMIT`           | variable         | `60` e-mails a day from the forms (in `wrangler.jsonc`)                                                 | Section 18 |
+| `FORMS_KV`                    | KV binding       | Namespace of the daily form budget (in `wrangler.jsonc`)                                                | Section 18 |
+| `FORMS_ALLOW_WITHOUT_CAPTCHA` | `.dev.vars` only | `true` skips Turnstile locally; never in the dashboard or `wrangler.jsonc`                              | Section 14 |
 
 Notes:
 
-1. `SITE_URL`, `ORDER_EMAIL_FROM` and `GITHUB_REPO` are also declared
-   under `vars` in `wrangler.jsonc`. On each deploy, Wrangler applies the values from the
+1. `SITE_URL`, `ORDER_EMAIL_FROM`, `GITHUB_REPO` and `FORMS_DAILY_LIMIT`
+   are also declared under `vars` in `wrangler.jsonc`. On each deploy, Wrangler applies the values from the
    file, so change them in the file, not only in the dashboard (to verify
    against the final `wrangler.jsonc`; secrets are never in the file).
 2. `PUBLIC_MONDIAL_RELAY_BRAND` is read by Astro at build time. It goes in
@@ -119,7 +122,9 @@ Notes:
 7. A feature whose secret is missing answers `404 FEATURE_DISABLED` and logs
    `config.missing` with the name: the newsletter without `FORMS_SECRET`,
    `RESEND_API_KEY` or `RESEND_AUDIENCE_ID`; reviews without `FORMS_SECRET`
-   or `GITHUB_TOKEN`; the contact form without `ORDER_EMAIL_TO`. The owner's
+   or `GITHUB_TOKEN`; the contact form without `ORDER_EMAIL_TO` or
+   `RESEND_API_KEY`; the contact and newsletter forms without
+   `TURNSTILE_SECRET_KEY` (section 14). The owner's
    switches in the CMS settings act too, after the rebuild that her save
    triggers: `newsletter.enabled` false hides the signup blocks and turns
    the newsletter endpoints off; `reviews.enabled` false hides the reviews,
@@ -537,10 +542,10 @@ Repeat with `/en/checkout/`. Two lines on one route mean a missing
 14. Instagram: bio link set to `https://racinesenpartage.fr`, and the
     Instagram URL filled in the CMS settings (`brand.instagram`).
 15. Forms: a contact message and a stock alert reach Marie's Gmail with
-    the customer as reply-to; a newsletter signup sends the confirmation
-    and its link lands on `/newsletter/?status=ok` with the contact in the
-    Resend audience; `/ma-commande/` finds a test order by number and
-    e-mail (sections 13 to 16).
+    the customer as reply-to; a newsletter signup sends the confirmation,
+    its link opens `/newsletter/?t=...`, and the button adds the contact
+    to the Resend audience; `/ma-commande/` finds a test order by number
+    and e-mail; `FORMS_KV` is bound (sections 13 to 18).
 16. Reviews: run the cron locally against a test order (section 17), open
     the invitation link, submit a review, check the new file in
     `src/content/reviews/` on GitHub and publish it from the CMS.
@@ -576,8 +581,11 @@ bots. Free, no cookie banner needed.
 6. The secret key goes into the Worker secret `TURNSTILE_SECRET_KEY`
    (section 3). Never in the CMS or the repository.
 
-Without the secret the Worker skips the check (local development, before
-the widget exists). With the secret, a missing or refused token answers
+Without the secret the contact, stock-alert and newsletter forms answer
+`404 FEATURE_DISABLED` and log `config.missing` (`TURNSTILE_SECRET_KEY`), so
+bots cannot spend the Resend quota through an unprotected form. Locally,
+`FORMS_ALLOW_WITHOUT_CAPTCHA=true` in `.dev.vars` skips the check; never set
+it in the dashboard or in `wrangler.jsonc`. With the secret, a missing or refused token answers
 `400 CAPTCHA_FAILED`, and so does a Turnstile outage (the check fails
 closed; the customer retries). Both are set or both are empty: an empty
 site key in the CMS while `TURNSTILE_SECRET_KEY` is set makes every
@@ -588,8 +596,12 @@ deleting the secret.
 
 ## 15. Resend audience (newsletter)
 
-The newsletter is double opt-in: the form sends a confirmation e-mail, and
-the contact is created in Resend only when the link is clicked.
+The newsletter is double opt-in: the form sends a confirmation e-mail whose
+link opens `/newsletter/?t=<token>` (EN `/en/newsletter/?t=`); the contact
+is created in Resend only when the person clicks "Confirmer mon
+inscription" on that page, which posts the token to
+`POST /api/newsletter/confirm`. A mail scanner that opens the link
+subscribes nobody.
 
 1. Resend, Audiences (also called Contacts in newer dashboards; to verify),
    Create audience: `Newsletter Racines en Partage`.
@@ -607,14 +619,23 @@ the contact is created in Resend only when the link is clicked.
    the unsubscribe link (owner guide).
 
 Without `RESEND_AUDIENCE_ID`, or with `newsletter.enabled` off in the CMS,
-the newsletter endpoints answer `404 FEATURE_DISABLED`. The confirmation link redirects to
-`/newsletter/?status=ok`, `status=invalid` (expired after 48 hours or
-altered) or `status=error` (Resend unavailable; clicking again later works).
+the newsletter endpoints answer `404 FEATURE_DISABLED`. On the page, an
+expired (after 48 hours) or altered link shows the "invalid link" message;
+Resend unavailable shows a retry message (clicking again later works).
 
 ## 16. GitHub token for reviews
 
 `POST /api/reviews` commits each review as a file in `src/content/reviews/`
 with `published: false`; Marie publishes it from the CMS.
+
+The token can write any file of the repository, and every push to `main`
+deploys the site: whoever holds it can change the shop. Store it only as
+the Worker secret `GITHUB_TOKEN` (never in `.dev.vars` on a shared machine,
+a chat or a ticket), rotate it every year, and revoke it at once if it may
+have leaked. The Worker itself only writes new files under
+`src/content/reviews/`. Narrowing the access later is possible with a
+GitHub App installed on this repository only, or with a separate reviews
+repository that the build reads.
 
 1. GitHub, signed in as `ngawang21`: Settings, Developer settings, Personal
    access tokens, Fine-grained tokens, Generate new token.
@@ -639,7 +660,9 @@ the invitation link keeps working once the token is replaced.
 
 `wrangler.jsonc` declares `"triggers": { "crons": ["0 9 * * *"] }`: every
 day at 09:00 UTC (10:00 in winter, 11:00 in summer in Paris) the Worker
-lists the Checkout Sessions created between 8 and 7 days earlier and sends
+lists the Checkout Sessions created between 10 and 7 days earlier (a
+session missed by a failed run is retried on the next two days;
+`review_invited` prevents a second invitation) and sends
 one invitation per paid order with a customer e-mail, then sets
 `metadata.review_invited = 'true'` on the session. The run needs
 `STRIPE_SECRET_KEY`, `RESEND_API_KEY` and `FORMS_SECRET`; without
@@ -657,6 +680,29 @@ nothing.
   nothing, and the review page answers `404 FEATURE_DISABLED`. To stop the
   run itself, remove the `triggers` block from `wrangler.jsonc` and deploy
   (deleting the trigger in the dashboard lasts only until the next deploy).
+
+## 18. Daily form budget (Workers KV)
+
+Resend's free plan sends 100 e-mails a day, and the order e-mails need
+them. Turnstile and the per-IP limit stop most abuse; the daily budget is
+the last ceiling: each e-mail sent by the contact, stock-alert or
+newsletter form increments a counter in KV (`forms:<UTC day>`, kept two
+days), and past `FORMS_DAILY_LIMIT` (60 in `wrangler.jsonc`) those forms
+answer `429 RATE_LIMITED` until midnight UTC, with the log line
+`forms.budget_exhausted`. Order e-mails and review invitations are never
+counted. KV counts approximately (a few extra e-mails may pass under
+load), which is enough for a ceiling.
+
+1. Create the namespace, in the dashboard (Storage & Databases, KV, Create
+   a namespace, name `FORMS_KV`) or with
+   `pnpm exec wrangler kv namespace create FORMS_KV`. Copy its id.
+2. In `wrangler.jsonc`, uncomment the `kv_namespaces` line and paste the
+   id. Commit and push: the deploy binds it. A placeholder id would make
+   every deploy fail, which is why the line ships commented.
+3. Check: Workers & Pages, the Worker, Bindings lists `FORMS_KV`.
+
+Without the binding no budget applies (tests, before this step). A KV
+error lets the form through and logs `forms.budget_unavailable`.
 
 ## Troubleshooting
 

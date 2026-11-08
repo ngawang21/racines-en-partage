@@ -2,6 +2,8 @@
 // Five stars, filled to `rating` (partial fill for halves and tenths). The
 // row is one image for assistive technology: `label` is its text
 // ("4,5 sur 5"). Inline SVG, no script; the fill is a clipped second row.
+// Both rows are outlined in kraft ink (3:1 and more on cream and paper, as
+// the review form's stars); the gold fill alone would not reach it.
 interface Props {
   /** 0 to 5. */
   rating: number;
@@ -56,7 +58,7 @@ const row = [0, 1, 2, 3, 4]
   }
   .stars-empty {
     fill: none;
-    stroke: var(--kraft-deep);
+    stroke: var(--kraft-ink);
     stroke-width: 1.4;
     stroke-linejoin: round;
   }
@@ -68,7 +70,7 @@ const row = [0, 1, 2, 3, 4]
   }
   .stars-fill svg {
     fill: var(--gold);
-    stroke: var(--gold);
+    stroke: var(--kraft-ink);
     stroke-width: 1.4;
     stroke-linejoin: round;
   }

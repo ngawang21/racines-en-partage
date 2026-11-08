@@ -2,6 +2,7 @@
 // assets (wrangler.jsonc runs this Worker first for /api/* only). The daily
 // Cron Trigger sends the review invitations.
 import { createApp } from './app';
+import { createKvBudget, dailyLimit } from './budget';
 import { assetCatalogFetcher, createCatalogCache } from './catalog';
 import { NullMailer, ResendAudience, ResendMailer } from './email/resend';
 import { createGitHubRepo } from './github';
@@ -9,12 +10,21 @@ import { logError } from './log';
 import { inviteReviews } from './reviews';
 import { getStripeClient } from './stripe';
 import { createTurnstile } from './turnstile';
-import type { Env, Mailer } from './types';
+import type { Captcha, Env, Mailer } from './types';
 
 const catalogCache = createCatalogCache();
 
 function isApiPath(pathname: string): boolean {
   return pathname === '/api' || pathname.startsWith('/api/');
+}
+
+/**
+ * Turnstile when its secret is set. Without it the forms are refused (null),
+ * unless `FORMS_ALLOW_WITHOUT_CAPTCHA` is 'true' (local development: no check).
+ */
+function captchaFor(env: Env): Captcha | null | undefined {
+  if (env.TURNSTILE_SECRET_KEY) return createTurnstile(env.TURNSTILE_SECRET_KEY);
+  return env.FORMS_ALLOW_WITHOUT_CAPTCHA === 'true' ? undefined : null;
 }
 
 function mailerFor(env: Env): Mailer {
@@ -46,7 +56,10 @@ export default {
         orders: env.ORDERS_LIMITER,
         forms: env.FORMS_LIMITER,
       },
-      captcha: createTurnstile(env.TURNSTILE_SECRET_KEY),
+      captcha: captchaFor(env),
+      ...(env.FORMS_KV
+        ? { budget: createKvBudget(env.FORMS_KV, dailyLimit(env.FORMS_DAILY_LIMIT), now) }
+        : {}),
       // The newsletter needs both the audience and an API key to reach it.
       ...(env.RESEND_API_KEY && env.RESEND_AUDIENCE_ID
         ? { audience: new ResendAudience(env.RESEND_API_KEY, env.RESEND_AUDIENCE_ID) }
