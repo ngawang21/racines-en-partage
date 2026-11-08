@@ -1,6 +1,7 @@
 ---
 // Home hero (spec 5.4, premium standard section 2): copy on the left in the
-// text column, vertically centred; the trio photo bleeds to the right edge of
+// wide container (its left edge aligns with the header wordmark and the
+// featured grid below), vertically centred; the trio photo bleeds to the right edge of
 // the window on desktop and edge to edge under the copy on phones, with the
 // medallion resting on its corner. The photo is the LCP element: eager,
 // fetchpriority high. On phones the 3:2 photo is cropped to 4:3, so the
@@ -23,7 +24,7 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
 ---
 
 <section class="hero" aria-labelledby="hero-title">
-  <div class="container hero-grid">
+  <div class="container-wide hero-grid">
     <div class="hero-copy">
       <p class="eyebrow hero-eyebrow">{hero.eyebrow}</p>
       <h1 id="hero-title">
@@ -92,7 +93,7 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
   }
   h1 {
     margin-top: var(--space-4);
-    font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4.25rem);
+    font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4.75rem);
     line-height: 1.04;
     letter-spacing: -0.02em;
   }
@@ -108,7 +109,7 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
   }
   .hero-lead {
     margin-top: var(--space-6);
-    max-width: 44ch;
+    max-width: 46ch;
   }
   .hero-ctas {
     display: flex;
@@ -135,7 +136,9 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
   @media (min-width: 960px) {
     /* Desktop: the photo runs from its column to the window's right edge. */
     .hero-media {
-      --bleed: calc(var(--gutter) + max(0px, (100vw - var(--container) - 2 * var(--gutter)) / 2));
+      --bleed: calc(
+        var(--gutter) + max(0px, (100vw - var(--container-wide) - 2 * var(--gutter)) / 2)
+      );
       margin-inline: 0 calc(var(--bleed) * -1);
       container-type: inline-size;
     }
