@@ -1,18 +1,29 @@
-// Opens the disclosure that holds the URL fragment target. Chromium and
-// Firefox open a closed <details> on a fragment navigation themselves; Safari
-// does not, so a visitor landing on "#recipe" (recipes page, JSON-LD url)
-// would see the recipe folded. Runs on load and on every hash change.
+// Opens the disclosure that holds the URL fragment target ("#recipe" from a
+// "Voir la recette" link, the recipes page or the JSON-LD url), then brings
+// it into view and moves focus to its summary, so keyboard and screen reader
+// users land on it too. Chromium and Firefox open a closed <details> on a
+// fragment navigation themselves, but the scroll they make while the panel is
+// still folded (or animating open) can leave the page at the top; Safari
+// does not open it at all. Runs on load and on every hash change.
 
-function openTarget(): void {
+function revealTarget(smooth: boolean): void {
   const id = decodeURIComponent(location.hash.slice(1));
   if (!id) return;
   const target = document.getElementById(id);
   const details = target?.closest<HTMLDetailsElement>('details');
-  if (!target || !details || details.open) return;
+  const summary = details?.querySelector<HTMLElement>(':scope > summary');
+  if (!target || !details || !summary) return;
   details.open = true;
-  // The browser scrolled while the panel was closed: land on the target now.
-  target.scrollIntoView({ block: 'start' });
+  // After layout: the summary sits above the opening panel, so its position
+  // does not depend on the open animation. scrollIntoView honours the
+  // page's scroll-padding-top (the sticky header).
+  requestAnimationFrame(() => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    summary.scrollIntoView({ block: 'start', behavior: smooth && !reduce ? 'smooth' : 'instant' });
+    summary.focus({ preventScroll: true });
+  });
 }
 
-openTarget();
-window.addEventListener('hashchange', openTarget);
+// On arrival the page jumps straight there; an in-page link glides.
+revealTarget(false);
+window.addEventListener('hashchange', () => revealTarget(true));

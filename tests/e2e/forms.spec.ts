@@ -390,7 +390,10 @@ test.describe('cart cross-sell', () => {
   }) => {
     await page.goto(PATHS.fr.shop);
     const catalog = (await readCatalog(page)) as unknown as {
-      products: Record<string, { name: string; related: string[]; stock: string }>;
+      products: Record<
+        string,
+        { name: string; related: string[]; stock: string; featured: boolean }
+      >;
     };
     const sku = Object.keys(catalog.products).find(
       (s) => catalog.products[s]!.related.length > 0 && catalog.products[s]!.stock !== 'out',
@@ -411,7 +414,14 @@ test.describe('cart cross-sell', () => {
     );
     expect(suggested.length).toBeLessThanOrEqual(2);
     expect(suggested).not.toContain(sku);
-    expect(suggested[0]).toBe(catalog.products[sku]!.related[0]);
+    // Complements come first and other formats of the line are excluded, so
+    // the order is not the related list's: every suggestion still comes from
+    // the related list or the featured products.
+    const sources = new Set([
+      ...catalog.products[sku]!.related,
+      ...Object.keys(catalog.products).filter((s) => catalog.products[s]!.featured),
+    ]);
+    for (const s of suggested) expect(sources.has(s)).toBe(true);
 
     const pick = suggested[0]!;
     await items

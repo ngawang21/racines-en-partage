@@ -6,6 +6,7 @@
   /* Palette */
   --cream: #fbf6ea; /* page background */
   --paper: #f3ead6; /* cards, alternating bands */
+  --photo-ground: #e4cdb0; /* the peach ground of the product photos */
   --kraft: #d8b98e; /* frames, soft fills */
   --kraft-ink: #86602f; /* kraft as text: 5.2:1 on cream, 4.7:1 on paper */
   --kraft-deep: #b98e5e; /* hover on kraft, captions */
@@ -17,7 +18,7 @@
   --hibiscus-deep: #b8262e;
   --gold: #c9a24a; /* hairlines, ornaments */
   --terracotta: #c8582c; /* kente divider */
-  --ink-2: #4a5c45; /* secondary text */
+  --ink-2: #43553f; /* secondary text */
   --line: rgba(22, 58, 28, 0.14);
   --cream-muted: rgba(251, 246, 234, 0.78); /* secondary text on forest */
 
@@ -58,7 +59,7 @@
 
   /* Motion: under reduced motion every duration above 150 ms drops to 0. */
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
-  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1); /* entrances, reveals, press */
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1); /* entrances, press */
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --dur-press: 160ms;
   --dur-fast: 150ms;

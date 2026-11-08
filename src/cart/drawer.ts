@@ -5,6 +5,7 @@ import type { CartContext } from './context';
 import { renderCrossSell } from './cross-sell-view';
 import { renderFreeShipping } from './free-shipping';
 import { bindLineEvents, renderLines } from './lines';
+import { shippingHint, shippingHintText } from './shipping-hint';
 import type { CartState } from './store';
 import { computeTotals } from './totals';
 
@@ -26,6 +27,7 @@ export function createDrawer(ctx: CartContext): Drawer | null {
   const foot = q<HTMLElement>('[data-drawer-foot]');
   const count = q<HTMLElement>('[data-drawer-count]');
   const subtotal = q<HTMLElement>('[data-drawer-subtotal]');
+  const shipping = q<HTMLElement>('[data-drawer-shipping]');
   const free = q<HTMLElement>('[data-free-shipping]');
   const crossSell = q<HTMLElement>('[data-cross-sell]');
   let opener: HTMLElement | null = null;
@@ -99,6 +101,12 @@ export function createDrawer(ctx: CartContext): Drawer | null {
       }
       if (count) count.textContent = hasLines ? ctx.itemsLabel(totals.itemCount) : '';
       if (subtotal) subtotal.textContent = ctx.price(totals.subtotal);
+      if (shipping)
+        shipping.textContent = shippingHintText(
+          shippingHint(totals.subtotal, ctx.catalog),
+          ctx.t.cart,
+          ctx.price,
+        );
       renderFreeShipping(free, totals, ctx);
       renderCrossSell(crossSell, cart, ctx);
     },

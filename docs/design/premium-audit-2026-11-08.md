@@ -58,13 +58,13 @@ made here), **handed** (in the forms and cart worker's files, handed over),
 
 ## 6. Motion
 
-| Check                                 | Result | Fix or reason                                                                                                                                                                      |
-| ------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Every transition lists its properties | pass   | No `transition: all` and no transition without a property in the storefront files.                                                                                                 |
-| Nothing in the interface above 400 ms | fixed  | Photo zoom on hover (cards, tiles, recipes) 600 to 400 ms; scroll reveal 640 to 480 ms (within the 300 to 500 ms reveal range); hero entrance 560 to 600 ms down to 440 to 500 ms. |
-| Page transition 150 ms crossfade      | fixed  | 180 to 150 ms.                                                                                                                                                                     |
-| Reduced motion removes movement       | pass   | Reveal, hero entrance, sticky bar slide, menu slide, header tuck and hover zooms are all off under `prefers-reduced-motion`.                                                       |
-| Drawer opens under 300 ms             | pass   | 240 ms (`--dur-base`).                                                                                                                                                             |
+| Check                                 | Result | Fix or reason                                                                                                                                                              |
+| ------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Every transition lists its properties | pass   | No `transition: all` and no transition without a property in the storefront files.                                                                                         |
+| Nothing in the interface above 400 ms | fixed  | Photo zoom on hover (cards, tiles, recipes) 600 to 400 ms; hero entrance 560 to 600 ms down to 440 to 500 ms. The scroll reveal was removed on 2026-11-08 (design pass 5). |
+| Page transition 150 ms crossfade      | fixed  | 180 to 150 ms.                                                                                                                                                             |
+| Reduced motion removes movement       | pass   | Reveal, hero entrance, sticky bar slide, menu slide, header tuck and hover zooms are all off under `prefers-reduced-motion`.                                               |
+| Drawer opens under 300 ms             | pass   | 240 ms (`--dur-base`).                                                                                                                                                     |
 
 ## 7. Interaction and states
 
@@ -116,8 +116,7 @@ module scripts:
 Fonts on a page using both Fraunces styles: 56.5 + 36.9 + 20.2 (Figtree) =
 113.6 KB, under the 120 KB budget (about 291 KB before). Scripts are per
 component, so pages load only what they render: the sticky bar script on
-product pages, the gallery on product pages, the filter on the shop, the
-reveal on the home page, the accordion target on pages with disclosures.
+product pages, the gallery on product pages, the filter on the shop, the accordion target on pages with disclosures.
 Lighthouse was not run in this pass (no throttled device profile on this
 machine); the build sizes and the absence of layout-shifting elements are the
 evidence until the lead's release check.

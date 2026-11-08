@@ -69,7 +69,8 @@
       "shareText": "Your parcel arrives within a few days. All that is left is to make the cup."
     },
     "unitPrice": "Price per kilo",
-    "recipesLink": "Our recipes"
+    "recipesLink": "Our recipes",
+    "priceFrom": "from"
   },
   "product": {
     "addToCart": "Add to basket",
@@ -156,7 +157,10 @@
     "secureNote": "Secure payment by Stripe",
     "crossSellTitle": "Complete your order",
     "crossSellAdd": "Add",
-    "crossSellAddOf": "Add {name} to your basket"
+    "crossSellAddOf": "Add {name} to your basket",
+    "shippingFrom": "From {amount} to a pickup point",
+    "shippingFromFree": "From {amount} to a pickup point, free from {threshold}",
+    "shippingOffered": "Free"
   },
   "checkout": {
     "title": "Your order",

@@ -500,6 +500,27 @@ describe('pages', () => {
     expect(en.hero.title).not.toBe(fr.hero.title);
     expect(en.storyBody).not.toBe(fr.storyBody);
   });
+  it('the home story lands list every product origin country, in both locales', () => {
+    // The country is the part of `origin` before any comma ("Allemagne, Sonam’Tsampa").
+    const country = (p: Product) => p.origin.split(',')[0]!.trim();
+    const home = (locale: string) =>
+      mergePage(
+        'home',
+        pages('fr').get('home'),
+        locale === 'fr' ? undefined : pages(locale).get('home'),
+      );
+    for (const [locale, products] of [
+      ['fr', productsFr],
+      ['en', productsEn],
+    ] as const) {
+      const { storyLands, storyBody } = home(locale);
+      const from = storyLands.from;
+      for (const p of products) expect(from, `${locale} ${p.slug}`).toContain(country(p));
+      expect(new Set(from).size, locale).toBe(from.length);
+      // The story paragraph names the same lands.
+      for (const land of from) expect(storyBody, `${locale} ${land}`).toContain(land);
+    }
+  });
   it('the home recipes point at products that carry a recipe', () => {
     const home = mergePage('home', pages('fr').get('home'));
     for (const slug of home.recipeProducts) expect(bySlug.get(slug)?.recipe, slug).toBeDefined();

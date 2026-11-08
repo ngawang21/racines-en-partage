@@ -3,11 +3,13 @@ import { Image } from 'astro:assets';
 import medallion from '../assets/brand/medallion.webp';
 import Base from '../layouts/Base.astro';
 import Icon from '../components/Icon.astro';
-import Ornament from '../components/Ornament.astro';
 import { loadLocale } from '../i18n/locale';
 import { routePath } from '../i18n/routing';
 
-// Bilingual: French first, English under it (spec 3, `/404.html`, noindex).
+// One language per visit (spec 3, `/404.html`, noindex): French by default,
+// English when the missing path or the referring page is under /en/
+// (not-found.ts, client side). A small link switches to the other language;
+// without JavaScript it leads to that language's home page.
 const [fr, en] = await Promise.all([loadLocale('fr'), loadLocale('en')]);
 ---
 
@@ -26,37 +28,49 @@ const [fr, en] = await Promise.all([loadLocale('fr'), loadLocale('en')]);
       densities={[1, 2]}
       class="nf-medallion"
     />
-    <p class="eyebrow">404</p>
-    <h1>{fr.errors.notFoundTitle}</h1>
-    <p class="lead">{fr.errors.notFoundText}</p>
-    <div class="nf-ctas">
-      <a class="btn btn-primary" href={routePath('shop', 'fr')}>{fr.errors.toShop}</a>
-      <a class="btn btn-secondary" href={routePath('home', 'fr')}>{fr.errors.backHome}</a>
-    </div>
-    <button
-      type="button"
-      class="btn btn-ghost nf-search"
-      data-search-open
-      aria-controls="search-dialog"
-      aria-haspopup="dialog"
-      hidden
-    >
-      <Icon name="search" />
-      <span>{fr.search.title}</span>
-    </button>
 
-    <Ornament class="nf-ornament" />
-
-    <div lang="en" class="nf-en">
-      <p class="nf-en-title">{en.errors.notFoundTitle}</p>
-      <p class="nf-en-text">{en.errors.notFoundText}</p>
+    <div class="nf-copy" lang="fr" data-nf="fr">
+      <p class="eyebrow">404</p>
+      <h1>{fr.errors.notFoundTitle}</h1>
+      <p class="lead">{fr.errors.notFoundText}</p>
       <div class="nf-ctas">
-        <a class="btn btn-secondary" href={routePath('shop', 'en')}>{en.errors.toShop}</a>
-        <a class="btn btn-ghost" href={routePath('home', 'en')}>{en.errors.backHome}</a>
+        <a class="btn btn-primary" href={routePath('shop', 'fr')}>{fr.errors.toShop}</a>
+        <a class="btn btn-secondary" href={routePath('home', 'fr')}>{fr.errors.backHome}</a>
       </div>
+      <button
+        type="button"
+        class="btn btn-ghost nf-search"
+        data-search-open
+        aria-controls="search-dialog"
+        aria-haspopup="dialog"
+        hidden
+      >
+        <Icon name="search" />
+        <span>{fr.search.title}</span>
+      </button>
+      <a class="nf-switch" href={routePath('home', 'en')} lang="en" data-nf-switch="en">
+        {fr.a11y.english}
+      </a>
+    </div>
+
+    <div class="nf-copy" lang="en" data-nf="en" hidden>
+      <p class="eyebrow">404</p>
+      <h1>{en.errors.notFoundTitle}</h1>
+      <p class="lead">{en.errors.notFoundText}</p>
+      <div class="nf-ctas">
+        <a class="btn btn-primary" href={routePath('shop', 'en')}>{en.errors.toShop}</a>
+        <a class="btn btn-secondary" href={routePath('home', 'en')}>{en.errors.backHome}</a>
+      </div>
+      <a class="nf-switch" href={routePath('home', 'fr')} lang="fr" data-nf-switch="fr">
+        {en.a11y.french}
+      </a>
     </div>
   </section>
 </Base>
+
+<script>
+  import '../scripts/not-found';
+</script>
 
 <style>
   .nf {
@@ -73,6 +87,13 @@ const [fr, en] = await Promise.all([loadLocale('fr'), loadLocale('en')]);
     box-shadow:
       0 0 0 6px var(--cream),
       0 0 0 7px var(--gold);
+  }
+  .nf-copy {
+    display: grid;
+    justify-items: center;
+  }
+  .nf-copy[hidden] {
+    display: none;
   }
   h1 {
     margin-top: var(--space-3);
@@ -94,17 +115,18 @@ const [fr, en] = await Promise.all([loadLocale('fr'), loadLocale('en')]);
     gap: var(--space-3);
     margin-top: var(--space-8);
   }
-  .nf :global(.nf-ornament) {
-    width: min(360px, 100%);
-    margin-block: var(--space-12);
-  }
-  .nf-en-title {
-    font-family: var(--font-display);
-    font-size: var(--fs-3);
-    font-weight: 600;
-  }
-  .nf-en-text {
-    margin-top: var(--space-2);
+  .nf-switch {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-top: var(--space-6);
     color: var(--ink-2);
+    font-size: 0.9375rem;
+    text-underline-offset: 4px;
+  }
+  @media (hover: hover) {
+    .nf-switch:hover {
+      color: var(--forest);
+    }
   }
 </style>

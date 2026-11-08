@@ -1,22 +1,16 @@
 ---
-// Home page, both locales (spec 5.4).
-import duoMoringa from '../../assets/brand/duo-moringa.webp';
+// Home page, both locales (spec 5.4): hero, trust strip, bestsellers, how it
+// works, the story band, reviews, recipes, then the commitments. The hero's
+// slogan is the only kicker on the page; the shop's filter chips replace the
+// category tiles (eleven products do not need them).
+import medallion from '../../assets/brand/medallion.webp';
 import type { Locale } from '../../consts';
 import Base from '../../layouts/Base.astro';
-import {
-  loadCategories,
-  loadLocale,
-  loadPage,
-  loadProducts,
-  loadReviews,
-  loadSettings,
-} from '../../i18n/locale';
+import { loadLocale, loadPage, loadProducts, loadReviews, loadSettings } from '../../i18n/locale';
 import { routePath } from '../../i18n/routing';
-import CategoryTiles from '../CategoryTiles.astro';
 import Commitment from '../Commitment.astro';
 import Hero from '../Hero.astro';
 import HowItWorks from '../HowItWorks.astro';
-import Ornament from '../Ornament.astro';
 import ProductGrid from '../ProductGrid.astro';
 import Reassurance from '../Reassurance.astro';
 import RecipeCards from '../RecipeCards.astro';
@@ -28,11 +22,10 @@ interface Props {
   locale: Locale;
 }
 const { locale } = Astro.props;
-const [t, home, products, categories, settings, reviews] = await Promise.all([
+const [t, home, products, settings, reviews] = await Promise.all([
   loadLocale(locale),
   loadPage(locale, 'home'),
   loadProducts(locale),
-  loadCategories(locale),
   loadSettings(),
   loadReviews(),
 ]);
@@ -42,8 +35,6 @@ const bySlug = new Map(products.map((p) => [p.slug, p]));
 const recipeProducts = home.recipeProducts
   .map((slug) => bySlug.get(slug))
   .filter((p): p is NonNullable<typeof p> => p !== undefined);
-const counts: Record<string, number> = {};
-for (const p of products) counts[p.category] = (counts[p.category] ?? 0) + 1;
 const shopHref = routePath('shop', locale);
 const aboutHref = routePath('about', locale);
 ---
@@ -57,9 +48,7 @@ const aboutHref = routePath('about', locale);
     <SectionHead
       id="featured-title"
       title={home.featuredTitle}
-      eyebrow={t.nav.shop}
       link={{ href: shopHref, label: t.shop.viewAll }}
-      reveal
     />
     <ProductGrid
       products={featured}
@@ -67,57 +56,39 @@ const aboutHref = routePath('about', locale);
       {t}
       shopOpen={settings.shop.open}
       class="featured-grid"
-      reveal
     />
   </section>
 
-  <HowItWorks {t} reveal />
+  <HowItWorks {t} />
 
   <StoryBand
-    eyebrow={t.nav.about}
     title={home.storyTitle}
     body={home.storyBody}
     lands={home.storyLands}
     fromLabel={t.shop.landsFrom}
     toLabel={t.shop.landsTo}
-    image={duoMoringa}
-    imageAlt=""
+    image={medallion}
+    imageAlt={t.a11y.medallionAlt}
     link={{ href: aboutHref, label: home.hero.cta.secondary }}
   />
 
-  {settings.reviews.enabled && <ReviewsBand {reviews} {products} {locale} {t} reveal />}
-
-  <section class="container section" aria-labelledby="categories-title">
-    <SectionHead id="categories-title" title={home.categoriesTitle} eyebrow={t.nav.shop} reveal />
-    <CategoryTiles {categories} {counts} {locale} {t} reveal />
-  </section>
-
-  <div class="container">
-    <Ornament />
-  </div>
+  {settings.reviews.enabled && <ReviewsBand {reviews} {products} {locale} {t} />}
 
   <section class="container section" aria-labelledby="recipes-title">
     <SectionHead
       id="recipes-title"
       title={home.recipesTitle}
-      eyebrow={t.shop.recipesKicker}
       link={{ href: routePath('recipes', locale), label: t.recipes.viewAll }}
-      reveal
     />
-    <RecipeCards products={recipeProducts} {locale} {t} reveal />
+    <RecipeCards products={recipeProducts} {locale} {t} />
   </section>
 
   <Commitment
     title={home.commitmentTitle}
     body={home.commitmentBody}
-    medallionAlt={t.a11y.medallionAlt}
     link={{ href: aboutHref, label: home.hero.cta.secondary }}
   />
 </Base>
-
-<script>
-  import '../reveal';
-</script>
 
 <style>
   /* The home selection never leaves a lone card on its last row: three cards

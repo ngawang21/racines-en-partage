@@ -164,9 +164,10 @@ const seo = { seoTitle: text, seoDescription: text };
 export const homePageSchema = z.object({
   ...seo,
   hero: z.object({
+    /** The brand slogan, a small italic kicker above the H1. */
     eyebrow: text,
+    /** The H1: what the shop sells, in one colour. */
     title: text,
-    titleAccent: text,
     lead: text,
     cta: z.object({ primary: text, secondary: text }),
     imageAlt: text,
@@ -178,7 +179,6 @@ export const homePageSchema = z.object({
   storyTitle: text,
   storyBody: text,
   storyLands: z.object({ from: textList.min(1), to: text }),
-  categoriesTitle: text,
   recipesTitle: text,
   recipeProducts: z.array(text).length(3, 'exactly 3 recipe products'),
   commitmentTitle: text,

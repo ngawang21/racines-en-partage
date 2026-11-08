@@ -132,7 +132,7 @@ approach as Lamsel, pure module, unit tested).
 
 ### 4.3 Pages (file collection, i18n)
 
-- `home`: hero (`eyebrow`, `title`, `titleAccent`, `lead`, `cta`), `reassurance`
+- `home`: hero (`eyebrow`, `title`, `lead`, `cta`; `titleAccent` removed 2026-11-08, design pass 5), `reassurance`
   (4 items with icon key and text), `storyTitle`, `storyBody`, `recipesTitle`,
   `commitmentTitle`, `commitmentBody`.
 - `about`: `title`, `lead`, `sections[]` (`title`, `body`, optional `image`).

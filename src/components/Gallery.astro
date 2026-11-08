@@ -1,7 +1,9 @@
 ---
 // Product gallery (spec 5.4): one main picture per photo, only the active one
-// shown, and a row of thumbnail buttons when there is more than one photo.
-// gallery.ts switches the picture; arrow keys move between thumbnails.
+// shown, and a thumbnail button per photo when there is more than one: a
+// column beside the photo from 900 px, dots on the photo on phones (where
+// the photo is square, so the name, price and add button fit the first
+// screen). gallery.ts switches the picture; arrow keys move between them.
 // The first photo is the LCP element of the page: eager, high priority.
 import type { ImageMetadata } from 'astro';
 import { interpolate } from '../i18n/fallback';
@@ -58,10 +60,18 @@ const many = images.length > 1;
 {many && <GalleryScript />}
 
 <style>
+  .gallery {
+    position: relative;
+  }
   .gallery-main {
     position: relative;
   }
+  /* From 900 px the gallery is sticky: the photo never grows taller than the
+     screen under the header, so it is always seen whole. */
   @media (min-width: 900px) {
+    .gallery-main {
+      width: min(100%, calc((100vh - var(--header-h) - 3rem) * 0.8));
+    }
     .gallery.many {
       display: grid;
       grid-template-columns: 76px minmax(0, 1fr);
@@ -123,5 +133,52 @@ const many = images.length > 1;
   .thumb[aria-pressed='true'] {
     border: 2px solid var(--forest);
     opacity: 1;
+  }
+  /* Phones: a square photo (the pouch sits in its middle) and the thumbnails
+     as dots on a cream pill at the bottom of the photo, 28 px targets. */
+  @media (max-width: 899px) {
+    .gallery-main {
+      aspect-ratio: 1 / 1;
+    }
+    .gallery-slide :global(img) {
+      object-position: 50% 52%;
+    }
+    .thumbs {
+      position: absolute;
+      bottom: var(--space-3);
+      left: 50%;
+      gap: 2px;
+      margin: 0;
+      padding: 0 6px;
+      border-radius: var(--radius-pill);
+      background: rgba(251, 246, 234, 0.88);
+      transform: translateX(-50%);
+    }
+    .thumb,
+    .thumb[aria-pressed='true'] {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      aspect-ratio: auto;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      opacity: 1;
+    }
+    .thumb :global(picture) {
+      display: none;
+    }
+    .thumb::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border: 1.5px solid var(--forest);
+      border-radius: 50%;
+      transition: background-color var(--dur-fast) ease;
+    }
+    .thumb[aria-pressed='true']::before {
+      background: var(--forest);
+    }
   }
 </style>

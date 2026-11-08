@@ -369,7 +369,7 @@ const links = [
     content: '';
     position: fixed;
     inset: var(--menu-top, var(--header-h)) 0 0;
-    background: rgba(22, 58, 28, 0.32);
+    background: rgba(22, 58, 28, 0.6);
     cursor: default;
   }
   @media (max-width: 1023px) {
@@ -399,6 +399,15 @@ const links = [
     background: var(--cream);
     border-right: 1px solid var(--line);
     box-shadow: var(--shadow-float);
+  }
+  /* Phones: the panel takes the whole width, so no cropped page shows
+     beside it; tablets keep a side sheet over a dim scrim. */
+  @media (max-width: 599px) {
+    .mobile-nav {
+      width: 100%;
+      border-right: 0;
+      box-shadow: none;
+    }
   }
   @media (prefers-reduced-motion: no-preference) {
     .mobile-menu[open] .mobile-nav {

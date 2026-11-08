@@ -78,9 +78,13 @@ describe('routes', () => {
     for (const p of ALL)
       expect(doc(p.file).querySelector('html')?.getAttribute('lang'), p.file).toBe(p.locale);
   });
-  it('every page has one h1 and a real description', () => {
+  it('every page has one visible h1 and a real description', () => {
     for (const p of ALL) {
-      expect(doc(p.file).querySelectorAll('h1').length, p.file).toBe(1);
+      // The 404 page holds one block per language and hides the other one.
+      const visible = doc(p.file)
+        .querySelectorAll('h1')
+        .filter((h) => !h.closest('[hidden]'));
+      expect(visible.length, p.file).toBe(1);
       const desc = doc(p.file).querySelector('meta[name="description"]')?.getAttribute('content');
       expect(desc?.length ?? 0, p.file).toBeGreaterThan(20);
     }

@@ -1,5 +1,6 @@
 // Spec 8: add two products from the shop, change a quantity in the drawer,
-// open the cart page, go to checkout, pick pickup, accept the terms, pay with
+// open the cart page, go to checkout (Point Relais preselected with its price
+// in the total, review 11), pick pickup, accept the terms, pay with
 // /api/checkout mocked, check the request body and the thanks page. Runs in
 // both locales; the "mobile" project repeats everything at 390 px.
 import { expect, test } from '@playwright/test';
@@ -11,6 +12,8 @@ import {
   json,
   orderFixture,
   readCatalog,
+  relayShipping,
+  wholePrice,
   type Locale,
 } from './helpers';
 
@@ -73,10 +76,23 @@ for (const locale of ['fr', 'en'] as const satisfies readonly Locale[]) {
       await formatInPage(page, subtotal, locale),
     );
 
-    // Checkout with pickup.
+    // Checkout: Point Relais is preselected, so the summary shows its price
+    // and a complete total before any click.
     await page.locator('[data-cart-page-checkout]').click();
     await expect(page).toHaveURL(new RegExp(`${paths.checkout}$`));
     await expect(page.locator('[data-co-lines] li[data-sku]')).toHaveCount(2);
+    await expect(page.locator('input[name="delivery-method"][value="relay"]')).toBeChecked();
+    await expect(page.locator('[data-method-detail="relay"]')).toBeVisible();
+    await expect(page.locator('[data-relay-frame]')).toBeHidden();
+    const relayCents = relayShipping(catalog, subtotal);
+    await expect(page.locator('[data-co-shipping]')).toHaveText(
+      relayCents === 0 ? copy.free : await formatInPage(page, relayCents, locale),
+    );
+    await expect(page.locator('[data-co-total]')).toHaveText(
+      await formatInPage(page, subtotal + relayCents, locale),
+    );
+
+    // Then pickup, one tap away.
     await page.locator('.method-card', { hasText: copy.pickup }).click();
     await expect(page.locator('[data-method-detail="pickup"]')).toBeVisible();
     await expect(page.locator('[data-method-detail="pickup"]')).toContainText('9 Rue du Marché');
@@ -141,8 +157,8 @@ test('relay without a chosen point, then an out-of-stock answer from the API', a
   await page.keyboard.press('Escape');
   await page.goto(PATHS.fr.checkout);
 
-  // Relay selected, no point yet: the payment is refused on the client.
-  await page.locator('.method-card', { hasText: 'Point Relais' }).click();
+  // Relay preselected, no point yet: the payment is refused on the client.
+  await expect(page.locator('input[name="delivery-method"][value="relay"]')).toBeChecked();
   await expect(page.locator('[data-relay-search]')).toBeVisible();
 
   // Empty, then malformed postcode: a visible error tied to the field, no widget load.
@@ -298,4 +314,82 @@ test('drawer keeps the focus inside and returns it to the opener', async ({ page
   await expect(drawer).toBeVisible();
   await page.mouse.click(5, 400);
   await expect(drawer).toBeHidden();
+});
+
+for (const locale of ['fr', 'en'] as const satisfies readonly Locale[]) {
+  test(`cart page: delivery line from the settings, "Commander" in the first screen (${locale})`, async ({
+    page,
+  }) => {
+    const paths = PATHS[locale];
+    await page.goto(paths.shop);
+    const catalog = await readCatalog(page);
+    const add = page.locator('button[data-add-to-cart]:not([disabled])').first();
+    const sku = (await add.getAttribute('data-sku'))!;
+    await add.click();
+    await page.keyboard.press('Escape');
+
+    const unit = catalog.products[sku]!.unitAmount;
+    const relay = catalog.shipping.find((s) => s.id === 'relay')!.amount;
+    const threshold = catalog.freeShippingFrom!;
+    const amount = await formatInPage(page, relay, locale);
+    const free = wholePrice(await formatInPage(page, threshold, locale));
+    const hint =
+      locale === 'fr'
+        ? `Dès ${amount} en Point Relais, offerte dès ${free}`
+        : `From ${amount} to a pickup point, free from ${free}`;
+    expect(unit).toBeLessThan(threshold);
+
+    // The drawer says it too.
+    await page.locator('[data-cart-toggle]').first().click();
+    await expect(page.locator('[data-drawer-shipping]')).toHaveText(hint);
+    await page.keyboard.press('Escape');
+
+    await page.goto(paths.cart);
+    await expect(page.locator('[data-cart-page-shipping]')).toHaveText(hint);
+    // One line: the primary action is on the first screen, phone included,
+    // and the phone bar stays away.
+    await expect(page.locator('[data-cart-page-checkout]')).toBeInViewport();
+    await expect(page.locator('[data-cart-bar]')).toBeHidden();
+
+    // Past the threshold the line says free.
+    const needed = Math.ceil(threshold / unit);
+    if (needed <= catalog.maxQuantityPerLine) {
+      const qty = page.locator('[data-cart-page-lines] [data-line-qty]').first();
+      await qty.fill(String(needed));
+      await qty.press('Enter');
+      await expect(page.locator('[data-cart-page-shipping]')).toHaveText(
+        locale === 'fr' ? 'Offerte' : 'Free',
+      );
+    }
+  });
+}
+
+test('cart cross-sell never offers another format of a product in the cart', async ({ page }) => {
+  await page.goto(PATHS.fr.shop);
+  const catalog = await readCatalog(page);
+  // A product sold in two formats (moringa 100 g and 200 g, for example).
+  const family = (p: { slug: string; category: string }) =>
+    `${p.category}/${p.slug.replace(/-\d+(?:[.,]\d+)?k?g$/i, '')}`;
+  const skus = Object.keys(catalog.products);
+  const sku = skus.find(
+    (a) =>
+      catalog.products[a]!.stock !== 'out' &&
+      skus.some((b) => b !== a && family(catalog.products[b]!) === family(catalog.products[a]!)),
+  );
+  test.skip(!sku, 'no product in two formats');
+  await page.evaluate(
+    (line) =>
+      localStorage.setItem(
+        'rep.cart.v1',
+        JSON.stringify({ version: 1, lines: [line], updatedAt: new Date().toISOString() }),
+      ),
+    { sku: sku!, quantity: 1 },
+  );
+  await page.goto(PATHS.fr.cart);
+  const items = page.locator('[data-cross-sell] [data-cross-sell-sku]');
+  await expect(items.first()).toBeVisible();
+  for (const other of await items.evaluateAll((els) =>
+    els.map((el) => (el as HTMLElement).dataset.crossSellSku!),
+  ))
+    expect(family(catalog.products[other]!)).not.toBe(family(catalog.products[sku!]!));
 });

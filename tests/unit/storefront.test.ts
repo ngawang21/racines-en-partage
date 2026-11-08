@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { CARD_POUCH, POUCH_BOXES, originCountry, pouchCrop } from '../../src/components/storefront';
 import {
+  formatFamilies,
   formatsOf,
+  groupFormats,
   mergeProduct,
   publishedReviews,
+  relatedProducts,
   reviewStats,
   reviewsFor,
 } from '../../src/content/merge';
@@ -14,13 +20,22 @@ const all = [...fr].map(([slug, raw]) => mergeProduct(slug, raw));
 
 /** A minimal product built from a real one, so the test does not hang on the catalogue. */
 const base = all[0]!;
-const make = (slug: string, name: string, weightGrams: number, category = 'poudres'): Product => ({
+const make = (
+  slug: string,
+  name: string,
+  weightGrams: number,
+  category = 'poudres',
+  over: Partial<Product> = {},
+): Product => ({
   ...base,
   slug,
   sku: slug.toUpperCase(),
   name,
   weightGrams,
   category,
+  featured: false,
+  related: [],
+  ...over,
 });
 
 const review = (over: Partial<Review>): Review => ({
@@ -62,6 +77,141 @@ describe('formatsOf', () => {
       expect(family).toContain(p);
       expect(new Set(family.map((f) => f.category))).toEqual(new Set([p.category]));
     }
+  });
+});
+
+describe('formatFamilies and groupFormats', () => {
+  const m100 = make('m-100', 'Poudre de moringa', 100);
+  const m200 = make('m-200', 'Poudre de moringa', 200);
+  const b100 = make('b-100', 'Poudre de baobab', 100);
+  const b200 = make('b-200', 'Poudre de baobab', 200);
+  const hib = make('hib', 'Fleurs d’hibiscus', 100, 'infusions');
+  const list = [m200, b100, hib, m100, b200];
+
+  it('maps every slug to the lightest format of its family', () => {
+    const families = formatFamilies(list);
+    expect(families.get('m-200')).toBe('m-100');
+    expect(families.get('m-100')).toBe('m-100');
+    expect(families.get('b-200')).toBe('b-100');
+    expect(families.get('hib')).toBe('hib');
+  });
+  it('makes one group per family, in the order first met, led by the lightest', () => {
+    const groups = groupFormats(list);
+    expect(groups.map((g) => g.lead.slug)).toEqual(['m-100', 'b-100', 'hib']);
+    expect(groups.map((g) => g.formats.map((f) => f.slug))).toEqual([
+      ['m-100', 'm-200'],
+      ['b-100', 'b-200'],
+      ['hib'],
+    ]);
+  });
+  it('takes the formats from the whole catalogue (a home selection of one format)', () => {
+    const groups = groupFormats([m100, hib], list);
+    expect(groups.map((g) => g.formats.length)).toEqual([2, 1]);
+    expect(groupFormats([m200], list)[0]!.lead).toBe(m100);
+  });
+  it('groups by the French families whatever the names of the locale', () => {
+    const families = formatFamilies(list);
+    const en = list.map((p) => ({ ...p, name: `${p.name} ${p.weightGrams}` }));
+    expect(groupFormats(en, en, families).map((g) => g.formats.length)).toEqual([2, 2, 1]);
+  });
+  it('keeps a product missing from the catalogue as its own card', () => {
+    const lone = make('lone', 'Seul', 50);
+    expect(groupFormats([lone], list)).toEqual([{ lead: lone, formats: [lone] }]);
+  });
+  it('makes 9 cards of the 11 products of the real catalogue', () => {
+    const groups = groupFormats(all);
+    expect(groups).toHaveLength(9);
+    expect(groups.flatMap((g) => g.formats)).toHaveLength(all.length);
+    for (const g of groups) expect(g.lead).toBe(g.formats[0]);
+  });
+});
+
+describe('relatedProducts', () => {
+  const m100 = make('m-100', 'Poudre de moringa', 100, 'poudres', { related: ['m-200', 'b-200'] });
+  const m200 = make('m-200', 'Poudre de moringa', 200);
+  const b100 = make('b-100', 'Poudre de baobab', 100);
+  const b200 = make('b-200', 'Poudre de baobab', 200);
+  const orge = make('orge', 'Poudre d’orge', 100);
+  const hib = make('hib', 'Fleurs d’hibiscus', 100, 'infusions', { featured: true });
+  const cacao = make('cacao', 'Poudre de cacao', 100, 'cacao');
+  const nibs = make('nibs', 'Grués de cacao', 100, 'cacao', { featured: true });
+  const list = [orge, b100, b200, m100, m200, hib, cacao, nibs];
+
+  it('never lists a format of the product, and one format per other product', () => {
+    const slugs = relatedProducts(m100, list).map((p) => p.slug);
+    expect(slugs).not.toContain('m-100');
+    expect(slugs).not.toContain('m-200');
+    expect(slugs.filter((s) => s.startsWith('b-'))).toEqual(['b-100']);
+  });
+  it('fills four: related links, same category, then featured products elsewhere', () => {
+    expect(relatedProducts(m100, list).map((p) => p.slug)).toEqual([
+      'b-100',
+      'orge',
+      'hib',
+      'nibs',
+    ]);
+    expect(relatedProducts(m200, list).map((p) => p.slug)).toEqual([
+      'orge',
+      'b-100',
+      'hib',
+      'nibs',
+    ]);
+  });
+  it('falls back to the rest of the catalogue when the featured ones run out', () => {
+    expect(relatedProducts(hib, list).map((p) => p.slug)).toEqual([
+      'nibs',
+      'orge',
+      'b-100',
+      'm-100',
+    ]);
+  });
+  it('gives four distinct families for every product of the real catalogue', () => {
+    const families = formatFamilies(all);
+    for (const p of all) {
+      const related = relatedProducts(p, all, families);
+      expect(related, p.slug).toHaveLength(4);
+      const keys = related.map((r) => families.get(r.slug));
+      expect(new Set(keys).size, p.slug).toBe(4);
+      expect(keys, p.slug).not.toContain(families.get(p.slug));
+      for (const r of related) expect(families.get(r.slug), p.slug).toBe(r.slug);
+    }
+  });
+});
+
+describe('originCountry', () => {
+  it('keeps the country of an origin line', () => {
+    expect(originCountry('Allemagne, Sonam’Tsampa')).toBe('Allemagne');
+    expect(originCountry('Germany, Sonam’Tsampa')).toBe('Germany');
+    expect(originCountry('Côte d’Ivoire')).toBe('Côte d’Ivoire');
+    expect(originCountry(' Niger ')).toBe('Niger');
+  });
+});
+
+describe('pouchCrop', () => {
+  const frameH = 5 / 4;
+  const photoH = 1600 / 1067;
+  it('puts every measured pouch at the same place and scale in a 4:5 card', () => {
+    for (const [name, box] of Object.entries(POUCH_BOXES)) {
+      const crop = pouchCrop(`/src/assets/products/${name}.webp`)!;
+      expect(crop.scale, name).toBeGreaterThanOrEqual(1);
+      expect(crop.offset, name).toBeLessThanOrEqual(0);
+      // The photo covers the frame.
+      expect(crop.offset + photoH * crop.scale, name).toBeGreaterThanOrEqual(frameH - 0.002);
+      const top = (crop.offset + box.top * photoH * crop.scale) / frameH;
+      const height = ((box.bottom - box.top) * photoH * crop.scale) / frameH;
+      expect(top, name).toBeCloseTo(CARD_POUCH.top, 2);
+      expect(height, name).toBeCloseTo(CARD_POUCH.height, 2);
+    }
+  });
+  it('measures every product photo of the catalogue', () => {
+    for (const p of all) {
+      const file = p.images[0]!;
+      expect(existsSync(join(process.cwd(), file.slice(1))), file).toBe(true);
+      expect(pouchCrop(file), file).not.toBeNull();
+    }
+  });
+  it('leaves an unmeasured photo to the default crop', () => {
+    expect(pouchCrop('/src/assets/products/new-product.webp')).toBeNull();
   });
 });
 

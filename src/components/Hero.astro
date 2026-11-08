@@ -1,17 +1,19 @@
 ---
-// Home hero (spec 5.4, premium standard section 2): copy on the left in the
-// wide container (its left edge aligns with the header wordmark and the
-// featured grid below), vertically centred; the trio photo bleeds to the right edge of
-// the window on desktop and edge to edge under the copy on phones, with the
-// medallion resting on its corner. The photo is the LCP element: eager,
-// fetchpriority high. On phones the 3:2 photo is cropped to 4:3, so the
-// rendered image is about 1.125 times the frame width: `sizes` accounts for it.
+// Home hero (spec 5.4, premium standard sections 2 and 3). The slogan is a
+// small italic kicker; the H1 names what is sold, in one colour; one primary
+// button, then "Notre histoire" as a plain text link.
+// From 960 px: copy and photo share the content container (same inset on
+// both sides, the copy's left edge on the header wordmark), the photo framed
+// with rounded corners on all four sides. The H1 is sized on its own column
+// (container query units) so it keeps to three lines at 1440 px and wider.
+// Under 960 px: the photo comes first (4:3, inside the gutter), then the copy.
+// The photo is the LCP element: eager, fetchpriority high. The 3:2 photo is
+// cropped to 4:3, so the rendered image is 1.125 times the frame width:
+// `sizes` accounts for it.
 // Entrance: the copy rises in a short stagger, the photo settles from a
-// slight zoom (transform only, so the LCP image is never transparent) and the
-// medallion lands last. All of it is off under prefers-reduced-motion.
-import { Image } from 'astro:assets';
+// slight zoom (transform only, so the LCP image is never transparent). All of
+// it is off under prefers-reduced-motion.
 import heroTrio from '../assets/brand/hero-trio.webp';
-import medallion from '../assets/brand/medallion.webp';
 import type { HomePage } from '../content/schemas';
 import Picture from './Picture.astro';
 
@@ -24,17 +26,14 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
 ---
 
 <section class="hero" aria-labelledby="hero-title">
-  <div class="container-wide hero-grid">
+  <div class="container hero-grid">
     <div class="hero-copy">
-      <p class="eyebrow hero-eyebrow">{hero.eyebrow}</p>
-      <h1 id="hero-title">
-        <span class="hero-title-main">{hero.title}</span>{' '}
-        <span class="accent hero-accent">{hero.titleAccent}</span>
-      </h1>
+      <p class="eyebrow hero-kicker">{hero.eyebrow}</p>
+      <h1 id="hero-title">{hero.title}</h1>
       <p class="lead hero-lead">{hero.lead}</p>
       <div class="hero-ctas">
         <a class="btn btn-primary" href={primaryHref}>{hero.cta.primary}</a>
-        <a class="btn btn-secondary" href={secondaryHref}>{hero.cta.secondary}</a>
+        <a class="link-arrow hero-link" href={secondaryHref}>{hero.cta.secondary}</a>
       </div>
     </div>
     <div class="hero-media">
@@ -43,69 +42,70 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
           src={heroTrio}
           alt={hero.imageAlt}
           preset="hero"
-          sizes="(min-width: 960px) 58vw, 112vw"
+          sizes="(min-width: 1552px) 690px, (min-width: 960px) 45vw, calc(112.5vw - 45px)"
           loading="eager"
           fetchpriority="high"
         />
       </div>
-      <Image
-        src={medallion}
-        alt=""
-        width={96}
-        height={96}
-        densities={[1, 2]}
-        class="hero-medallion"
-        loading="eager"
-      />
     </div>
   </div>
 </section>
 
 <style>
   .hero {
-    /* The bleeding photo must never cause a horizontal scroll (100vw counts
-       the scrollbar). */
-    overflow-x: clip;
-    padding-block: clamp(2rem, 1rem + 4vw, 4.5rem) clamp(2.5rem, 1.5rem + 4vw, 5rem);
+    padding-block: clamp(var(--space-4), 0.25rem + 3vw, var(--space-16))
+      clamp(2.5rem, 1.5rem + 4vw, 5rem);
   }
   .hero-grid {
     display: grid;
-    gap: clamp(2rem, 1rem + 3vw, 4rem);
+    gap: clamp(1.5rem, 1rem + 2vw, 2.5rem);
     align-items: center;
+  }
+  /* Phones and tablets: the photo first. */
+  .hero-media {
+    order: -1;
   }
   @media (min-width: 960px) {
     .hero-grid {
-      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
       gap: clamp(2.5rem, 1rem + 4vw, 5rem);
     }
+    .hero-media {
+      order: 0;
+    }
+    .hero-copy {
+      container-type: inline-size;
+    }
   }
-  .hero-eyebrow {
+  .hero-kicker {
     display: flex;
     align-items: center;
     gap: var(--space-3);
     color: var(--ink-2);
   }
-  .hero-eyebrow::before {
+  /* The rule sits on the first line when the slogan wraps (phones). */
+  .hero-kicker::before {
     content: '';
+    flex: none;
+    align-self: flex-start;
+    margin-top: 0.65em;
     width: 28px;
     height: 1px;
     background: var(--gold);
   }
   h1 {
     margin-top: var(--space-4);
-    font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4.75rem);
-    line-height: 1.04;
+    max-width: 22ch;
+    font-size: clamp(2.5rem, 1.6rem + 3vw, 4rem);
+    line-height: 1.06;
     letter-spacing: -0.02em;
   }
-  .hero-title-main,
-  .hero-accent {
-    display: block;
-  }
-  .hero-accent {
-    margin-top: 0.08em;
-    color: var(--hibiscus-deep);
-    font-weight: 400;
-    letter-spacing: -0.01em;
+  @media (min-width: 960px) {
+    /* Sized on the copy column: about 12.8 em of measure, three lines. */
+    h1 {
+      max-width: none;
+      font-size: clamp(2.5rem, 7.8cqi, 4rem);
+    }
   }
   .hero-lead {
     margin-top: var(--space-6);
@@ -114,7 +114,8 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
   .hero-ctas {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-3);
+    align-items: center;
+    gap: var(--space-3) var(--space-8);
     margin-top: var(--space-8);
   }
   @media (max-width: 479px) {
@@ -122,32 +123,17 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
       flex: 1 1 100%;
     }
   }
-  .hero-media {
-    position: relative;
-    /* Phones: edge to edge. */
-    margin-inline: calc(var(--gutter) * -1);
-  }
   .hero-frame {
     overflow: hidden;
     aspect-ratio: 4 / 3;
-    border-block: 1px solid var(--kraft);
+    border: 1px solid var(--kraft);
+    border-radius: var(--radius-m);
     background: var(--paper);
   }
   @media (min-width: 960px) {
-    /* Desktop: the photo runs from its column to the window's right edge. */
-    .hero-media {
-      --bleed: calc(
-        var(--gutter) + max(0px, (100vw - var(--container-wide) - 2 * var(--gutter)) / 2)
-      );
-      margin-inline: 0 calc(var(--bleed) * -1);
-      container-type: inline-size;
-    }
-    /* Full width of the bleeding column; 4:3 until the height cap. */
     .hero-frame {
-      aspect-ratio: auto;
-      height: min(75cqi, 76vh, 680px);
-      border-left: 1px solid var(--kraft);
-      border-radius: var(--radius-l) 0 0 var(--radius-l);
+      max-height: min(76vh, 640px);
+      border-radius: var(--radius-l);
       box-shadow: var(--shadow-soft);
     }
   }
@@ -161,57 +147,25 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
     object-fit: cover;
     object-position: 50% 55%;
   }
-  .hero-media :global(.hero-medallion) {
-    position: absolute;
-    left: -18px;
-    bottom: -26px;
-    width: 76px;
-    height: 76px;
-    border: 4px solid var(--cream);
-    border-radius: 50%;
-    background: var(--cream);
-    box-shadow: var(--shadow-soft);
-  }
-  @media (min-width: 960px) {
-    .hero-media :global(.hero-medallion) {
-      left: -40px;
-      bottom: -36px;
-      width: 96px;
-      height: 96px;
-    }
-  }
-  @media (max-width: 959px) {
-    .hero-media :global(.hero-medallion) {
-      left: auto;
-      right: calc(var(--gutter) + 6px);
-    }
-  }
 
   @media (prefers-reduced-motion: no-preference) {
-    .hero-eyebrow,
-    .hero-title-main,
-    .hero-accent,
+    .hero-kicker,
+    h1,
     .hero-lead,
     .hero-ctas {
       animation: rep-hero-rise 480ms var(--ease-out-strong) both;
     }
-    .hero-title-main {
-      animation-delay: 50ms;
-    }
-    .hero-accent {
-      animation-delay: 130ms;
+    h1 {
+      animation-delay: 60ms;
     }
     .hero-lead {
-      animation-delay: 200ms;
+      animation-delay: 140ms;
     }
     .hero-ctas {
-      animation-delay: 260ms;
+      animation-delay: 200ms;
     }
     .hero-frame :global(img) {
       animation: rep-hero-settle 500ms var(--ease-out-strong) both;
-    }
-    .hero-media :global(.hero-medallion) {
-      animation: rep-hero-land 440ms var(--ease-out-strong) 300ms both;
     }
   }
   @keyframes rep-hero-rise {
@@ -223,12 +177,6 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
   @keyframes rep-hero-settle {
     from {
       transform: scale(1.04);
-    }
-  }
-  @keyframes rep-hero-land {
-    from {
-      opacity: 0;
-      transform: translateY(6px) scale(0.9);
     }
   }
 </style>

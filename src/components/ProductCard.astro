@@ -1,8 +1,13 @@
 ---
-// One product in a grid (spec 5.4 shop): 4:5 framed photo, weight and origin,
-// name, review summary when there are reviews, price with the price per kilo,
-// stock status when it is not plain "in stock", and the add button of the
-// cart contract. The data-* attributes feed shop-filter.ts.
+// One product family in a grid (spec 5.4 shop, premium standard 9): the
+// lightest format's photo cropped so every pouch has the same scale, the
+// name (rows shared across the grid, so the meta, prices and buttons align
+// across a row whatever wraps), the
+// weight, or a chip per format, and the country of origin, the review
+// summary when there are reviews, the price ("dès 6,00 €" when there are
+// several formats) with the shown format's price per kilo, the stock when it
+// is not plain "in stock", and the add button of the cart contract for the
+// shown format. The data-* attributes feed shop-filter.ts.
 import type { Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
 import type { Product } from '../content/schemas';
@@ -11,24 +16,38 @@ import { routePath } from '../i18n/routing';
 import AddToCart from './AddToCart.astro';
 import Picture from './Picture.astro';
 import ReviewSummary from './ReviewSummary.astro';
-import { STOCK_CLASS, stockLabel } from './storefront';
+import { STOCK_CLASS, originCountry, pouchCrop, stockLabel } from './storefront';
 
 interface Props {
+  /** The format the card shows and adds: the lightest of its family. */
   product: Product;
+  /** Every format of the family, lightest first (groupFormats). */
+  formats?: Product[];
   locale: Locale;
   t: LocaleContent;
   shopOpen: boolean;
   /** Position in the default ("featured") order, for sorting back. */
   index?: number;
   headingLevel?: 'h2' | 'h3';
-  /** Published reviews of the product (reviewStats); nothing shown at count 0. */
+  /** Published reviews of the family (reviewStats); nothing shown at count 0. */
   rating?: { count: number; average: number };
 }
-const { product: p, locale, t, shopOpen, index = 0, headingLevel = 'h3', rating } = Astro.props;
+const {
+  product: p,
+  formats = [p],
+  locale,
+  t,
+  shopOpen,
+  index = 0,
+  headingLevel = 'h3',
+  rating,
+} = Astro.props;
 const Heading = headingLevel;
 const href = routePath('product', locale, p.slug);
 const cents = toCents(p.price);
 const weight = formatWeight(p.weightGrams, locale);
+const several = formats.length > 1;
+const crop = pouchCrop(p.images[0]!);
 ---
 
 <article
@@ -41,7 +60,11 @@ const weight = formatWeight(p.weightGrams, locale);
   data-order={index}
   data-featured={p.featured ? '' : undefined}
 >
-  <div class="frame card-media">
+  <div
+    class="frame card-media"
+    data-crop={crop ? '' : undefined}
+    style={crop ? `--crop-s: ${crop.scale}; --crop-y: ${crop.offset}` : undefined}
+  >
     <Picture src={p.images[0]!} alt="" preset="card" />
     {
       p.stock !== 'in_stock' && (
@@ -52,33 +75,60 @@ const weight = formatWeight(p.weightGrams, locale);
     }
   </div>
   <div class="card-body">
-    <p class="card-meta">
-      <span class="card-weight">{weight}</span>
-      <span aria-hidden="true">·</span>
-      <span class="card-origin">{p.origin}</span>
-    </p>
     <Heading class="card-title">
       <a href={href}>{p.name}</a>
     </Heading>
-    {rating && rating.count > 0 && <ReviewSummary stats={rating} {locale} {t} />}
+    <div class="card-info">
+      <div class="card-meta">
+        {
+          several ? (
+            <ul class="card-formats" role="list" aria-label={t.product.formats}>
+              {formats.map((f) => (
+                <li>
+                  <a
+                    class="card-format"
+                    href={routePath('product', locale, f.slug)}
+                    data-shown={f.slug === p.slug ? '' : undefined}
+                  >
+                    {formatWeight(f.weightGrams, locale)}
+                    <span class="visually-hidden">, {f.name}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <span class="card-weight">{weight}</span>
+          )
+        }
+        <span class="card-sep" aria-hidden="true">·</span>
+        <span class="card-origin">{originCountry(p.origin)}</span>
+      </div>
+      {rating && rating.count > 0 && <ReviewSummary stats={rating} {locale} {t} />}
+    </div>
     <div class="card-foot">
-      <p class="card-prices">
-        <span class="price card-price">{formatPrice(cents, locale)}</span>{' '}
-        <span class="card-unit">
-          <span class="visually-hidden">{t.shop.unitPrice} </span>
-          {formatUnitPrice(cents, p.weightGrams, locale)}
-        </span>
-      </p>
-      <AddToCart
-        sku={p.sku}
-        stock={p.stock}
-        {shopOpen}
-        label={t.shop.add}
-        outLabel={t.product.stockOut}
-        srSuffix={`, ${p.name} ${weight}`}
-        icon
-        class="card-add"
-      />
+      <div class="card-buy">
+        <p class="card-prices">
+          <span class="card-price-line">
+            {several && <span class="card-from">{t.shop.priceFrom} </span>}
+            <span class="price card-price">{formatPrice(cents, locale)}</span>
+          </span>{' '}
+          <span class="card-unit">
+            <span class="visually-hidden">{t.shop.unitPrice} </span>
+            {formatUnitPrice(cents, p.weightGrams, locale)}
+            {several && <span class="visually-hidden">, {weight}</span>}
+          </span>
+        </p>
+        <AddToCart
+          sku={p.sku}
+          stock={p.stock}
+          {shopOpen}
+          label={t.shop.add}
+          outLabel={t.product.stockOut}
+          srSuffix={`, ${p.name} ${weight}`}
+          icon
+          class="card-add"
+        />
+      </div>
     </div>
   </div>
 </article>
@@ -90,7 +140,6 @@ const weight = formatWeight(p.weightGrams, locale);
     flex-direction: column;
     height: 100%;
     border-radius: var(--radius-m);
-    container-type: inline-size;
   }
   /* Hover: the card rises 2 px, the frame takes the shadow and a deeper
      kraft edge, and the photo eases up a few percent inside its frame. */
@@ -103,7 +152,27 @@ const weight = formatWeight(p.weightGrams, locale);
   }
   .card-media :global(img) {
     object-position: 50% 60%;
-    transition: transform 400ms var(--ease-out-strong);
+    transition: transform 300ms var(--ease-out-strong);
+  }
+  /* Measured photos (pouchCrop): the photo is scaled and shifted so the
+     pouch top sits 18 % below the frame top and the pouch fills 70 % of the
+     frame height, the same in every card. Margins in percent refer to the
+     frame width, which is what --crop-y is expressed in. */
+  .card-media[data-crop] :global(picture) {
+    position: relative;
+    display: block;
+    height: 100%;
+  }
+  .card-media[data-crop] :global(img) {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: calc(var(--crop-s) * 100%);
+    max-width: none;
+    height: auto;
+    margin-top: calc(var(--crop-y) * 100%);
+    margin-left: calc(var(--crop-s) * -50%);
+    object-fit: fill;
   }
   @media (hover: hover) and (pointer: fine) {
     .card.lift:hover {
@@ -114,7 +183,7 @@ const weight = formatWeight(p.weightGrams, locale);
       box-shadow: var(--shadow-float);
     }
     .card:hover .card-media :global(img) {
-      transform: scale(1.04);
+      transform: scale(1.025);
     }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -139,42 +208,55 @@ const weight = formatWeight(p.weightGrams, locale);
     gap: var(--space-2);
     padding: var(--space-4) 2px 2px;
   }
-  /* One line: a long origin is shortened rather than stranding the dot. The
-     product page carries it in full. */
-  .card-meta {
-    display: flex;
-    gap: 6px;
-    min-width: 0;
-    color: var(--ink-2);
-    font-size: var(--fs--1);
-    letter-spacing: 0.01em;
-    white-space: nowrap;
-  }
-  .card-meta > * {
-    flex: none;
-  }
-  .card-meta .card-origin {
-    flex: 0 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  /* Narrow cards (two columns on phones): weight and origin on two lines. */
-  @container (max-width: 199px) {
-    .card-meta {
-      flex-direction: column;
-      gap: 0;
+  /* Where subgrid works (ProductGrid gives each item four rows of the grid:
+     photo, name, meta, price), names, meta lines and prices of a row of
+     cards share their rows: a name on two lines moves the whole row, never
+     one card. Elsewhere the name keeps two lines of room. */
+  @supports (grid-template-rows: subgrid) {
+    .card {
+      display: grid;
+      grid-row: span 4;
+      grid-template-rows: subgrid;
+      row-gap: 0;
     }
-    .card-meta > [aria-hidden] {
-      display: none;
+    .card-body {
+      display: contents;
+    }
+    .card-title {
+      padding-top: var(--space-4);
+    }
+    .card-info {
+      padding-top: var(--space-2);
+    }
+    .card-foot {
+      align-self: end;
+      padding-top: var(--space-3);
+    }
+    .card-title,
+    .card-info,
+    .card-foot {
+      padding-inline: 2px;
     }
   }
+  @supports not (grid-template-rows: subgrid) {
+    .card-title {
+      min-height: calc(2em * 1.25);
+    }
+  }
+  .card-info {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+  }
+  /* 17 px on phones, balanced when it wraps. */
   .card-title {
-    font-size: clamp(1.125rem, 1.05rem + 0.35vw, 1.3125rem);
+    font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.3125rem);
     font-weight: 600;
     line-height: 1.25;
+    text-wrap: balance;
   }
-  /* The name's link covers the card; the add button sits above it. */
+  /* The name's link covers the card; the add button and the format chips
+     sit above it. */
   .card-title a::after {
     content: '';
     position: absolute;
@@ -191,6 +273,11 @@ const weight = formatWeight(p.weightGrams, locale);
     outline-offset: 4px;
   }
   .card-title a {
+    /* The link box itself is at least 24 px tall (touch target rule), the
+       padding cancelled by the margin so the layout does not move. */
+    display: inline-block;
+    padding-block: 3px;
+    margin-block: -3px;
     color: var(--forest);
     text-decoration: underline;
     text-decoration-color: transparent;
@@ -203,13 +290,104 @@ const weight = formatWeight(p.weightGrams, locale);
       text-decoration-color: var(--kraft-deep);
     }
   }
+  /* Weight (or the format chips) and country on one line of a fixed height;
+     a long country is shortened rather than wrapped. */
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    min-height: 28px;
+    color: var(--ink-2);
+    font-size: var(--fs--1);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  .card-meta > * {
+    flex: none;
+  }
+  .card-meta .card-origin {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-formats {
+    display: flex;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+  }
+  .card-format {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 10px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: rgba(255, 255, 255, 0.5);
+    color: var(--forest);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-decoration: none;
+    touch-action: manipulation;
+    transition:
+      border-color var(--dur-fast) ease,
+      background-color var(--dur-fast) ease,
+      transform var(--dur-press) var(--ease-out-strong);
+  }
+  .card-format[data-shown] {
+    border-color: var(--forest);
+  }
+  .card-format:active {
+    transform: scale(0.97);
+  }
+  @media (hover: hover) {
+    .card-format:hover {
+      border-color: var(--forest);
+      background: var(--cream);
+    }
+  }
+  /* Two columns on phones: weight or chips, then the country, each on a
+     line of the same height. (A container query would need containment on
+     the card, which turns its subgrid off.) */
+  @media (max-width: 719px) {
+    .card-meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+    .card-meta > .card-weight,
+    .card-meta > .card-formats {
+      display: flex;
+      align-items: center;
+      min-height: 28px;
+    }
+    .card-meta > [aria-hidden] {
+      display: none;
+    }
+    .card-meta .card-origin {
+      max-width: 100%;
+    }
+  }
+  /* The foot is the size container of its own layout (price over the button
+     in narrow cards, side by side from 230 px). Containment makes it a
+     stacking context, so it sits above the name's covering link. */
   .card-foot {
+    position: relative;
+    z-index: 2;
+    margin-top: auto;
+    padding-top: var(--space-2);
+    container-type: inline-size;
+  }
+  .card-buy {
     display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: var(--space-3);
-    margin-top: auto;
-    padding-top: var(--space-2);
   }
   /* Price over price per kilo, always: every card has the same two lines, so
      prices and buttons line up across a row at any width. */
@@ -219,13 +397,24 @@ const weight = formatWeight(p.weightGrams, locale);
     align-items: flex-start;
     margin: 0;
   }
+  .card-price-line {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3em;
+  }
+  .card-from {
+    color: var(--ink-2);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
   .card-price {
     font-size: var(--fs-2);
     line-height: 1.2;
   }
+  /* A legal mention and a buying criterion: 13 px at least, 8.7:1 on cream. */
   .card-unit {
-    color: var(--ink-2);
-    font-size: 0.75rem;
+    color: var(--forest-2);
+    font-size: 0.8125rem;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
@@ -241,7 +430,7 @@ const weight = formatWeight(p.weightGrams, locale);
     height: 18px;
   }
   @container (min-width: 230px) {
-    .card-foot {
+    .card-buy {
       flex-direction: row;
       align-items: center;
       justify-content: space-between;

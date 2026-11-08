@@ -68,7 +68,9 @@ const shopOpen = settings.shop.open;
         <span class="cd-row-label">{t.cart.subtotal}</span>
         <span class="cd-subtotal price" data-drawer-subtotal></span>
       </div>
-      <p class="cd-note">{t.cart.shipping} · {t.cart.shippingNextStep}</p>
+      <p class="cd-note">
+        {t.cart.shipping} · <span data-drawer-shipping>{t.cart.shippingNextStep}</span>
+      </p>
       {!shopOpen && <p class="cd-closed">{t.shop.closedNotice}</p>}
       <div class="cd-actions">
         <a class="btn btn-secondary" href={routePath('cart', locale)}>{t.cart.viewCart}</a>

@@ -19,8 +19,13 @@ export async function readCatalog(page: Page) {
   return page.evaluate(
     () =>
       JSON.parse(document.getElementById('rep-catalog')!.textContent!) as {
-        products: Record<string, { name: string; unitAmount: number; stock: string }>;
+        products: Record<
+          string,
+          { name: string; unitAmount: number; stock: string; slug: string; category: string }
+        >;
         freeShippingFrom: number | null;
+        maxQuantityPerLine: number;
+        shipping: Array<{ id: 'relay' | 'home' | 'pickup'; amount: number }>;
       },
   );
 }
@@ -53,3 +58,16 @@ export function orderFixture(items: Array<{ name: string; quantity: number; unit
 
 export const json = (route: Route, status: number, body: unknown) =>
   route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
+
+/** "49 €" rather than "49,00 €", as the cart prints a round threshold. */
+export const wholePrice = (formatted: string) => formatted.replace(/[,.]00(?=\D|$)/, '');
+
+/** The display price of the relay method for `subtotal` (free from the threshold). */
+export function relayShipping(
+  catalog: Awaited<ReturnType<typeof readCatalog>>,
+  subtotal: number,
+): number {
+  const relay = catalog.shipping.find((s) => s.id === 'relay')!.amount;
+  const threshold = catalog.freeShippingFrom;
+  return threshold !== null && subtotal >= threshold ? 0 : relay;
+}

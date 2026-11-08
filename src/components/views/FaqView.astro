@@ -1,6 +1,7 @@
 ---
-// FAQ, both locales (spec 5.4): a list of <details>, the FAQPage graph from
-// Base, and a contact card for anything else.
+// FAQ, both locales (spec 5.4): a list of <details> at most 760 px wide, the
+// FAQPage graph from Base, and the contact column for anything else, sticky
+// right beside the list from 960 px (a plain column under a hairline, not a card).
 import type { Locale } from '../../consts';
 import Base from '../../layouts/Base.astro';
 import { formatPhone, phoneE164 } from '../../i18n/format';
@@ -84,8 +85,8 @@ const { brand } = settings;
   }
   @media (min-width: 960px) {
     .faq-layout {
-      grid-template-columns: minmax(0, 1fr) 340px;
-      gap: var(--space-16);
+      grid-template-columns: minmax(0, 760px) minmax(260px, 320px);
+      gap: clamp(3rem, 1rem + 5vw, 7rem);
     }
     .ask {
       position: sticky;
@@ -93,7 +94,6 @@ const { brand } = settings;
     }
   }
   .faq-list {
-    max-width: 760px;
     border-top: 1px solid var(--line);
   }
   .answer {
@@ -103,10 +103,8 @@ const { brand } = settings;
     line-height: 1.7;
   }
   .ask {
-    padding: var(--space-8);
-    border: 1px solid var(--kraft);
-    border-radius: var(--radius-l);
-    background: var(--paper);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--kraft);
   }
   .ask h2 {
     font-size: var(--fs-3);

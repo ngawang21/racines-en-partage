@@ -98,7 +98,7 @@ describe('open graph cards', () => {
 });
 
 describe('shop page', () => {
-  it('has the category chips, the sort select and every product card', () => {
+  it('has the category chips, the sort select and one card per product family', () => {
     for (const l of LOCALES) {
       const d = doc(routePath('shop', l));
       const chips = d.querySelectorAll('button[data-filter]');
@@ -108,8 +108,18 @@ describe('shop page', () => {
       expect(chips.filter((c) => c.getAttribute('aria-pressed') === 'true').length).toBe(1);
       for (const c of chips) expect(c.getAttribute('type')).toBe('button');
       expect(d.querySelectorAll('select[data-sort] option').length).toBe(4);
+      // Formats of one product (moringa 100 g and 200 g) share a card, whose
+      // chips link every format.
+      const families = new Set(
+        products.map((p) => `${p.category}|${String(p.name).trim().toLocaleLowerCase('fr')}`),
+      );
       const cards = d.querySelectorAll('[data-product-card]');
-      expect(cards.length).toBe(products.length);
+      expect(cards.length).toBe(families.size);
+      const linked = new Set(
+        cards.flatMap((c) => c.querySelectorAll('a').map((a) => a.getAttribute('href'))),
+      );
+      for (const p of products)
+        expect(linked.has(routePath('product', l, p.slug)), p.slug).toBe(true);
       for (const c of cards) {
         expect(c.getAttribute('data-category')).toBeTruthy();
         expect(Number(c.getAttribute('data-price'))).toBeGreaterThan(0);

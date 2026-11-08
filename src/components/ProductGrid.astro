@@ -1,9 +1,13 @@
 ---
-import type { Locale } from '../consts';
+// A grid of product cards: one card per product family (moringa 100 g and
+// 200 g make one card showing the 100 g, with a chip per format). Families
+// are defined in French (formatsOf) and the chips list every format of the
+// catalogue, even when `products` holds only one of them.
+import { DEFAULT_LOCALE, type Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
 import type { Product } from '../content/schemas';
-import { reviewStats } from '../content/merge';
-import { loadReviews, loadSettings, reviewsFor } from '../i18n/locale';
+import { formatFamilies, groupFormats, reviewStats } from '../content/merge';
+import { loadProducts, loadReviews, loadSettings, reviewsFor } from '../i18n/locale';
 import ProductCard from './ProductCard.astro';
 
 interface Props {
@@ -14,37 +18,51 @@ interface Props {
   headingLevel?: 'h2' | 'h3';
   id?: string;
   class?: string;
-  /** Fade the cards up on scroll, staggered (home page, reveal.ts). */
-  reveal?: boolean;
 }
-const {
-  products,
-  locale,
-  t,
-  shopOpen,
-  headingLevel,
-  id,
-  class: className,
-  reveal = false,
-} = Astro.props;
-const [reviews, settings] = await Promise.all([loadReviews(), loadSettings()]);
+const { products, locale, t, shopOpen, headingLevel, id, class: className } = Astro.props;
+const [reviews, settings, all, allFr] = await Promise.all([
+  loadReviews(),
+  loadSettings(),
+  loadProducts(locale),
+  loadProducts(DEFAULT_LOCALE),
+]);
 const showRatings = settings.reviews.enabled;
+const groups = groupFormats(products, all, formatFamilies(allFr));
 ---
 
 <ul class:list={['product-grid', className]} role="list" {id} data-product-grid>
   {
-    products.map((product, index) => (
-      <li data-product-item data-reveal={reveal ? '' : undefined}>
+    groups.map(({ lead, formats }, index) => (
+      <li data-product-item>
         <ProductCard
-          {product}
+          product={lead}
+          {formats}
           {locale}
           {t}
           {shopOpen}
           {index}
           {headingLevel}
-          rating={showRatings ? reviewStats(reviewsFor(product.slug, reviews)) : undefined}
+          rating={
+            showRatings
+              ? reviewStats(formats.flatMap((f) => reviewsFor(f.slug, reviews)))
+              : undefined
+          }
         />
       </li>
     ))
   }
 </ul>
+
+<style>
+  /* Each item spans four rows of the grid (photo, name, meta, price) that
+     its card shares through subgrid (ProductCard), so a row of cards aligns.
+     A filtered-out item ([hidden]) stays hidden. */
+  @supports (grid-template-rows: subgrid) {
+    .product-grid > li:not([hidden]) {
+      display: grid;
+      grid-row: span 4;
+      grid-template-rows: subgrid;
+      row-gap: 0;
+    }
+  }
+</style>

@@ -178,13 +178,15 @@ blockquote {
   font-style: italic;
   font-weight: 500;
 }
+/* Kicker above a heading: a quiet italic line in sentence case (never
+   tracked capitals), used only where it adds information. */
 .eyebrow {
-  font-family: var(--font-body);
-  font-size: var(--fs--1);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  font-family: var(--font-display);
+  font-size: var(--fs-1);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--kraft-ink);
   text-wrap: balance;
 }
 .lead {
@@ -227,17 +229,17 @@ blockquote {
 
 /* --------------------------------------------------------------- layout */
 
+/* One content edge per breakpoint: every section, grid and band shares the
+   same left and right edges (56 px gutter at 1440, the content at most 1440
+   wide). Text keeps a readable measure through max-width on the block itself,
+   never through a narrower container, so the edge never jumps between
+   sections. `.container-wide` is kept as an alias. */
 .container,
 .container-wide {
   width: 100%;
-  max-width: calc(var(--container) + 2 * var(--gutter));
+  max-width: calc(var(--container-wide) + 2 * var(--gutter));
   margin-inline: auto;
   padding-inline: var(--gutter);
-}
-/* Product grids (shop, category, home selection): wider on large screens,
-   five columns from 1600 px. */
-.container-wide {
-  max-width: calc(var(--container-wide) + 2 * var(--gutter));
 }
 .section {
   padding-block: var(--space-16);
@@ -455,7 +457,9 @@ blockquote {
   overflow: hidden;
   border: 1px solid var(--kraft);
   border-radius: var(--radius-m);
-  background: var(--paper);
+  /* The ground of the product photographs, so a frame waiting for its image
+     never reads as an empty box. */
+  background: var(--photo-ground);
 }
 .frame img {
   width: 100%;
@@ -746,29 +750,6 @@ blockquote {
 /* ======================================================================
    Launch polish (review 4): motion, page transitions, print.
    ====================================================================== */
-
-/* Scroll reveal for the home sections (src/components/reveal.ts). The script
-   marks only what starts below the fold, and only when motion is welcome:
-   without it, or under reduced motion, everything is simply visible. */
-/* Eased on the way in only: hiding at load is instant and unseen. */
-[data-reveal]:not(.is-pending) {
-  transition:
-    opacity 480ms var(--ease-out-strong) var(--reveal-delay, 0ms),
-    transform 480ms var(--ease-out-strong) var(--reveal-delay, 0ms);
-}
-[data-reveal].is-pending {
-  opacity: 0;
-  transform: translateY(16px);
-}
-@media (prefers-reduced-motion: reduce) {
-  [data-reveal],
-  [data-reveal].is-pending {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
-}
-
 /* Cross-document view transitions: a short crossfade between pages, the
    header held still. Pure CSS, each page still loads its own scripts; the
    browsers without support navigate as before. */
@@ -830,10 +811,6 @@ blockquote {
     box-shadow: none !important;
     animation: none !important;
     transition: none !important;
-  }
-  [data-reveal] {
-    opacity: 1 !important;
-    transform: none !important;
   }
   h1,
   h2,

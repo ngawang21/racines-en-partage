@@ -338,6 +338,16 @@ Other owner inputs are visible in the content but not gated: origins marked
 on four products, the about and home story texts. The CMS editor shows none of
 the YAML comments, so `docs/client/presentation.md` lists them for Marie.
 
+Home page fields (`pages/{fr,en}/home.yml`): `hero.eyebrow` is the brand
+slogan, printed as the small italic line above the H1 and reused as the
+title of the "Notre histoire" closing band; `hero.title` is the H1 and names
+what the shop sells, in one colour; `hero.cta.secondary` is a plain text link
+to "Notre histoire", not a second button. `storyLands.from` lists the
+countries of the product `origin` fields (the part before any comma), each
+named in `storyBody` too: a unit test fails when a product origin is missing
+in either locale, so a new origin means a new land and a sentence in the
+story.
+
 ## 7. Admin page and CSP
 
 `public/_headers` keeps the strict global policy and appends an `/admin/*`

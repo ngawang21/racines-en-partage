@@ -4,13 +4,11 @@ seoDescription: >-
   additifs, conditionnés en France par l’ESAT Les Oliviers. Livraison en Point
   Relais Mondial Relay.
 hero:
-  eyebrow: Tisanes, poudres et graines d’Afrique de l’Ouest
-  title: Deux terres. Un rituel.
-  titleAccent: Un bien-être à partager.
+  eyebrow: Deux terres. Un rituel. Un bien-être à partager.
+  title: 'Moringa, bissap, baobab, cacao : les plantes d’Afrique de l’Ouest, en sachet kraft.'
   lead: >-
-    Des feuilles, des fleurs, des graines et du cacao d’Afrique de l’Ouest,
-    choisis pour leur goût et leur simplicité. Un seul ingrédient par sachet,
-    conditionné en France.
+    Des feuilles, des fleurs, des graines et du cacao, un seul ingrédient par
+    sachet : à infuser, à mixer dans un smoothie ou à saupoudrer sur un plat.
   cta:
     primary: Découvrir la boutique
     secondary: Notre histoire
@@ -28,18 +26,18 @@ reassurance:
     text: Paiement sécurisé
 featuredTitle: Nos incontournables
 storyTitle: Deux terres
-# Owner to validate (Marie’s own words welcome).
+# Owner to validate (Marie’s own words welcome). Keep storyLands.from in line
+# with the product origins (a unit test checks).
 storyBody: >-
   Racines en Partage est née entre deux terres : l’Afrique de l’Ouest, où le
   moringa, le bissap et le souchet font partie du quotidien, et la France, où
-  nous vivons. Nous choisissons des produits du Niger, du Sénégal, du
-  Cameroun, de Côte d’Ivoire et d’Inde, puis nous les faisons conditionner en Île-de-France. Notre
-  philosophie : partager le goût et les savoir-faire de nos
-  terroirs.
+  nous vivons. Le moringa et le souchet viennent du Niger, le baobab du
+  Sénégal, le bissap du Cameroun, le cacao de Côte d’Ivoire. Deux compagnons
+  viennent d’ailleurs : le psyllium d’Inde et l’orge grillée d’Allemagne. Tout
+  est mis en sachet en Île-de-France.
 storyLands:
-  from: [Niger, Sénégal, Côte d’Ivoire, Inde]
+  from: [Niger, Sénégal, Cameroun, Côte d’Ivoire, Inde, Allemagne]
   to: Arnouville
-categoriesTitle: Nos univers
 recipesTitle: Petites recettes
 recipeProducts:
   - fleurs-d-hibiscus-bissap-100g

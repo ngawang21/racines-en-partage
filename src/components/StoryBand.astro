@@ -1,12 +1,13 @@
 ---
-// "Deux terres" band on forest (spec 5.4): the duo photo, the story, and the
-// lands of origin on one side with Arnouville on the other.
+// "Deux terres" band on forest (spec 5.4): the painted scene of the two lands
+// from the logo, the story, and the lands of origin (the product origins, a
+// unit test keeps them in line) on one side with Arnouville on the other. No
+// kicker: the hero's slogan is the only one on the home page.
 import type { ImageMetadata } from 'astro';
 import Icon from './Icon.astro';
 import Picture from './Picture.astro';
 
 interface Props {
-  eyebrow: string;
   title: string;
   body: string;
   lands: { from: string[]; to: string };
@@ -16,23 +17,22 @@ interface Props {
   imageAlt: string;
   link: { href: string; label: string };
 }
-const { eyebrow, title, body, lands, fromLabel, toLabel, image, imageAlt, link } = Astro.props;
+const { title, body, lands, fromLabel, toLabel, image, imageAlt, link } = Astro.props;
 ---
 
 <section class="band-forest story" aria-labelledby="story-title">
   <div class="container story-grid section">
-    <div class="story-media" data-reveal>
+    <div class="story-media">
       <div class="story-frame">
         <Picture
           src={image}
           preset="gallery"
-          sizes="(min-width: 960px) 460px, 100vw"
+          sizes="(min-width: 960px) 420px, 300px"
           alt={imageAlt}
         />
       </div>
     </div>
-    <div class="story-copy" data-reveal>
-      <p class="eyebrow story-eyebrow">{eyebrow}</p>
+    <div class="story-copy">
       <h2 id="story-title">{title}</h2>
       <p class="story-body">{body}</p>
 
@@ -64,10 +64,7 @@ const { eyebrow, title, body, lands, fromLabel, toLabel, image, imageAlt, link }
         </div>
       </div>
 
-      <a class="link-arrow" href={link.href}>
-        {link.label}
-        <Icon name="chevron" />
-      </a>
+      <a class="link-arrow" href={link.href}>{link.label}</a>
     </div>
   </div>
 </section>
@@ -83,35 +80,40 @@ const { eyebrow, title, body, lands, fromLabel, toLabel, image, imageAlt, link }
       grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
     }
   }
+  /* The painting sits in a circle with a thin gold ring, like the label's
+     medallion seen up close. */
+  .story-media {
+    display: flex;
+    justify-content: center;
+  }
   .story-frame {
     overflow: hidden;
-    aspect-ratio: 4 / 5;
-    max-width: 460px;
-    border: 1px solid rgba(201, 162, 74, 0.6);
-    border-radius: var(--radius-l);
+    width: min(100%, 420px);
+    aspect-ratio: 1;
+    padding: 10px;
+    border: 1px solid rgba(201, 162, 74, 0.7);
+    border-radius: 50%;
     background: var(--forest-2);
   }
   @media (max-width: 959px) {
     .story-frame {
-      aspect-ratio: 4 / 3;
-      max-width: none;
-    }
-    .story-frame :global(img) {
-      /* The pouches fill the middle half of the portrait photo. */
-      object-position: 50% 50% !important;
+      width: min(100%, 300px);
     }
   }
+  .story-frame :global(picture),
   .story-frame :global(img) {
+    display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    object-position: 50% 62%;
   }
-  .story-eyebrow {
-    color: var(--gold);
+  .story-frame :global(img) {
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .story-copy {
+    container-type: inline-size;
   }
   h2 {
-    margin-top: var(--space-3);
     font-size: var(--fs-5);
   }
   .story-body {
@@ -121,9 +123,11 @@ const { eyebrow, title, body, lands, fromLabel, toLabel, image, imageAlt, link }
     font-size: var(--fs-1);
     line-height: 1.65;
   }
+  /* The six lands hold on two lines: the origins get two thirds of the box,
+     and a narrow column (phones, the 960 to 1200 px range) stacks the box. */
   .lands {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 0.8fr);
+    grid-template-columns: minmax(0, 2fr) auto minmax(0, 1fr);
     align-items: center;
     gap: var(--space-4);
     margin-block: var(--space-8);
@@ -134,26 +138,19 @@ const { eyebrow, title, body, lands, fromLabel, toLabel, image, imageAlt, link }
   .land-label {
     margin-bottom: var(--space-2);
     color: var(--gold);
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    letter-spacing: 0.01em;
   }
   .land-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px 0;
+    gap: 4px 16px;
     margin: 0;
   }
   .land-list li {
     font-family: var(--font-display);
-    /* Four lands on one line from a 390 px phone. */
     font-size: clamp(1rem, 0.86rem + 0.6vw, 1.25rem);
-  }
-  .land-list {
-    gap: 4px 16px;
-  }
-  .land-list li {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -193,7 +190,7 @@ const { eyebrow, title, body, lands, fromLabel, toLabel, image, imageAlt, link }
   .land-to :global(svg) {
     color: var(--gold);
   }
-  @media (max-width: 520px) {
+  @container (max-width: 560px) {
     .lands {
       grid-template-columns: 1fr;
       padding: var(--space-4) var(--space-4) var(--space-6);

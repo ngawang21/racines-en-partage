@@ -147,6 +147,83 @@ export function formatsOf(product: Product, all: readonly Product[]): Product[] 
   );
 }
 
+/**
+ * The family of every product: slug to the slug of the lightest format of
+ * its family (formatsOf). Pass products merged in French, the language that
+ * defines a family; the map then serves every locale.
+ */
+export function formatFamilies(all: readonly Product[]): Map<string, string> {
+  return new Map(all.map((p) => [p.slug, formatsOf(p, all)[0]!.slug]));
+}
+
+/** One card of a grid: a product family shown through its lightest format. */
+export interface ProductGroup {
+  /** The format the card shows and adds to the cart: the lightest one. */
+  lead: Product;
+  /** Every format of the family, lightest first; one item when there is no other. */
+  formats: Product[];
+}
+
+/**
+ * One group per product family (moringa 100 g and 200 g make one card), in
+ * the order of the first member met in `products`. Each group lists the
+ * family's formats taken from `all`, so a home selection holding only the
+ * 100 g still offers the 200 g. A slug missing from `families` is its own
+ * family.
+ */
+export function groupFormats(
+  products: readonly Product[],
+  all: readonly Product[] = products,
+  families: ReadonlyMap<string, string> = formatFamilies(all),
+): ProductGroup[] {
+  const key = (p: Product) => families.get(p.slug) ?? p.slug;
+  const groups: ProductGroup[] = [];
+  const seen = new Set<string>();
+  for (const product of products) {
+    const k = key(product);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    const members = all.filter((p) => key(p) === k);
+    const formats = (members.some((p) => p.slug === product.slug) ? members : [product, ...members])
+      .slice()
+      .sort((a, b) => a.weightGrams - b.weightGrams || a.slug.localeCompare(b.slug));
+    groups.push({ lead: formats[0]!, formats });
+  }
+  return groups;
+}
+
+/**
+ * "Dans le même esprit" of a product page: `limit` other products, one
+ * format each (the lightest), never a format of the product itself. Taken in
+ * this order: the owner's `related` links, the same category, the featured
+ * products of other categories, then the rest of the catalogue, so the row is
+ * always full when the catalogue allows it.
+ */
+export function relatedProducts(
+  product: Product,
+  all: readonly Product[],
+  families: ReadonlyMap<string, string> = formatFamilies(all),
+  limit = 4,
+): Product[] {
+  const key = (p: Product) => families.get(p.slug) ?? p.slug;
+  const bySlug = new Map(all.map((p) => [p.slug, p]));
+  const candidates = [
+    ...product.related.map((s) => bySlug.get(s)).filter((p): p is Product => p !== undefined),
+    ...all.filter((p) => p.category === product.category),
+    ...all.filter((p) => p.featured && p.category !== product.category),
+    ...all,
+  ];
+  const seen = new Set([key(product)]);
+  const picked: Product[] = [];
+  for (const p of candidates) {
+    if (picked.length >= limit) break;
+    if (seen.has(key(p))) continue;
+    seen.add(key(p));
+    picked.push(p);
+  }
+  return groupFormats(picked, all, families).map((g) => g.lead);
+}
+
 /** Count and average rating (one decimal, 0 when there is none) of a list of reviews. */
 export function reviewStats(reviews: readonly Pick<Review, 'rating'>[]): {
   count: number;

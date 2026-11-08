@@ -4,7 +4,14 @@
 // ui.ts, is traded for the session cookie; without one the page asks for the
 // orders directly (the cookie lasts 30 days) and a 401 means "logged out".
 import { linesToCart } from './reorder';
-import { ERROR_KEY, getAccountOrders, postJson, type AccountOrder, type ApiError } from './api';
+import {
+  ERROR_KEY,
+  accountFailure,
+  getAccountOrders,
+  postJson,
+  type AccountOrder,
+  type ApiError,
+} from './api';
 import type { CartContext } from './context';
 import { readJson, stampIds } from './dom';
 import { renderOrder } from './order-view';
@@ -39,6 +46,7 @@ export function initAccount(ctx: CartContext, token: string | null): void {
   const greeting = q<HTMLElement>('[data-account-greeting]');
   const list = q<HTMLElement>('[data-account-orders]');
   const empty = q<HTMLElement>('[data-account-empty]');
+  const failure = q<HTMLElement>('[data-account-error]');
   const template = root.querySelector<HTMLTemplateElement>('template[data-account-order]');
   const heading = q<HTMLElement>('h1');
   const form = root.querySelector<HTMLFormElement>('form[data-form="account_login"]');
@@ -62,11 +70,26 @@ export function initAccount(ctx: CartContext, token: string | null): void {
     }
   };
 
+  // The failure message lives in a polite live region next to the orders
+  // list; it is filled a moment after the signed-in view shows, so screen
+  // readers announce it rather than skip a region that just appeared.
+  let failureTimer: number | undefined;
+  const setFailure = (message: string) => {
+    window.clearTimeout(failureTimer);
+    if (!failure) return;
+    failure.textContent = '';
+    if (message)
+      failureTimer = window.setTimeout(() => {
+        failure.textContent = message;
+      }, 60);
+  };
+
   /** Removes every personal detail from the page (logout, leaving the page). */
   const clear = () => {
     list.replaceChildren();
     if (greeting) greeting.textContent = '';
     if (empty) empty.hidden = true;
+    setFailure('');
     form?.reset();
   };
 
@@ -154,13 +177,24 @@ export function initAccount(ctx: CartContext, token: string | null): void {
     return clone;
   };
 
-  const load = async () => {
+  /**
+   * Lists the orders. `signedInAs` is the masked e-mail of a sign-in that just
+   * succeeded: a failure then is real and shows in the signed-in view. Without
+   * it, a failure that does not prove a session shows the bare sign-in form.
+   */
+  const load = async (signedInAs: string | null = null) => {
     show('loading', as.loading);
+    setFailure('');
     const answer = await getAccountOrders();
     if (answer.status === 'error') {
-      if (answer.error.code === 'UNAUTHENTICATED' || answer.error.status === 401)
-        return loggedOut();
-      return loggedOut(as.loadFailed);
+      if (accountFailure(answer.error, signedInAs !== null) === 'signed-out') return loggedOut();
+      list.replaceChildren();
+      if (empty) empty.hidden = true;
+      if (greeting)
+        greeting.textContent = signedInAs ? ctx.fmt(as.greeting, { email: signedInAs }) : '';
+      show('in');
+      setFailure(as.loadFailed);
+      return;
     }
     if (greeting) greeting.textContent = ctx.fmt(as.greeting, { email: answer.email });
     list.replaceChildren(...answer.orders.map(buildCard));
@@ -171,7 +205,10 @@ export function initAccount(ctx: CartContext, token: string | null): void {
   const signIn = async (signInToken: string) => {
     show('loading', as.signingIn);
     const result = await postJson('/api/account/session', { token: signInToken });
-    if (result.ok) return load();
+    if (result.ok) {
+      const email = (result.data as { email?: unknown } | null)?.email;
+      return load(typeof email === 'string' ? email : '');
+    }
     const code = result.error.code;
     loggedOut(
       code === 'INVALID_TOKEN' || code === 'VALIDATION_ERROR'

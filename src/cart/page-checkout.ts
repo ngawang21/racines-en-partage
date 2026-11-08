@@ -8,7 +8,7 @@ import { bindLineEvents, renderLines } from './lines';
 import { displayCase, parseHoursTable } from './relay';
 import type { RelayWidget } from './relay-widget';
 import { parseRelayPoint, type CartState, type RelayPoint, type ShippingMethodId } from './store';
-import { computeTotals } from './totals';
+import { computeTotals, quoteShipping } from './totals';
 
 /** Last relay search and point, so a return to checkout starts where it stopped. */
 const RELAY_MEMORY_KEY = 'rep.relay.search';
@@ -41,6 +41,20 @@ function writeMemory(memory: RelayMemory): void {
 }
 
 const POSTCODE_RE = /^[0-9A-Za-z -]{3,10}$/;
+
+/**
+ * The method checked when the page opens: the one the cart remembers when it
+ * is still offered, else Point Relais (review 11: the summary then shows a
+ * delivery price and a complete total from the start; the other methods stay
+ * one tap away). Pure, exported for the unit tests.
+ */
+export function initialMethod(
+  stored: ShippingMethodId | null | undefined,
+  enabled: ReadonlySet<ShippingMethodId>,
+): ShippingMethodId | null {
+  if (stored && enabled.has(stored)) return stored;
+  return enabled.has('relay') ? 'relay' : null;
+}
 
 export function initCheckout(ctx: CartContext): void {
   const root = document.querySelector<HTMLElement>('[data-checkout]');
@@ -87,8 +101,8 @@ export function initCheckout(ctx: CartContext): void {
 
   const enabled = new Set(ctx.catalog.shipping.map((s) => s.id));
   const initial = ctx.store.getCart().delivery;
-  let selected: ShippingMethodId | null =
-    initial && enabled.has(initial.method) ? initial.method : null;
+  let selected = initialMethod(initial?.method, enabled);
+  const preselected = selected !== null && selected !== initial?.method;
   const memory = readMemory();
   let lastRelay: RelayPoint | null =
     initial?.method === 'relay' ? initial.relay : (memory.point ?? null);
@@ -145,16 +159,18 @@ export function initCheckout(ctx: CartContext): void {
     renderLines(lines, cart.lines, ctx, { variant: 'summary', flagged });
 
     subtotalEl.textContent = ctx.price(totals.subtotal);
-    const shippingValue =
-      totals.shipping === null
-        ? null
-        : totals.shipping === 0
-          ? tc.free
-          : ctx.price(totals.shipping);
+    // Relay checked without a point yet: the cart holds no delivery, but the
+    // method's price is known, so the summary shows it and a complete total.
+    const shipping =
+      totals.shipping ??
+      (selected && !totals.shippingUnavailable
+        ? quoteShipping(selected, totals.subtotal, ctx.catalog)
+        : null);
+    const shippingValue = shipping === null ? null : shipping === 0 ? tc.free : ctx.price(shipping);
     shippingEl.textContent = shippingValue ?? '–';
     shippingEl.classList.toggle('price', shippingValue !== null);
-    shippingEl.classList.toggle('is-free', totals.shipping === 0);
-    totalEl.textContent = ctx.price(totals.total);
+    shippingEl.classList.toggle('is-free', shipping === 0);
+    totalEl.textContent = ctx.price(totals.subtotal + (shipping ?? 0));
     renderFreeShipping(free, totals, ctx);
 
     for (const priceEl of root.querySelectorAll<HTMLElement>('[data-method-price]')) {
@@ -417,12 +433,42 @@ export function initCheckout(ctx: CartContext): void {
     if (event.persisted) setBusy(false);
   });
 
+  // Relay preselected with no point yet but a postcode remembered from an
+  // earlier visit: search with it, but only once the delivery block is on
+  // screen or takes the focus, so opening the page never loads the Mondial
+  // Relay widget (jQuery, Leaflet, the remote scripts) for nothing.
+  const deferRelaySearch = () => {
+    if (!relay || !relayRoot) return;
+    let done = false;
+    let observer: IntersectionObserver | null = null;
+    const go = () => {
+      if (done) return;
+      done = true;
+      observer?.disconnect();
+      methods.removeEventListener('focusin', go);
+      const postcode = relay.postcode.value.trim();
+      if (selected === 'relay' && !lastRelay && widget === null && POSTCODE_RE.test(postcode))
+        runSearch();
+    };
+    methods.addEventListener('focusin', go);
+    if ('IntersectionObserver' in window) {
+      observer = new IntersectionObserver((entries) => {
+        if (entries.some((e) => e.isIntersecting)) go();
+      });
+      observer.observe(relayRoot);
+    }
+  };
+
   bindLineEvents(lines, ctx, () => {
     const heading = root.querySelector<HTMLElement>('#co-summary-title');
     if (heading) heading.tabIndex = -1;
     return heading;
   });
+  // A point remembered from an earlier visit counts as chosen, as when the
+  // customer ticks Point Relais themselves.
+  if (preselected && selected === 'relay' && lastRelay)
+    ctx.store.setDelivery({ method: 'relay', relay: lastRelay });
   render(ctx.store.getCart());
   ctx.store.subscribe(render);
-  if (selected === 'relay' && !lastRelay && relay?.postcode.value.trim()) runSearch();
+  if (selected === 'relay' && !lastRelay && relay?.postcode.value.trim()) deferRelaySearch();
 }

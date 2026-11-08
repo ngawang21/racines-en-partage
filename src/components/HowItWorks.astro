@@ -7,10 +7,8 @@ import SectionHead from './SectionHead.astro';
 
 interface Props {
   t: LocaleContent;
-  /** Fade up on scroll (home page, reveal.ts). */
-  reveal?: boolean;
 }
-const { t, reveal = false } = Astro.props;
+const { t } = Astro.props;
 const s = t.shop.steps;
 const steps: Array<{ icon: IconName; title: string; text: string }> = [
   { icon: 'cart', title: s.orderTitle, text: s.orderText },
@@ -21,11 +19,11 @@ const steps: Array<{ icon: IconName; title: string; text: string }> = [
 
 <section class="band-paper how" aria-labelledby="how-title">
   <div class="container section">
-    <SectionHead id="how-title" title={t.shop.howTitle} eyebrow={t.shop.howKicker} {reveal} />
+    <SectionHead id="how-title" title={t.shop.howTitle} />
     <ol class="steps" role="list">
       {
         steps.map((step, i) => (
-          <li class="step" data-reveal={reveal ? '' : undefined}>
+          <li class="step">
             <span class="step-icon">
               <Icon name={step.icon} size={26} />
               <span class="step-n" aria-hidden="true">
@@ -93,7 +91,7 @@ const steps: Array<{ icon: IconName; title: string; text: string }> = [
     border-radius: 50%;
     background: var(--forest);
     color: var(--cream);
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
   }

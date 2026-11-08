@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { ClientCatalog, ClientProduct } from '../../src/catalog/build';
 import { emptyCart, type CartState, type Delivery } from '../../src/cart/store';
-import { computeTotals, shippingAmount } from '../../src/cart/totals';
+import {
+  shippingHint,
+  shippingHintText,
+  wholePrice,
+  type ShippingHintStrings,
+} from '../../src/cart/shipping-hint';
+import { computeTotals, quoteShipping, shippingAmount } from '../../src/cart/totals';
+import { formatPrice } from '../../src/i18n/format';
 
 const product = (sku: string, unitAmount: number, stock: ClientProduct['stock'] = 'in_stock') =>
   ({
@@ -197,3 +204,66 @@ function relayPoint() {
     country: 'FR',
   };
 }
+
+describe('quoteShipping', () => {
+  it('prices a method for a subtotal, free from the threshold, null when not offered', () => {
+    expect(quoteShipping('relay', 600, catalog)).toBe(490);
+    expect(quoteShipping('home', 600, catalog)).toBe(690);
+    expect(quoteShipping('pickup', 600, catalog)).toBe(0);
+    expect(quoteShipping('relay', 4900, catalog)).toBe(0);
+    const noHome = { ...catalog, shipping: catalog.shipping.filter((s) => s.id !== 'home') };
+    expect(quoteShipping('home', 600, noHome)).toBeNull();
+  });
+});
+
+describe('shippingHint (cart delivery line)', () => {
+  const fr: ShippingHintStrings = {
+    shippingFrom: 'Dès {amount} en Point Relais',
+    shippingFromFree: 'Dès {amount} en Point Relais, offerte dès {threshold}',
+    shippingOffered: 'Offerte',
+    shippingNextStep: 'Calculée à l’étape suivante',
+  };
+  const price = (cents: number) => formatPrice(cents, 'fr');
+  const nnbsp = '\u202f';
+
+  it('reads the relay price and the threshold from the catalogue', () => {
+    expect(shippingHint(600, catalog)).toEqual({ kind: 'from', amount: 490, freeFrom: 4900 });
+    expect(shippingHintText(shippingHint(600, catalog), fr, price)).toBe(
+      `Dès 4,90${nnbsp}€ en Point Relais, offerte dès 49${nnbsp}€`,
+    );
+    const dearer = {
+      ...catalog,
+      freeShippingFrom: 6000,
+      shipping: catalog.shipping.map((s) => (s.id === 'relay' ? { ...s, amount: 550 } : s)),
+    };
+    expect(shippingHintText(shippingHint(600, dearer), fr, price)).toBe(
+      `Dès 5,50${nnbsp}€ en Point Relais, offerte dès 60${nnbsp}€`,
+    );
+  });
+
+  it('says free once the subtotal reaches the threshold', () => {
+    expect(shippingHint(4899, catalog)?.kind).toBe('from');
+    expect(shippingHint(4900, catalog)).toEqual({ kind: 'free' });
+    expect(shippingHintText({ kind: 'free' }, fr, price)).toBe('Offerte');
+  });
+
+  it('drops the threshold when free shipping is off', () => {
+    const noFree = { ...catalog, freeShippingFrom: null };
+    expect(shippingHint(100_000, noFree)).toEqual({ kind: 'from', amount: 490, freeFrom: null });
+    expect(shippingHintText(shippingHint(600, noFree), fr, price)).toBe(
+      `Dès 4,90${nnbsp}€ en Point Relais`,
+    );
+  });
+
+  it('falls back to the neutral line without the relay method', () => {
+    const noRelay = { ...catalog, shipping: catalog.shipping.filter((s) => s.id !== 'relay') };
+    expect(shippingHint(600, noRelay)).toBeNull();
+    expect(shippingHintText(null, fr, price)).toBe('Calculée à l’étape suivante');
+  });
+
+  it('keeps cents on a threshold that is not round', () => {
+    expect(wholePrice(`49,00${nnbsp}€`)).toBe(`49${nnbsp}€`);
+    expect(wholePrice('€49.00')).toBe('€49');
+    expect(wholePrice(`49,50${nnbsp}€`)).toBe(`49,50${nnbsp}€`);
+  });
+});

@@ -50,6 +50,20 @@ export function shippingAmount(
   return freeShippingFrom !== null && subtotal >= freeShippingFrom ? 0 : methodAmount;
 }
 
+/**
+ * The display price of a method for `subtotal`, before the customer has
+ * finished choosing (a relay method without a point yet): null when the
+ * method is not offered. The Worker prices the order again.
+ */
+export function quoteShipping(
+  methodId: ShippingMethodId,
+  subtotal: number,
+  catalog: Pick<ClientCatalog, 'shipping' | 'freeShippingFrom'>,
+): number | null {
+  const method = catalog.shipping.find((s) => s.id === methodId);
+  return method ? shippingAmount(method.amount, subtotal, catalog.freeShippingFrom) : null;
+}
+
 export function computeTotals(cart: CartState, catalog: Catalog): Totals {
   const lines: TotalsLine[] = [];
   const unknownSkus: string[] = [];

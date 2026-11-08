@@ -4,12 +4,11 @@ seoDescription: >-
   additives, packed in France by ESAT Les Oliviers. Delivery to Mondial Relay
   pickup points.
 hero:
-  eyebrow: Herbal teas & botanical powders
-  title: Two lands. One ritual.
-  titleAccent: Well-being to share.
+  eyebrow: Two lands. One ritual. Well-being to share.
+  title: 'Moringa, hibiscus, baobab, cacao: West African plants, in a kraft pouch.'
   lead: >-
-    Leaves, flowers, seeds and cacao from West Africa, chosen for their taste
-    and their simplicity. One ingredient per pouch, packed in France.
+    Leaves, flowers, seeds and cacao, one ingredient per pouch: to brew, to
+    blend into a smoothie or to sprinkle over a dish.
   cta:
     primary: Visit the shop
     secondary: Our story
@@ -29,14 +28,14 @@ featuredTitle: Our essentials
 storyTitle: Two lands
 storyBody: >-
   Racines en Partage was born between two lands: West Africa, where moringa,
-  bissap and tiger nut are part of everyday life, and France, where we live. We
-  choose products from Niger, Senegal, Cameroon, Côte d’Ivoire and India, then have them
-  packed in the Paris region. Our philosophy: taking care of ourselves by sharing
-  the taste and the know-how of our homelands.
+  bissap and tiger nut are part of everyday life, and France, where we live.
+  The moringa and tiger nut come from Niger, the baobab from Senegal, the
+  hibiscus from Cameroon, the cacao from Côte d’Ivoire. Two companions come
+  from further afield: psyllium from India and roasted barley from Germany.
+  Everything is packed in the Paris region.
 storyLands:
-  from: [Niger, Senegal, Côte d’Ivoire, India]
+  from: [Niger, Senegal, Cameroon, Côte d’Ivoire, India, Germany]
   to: Arnouville
-categoriesTitle: Our ranges
 recipesTitle: Little recipes
 commitmentTitle: Our commitments
 commitmentBody: >-

@@ -105,11 +105,15 @@ const { locale, t } = Astro.props;
   .search-dialog::backdrop {
     background: rgba(22, 58, 28, 0.35);
   }
+  /* From 720 px a panel as tall as its content, 70 % of the screen at most.
+     A modal dialog is fixed with both insets set, so "auto" would stretch it
+     to its maximum: fit-content sizes it to the results. */
   @media (min-width: 720px) {
     .search-dialog {
       width: min(640px, calc(100% - 2 * var(--gutter)));
-      height: auto;
-      max-height: min(78vh, 720px);
+      height: fit-content;
+      max-height: 70vh;
+      overflow: hidden;
       margin: 10vh auto auto;
       border: 1px solid var(--kraft);
       border-radius: var(--radius-l);
@@ -140,6 +144,11 @@ const { locale, t } = Astro.props;
     flex-direction: column;
     height: 100%;
     max-height: inherit;
+  }
+  @media (min-width: 720px) {
+    .search-panel {
+      max-height: calc(70vh - 2px);
+    }
   }
   .search-form {
     position: relative;
@@ -231,10 +240,9 @@ const { locale, t } = Astro.props;
   .search-label {
     margin-top: var(--space-4);
     color: var(--ink-2);
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    letter-spacing: 0.01em;
   }
   .search-label[hidden] {
     display: none;

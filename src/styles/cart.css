@@ -397,15 +397,15 @@ html.has-drawer {
   position: absolute;
   top: -8px;
   right: -8px;
-  min-width: 22px;
-  height: 22px;
+  min-width: 24px;
+  height: 24px;
   padding: 0 6px;
   border-radius: var(--radius-pill);
   background: var(--forest);
   color: var(--cream);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 700;
-  line-height: 22px;
+  line-height: 24px;
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
@@ -692,14 +692,18 @@ html.has-drawer {
 
 /* -------------------------------------------------------------- cart page */
 
+/* Phones: lines, then the summary with "Commander", then the cross-sell and
+   "Continuer mes achats" (source order). From 900 px: two columns, the
+   summary sticky on the right across both rows. */
 .cart-layout {
   display: grid;
-  gap: var(--space-8);
+  gap: var(--space-6);
 }
-.cart-layout-main {
+.cart-layout-more {
   display: grid;
   gap: var(--space-4);
   align-content: start;
+  min-width: 0;
 }
 .back-link {
   justify-self: start;
@@ -709,14 +713,108 @@ html.has-drawer {
 }
 @media (min-width: 900px) {
   .cart-layout {
+    grid-template-areas:
+      'lines summary'
+      'more summary';
     grid-template-columns: minmax(0, 1fr) 380px;
-    gap: var(--space-12);
+    grid-template-rows: auto 1fr;
+    gap: var(--space-4) var(--space-12);
     align-items: start;
   }
+  .cart-layout-lines {
+    grid-area: lines;
+  }
+  .cart-layout-more {
+    grid-area: more;
+  }
   .cart-layout .summary-card {
+    grid-area: summary;
     position: sticky;
     top: calc(var(--header-h) + var(--space-6));
   }
+}
+@media (max-width: 899px) {
+  /* A tighter card on phones keeps "Commander" in the first screen. */
+  .cart-layout .summary-card {
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-4) var(--space-6);
+  }
+}
+
+/* The delivery line before a method is chosen: price and threshold from the
+   settings, a sentence that may wrap under its label on a narrow card. */
+.summary-row--hint {
+  flex-wrap: wrap;
+  gap: 0 var(--space-4);
+}
+.summary-row--hint dd {
+  flex: 1 1 14ch;
+  text-wrap: pretty;
+}
+.summary-row--hint.is-free dd {
+  color: var(--leaf-ink);
+  font-weight: 600;
+}
+
+/* Phone bar: subtotal and "Commander" while the summary's button is below
+   the fold. Opaque, under the thumb, out of the tab order while hidden. */
+.cart-bar {
+  display: none;
+}
+@media (max-width: 899px) {
+  .cart-bar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--gutter) calc(var(--space-3) + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--kraft);
+    background: var(--cream);
+    box-shadow: 0 -8px 24px rgba(22, 58, 28, 0.1);
+    transform: translateY(110%);
+    visibility: hidden;
+    transition:
+      transform var(--dur-base) var(--ease-out-strong),
+      visibility 0s linear var(--dur-base);
+  }
+  .cart-bar.is-visible {
+    transform: none;
+    visibility: visible;
+    transition:
+      transform var(--dur-base) var(--ease-out-strong),
+      visibility 0s;
+  }
+  .cart-page:has(.cart-bar.is-visible) {
+    padding-bottom: calc(var(--space-16) + 76px + env(safe-area-inset-bottom));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cart-bar,
+  .cart-bar.is-visible {
+    transition: none;
+  }
+}
+.cart-bar-total {
+  display: grid;
+  min-width: 0;
+  line-height: var(--lh-snug);
+}
+.cart-bar-label {
+  color: var(--ink-2);
+  font-size: var(--fs--1);
+}
+.cart-bar-total .price {
+  font-size: var(--fs-2);
+}
+.btn.cart-bar-action {
+  flex: none;
+  min-height: 48px;
+  padding-inline: var(--space-6);
 }
 
 /* --------------------------------------------------------------- checkout */
@@ -894,7 +992,7 @@ html.has-drawer {
 }
 .method-free {
   color: var(--ink-2);
-  font-size: 0.75rem;
+  font-size: var(--fs--1);
 }
 .method-detail {
   display: grid;
@@ -1324,7 +1422,7 @@ html.has-drawer {
 
 .cart-line-kilo {
   color: var(--ink-2);
-  font-size: 0.75rem;
+  font-size: var(--fs--1);
   font-variant-numeric: tabular-nums;
 }
 .cart-line-kilo:empty {
@@ -1349,8 +1447,7 @@ html.has-drawer {
   font-family: var(--font-body);
   font-size: var(--fs--1);
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 .cross-sell-list {
   display: grid;
@@ -1416,7 +1513,7 @@ html.has-drawer {
 }
 .cross-sell-kilo {
   color: var(--ink-2);
-  font-size: 0.75rem;
+  font-size: var(--fs--1);
   font-variant-numeric: tabular-nums;
 }
 .btn.cross-sell-add {
@@ -2086,6 +2183,27 @@ main:has(> .nl-landing:last-child) + .site-footer {
 }
 .account-orders-title {
   font-size: var(--fs-3);
+}
+/* Live region of a failure after sign-in, next to the orders list. Always in
+   the tree (screen readers announce a change, not an appearance); empty, it
+   takes no room, its grid gap cancelled. */
+.account-error {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid rgba(184, 38, 46, 0.35);
+  border-radius: var(--radius-s);
+  background: rgba(224, 58, 58, 0.07);
+  color: var(--hibiscus-deep);
+  font-size: var(--fs--1);
+  font-weight: 500;
+  line-height: var(--lh-snug);
+}
+.account-error:empty {
+  margin-top: calc(var(--space-6) * -1);
+  padding: 0;
+  border: 0;
+}
+.account-greeting:empty {
+  display: none;
 }
 .account-empty {
   padding: var(--space-6);

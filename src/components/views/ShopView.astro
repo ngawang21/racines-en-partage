@@ -2,7 +2,8 @@
 // Shop page, both locales (spec 5.4): category chips, sort select and the
 // full grid. The grid is complete without JavaScript; shop-filter.ts filters
 // and sorts the rendered cards and mirrors the state in the URL hash.
-import type { Locale } from '../../consts';
+import { DEFAULT_LOCALE, type Locale } from '../../consts';
+import { formatFamilies, groupFormats } from '../../content/merge';
 import Base from '../../layouts/Base.astro';
 import { loadCategories, loadLocale, loadProducts, loadSettings } from '../../i18n/locale';
 import { routePath, routeUrl } from '../../i18n/routing';
@@ -15,19 +16,22 @@ interface Props {
   locale: Locale;
 }
 const { locale } = Astro.props;
-const [t, categories, loaded, settings] = await Promise.all([
+const [t, categories, loaded, settings, allFr] = await Promise.all([
   loadLocale(locale),
   loadCategories(locale),
   loadProducts(locale),
   loadSettings(),
+  loadProducts(DEFAULT_LOCALE),
 ]);
 // Default order: the catalogue order (category, then the owner's "Réorganiser"
 // position, then name). `featured` only picks the home page selection.
 const products = [...loaded];
+// The grid shows one card per product family (ProductGrid); the counts count cards.
+const groups = groupFormats(products, products, formatFamilies(allFr));
 const counts: Record<string, number> = {};
-for (const p of products) counts[p.category] = (counts[p.category] ?? 0) + 1;
+for (const { lead } of groups) counts[lead.category] = (counts[lead.category] ?? 0) + 1;
 const chips = [
-  { value: 'all', label: t.shop.all, count: products.length },
+  { value: 'all', label: t.shop.all, count: groups.length },
   ...categories.map((c) => ({ value: c.slug, label: c.name, count: counts[c.slug] ?? 0 })),
 ];
 const sorts = [
@@ -47,64 +51,67 @@ const sorts = [
     items: products.map((p) => ({ name: p.name, url: routeUrl('product', locale, p.slug) })),
   }}
 >
-  <div class="container-wide page-head">
+  <div class="container-wide page-head shop-head">
     <Breadcrumbs
       label={t.a11y.breadcrumb}
       items={[{ name: t.nav.home, href: routePath('home', locale) }, { name: t.nav.shop }]}
     />
     <h1>{t.shop.title}</h1>
-    <p class="lead">{t.shop.intro}</p>
-    <a class="link-arrow head-link" href={routePath('recipes', locale)}>
-      {t.shop.recipesLink}
-      <Icon name="chevron" />
-    </a>
+    <div class="shop-lead">
+      <p class="lead">{t.shop.intro}</p>
+      <a class="link-arrow head-link" href={routePath('recipes', locale)}>
+        {t.shop.recipesLink}
+        <Icon name="chevron" />
+      </a>
+    </div>
   </div>
 
   <section class="container-wide shop" aria-labelledby="shop-results">
     <noscript
       ><style is:inline>
-        .shop-tools {
-          display: none;
+        [data-shop-tools] {
+          display: none !important;
         }
       </style></noscript
     >
-    <div
-      class="shop-tools"
-      data-shop-tools
-      data-count-one={t.shop.countOne.replace('{count}', '%n')}
-      data-count-many={t.shop.countMany.replace('{count}', '%n')}
-      data-locale={locale}
-    >
-      <div class="chips" role="group" aria-label={t.shop.filterLabel}>
-        {
-          chips.map((c, i) => (
-            <button
-              type="button"
-              class="chip"
-              data-filter={c.value}
-              aria-pressed={i === 0 ? 'true' : 'false'}
-            >
-              <span>{c.label}</span>
-              <span class="chip-count" aria-hidden="true">
-                {c.count}
-              </span>
-            </button>
-          ))
-        }
-      </div>
-      <div class="sort">
-        <label for="shop-sort">{t.shop.sortLabel}</label>
-        <div class="select">
-          <select id="shop-sort" data-sort>
-            {sorts.map((s) => <option value={s.value}>{s.label}</option>)}
-          </select>
+    <div class="shop-bar">
+      <div
+        class="shop-tools"
+        data-shop-tools
+        data-count-one={t.shop.countOne.replace('{count}', '%n')}
+        data-count-many={t.shop.countMany.replace('{count}', '%n')}
+        data-locale={locale}
+      >
+        <div class="chips" role="group" aria-label={t.shop.filterLabel}>
+          {
+            chips.map((c, i) => (
+              <button
+                type="button"
+                class="chip"
+                data-filter={c.value}
+                aria-pressed={i === 0 ? 'true' : 'false'}
+              >
+                <span>{c.label}</span>
+                <span class="chip-count" aria-hidden="true">
+                  {c.count}
+                </span>
+              </button>
+            ))
+          }
+        </div>
+        <div class="sort">
+          <label for="shop-sort">{t.shop.sortLabel}</label>
+          <div class="select">
+            <select id="shop-sort" data-sort>
+              {sorts.map((s) => <option value={s.value}>{s.label}</option>)}
+            </select>
+          </div>
         </div>
       </div>
+      <p id="shop-results" class="count" aria-live="polite" data-count>
+        {countLabel(groups.length, t, locale)}
+      </p>
     </div>
-
-    <p id="shop-results" class="count" aria-live="polite" data-count>
-      {countLabel(products.length, t, locale)}
-    </p>
 
     <ProductGrid {products} {locale} {t} shopOpen={settings.shop.open} headingLevel="h2" />
     <p class="empty" data-empty hidden>{t.shop.empty}</p>
@@ -116,26 +123,75 @@ const sorts = [
 </script>
 
 <style>
-  .head-link {
+  /* Compact head: at 1440 x 900 a full row of cards sits above the fold. */
+  .shop-head {
+    padding-block: 20px var(--space-6);
+  }
+  .shop-head :global(.crumbs) {
+    margin-bottom: var(--space-3);
+  }
+  .shop-head h1 {
+    font-size: clamp(2.25rem, 1.9rem + 1.2vw, 3rem);
+    line-height: 1.05;
+  }
+  .shop-lead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-6);
     margin-top: var(--space-2);
+  }
+  .shop-head .lead {
+    flex: 1 1 32rem;
+    max-width: 72ch;
+    margin-top: 0;
+    font-size: 1.0625rem;
+    line-height: 1.5;
+  }
+  @media (min-width: 1200px) {
+    .shop-head .lead {
+      max-width: none;
+    }
+  }
+  .head-link {
+    flex: none;
     font-size: 0.9375rem;
     font-weight: 500;
   }
   .shop {
     padding-bottom: clamp(3rem, 2rem + 4.5vw, 6rem);
   }
-  .shop-tools {
+  /* Filter chips, the count and the sort on one row (the count keeps its
+   place without JavaScript, when the tools are hidden). */
+  .shop-bar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4) var(--space-6);
-    padding-block: var(--space-4);
-    border-top: 1px solid var(--line);
+    gap: var(--space-3) var(--space-6);
+    padding-bottom: var(--space-3);
     border-bottom: 1px solid var(--line);
   }
-  /* Phones: one scrolling row bleeding to the screen edges, faded at the
-     right edge so the row reads as scrollable. */
+  .shop-tools {
+    display: contents;
+  }
+  /* Phones: the chips take a whole row, bleeding to the screen edges. */
+  .shop-bar .chips {
+    order: 1;
+    flex: 0 0 calc(100% + 2 * var(--gutter));
+    min-width: 0;
+  }
+  .shop-bar .count {
+    order: 2;
+  }
+  .shop-bar .sort {
+    order: 3;
+    margin-left: auto;
+  }
+  @media (min-width: 900px) {
+    .shop-bar .chips {
+      flex: 1 1 auto;
+    }
+  }
   .chips {
     display: flex;
     gap: var(--space-2);
@@ -204,7 +260,7 @@ const sorts = [
     border-radius: var(--radius-pill);
     background: var(--paper);
     color: var(--ink-2);
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     font-weight: 600;
     text-align: center;
     font-variant-numeric: tabular-nums;
@@ -260,9 +316,14 @@ const sorts = [
     }
   }
   .count {
-    margin-block: var(--space-6) var(--space-6);
+    margin: 0;
     color: var(--ink-2);
     font-size: var(--fs--1);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .shop :global(.product-grid) {
+    margin-top: 20px;
   }
   .empty {
     padding-block: var(--space-12);

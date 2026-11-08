@@ -83,6 +83,7 @@ export const localeSchema = z.object({
     }),
     unitPrice: text,
     recipesLink: text,
+    priceFrom: text,
   }),
   product: ns({
     addToCart: text,
@@ -165,6 +166,9 @@ export const localeSchema = z.object({
     crossSellTitle: text,
     crossSellAdd: text,
     crossSellAddOf: text,
+    shippingFrom: text,
+    shippingFromFree: text,
+    shippingOffered: text,
   }),
   checkout: ns({
     title: text,

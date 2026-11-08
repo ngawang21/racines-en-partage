@@ -1,7 +1,9 @@
 // Customer space (spec iteration 3, 8.6), /api/account/* mocked: logged out
-// with the sign-in form, arrival with a sign-in link (valid and expired),
-// logged in with orders (details, "Commander à nouveau", "Donner mon avis")
-// and without, logout, a 401, the back/forward cache, axe.
+// with the sign-in form, an unreachable API (the bare form, no error), arrival
+// with a sign-in link (valid and expired), a failure after sign-in (in the
+// live region by the orders), logged in with orders (details, "Commander à
+// nouveau", "Donner mon avis") and without, logout, a 401, the back/forward
+// cache, axe.
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { blockThirdParties, json, orderFixture, readCatalog } from './helpers';
@@ -72,6 +74,53 @@ test('logged out: the sign-in form sends a link', async ({ page }) => {
   await expect(form.locator('[data-form-done]')).toContainText('Vérifiez votre boîte mail');
   await expect(form.locator('[data-form-done]')).toBeFocused();
   expect(calls).toEqual([{ email: 'awa@gmail.com', locale: 'fr' }]);
+});
+
+for (const [label, answer] of [
+  ['unreachable', 'abort'],
+  ['missing (static preview)', 'html404'],
+  ['rate limited', 'rate'],
+] as const) {
+  test(`anonymous visitor, API ${label}: the bare sign-in form, no error`, async ({ page }) => {
+    await page.route('**/api/account/orders', (route) =>
+      answer === 'abort'
+        ? route.abort()
+        : answer === 'html404'
+          ? route.fulfill({ status: 404, contentType: 'text/html', body: '<h1>Not found</h1>' })
+          : json(route, 429, { error: { code: 'RATE_LIMITED', message: 'x' } }),
+    );
+    await page.goto(ACCOUNT.fr);
+    await expect(page.locator('form[data-form="account_login"]')).toBeVisible();
+    await expect(page.locator('[data-account-notice]')).toBeHidden();
+    await expect(page.locator('[data-account-state="in"]')).toBeHidden();
+    await expect(page.locator('.notice--error:visible')).toHaveCount(0);
+  });
+}
+
+test('a failure after sign-in is announced next to the orders list', async ({ page }) => {
+  await page.route('**/api/account/session', (route) =>
+    json(route, 200, { ok: true, email: 'a***@gmail.com' }),
+  );
+  await page.route('**/api/account/orders', (route) =>
+    json(route, 502, { error: { code: 'PAYMENT_PROVIDER_ERROR', message: 'x' } }),
+  );
+  await page.goto(`${ACCOUNT.fr}?t=login.tok-2`);
+  const space = page.locator('[data-account-state="in"]');
+  await expect(space).toBeVisible();
+  await expect(page.locator('[data-account-greeting]')).toContainText('a***@gmail.com');
+  const failure = space.locator('[data-account-error]');
+  await expect(failure).toHaveAttribute('role', 'status');
+  await expect(failure).toHaveText(/Nous n’arrivons pas à afficher vos commandes/);
+  await expect(page.locator('[data-account-empty]')).toBeHidden();
+  await expect(page.locator('form[data-form="account_login"]')).toBeHidden();
+  await expect(page.locator('[data-account-notice]')).toBeHidden();
+
+  // The same provider failure on a later visit (cookie valid): the same place.
+  await page.goto(ACCOUNT.en);
+  await expect(page.locator('[data-account-state="in"] [data-account-error]')).toHaveText(
+    /cannot show your orders/,
+  );
+  await expect(page.locator('form[data-form="account_login"]')).toBeHidden();
 });
 
 test('a sign-in link opens the space, strips the token and lists the orders', async ({ page }) => {

@@ -1,10 +1,10 @@
 ---
-// Sticky buy bar on phones (spec 2.13, premium standard 1.1): while the
-// page's add button is off screen (below the fold on arrival, or scrolled
-// past), a bar with the price and an "Ajouter" button sits at the bottom. The button follows the cart contract, so the cart script
-// adds the quantity chosen in the page's stepper. sticky-buy.ts shows and
-// hides it; without script, or from 900 px, it never shows. Nothing is
-// rendered for a product that cannot be bought.
+// Sticky buy bar on phones (spec 2.13, premium standard 8): once the page's
+// add button has scrolled above the screen, a bar with the price and an
+// "Ajouter" button sits at the bottom. The button follows the cart contract,
+// so the cart script adds the quantity chosen in the page's stepper.
+// sticky-buy.ts shows and hides it; without script, or from 900 px, it never
+// shows. Nothing is rendered for a product that cannot be bought.
 import type { Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
 import type { Product } from '../content/schemas';
@@ -71,7 +71,7 @@ const weight = formatWeight(product.weightGrams, locale);
       display: block;
       padding: var(--space-3) var(--gutter) calc(var(--space-3) + env(safe-area-inset-bottom));
       border-top: 1px solid var(--kraft);
-      background: rgba(251, 246, 234, 0.97);
+      background: var(--cream);
       box-shadow: 0 -8px 24px rgba(22, 58, 28, 0.1);
       transform: translateY(110%);
       visibility: hidden;
@@ -130,8 +130,8 @@ const weight = formatWeight(product.weightGrams, locale);
     line-height: 1.2;
   }
   .sticky-unit {
-    color: var(--ink-2);
-    font-size: 0.75rem;
+    color: var(--forest-2);
+    font-size: 0.8125rem;
     font-variant-numeric: tabular-nums;
   }
   .sticky-add {

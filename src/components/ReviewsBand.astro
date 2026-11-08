@@ -22,10 +22,8 @@ interface Props {
   products: Product[];
   locale: Locale;
   t: LocaleContent;
-  /** Fade up on scroll (home page, reveal.ts). */
-  reveal?: boolean;
 }
-const { reviews, products, locale, t, reveal = false } = Astro.props;
+const { reviews, products, locale, t } = Astro.props;
 const bySlug = new Map(products.map((p) => [p.slug, p]));
 const shown = reviews
   .filter((r) => bySlug.has(r.product))
@@ -41,13 +39,12 @@ const shown = reviews
           id="reviews-band-title"
           title={t.reviews.bandTitle}
           eyebrow={t.reviews.bandKicker}
-          {reveal}
         />
         <ul class="quotes" role="list">
           {shown.map(({ review: r, product: p }) => {
             const foreign = r.locale !== locale;
             return (
-              <li data-reveal={reveal ? '' : undefined}>
+              <li>
                 <figure class="quote">
                   <Stars rating={r.rating} label={ratingLabel(r.rating, t, locale)} size={16} />
                   <blockquote lang={foreign ? r.locale : undefined}>

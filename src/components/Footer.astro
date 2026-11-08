@@ -54,7 +54,6 @@ const year = new Date().getFullYear();
         <span class="wordmark">{SITE.name}</span>
       </a>
       <p class="tagline">{pickLabel(brand.tagline, locale)}</p>
-      <p class="packed">{t.footer.packagedBy}</p>
     </div>
 
     <div class="contact-block">
@@ -178,19 +177,13 @@ const year = new Date().getFullYear();
     font-size: var(--fs-1);
     max-width: 28ch;
   }
-  .packed {
-    margin-top: var(--space-3);
-    color: var(--cream-muted);
-    font-size: var(--fs--1);
-  }
   .col-title {
     margin-bottom: var(--space-3);
     color: var(--cream);
     font-family: var(--font-body);
     font-size: var(--fs--1);
     font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    letter-spacing: 0.01em;
   }
   .links {
     margin: 0;

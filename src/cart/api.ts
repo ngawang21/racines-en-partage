@@ -366,6 +366,22 @@ export function parseAccountOrder(data: unknown): AccountOrder | null {
 export type AccountOrders =
   { status: 'ok'; email: string; orders: AccountOrder[] } | { status: 'error'; error: ApiError };
 
+/**
+ * What a failed GET /api/account/orders means for the customer space.
+ * `signed-out`: show the sign-in form and nothing else. A 401 always means
+ * it; so does any failure that does not prove a valid session when the page
+ * opens without a fresh sign-in (no API, no network, rate limit, an HTML error
+ * page): that visitor is most likely anonymous, and the form is the way in.
+ * `failed`: a real failure for a signed-in customer, announced next to the
+ * orders list. PAYMENT_PROVIDER_ERROR comes after the cookie check, and right
+ * after a sign-in the session is known to be valid.
+ */
+export function accountFailure(error: ApiError, justSignedIn: boolean): 'signed-out' | 'failed' {
+  if (error.code === 'UNAUTHENTICATED' || error.status === 401) return 'signed-out';
+  if (justSignedIn) return 'failed';
+  return error.code === 'PAYMENT_PROVIDER_ERROR' ? 'failed' : 'signed-out';
+}
+
 /** GET /api/account/orders with the session cookie; 401 UNAUTHENTICATED without one. */
 export async function getAccountOrders(fetchImpl: typeof fetch = fetch): Promise<AccountOrders> {
   let response: Response;

@@ -367,3 +367,25 @@ a separate entry in `worker/` deployed with the static assets by one
   (accounts opened by the developer on the business address, GitHub transfer
   before deployment, vault handover). Gates: unit 252, worker 387, build 49
   (1 skipped), e2e 124 (2 skipped).
+- 2026-11-08 night, design pass 5 (premium review): an independent review
+  rated the site 6.5/10 (`out/review/11/rating-1.md`, local). Applied: scroll
+  reveal removed (one hero entrance only); every tracked all-caps label is
+  sentence case and kickers are italic, one per page; the hero names the
+  products in one colour with the slogan as kicker, photo contained with equal
+  insets, photo first on phones; one content edge for every section
+  (`.container` equals `.container-wide`); "Nos univers" tiles and the hero
+  corner medallion removed; story band shows the painted two-lands scene,
+  engagement band is type only; recipe cards are type-led; origins list
+  derived from the products (six countries, tested); copy slop replaced by
+  facts; one grid card per product with format chips and a per-photo pouch
+  crop; compact shop and category heads; 7/5 product gallery, phone gallery
+  1:1 with dots, sticky buy bar only after the add button leaves the screen;
+  related products without sibling formats; accordion targets scroll and
+  focus; search panel fits its content; 404 one language per visit; FAQ
+  760 px with sticky contact column; cart summary first on phones plus a
+  phone bar; cross-sell without sibling formats; real delivery line; Point
+  Relais preselected; account page shows only the form to anonymous
+  visitors; muted ink darkened to 7:1. Photography (textures, recipes made,
+  Marie, the ESAT, the 200 g baobab), the legal names and the domain e-mail
+  remain owner inputs. Gates: unit 288, worker 387, build 49 (1 skipped),
+  e2e 138 (2 skipped).

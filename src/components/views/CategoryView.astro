@@ -1,13 +1,14 @@
 ---
-// Category page, both locales (spec 5.4): intro, category photo, the grid,
-// then links to the other categories.
-import type { Locale } from '../../consts';
+// Category page, both locales (spec 5.4): a compact head (title, intro and
+// the count; the category photo only serves as the share image, the cards
+// are the pictures here), the grid, then links to the other categories.
+import { DEFAULT_LOCALE, type Locale } from '../../consts';
+import { formatFamilies, groupFormats } from '../../content/merge';
 import Base from '../../layouts/Base.astro';
 import { loadCategories, loadLocale, loadProducts, loadSettings } from '../../i18n/locale';
 import { routePath, routeUrl } from '../../i18n/routing';
 import { resolveAsset } from '../../images';
 import Breadcrumbs from '../Breadcrumbs.astro';
-import Picture from '../Picture.astro';
 import ProductGrid from '../ProductGrid.astro';
 import { countLabel } from '../storefront';
 
@@ -16,15 +17,18 @@ interface Props {
   slug: string;
 }
 const { locale, slug } = Astro.props;
-const [t, categories, products, settings] = await Promise.all([
+const [t, categories, products, settings, allFr] = await Promise.all([
   loadLocale(locale),
   loadCategories(locale),
   loadProducts(locale),
   loadSettings(),
+  loadProducts(DEFAULT_LOCALE),
 ]);
 const category = categories.find((c) => c.slug === slug);
 if (!category) throw new Error(`unknown category ${slug}`);
 const listed = products.filter((p) => p.category === slug);
+// One card per product family (ProductGrid): the count counts cards.
+const cards = groupFormats(listed, products, formatFamilies(allFr)).length;
 const others = categories.filter((c) => c.slug !== slug);
 ---
 
@@ -45,28 +49,18 @@ const others = categories.filter((c) => c.slug !== slug);
   }}
 >
   <div class="container-wide page-head cat-head">
-    <div class="cat-copy">
-      <Breadcrumbs
-        label={t.a11y.breadcrumb}
-        items={[
-          { name: t.nav.home, href: routePath('home', locale) },
-          { name: t.nav.shop, href: routePath('shop', locale) },
-          { name: category.name },
-        ]}
-      />
-      <p class="eyebrow">{t.shop.categoryKicker}</p>
-      <h1>{category.name}</h1>
+    <Breadcrumbs
+      label={t.a11y.breadcrumb}
+      items={[
+        { name: t.nav.home, href: routePath('home', locale) },
+        { name: t.nav.shop, href: routePath('shop', locale) },
+        { name: category.name },
+      ]}
+    />
+    <h1>{category.name}</h1>
+    <div class="cat-lead">
       <p class="lead">{category.intro}</p>
-      <p class="cat-count">{countLabel(listed.length, t, locale)}</p>
-    </div>
-    <div class="cat-media">
-      <Picture
-        src={category.image}
-        alt=""
-        preset="gallery"
-        sizes="(min-width: 900px) 420px, 100vw"
-        loading="eager"
-      />
+      <p class="cat-count">{countLabel(cards, t, locale)}</p>
     </div>
   </div>
 
@@ -106,57 +100,41 @@ const others = categories.filter((c) => c.slug !== slug);
 </Base>
 
 <style>
+  /* Compact head, as on the shop page: a full row of cards above the fold. */
   .cat-head {
-    display: grid;
-    gap: var(--space-8);
-    align-items: center;
+    padding-block: var(--space-6);
   }
-  @media (min-width: 900px) {
-    .cat-head {
-      grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
-      gap: var(--space-16);
-    }
-  }
-  .cat-copy :global(.crumbs) {
-    margin-bottom: var(--space-6);
-  }
-  .cat-copy .eyebrow {
+  .cat-head :global(.crumbs) {
     margin-bottom: var(--space-3);
   }
+  .cat-head h1 {
+    font-size: clamp(2.25rem, 1.9rem + 1.2vw, 3rem);
+    line-height: 1.05;
+  }
+  .cat-lead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-6);
+    margin-top: var(--space-2);
+  }
+  .cat-head .lead {
+    flex: 1 1 32rem;
+    max-width: 72ch;
+    margin-top: 0;
+    font-size: 1.0625rem;
+    line-height: 1.5;
+  }
   .cat-count {
-    margin-top: var(--space-4);
+    flex: none;
     color: var(--ink-2);
     font-size: var(--fs--1);
     font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  .cat-media {
-    overflow: hidden;
-    aspect-ratio: 16 / 10;
-    border: 1px solid var(--kraft);
-    border-radius: var(--radius-l);
-    background: var(--paper);
-  }
-  @media (min-width: 900px) {
-    .cat-media {
-      aspect-ratio: 4 / 5;
-    }
-  }
-  /* Wide on phones: the pouches fill the middle half of the duo photo. */
-  .cat-media :global(img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: 50% 50%;
-  }
-  @media (min-width: 900px) {
-    .cat-media :global(img) {
-      object-position: 50% 58%;
-    }
+    letter-spacing: 0.01em;
   }
   .cat-grid {
-    padding-top: var(--space-8);
+    padding-top: var(--space-6);
     border-top: 1px solid var(--line);
   }
   .empty {

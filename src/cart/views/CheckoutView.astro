@@ -13,6 +13,7 @@ import { routePath } from '../../i18n/routing';
 import { getClientCatalog } from '../catalog';
 import { pageStrings, serializeStrings } from '../strings';
 import { countryName } from '../address';
+import { wholePrice } from '../shipping-hint';
 
 interface Props {
   locale: Locale;
@@ -29,7 +30,7 @@ const [termsBefore = '', termsAfter = ''] = t.checkout.acceptTerms.split('{terms
 const address = settings.brand.address;
 const threshold = catalog.freeShippingFrom;
 // "Offerte dès 49 €", as on the product pages (no ",00" on a round threshold).
-const wholePrice = (cents: number) => formatPrice(cents, locale).replace(/[,.]00(?=\D|$)/, '');
+const roundPrice = (cents: number) => wholePrice(formatPrice(cents, locale));
 ---
 
 <section class="container checkout" data-checkout aria-busy="true">
@@ -91,7 +92,7 @@ const wholePrice = (cents: number) => formatPrice(cents, locale).replace(/[,.]00
                     </span>
                     {m.amount > 0 && threshold !== null && (
                       <span class="method-free" data-method-free={m.id}>
-                        {t.checkout.freeFrom.replace('{threshold}', wholePrice(threshold))}
+                        {t.checkout.freeFrom.replace('{threshold}', roundPrice(threshold))}
                       </span>
                     )}
                   </span>

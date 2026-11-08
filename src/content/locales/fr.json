@@ -53,7 +53,7 @@
     "categoryKicker": "Catégorie",
     "viewAll": "Voir toute la boutique",
     "explore": "Découvrir",
-    "landsFrom": "Nos terres d’origine",
+    "landsFrom": "D’où viennent nos produits",
     "landsTo": "Notre maison",
     "recipeCta": "Voir la recette",
     "otherCategories": "Nos autres univers",
@@ -69,7 +69,8 @@
       "shareText": "Votre colis arrive en quelques jours. Il ne reste qu’à préparer la tasse."
     },
     "unitPrice": "Prix au kilo",
-    "recipesLink": "Nos recettes"
+    "recipesLink": "Nos recettes",
+    "priceFrom": "dès"
   },
   "product": {
     "addToCart": "Ajouter au panier",
@@ -156,7 +157,10 @@
     "secureNote": "Paiement sécurisé par Stripe",
     "crossSellTitle": "Complétez votre commande",
     "crossSellAdd": "Ajouter",
-    "crossSellAddOf": "Ajouter {name} au panier"
+    "crossSellAddOf": "Ajouter {name} au panier",
+    "shippingFrom": "Dès {amount} en Point Relais",
+    "shippingFromFree": "Dès {amount} en Point Relais, offerte dès {threshold}",
+    "shippingOffered": "Offerte"
   },
   "checkout": {
     "title": "Votre commande",

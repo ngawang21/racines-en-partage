@@ -1,14 +1,14 @@
 ---
-// "Notre histoire", both locales (spec 5.4): the full logo, the story in
-// sections (alternating photo and text), then a way to the shop.
-import { Image } from 'astro:assets';
-import logoFull from '../../assets/brand/logo-full.webp';
+// "Notre histoire", both locales (spec 5.4): the title and lead beside the
+// painted medallion in a gold-ringed circle (no wordmark: the header already
+// carries it), the story in sections (alternating photo and text, no
+// numbering: they are not a sequence), then the slogan and a way to the shop.
+import medallion from '../../assets/brand/medallion.webp';
 import type { Locale } from '../../consts';
 import Base from '../../layouts/Base.astro';
 import { loadLocale, loadPage } from '../../i18n/locale';
 import { routePath } from '../../i18n/routing';
 import Breadcrumbs from '../Breadcrumbs.astro';
-import Icon from '../Icon.astro';
 import Ornament from '../Ornament.astro';
 import Picture from '../Picture.astro';
 
@@ -33,14 +33,15 @@ const [t, page, home] = await Promise.all([
       <h1>{page.title}</h1>
       <p class="lead">{page.lead}</p>
     </div>
-    <Image
-      src={logoFull}
-      alt={t.a11y.medallionAlt}
-      widths={[280, 420, 560]}
-      sizes="(min-width: 900px) 360px, 70vw"
-      class="about-logo"
-      loading="eager"
-    />
+    <div class="about-medallion">
+      <Picture
+        src={medallion}
+        alt={t.a11y.medallionAlt}
+        preset="gallery"
+        sizes="(min-width: 900px) 216px, 164px"
+        loading="eager"
+      />
+    </div>
   </div>
 
   <div class="container">
@@ -62,9 +63,6 @@ const [t, page, home] = await Promise.all([
             </div>
           )}
           <div class="story-copy">
-            <p class="story-index" aria-hidden="true">
-              {String(i + 1).padStart(2, '0')}
-            </p>
             <h2>{s.title}</h2>
             <p class="story-body">{s.body}</p>
           </div>
@@ -75,20 +73,15 @@ const [t, page, home] = await Promise.all([
 
   <section class="band-forest cta" aria-labelledby="about-cta">
     <div class="container section cta-inner">
-      <p class="eyebrow cta-eyebrow">{home.hero.eyebrow}</p>
-      <h2 id="about-cta" class="cta-title">
-        {home.hero.title}
-        <span class="accent">{home.hero.titleAccent}</span>
-      </h2>
-      <a class="btn btn-primary" href={routePath('shop', locale)}>
-        {home.hero.cta.primary}
-        <Icon name="chevron" />
-      </a>
+      <h2 id="about-cta" class="cta-title">{home.hero.eyebrow}</h2>
+      <a class="btn btn-primary" href={routePath('shop', locale)}>{home.hero.cta.primary}</a>
     </div>
   </section>
 </Base>
 
 <style>
+  /* Phones: title and lead first, the medallion after them (180 px), so the
+     first screen reads as a page, not a badge. From 900 px: side by side. */
   .about-head {
     display: grid;
     gap: var(--space-8);
@@ -96,22 +89,40 @@ const [t, page, home] = await Promise.all([
   }
   @media (min-width: 900px) {
     .about-head {
-      grid-template-columns: minmax(0, 1fr) 360px;
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: var(--space-16);
     }
   }
   .about-head :global(.crumbs) {
     margin-bottom: var(--space-6);
   }
-  .about-head :global(.about-logo) {
-    justify-self: center;
-    width: min(300px, 72vw);
-    height: auto;
+  /* The painting in a circle with a thin gold ring, as on the home story
+     band. */
+  .about-medallion {
+    justify-self: start;
+    overflow: hidden;
+    width: 180px;
+    aspect-ratio: 1;
+    padding: 8px;
+    border: 1px solid rgba(201, 162, 74, 0.7);
+    border-radius: 50%;
+    background: var(--paper);
   }
   @media (min-width: 900px) {
-    .about-head :global(.about-logo) {
-      width: 320px;
+    .about-medallion {
+      width: 232px;
+      margin-right: var(--space-8);
     }
+  }
+  .about-medallion :global(picture),
+  .about-medallion :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .about-medallion :global(img) {
+    border-radius: 50%;
+    object-fit: cover;
   }
   .sections {
     display: grid;
@@ -160,14 +171,7 @@ const [t, page, home] = await Promise.all([
     object-fit: cover;
     object-position: 50% 55%;
   }
-  .story-index {
-    color: var(--kraft-ink);
-    font-family: var(--font-display);
-    font-size: var(--fs-2);
-    font-style: italic;
-  }
   h2 {
-    margin-top: var(--space-2);
     font-size: var(--fs-4);
   }
   .story-body {
@@ -182,15 +186,8 @@ const [t, page, home] = await Promise.all([
     gap: var(--space-6);
     text-align: center;
   }
-  .cta-eyebrow {
-    color: var(--gold);
-  }
   .cta-title {
-    max-width: 18ch;
+    max-width: 20ch;
     font-size: var(--fs-5);
-  }
-  .cta-title .accent {
-    display: block;
-    color: var(--kraft);
   }
 </style>

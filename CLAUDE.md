@@ -70,7 +70,13 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   `loadPage`, `loadLegal`, `loadReviews`, `reviewsFor`, `legalTokens`,
   `formatSiren`. Always read content through these, never with
   `getCollection` directly. `merge.ts` also holds `formatsOf` (100 g and
-  200 g siblings by French name), `reviewStats`, `publishedReviews`.
+  200 g siblings by French name), `formatFamilies`, `groupFormats` (one grid
+  card per product, the lightest format leads, chips link the others),
+  `relatedProducts` (four cards, never a format of the current product),
+  `reviewStats`, `publishedReviews`. `src/components/storefront.ts` adds
+  `originCountry` (country before the comma) and `pouchCrop` (per-photo crop
+  so every pouch sits at the same place in a card; a new photo needs its
+  `POUCH_BOXES` entry).
 - `src/i18n/fallback.ts` (pure): `deepFallback`, `interpolate`,
   `interpolateHtml`, `escapeHtml`, `pickLabel`.
 - `src/i18n/routing.ts` (pure, also imported by `astro.config.mjs`):
@@ -90,7 +96,11 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   set), `review-token.ts` (decodes the review token payload for display only).
 - `src/cart/`: besides the cart, `order-view.ts` (shared order renderer of
   the thanks and lookup pages), `page-lookup.ts`, `page-review.ts`,
-  `cross-sell.ts` (`pickCrossSell`), `cross-sell-view.ts`.
+  `cross-sell.ts` (`pickCrossSell`: complements first, never another format
+  of a product in the cart), `cross-sell-view.ts`, `shipping-hint.ts`
+  (`shippingHint`, `shippingHintText`, `wholePrice`: the delivery line of the
+  cart and drawer from the settings). The checkout preselects Point Relais
+  (the map loads on search or when the block comes into view).
 - `worker/`: `tokens.ts` (HMAC tokens), `forms.ts` (contact, newsletter),
   `reviews.ts` (`submitReview`, `inviteReviews` cron), `yaml.ts`,
   `github.ts` (Contents API), `turnstile.ts`; `orders.ts` has

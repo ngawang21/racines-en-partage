@@ -1,7 +1,10 @@
 ---
 // Cart page (spec 5.4): lines with pictures, steppers and remove, subtotal,
 // free-shipping progress, continue shopping and "Commander". The shell is
-// static; src/cart/page-cart.ts renders the browser cart into it.
+// static; src/cart/page-cart.ts renders the browser cart into it. Source
+// order is lines, summary, then cross-sell and "Continuer mes achats", so on a
+// phone "Commander" sits right under the lines (review 11); from 900 px the
+// summary moves to a sticky right column.
 import Icon from '../../components/Icon.astro';
 import type { Locale } from '../../consts';
 import type { LocaleContent } from '../../content/locale-schema';
@@ -22,19 +25,9 @@ const { locale, t, shopOpen } = Astro.props;
   </header>
 
   <div class="cart-layout" data-cart-page-content hidden>
-    <div class="cart-layout-main">
-      <ul class="cart-lines cart-lines--page" role="list" data-cart-page-lines></ul>
-      <section class="cross-sell" aria-labelledby="cart-page-xs" data-cross-sell hidden>
-        <h2 id="cart-page-xs" class="cross-sell-title">{t.cart.crossSellTitle}</h2>
-        <ul class="cross-sell-list" role="list" data-cross-sell-list></ul>
-      </section>
-      <a class="text-link back-link" href={routePath('shop', locale)}>
-        <Icon name="chevron" size={18} class="icon-flip" />
-        {t.cart.continue}
-      </a>
-    </div>
+    <ul class="cart-lines cart-lines--page cart-layout-lines" role="list" data-cart-page-lines></ul>
 
-    <aside class="summary-card" aria-labelledby="cart-summary-title">
+    <aside class="summary-card cart-layout-summary" aria-labelledby="cart-summary-title">
       <h2 id="cart-summary-title" class="summary-title">{t.checkout.summaryTitle}</h2>
       <div class="free-shipping" data-free-shipping hidden>
         <p class="free-shipping-text" data-free-text></p>
@@ -55,15 +48,11 @@ const { locale, t, shopOpen } = Astro.props;
           <dt>{t.cart.subtotal}</dt>
           <dd class="price" data-cart-page-subtotal></dd>
         </div>
-        <div class="summary-row is-muted">
+        <div class="summary-row is-muted summary-row--hint">
           <dt>{t.cart.shipping}</dt>
-          <dd>{t.cart.shippingNextStep}</dd>
+          <dd data-cart-page-shipping>{t.cart.shippingNextStep}</dd>
         </div>
       </dl>
-      <p class="summary-note">
-        <Icon name="truck" size={20} />
-        <span>{t.cart.deliveryNote}</span>
-      </p>
       <p class="notice notice--error" data-cart-page-alert hidden>
         {t.checkout.unavailableLines}
       </p>
@@ -81,7 +70,42 @@ const { locale, t, shopOpen } = Astro.props;
         <Icon name="lock" size={16} />
         <span>{t.cart.secureNote}</span>
       </p>
+      <p class="summary-note">
+        <Icon name="truck" size={20} />
+        <span>{t.cart.deliveryNote}</span>
+      </p>
     </aside>
+
+    <div class="cart-layout-more">
+      <section class="cross-sell" aria-labelledby="cart-page-xs" data-cross-sell hidden>
+        <h2 id="cart-page-xs" class="cross-sell-title">{t.cart.crossSellTitle}</h2>
+        <ul class="cross-sell-list" role="list" data-cross-sell-list></ul>
+      </section>
+      <a class="text-link back-link" href={routePath('shop', locale)}>
+        <Icon name="chevron" size={18} class="icon-flip" />
+        {t.cart.continue}
+      </a>
+    </div>
+  </div>
+
+  {
+    /* Phones: while the summary's "Commander" is still below the fold (several
+     lines), a bar keeps the subtotal and the action under the thumb. Hidden
+     (visibility) until page-cart.ts shows it, so it stays out of the tab order. */
+  }
+  <div class="cart-bar" data-cart-bar>
+    <p class="cart-bar-total">
+      <span class="cart-bar-label">{t.cart.subtotal}</span>
+      <span class="price" data-cart-bar-subtotal></span>
+    </p>
+    <a
+      class="btn btn-primary cart-bar-action"
+      href={routePath('checkout', locale)}
+      data-cart-bar-checkout
+      aria-disabled={shopOpen ? undefined : 'true'}
+    >
+      {t.cart.checkout}
+    </a>
   </div>
 
   <div class="cart-empty cart-page-empty" data-cart-page-empty hidden>

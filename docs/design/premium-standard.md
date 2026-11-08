@@ -27,14 +27,15 @@ runs. The audit of this site against the standard lives in
 
 - A readable measure wins over edge-to-edge content. Body text stays between
   55 and 75 characters per line; headings may be wider.
-- Use a hybrid width: a centred container for text and controls (1200 to
-  1320 px), a wider container for product grids on large screens (up to
-  1440 px, five columns), and full-bleed for the hero photograph, coloured
-  bands and the footer. Full-bleed everything (the "Bootstrap container-fluid"
-  look of mass-market shops) stretches text lines past 100 characters on a
-  27 inch screen and makes the page feel like a spreadsheet; a narrow fixed
-  column on a wide screen feels like a blog. The hybrid keeps the richness of
-  wide photography with the comfort of a bounded column.
+- One content edge per breakpoint. Every section, grid, band and page shares
+  the same left and right edges (content at most 1440 px wide, gutters
+  below); coloured bands and the footer bleed to the window edges but their
+  content sits on the same lines. The edge never jumps between sections: a
+  24 px shift three times down a page reads as carelessness. Text keeps its
+  measure through max-width on the block itself (left-aligned, so the left
+  edge still matches), never through a narrower container. Photographs stay
+  inside the edge too, with the same inset on both sides: a photo that bleeds
+  on one side only unbalances the screen.
 - Gutters: 20 px on phones, 40 px from 900 px, 56 px from 1440 px.
 - Vertical rhythm: sections separated by 64 to 96 px on desktop, 48 to 64 px
   on phones. Related elements sit closer than unrelated ones (the gap says
@@ -44,9 +45,10 @@ runs. The audit of this site against the standard lives in
   width (tabular numerals).
 
 Checks: no horizontal scroll at 320 px; body measure 55 to 75 ch at every
-width; the hero and bands bleed, the text does not; the hero copy, the header
-wordmark and the first grid share one left edge; the product grid uses the
-room on a 1920 px screen without stretching the cards past 340 px.
+width; the left edge of every section measures the same x at 1440 (56 px) and
+at 390 (20 px); the hero photo has the same inset as the copy; the product
+grid uses the room on a 1920 px screen without stretching the cards past
+340 px.
 
 ## 3. Typography
 
@@ -55,8 +57,11 @@ room on a 1920 px screen without stretching the cards past 340 px.
   face carries headings, prices and quotes; the sans carries everything that
   must be read fast.
 - A fluid scale with clamp(), six steps, line heights 1.05 to 1.15 for display
-  sizes and 1.5 to 1.65 for body. Letter spacing tightens slightly above 40 px
-  and opens on small caps and eyebrows (0.08 em).
+  sizes and 1.5 to 1.65 for body. Letter spacing tightens slightly above 40 px.
+  No tracked capitals anywhere: small labels (form labels, footer column
+  titles, table heads) are sentence case in the sans at 600; a kicker above a
+  heading is an italic line of the display face, in sentence case, and only
+  where it adds information (never a repeat of the section's own name).
 - French typography is correct by construction: narrow no-break spaces before
   ; ! ? % and units, no-break before : and inside guillemets, typographic
   apostrophes, no orphan last word on headings (text-wrap: balance), no widows
@@ -115,9 +120,10 @@ Checks: Largest Contentful Paint element is the hero image and lands under
   the interface above 400 ms.
 - Only transform and opacity animate. Nothing appears from scale(0). Elements
   that can be interrupted use transitions, not keyframes.
-- Scroll reveal is subtle (8 to 16 px, 300 to 500 ms, once), staggered by 40
-  to 80 ms, and never hides content from a reader who scrolls fast or has
-  JavaScript off.
+- Nothing moves because the page scrolled. One entrance on load (the hero),
+  then only motion that answers the visitor: hover, press, open, add. A
+  fade-up on every section is the signature of a generated page and hides
+  content from anyone who scrolls fast or lands mid-page.
 - Reduced motion is honoured: movement is removed, opacity fades may stay.
 
 Checks: every transition lists its properties; `:active` scales pressables to
@@ -191,8 +197,9 @@ checkout; the thanks page works on refresh and from the e-mail link.
 
 ## 10. Content and copy
 
-- Headlines are specific and short; eyebrows name the section (the kicker),
-  the title says the idea, the lead says why it matters.
+- Headlines are specific and short; the title says the idea, the lead says
+  why it matters; a kicker appears only when it tells something the title
+  does not.
 - Product copy describes taste, texture, origin and use, in the owner's voice,
   without health or nutrition claims the label does not support.
 - Microcopy is polite and human ("Plus que 12 € pour la livraison offerte"),

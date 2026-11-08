@@ -635,9 +635,8 @@ collections:
             widget: object
             i18n: true
             fields:
-              - { name: eyebrow, label: Petit titre au-dessus, widget: string, i18n: true, required: [fr] }
-              - { name: title, label: Titre, widget: string, i18n: true, required: [fr] }
-              - { name: titleAccent, label: Suite du titre (en couleur), widget: string, i18n: true, required: [fr] }
+              - { name: eyebrow, label: Slogan (petite ligne au-dessus du titre), widget: string, i18n: true, required: [fr] }
+              - { name: title, label: Titre (ce que vend la boutique), widget: string, i18n: true, required: [fr] }
               - { name: lead, label: Texte, widget: text, i18n: true, required: [fr] }
               - name: cta
                 label: Boutons
@@ -645,7 +644,7 @@ collections:
                 i18n: true
                 fields:
                   - { name: primary, label: Bouton principal (vers la boutique), widget: string, i18n: true, required: [fr] }
-                  - { name: secondary, label: Second bouton (vers Notre histoire), widget: string, i18n: true, required: [fr] }
+                  - { name: secondary, label: Lien vers Notre histoire, widget: string, i18n: true, required: [fr] }
               - name: imageAlt
                 label: Description de la photo
                 widget: text
@@ -693,7 +692,6 @@ collections:
                 required: [fr]
                 field: { name: item, label: Pays, widget: string, i18n: true }
               - { name: to, label: Ville d'arrivée, widget: string, i18n: true, required: [fr] }
-          - { name: categoriesTitle, label: Titre des catégories, widget: string, i18n: true, required: [fr] }
           - { name: recipesTitle, label: Titre des recettes, widget: string, i18n: true, required: [fr] }
           - name: recipeProducts
             label: Les trois produits dont la recette est montrée

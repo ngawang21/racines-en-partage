@@ -1,26 +1,26 @@
 ---
-// "Petites recettes": recipes printed on the labels, each linking to its
-// product page (the recipe accordion carries id="recipe"). `layout="row"`
-// (home) swipes on phones; `layout="grid"` (recipes page) wraps and adds the
-// number of steps and ingredients.
+// "Petites recettes": the recipes printed on the labels, each linking to its
+// product page (the recipe accordion carries id="recipe"). Type-led cards on
+// the paper ground, no photo: the pouch is already in the product cards, and
+// the drink photos do not exist yet. A small hibiscus flower, the product as
+// a kicker, the recipe title, two or three lines, then "Voir la recette".
+// `layout="row"` (home) swipes on phones; `layout="grid"` (recipes page)
+// wraps and adds the number of steps and ingredients.
 import type { Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
 import type { Product } from '../content/schemas';
 import { interpolate } from '../i18n/fallback';
 import { routePath } from '../i18n/routing';
 import Icon from './Icon.astro';
-import Picture from './Picture.astro';
 
 interface Props {
   products: Product[];
   locale: Locale;
   t: LocaleContent;
-  /** Fade the cards up on scroll, staggered (home page, reveal.ts). */
-  reveal?: boolean;
   layout?: 'row' | 'grid';
   headingLevel?: 'h2' | 'h3';
 }
-const { products, locale, t, reveal = false, layout = 'row', headingLevel = 'h3' } = Astro.props;
+const { products, locale, t, layout = 'row', headingLevel = 'h3' } = Astro.props;
 const Heading = headingLevel;
 const withRecipe = products.filter((p) => p.recipe);
 const plural = (n: number, one: string, many: string) =>
@@ -33,47 +33,39 @@ const plural = (n: number, one: string, many: string) =>
       const r = p.recipe!;
       const lines = (r.ingredients?.length ? r.ingredients : r.steps).slice(0, 3);
       return (
-        <li data-reveal={reveal ? '' : undefined}>
+        <li>
           <article class="recipe lift">
-            <div class="recipe-media">
-              <Picture
-                src={p.images[0]!}
-                alt=""
-                preset="card"
-                sizes="(min-width: 960px) 380px, (min-width: 760px) 32vw, 82vw"
-              />
-            </div>
-            <div class="recipe-body">
-              <p class="recipe-kicker">{p.name}</p>
-              <Heading class="recipe-title">
-                <a href={`${routePath('product', locale, p.slug)}#recipe`}>{r.title}</a>
-              </Heading>
-              {layout === 'grid' && (
-                <p class="recipe-meta">
-                  {plural(r.steps.length, t.recipes.stepsOne, t.recipes.stepsMany)}
-                  {r.ingredients && r.ingredients.length > 0 && (
-                    <>
-                      <span aria-hidden="true"> · </span>
-                      <span class="visually-hidden">, </span>
-                      {plural(
-                        r.ingredients.length,
-                        t.recipes.ingredientsOne,
-                        t.recipes.ingredientsMany,
-                      )}
-                    </>
-                  )}
-                </p>
-              )}
-              <ul class="recipe-lines">
-                {lines.map((l) => (
-                  <li>{l}</li>
-                ))}
-              </ul>
-              <span class="link-arrow recipe-cta" aria-hidden="true">
-                {t.shop.recipeCta}
-                <Icon name="chevron" />
-              </span>
-            </div>
+            <span class="recipe-mark" aria-hidden="true">
+              <Icon name="flower" size={20} />
+            </span>
+            <p class="recipe-kicker">{p.name}</p>
+            <Heading class="recipe-title">
+              <a href={`${routePath('product', locale, p.slug)}#recipe`}>{r.title}</a>
+            </Heading>
+            {layout === 'grid' && (
+              <p class="recipe-meta">
+                {plural(r.steps.length, t.recipes.stepsOne, t.recipes.stepsMany)}
+                {r.ingredients && r.ingredients.length > 0 && (
+                  <>
+                    <span aria-hidden="true"> · </span>
+                    <span class="visually-hidden">, </span>
+                    {plural(
+                      r.ingredients.length,
+                      t.recipes.ingredientsOne,
+                      t.recipes.ingredientsMany,
+                    )}
+                  </>
+                )}
+              </p>
+            )}
+            <ul class="recipe-lines">
+              {lines.map((l) => (
+                <li>{l}</li>
+              ))}
+            </ul>
+            <span class="recipe-cta" aria-hidden="true">
+              {t.shop.recipeCta}
+            </span>
           </article>
         </li>
       );
@@ -82,12 +74,14 @@ const plural = (n: number, one: string, many: string) =>
 </ul>
 
 <style>
-  /* Phones: a swipeable row with the next card peeking in, rather than three
-     tall cards stacked. From 760 px: three columns. */
+  /* Phones: a swipeable row with the next card peeking in; each card keeps
+     its own height (a short recipe does not stretch to the tallest). From
+     760 px: three columns of equal height. */
   .recipes {
     display: grid;
     grid-auto-columns: min(82%, 340px);
     grid-auto-flow: column;
+    align-items: start;
     gap: var(--space-4);
     margin: 0 calc(var(--gutter) * -1);
     /* Room for the focus ring inside the scroller. */
@@ -108,6 +102,7 @@ const plural = (n: number, one: string, many: string) =>
     .recipes {
       grid-template-columns: repeat(3, minmax(0, 1fr));
       grid-auto-flow: row;
+      align-items: stretch;
       gap: var(--space-6);
       margin: 0;
       padding: 0;
@@ -118,7 +113,7 @@ const plural = (n: number, one: string, many: string) =>
   .recipes-grid {
     grid-template-columns: minmax(0, 1fr);
     grid-auto-flow: row;
-    gap: var(--space-6);
+    gap: var(--space-4);
     margin: 0;
     padding: 0;
     overflow: visible;
@@ -126,77 +121,56 @@ const plural = (n: number, one: string, many: string) =>
   @media (min-width: 600px) {
     .recipes-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: stretch;
+      gap: var(--space-6);
     }
   }
+  /* Three a row on six tracks, and a last row that is never a lone card or
+     a gap: two leftovers share the row, one leftover pairs with the card
+     before it (two rows of two). */
   @media (min-width: 960px) {
     .recipes-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+    .recipes-grid > li {
+      grid-column: span 2;
+    }
+    .recipes-grid > li:nth-child(3n + 1):nth-last-child(2),
+    .recipes-grid > li:nth-child(3n + 1):nth-last-child(2) ~ li,
+    .recipes-grid > li:nth-child(3n + 1):nth-last-child(4),
+    .recipes-grid > li:nth-child(3n + 1):nth-last-child(4) ~ li {
+      grid-column: span 3;
     }
   }
-  .recipe-meta {
-    margin-top: var(--space-2);
-    color: var(--kraft-ink);
-    font-size: var(--fs--1);
-    font-weight: 600;
-  }
+
   .recipe {
     position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
-    overflow: hidden;
-    border: 1px solid var(--kraft);
+    padding: clamp(var(--space-6), 1rem + 1.2vw, var(--space-8));
     border-radius: var(--radius-m);
-    background: var(--cream);
-  }
-  /* Square: the least a 2:3 portrait can be cropped to while keeping the
-     whole pouch and what it holds. */
-  .recipe-media {
-    aspect-ratio: 1 / 1;
-    overflow: hidden;
-    isolation: isolate;
     background: var(--paper);
-    border-bottom: 1px solid var(--kraft);
   }
-  .recipe-media :global(img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: 50% 70%;
-    transition: transform 400ms var(--ease-out-strong);
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .recipe.lift:hover {
-      box-shadow: var(--shadow-float);
-    }
-    .recipe:hover .recipe-media :global(img) {
-      transform: scale(1.04);
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .recipe-media :global(img) {
-      transition: none;
-    }
-    .recipe:hover .recipe-media :global(img) {
-      transform: none;
-    }
-  }
-  .recipe-body {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    padding: clamp(var(--space-4), 1rem + 1vw, var(--space-6));
+  .recipe-mark {
+    display: inline-flex;
+    color: var(--hibiscus);
   }
   .recipe-kicker {
+    margin-top: var(--space-4);
     color: var(--ink-2);
-    font-size: 0.75rem;
+    font-size: 0.875rem;
     font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    line-height: 1.35;
   }
   .recipe-title {
     margin-top: var(--space-2);
     font-size: var(--fs-3);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+    transition: text-decoration-color 200ms ease;
   }
   .recipe-title a {
     color: inherit;
@@ -206,6 +180,7 @@ const plural = (n: number, one: string, many: string) =>
     content: '';
     position: absolute;
     inset: 0;
+    border-radius: inherit;
   }
   .recipe-title a:focus-visible {
     outline: none;
@@ -216,12 +191,19 @@ const plural = (n: number, one: string, many: string) =>
     outline-offset: 2px;
     box-shadow: 0 0 0 2px var(--cream);
   }
+  .recipe-meta {
+    margin-top: var(--space-2);
+    color: var(--kraft-ink);
+    font-size: var(--fs--1);
+    font-weight: 600;
+  }
   .recipe-lines {
     margin: var(--space-4) 0 var(--space-6);
     padding: 0;
     list-style: none;
     color: var(--ink-2);
     font-size: 0.9375rem;
+    line-height: 1.5;
   }
   .recipe-lines li {
     position: relative;
@@ -242,21 +224,23 @@ const plural = (n: number, one: string, many: string) =>
   }
   .recipe-cta {
     margin-top: auto;
-    min-height: 0;
-  }
-  .recipe-title {
+    align-self: flex-start;
+    color: var(--forest);
+    font-weight: 600;
     text-decoration: underline;
-    text-decoration-color: transparent;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 5px;
-    transition: text-decoration-color 200ms ease;
+    text-decoration-color: var(--kraft-deep);
+    text-underline-offset: 6px;
+    transition: text-decoration-color var(--dur-fast) ease;
   }
-  @media (hover: hover) {
+  @media (hover: hover) and (pointer: fine) {
+    .recipe.lift:hover {
+      box-shadow: var(--shadow-float);
+    }
     .recipe:hover .recipe-title {
       text-decoration-color: var(--kraft-deep);
     }
-    .recipe:hover .recipe-cta :global(svg) {
-      transform: translateX(3px);
+    .recipe:hover .recipe-cta {
+      text-decoration-color: var(--forest);
     }
   }
 </style>
