@@ -5,7 +5,7 @@
 // committed under docs/branding/card/ and copied to public/carte/; the vCard
 // public/racines-en-partage.vcf is written from the settings on the same run.
 //
-//   pnpm card                 (variant "medaillon", the published one)
+//   pnpm card                 (variant "kraft", the published one)
 //   pnpm card kraft           (or foret: the two other directions)
 //   pnpm card review          (all three into out/review/card/ plus comparison.png,
 //                              nothing published)
@@ -23,7 +23,7 @@ import sharp from 'sharp';
 import { parse as parseYaml } from 'yaml';
 
 const VARIANTS = ['medaillon', 'kraft', 'foret'];
-const arg = process.argv[2] ?? 'medaillon';
+const arg = process.argv[2] ?? 'kraft';
 const review = arg === 'review';
 if (!review && !VARIANTS.includes(arg)) {
   console.error(`unknown variant "${arg}", expected ${[...VARIANTS, 'review'].join(' | ')}`);

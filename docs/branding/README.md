@@ -18,12 +18,12 @@ inside the trim. One template holds three directions, picked by the body's
 | `kraft`     | kraft, the small hibiscus, stacked wordmark, tagline        | cream, wordmark and contacts left, QR right, kente strip at the foot |
 | `foret`     | forest, gold hibiscus between hairlines, wordmark, tagline  | cream, centred stack: QR, gold hairline, phone and e-mail            |
 
-`medaillon` is the published variant.
+`kraft` is the published variant (the owner's choice, 2026-11-08).
 
 Regenerate after a change of phone, e-mail, tagline or site URL:
 
-    pnpm card              # medaillon, published
-    pnpm card kraft        # or foret: publishes that variant instead
+    pnpm card              # kraft, published
+    pnpm card medaillon    # or foret: publishes that variant instead
     pnpm card review       # all three into out/review/card/ plus comparison.png
 
 The script (`scripts/business-card.mjs`) reads the brand name, tagline,
