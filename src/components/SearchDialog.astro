@@ -1,0 +1,313 @@
+---
+// Header search (spec 2.7): a modal <dialog> with one field. search.ts opens
+// it from the header button, filters the #rep-catalog JSON already embedded
+// in every page (src/search/match.ts) and lists the matches with thumbnail,
+// price, price per kilo and the add button of the cart contract (its
+// data-add-to-cart and data-sku are set when a row is rendered, so the
+// template holds no button without a SKU). No network
+// request. Strings travel as data attributes; `{query}` and `{count}` are
+// replaced client side.
+import type { Locale } from '../consts';
+import type { LocaleContent } from '../content/locale-schema';
+import { routePath } from '../i18n/routing';
+import Icon from './Icon.astro';
+
+interface Props {
+  locale: Locale;
+  t: LocaleContent;
+}
+const { locale, t } = Astro.props;
+---
+
+<dialog
+  id="search-dialog"
+  class="search-dialog"
+  aria-labelledby="search-title"
+  data-search
+  data-locale={locale}
+  data-empty={t.search.empty.replace('{query}', '%q')}
+  data-results-one={t.search.resultsOne.replace('{count}', '%n')}
+  data-results-many={t.search.resultsMany.replace('{count}', '%n')}
+  data-out={t.product.stockOut}
+>
+  <div class="search-panel">
+    <h2 id="search-title" class="visually-hidden">{t.search.title}</h2>
+    <form class="search-form" role="search" action={routePath('shop', locale)} data-search-form>
+      <Icon name="search" class="search-glyph" />
+      <label class="visually-hidden" for="search-input">{t.search.label}</label>
+      <input
+        id="search-input"
+        class="search-input"
+        type="search"
+        name="q"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        enterkeyhint="search"
+        placeholder={t.search.placeholder}
+        aria-describedby="search-hint"
+        aria-controls="search-results"
+        data-search-input
+      />
+      <button type="button" class="search-close" data-search-close>
+        <Icon name="close" />
+        <span class="visually-hidden">{t.search.close}</span>
+      </button>
+    </form>
+    <div class="search-body">
+      <p id="search-hint" class="search-hint">{t.search.hint}</p>
+      <p class="search-status" role="status" data-search-status></p>
+      <p class="search-label" data-search-label hidden>{t.search.suggestions}</p>
+      <ul id="search-results" class="search-results" role="list" data-search-results></ul>
+      <template data-search-row>
+        <li>
+          <img src="" alt="" width="56" height="56" loading="lazy" decoding="async" />
+          <div class="sr-text">
+            <a class="sr-name" href=""></a>
+            <span class="sr-meta">
+              <span class="sr-price"></span>
+              <span aria-hidden="true"> · </span>
+              <span class="visually-hidden">{t.product.unitPrice} </span>
+              <span class="sr-unit"></span>
+            </span>
+          </div>
+          <button type="button" class="btn btn-primary sr-add">
+            <Icon name="plus" />
+            <span class="sr-add-label">{t.shop.add}</span>
+            <span class="visually-hidden sr-add-name"></span>
+          </button>
+        </li>
+      </template>
+      <a class="link-arrow search-all" href={routePath('shop', locale)}>
+        {t.search.viewAll}
+        <Icon name="chevron" />
+      </a>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  import '../scripts/search';
+</script>
+
+<style>
+  .search-dialog {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--cream);
+    color: var(--ink);
+  }
+  .search-dialog::backdrop {
+    background: rgba(22, 58, 28, 0.35);
+  }
+  @media (min-width: 720px) {
+    .search-dialog {
+      width: min(640px, calc(100% - 2 * var(--gutter)));
+      height: auto;
+      max-height: min(78vh, 720px);
+      margin: 10vh auto auto;
+      border: 1px solid var(--kraft);
+      border-radius: var(--radius-l);
+      box-shadow: var(--shadow-float);
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .search-dialog[open] {
+      animation: rep-search-in 220ms var(--ease-out-strong);
+    }
+    .search-dialog[open]::backdrop {
+      animation: rep-search-fade 220ms ease;
+    }
+  }
+  @keyframes rep-search-in {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+  @keyframes rep-search-fade {
+    from {
+      opacity: 0;
+    }
+  }
+  .search-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: inherit;
+  }
+  .search-form {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--line);
+  }
+  .search-form :global(.search-glyph) {
+    flex: none;
+    color: var(--ink-2);
+  }
+  .search-input {
+    flex: 1;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0 var(--space-2);
+    border: 0;
+    background: transparent;
+    color: var(--forest);
+    font-size: 1.125rem;
+    appearance: none;
+  }
+  .search-input::placeholder {
+    color: var(--ink-2);
+    opacity: 0.8;
+  }
+  .search-input::-webkit-search-cancel-button {
+    appearance: none;
+  }
+  .search-input:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+  .search-form:has(.search-input:focus-visible) {
+    box-shadow: inset 0 -2px 0 var(--hibiscus);
+  }
+  .search-close {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--forest);
+  }
+  @media (hover: hover) {
+    .search-close:hover {
+      background: rgba(22, 58, 28, 0.06);
+    }
+  }
+  .search-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-4) var(--space-4) var(--space-6);
+  }
+  .search-hint,
+  .search-status {
+    color: var(--ink-2);
+    font-size: var(--fs--1);
+  }
+  .search-status:empty {
+    display: none;
+  }
+  .search-hint[hidden] {
+    display: none;
+  }
+  .search-status {
+    margin-top: var(--space-2);
+    font-weight: 600;
+  }
+  .search-label {
+    margin-top: var(--space-4);
+    color: var(--ink-2);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .search-label[hidden] {
+    display: none;
+  }
+  .search-results {
+    display: grid;
+    gap: 2px;
+    margin: var(--space-3) 0 var(--space-4);
+    padding: 0;
+  }
+  .search-results :global(li) {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2);
+    border-radius: var(--radius-s);
+  }
+  @media (hover: hover) {
+    .search-results :global(li:hover) {
+      background: var(--paper);
+    }
+  }
+  .search-results :global(li:has(a:focus-visible)) {
+    background: var(--paper);
+  }
+  .search-results :global(img) {
+    flex: none;
+    width: 56px;
+    height: 56px;
+    border: 1px solid var(--kraft);
+    border-radius: var(--radius-s);
+    background: var(--paper);
+    object-fit: cover;
+  }
+  .search-results :global(.sr-text) {
+    display: grid;
+    flex: 1;
+    gap: 2px;
+    min-width: 0;
+  }
+  .search-results :global(.sr-name) {
+    color: var(--forest);
+    font-weight: 600;
+    line-height: 1.3;
+    text-decoration: none;
+  }
+  /* The name's link covers the row; the add button sits above it. */
+  .search-results :global(.sr-name::after) {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-s);
+  }
+  .search-results :global(.sr-name:focus-visible) {
+    outline: none;
+    box-shadow: none;
+  }
+  .search-results :global(.sr-name:focus-visible::after) {
+    outline: 3px solid var(--hibiscus);
+    outline-offset: 0;
+  }
+  .search-results :global(.sr-meta) {
+    color: var(--ink-2);
+    font-size: var(--fs--1);
+    font-variant-numeric: tabular-nums;
+  }
+  .search-results :global(.sr-price) {
+    color: var(--forest);
+    font-weight: 600;
+  }
+  .search-results :global(.sr-add) {
+    position: relative;
+    z-index: 1;
+    flex: none;
+    min-height: 44px;
+    padding-inline: var(--space-4);
+    font-size: 0.9375rem;
+  }
+  .search-results :global(.sr-add svg) {
+    width: 18px;
+    height: 18px;
+  }
+  .search-all {
+    margin-top: var(--space-2);
+  }
+</style>

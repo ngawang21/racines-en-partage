@@ -8,3 +8,11 @@ docs/superpowers/
 src/assets/
 test-results/
 playwright-report/
+# Owner-edited content: Sveltia writes its own YAML style, so Prettier must not
+# make a CMS save fail `pnpm check`. The unit tests still parse every file.
+src/content/products/
+src/content/categories/
+src/content/pages/
+src/content/legal/
+src/content/reviews/
+src/content/settings/

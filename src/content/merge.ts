@@ -17,6 +17,7 @@ import {
   type PageContent,
   type PageKey,
   type Product,
+  type Review,
 } from './schemas';
 
 /** schema.parse with the file named in the error, readable in a build log. */
@@ -127,4 +128,50 @@ export function mergePage<K extends PageKey>(
     deepFallback(enRaw ?? {}, fr as unknown),
     `pages/en/${key}.yml (after French fallback)`,
   ) as PageContent<K>;
+}
+
+/**
+ * The formats of a product (spec 2.5): the products of the same category with
+ * the same French name (moringa 100 g and 200 g), the product itself included,
+ * lightest first. `name` is shared through the French file, so pass products
+ * merged in French, or in any locale whose names are translated together. A
+ * list of one means there is no other format and no "Format" row.
+ */
+export function formatsOf(product: Product, all: readonly Product[]): Product[] {
+  const key = (p: Product) => p.name.trim().toLocaleLowerCase('fr');
+  const family = all.filter(
+    (p) => p.category === product.category && key(p) === key(product) && p.slug !== product.slug,
+  );
+  return [product, ...family].sort(
+    (a, b) => a.weightGrams - b.weightGrams || a.slug.localeCompare(b.slug),
+  );
+}
+
+/** Count and average rating (one decimal, 0 when there is none) of a list of reviews. */
+export function reviewStats(reviews: readonly Pick<Review, 'rating'>[]): {
+  count: number;
+  average: number;
+} {
+  const count = reviews.length;
+  if (count === 0) return { count: 0, average: 0 };
+  const sum = reviews.reduce((total, r) => total + r.rating, 0);
+  return { count, average: Math.round((sum * 10) / count) / 10 };
+}
+
+/**
+ * The reviews the site shows (spec 2.1): published ones about a product the
+ * site shows, newest first (then by id, so the order is stable).
+ */
+export function publishedReviews(
+  reviews: readonly Review[],
+  productSlugs: ReadonlySet<string>,
+): Review[] {
+  return reviews
+    .filter((r) => r.published && productSlugs.has(r.product))
+    .sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id));
+}
+
+/** The reviews of one product, in the order given. */
+export function reviewsFor(slug: string, reviews: readonly Review[]): Review[] {
+  return reviews.filter((r) => r.product === slug);
 }

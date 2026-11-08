@@ -1,17 +1,20 @@
 ---
 // Product page, both locales (spec 5.4).
 import { getImage } from 'astro:assets';
-import { SITE, type Locale } from '../../consts';
+import { DEFAULT_LOCALE, SITE, type Locale } from '../../consts';
 import type { Product } from '../../content/schemas';
 import Base from '../../layouts/Base.astro';
-import { formatPrice, formatWeight, toCents } from '../../i18n/format';
+import { formatsOf, reviewStats } from '../../content/merge';
+import { formatPrice, formatUnitPrice, formatWeight, toCents } from '../../i18n/format';
 import { interpolate } from '../../i18n/fallback';
 import {
   loadCategories,
   loadLocale,
   loadProduct,
   loadProducts,
+  loadReviews,
   loadSettings,
+  reviewsFor,
 } from '../../i18n/locale';
 import { routePath, routeUrl } from '../../i18n/routing';
 import { resolveAsset } from '../../images';
@@ -19,11 +22,16 @@ import { productGraphInput } from '../../seo/graph';
 import Accordion from '../Accordion.astro';
 import AddToCart from '../AddToCart.astro';
 import Breadcrumbs from '../Breadcrumbs.astro';
+import Formats from '../Formats.astro';
 import Gallery from '../Gallery.astro';
 import Icon from '../Icon.astro';
 import NutritionTable from '../NutritionTable.astro';
 import ProductGrid from '../ProductGrid.astro';
+import ReviewSummary from '../ReviewSummary.astro';
+import Reviews from '../Reviews.astro';
 import SectionHead from '../SectionHead.astro';
+import StickyBuy from '../StickyBuy.astro';
+import StockAlert from '../forms/StockAlert.astro';
 import { companionPhoto } from '../companion';
 import { STOCK_CLASS, deliveryLine, stockLabel } from '../storefront';
 
@@ -32,12 +40,14 @@ interface Props {
   slug: string;
 }
 const { locale, slug } = Astro.props;
-const [t, product, all, settings, categories] = await Promise.all([
+const [t, product, all, settings, categories, allFr, published] = await Promise.all([
   loadLocale(locale),
   loadProduct(locale, slug),
   loadProducts(locale),
   loadSettings(),
   loadCategories(locale),
+  loadProducts(DEFAULT_LOCALE),
+  loadReviews(),
 ]);
 const category = categories.find((c) => c.slug === product.category);
 const images = product.images.map(resolveAsset);
@@ -60,6 +70,19 @@ const max = settings.shop.maxQuantityPerLine;
 const buyable = shopOpen && product.stock !== 'out';
 const qtyId = `qty-${product.sku.toLowerCase()}`;
 const delivery = deliveryLine(settings, t, locale);
+const unitPrice = formatUnitPrice(cents, product.weightGrams, locale);
+
+// Formats: the family is defined by the French name (spec 2.5), shown in the locale.
+const localeBySlug = new Map(all.map((p) => [p.slug, p]));
+const frProduct = allFr.find((p) => p.slug === product.slug);
+const formats = frProduct
+  ? formatsOf(frProduct, allFr)
+      .map((p) => localeBySlug.get(p.slug))
+      .filter((p): p is Product => p !== undefined)
+  : [product];
+
+const reviews = reviewsFor(product.slug, published);
+const stats = reviewStats(reviews);
 
 const companion = companionPhoto(product.images[0]!);
 const gallery = [
@@ -106,7 +129,7 @@ const shopHref = routePath('shop', locale);
         : []),
       { name: product.name, url: routeUrl('product', locale, slug) },
     ],
-    product: productGraphInput(product, settings, imageUrls, category?.name),
+    product: productGraphInput(product, settings, imageUrls, category?.name, reviews),
   }}
 >
   <div class="container product">
@@ -152,11 +175,20 @@ const shopHref = routePath('shop', locale);
         </ul>
 
         <div class="price-row">
-          <p class="price product-price">{formatPrice(cents, locale)}</p>
+          <div class="price-block">
+            <p class="price product-price">{formatPrice(cents, locale)}</p>
+            <p class="unit-price">
+              <span class="visually-hidden">{t.product.unitPrice} </span>
+              {unitPrice}
+            </p>
+          </div>
           <p class:list={['badge', STOCK_CLASS[product.stock]]}>{stockLabel(product.stock, t)}</p>
+          <ReviewSummary {stats} {locale} {t} href="#reviews" size="md" class="price-reviews" />
         </div>
 
-        <div class="buy">
+        <Formats current={product} {formats} {locale} {t} />
+
+        <div class="buy" data-buy-block>
           <div class="stepper" data-qty-stepper>
             <button
               type="button"
@@ -198,6 +230,12 @@ const shopHref = routePath('shop', locale);
           />
         </div>
 
+        {
+          product.stock === 'out' && (
+            <StockAlert {locale} {t} {settings} sku={product.sku} productName={product.name} />
+          )
+        }
+
         <ul class="assurances" role="list">
           {
             delivery && (
@@ -209,6 +247,10 @@ const shopHref = routePath('shop', locale);
           }
           <li>
             <Icon name="leaf" size={20} />
+            <span>{t.product.vegetal}</span>
+          </li>
+          <li>
+            <Icon name="pin" size={20} />
             <span>{t.product.packagedBy}</span>
           </li>
         </ul>
@@ -305,9 +347,11 @@ const shopHref = routePath('shop', locale);
     </div>
   </div>
 
+  <Reviews {reviews} {locale} {t} />
+
   {
     related.length > 0 && (
-      <section class="band-paper related" aria-labelledby="related-title">
+      <section class="related" aria-labelledby="related-title">
         <div class="container section">
           <SectionHead
             id="related-title"
@@ -323,6 +367,8 @@ const shopHref = routePath('shop', locale);
   <aside class="container footnote">
     <p>{t.product.disclaimer}</p>
   </aside>
+
+  <StickyBuy {product} {locale} {t} {shopOpen} />
 </Base>
 
 <style>
@@ -388,6 +434,16 @@ const shopHref = routePath('shop', locale);
   .product-price {
     font-size: clamp(2rem, 1.7rem + 1.2vw, 2.5rem);
     line-height: 1;
+  }
+  .unit-price {
+    margin-top: 6px;
+    color: var(--ink-2);
+    font-size: var(--fs--1);
+    font-variant-numeric: tabular-nums;
+  }
+  .price-row :global(.price-reviews) {
+    flex-basis: 100%;
+    margin-top: calc(var(--space-2) * -1);
   }
   .buy {
     display: flex;

@@ -15,7 +15,7 @@ every label: "Deux terres. Un rituel. Un bien-être à partager." Sub-brand line
 Her request, verbatim: "Sur ce site, j'aimerais que les personnes voient mes
 produits, puissent payer et mettre le choix de livraison avec Mondial relais."
 
-Contact: racinesenpartage@outlook.com, 07 75 68 91 08, 9 Rue du Marché,
+Contact: racinesenpartage@gmail.com (Outlook until 2026-11-08), 07 75 68 91 08, 9 Rue du Marché,
 95400 Arnouville.
 
 The developer's goals on top of the brief: a premium, inviting storefront that

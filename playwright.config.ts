@@ -31,6 +31,9 @@ const preview = `pnpm exec astro preview --host ${HOST} --port ${PORT} --ignore-
 export default defineConfig({
   testDir: 'tests/e2e',
   fullyParallel: true,
+  // The development machine has 128 cores: unbounded workers overload the
+  // preview server and the slow mobile checkout tests time out. CI keeps the default.
+  workers: process.env.CI ? undefined : 16,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['list']] : 'list',

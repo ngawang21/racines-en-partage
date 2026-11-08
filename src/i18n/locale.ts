@@ -11,6 +11,8 @@ import {
   mergePage,
   mergeProduct,
   publishedProducts,
+  publishedReviews,
+  reviewsFor,
 } from '../content/merge';
 import {
   validateCatalog,
@@ -19,16 +21,17 @@ import {
   type PageContent,
   type PageKey,
   type Product,
+  type Review,
   type Settings,
 } from '../content/schemas';
 import { hasAsset } from '../images';
 import { deepFallback, interpolate, interpolateHtml, pickLabel } from './fallback';
 import { formatPhone } from './format';
-import { frenchTypographyDeep, frenchTypographyHtml } from './typography';
+import { frenchTypographyDeep, frenchTypographyHtml, frenchTypographyText } from './typography';
 
 // `astro:content` is a virtual module that vitest cannot resolve, so the pure
 // helpers live in ./fallback and ../content/merge and are re-exported here.
-export { deepFallback, interpolate, interpolateHtml, pickLabel };
+export { deepFallback, interpolate, interpolateHtml, pickLabel, reviewsFor };
 
 /**
  * French content gets its no-break spaces at load time (before « : ; ! ? »,
@@ -134,6 +137,37 @@ export async function loadProduct(locale: Locale, slug: string): Promise<Product
   const found = (await loadProducts(locale)).find((p) => p.slug === slug);
   if (!found) throw new Error(`unknown product "${slug}"`);
   return found;
+}
+
+/**
+ * The customer reviews the site shows (spec 2.1): `published` ones about a
+ * product the site shows (a review of a hidden or deleted product is dropped),
+ * newest first. Reviews are not translated: each keeps its language, and the
+ * French ones get the French typography.
+ */
+export function loadReviews(): Promise<Review[]> {
+  // One read per production build (every product grid asks; an empty
+  // collection would otherwise print Astro's warning once per call). The dev
+  // server reads afresh so an edited review shows on reload.
+  if (!import.meta.env.PROD) return readReviews();
+  reviewsOnce ??= readReviews();
+  return reviewsOnce;
+}
+
+let reviewsOnce: Promise<Review[]> | undefined;
+
+async function readReviews(): Promise<Review[]> {
+  const [entries, products] = await Promise.all([
+    getCollection('reviews'),
+    loadProducts(DEFAULT_LOCALE),
+  ]);
+  const all: Review[] = entries.map((e) => {
+    const r = { ...e.data, id: e.id };
+    if (r.locale !== DEFAULT_LOCALE) return r;
+    const fr = (v: string) => frenchTypographyText(v);
+    return { ...r, author: fr(r.author), title: fr(r.title), text: fr(r.text), reply: fr(r.reply) };
+  });
+  return publishedReviews(all, new Set(products.map((p) => p.slug)));
 }
 
 export async function loadPage<K extends PageKey>(locale: Locale, key: K): Promise<PageContent<K>> {

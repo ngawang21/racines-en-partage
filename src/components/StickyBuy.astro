@@ -1,0 +1,142 @@
+---
+// Sticky buy bar on phones (spec 2.13): once the page's add button has
+// scrolled up out of view, a bar with the price and an "Ajouter" button slides
+// in at the bottom. The button follows the cart contract, so the cart script
+// adds the quantity chosen in the page's stepper. sticky-buy.ts shows and
+// hides it; without script, or from 900 px, it never shows. Nothing is
+// rendered for a product that cannot be bought.
+import type { Locale } from '../consts';
+import type { LocaleContent } from '../content/locale-schema';
+import type { Product } from '../content/schemas';
+import { formatPrice, formatUnitPrice, formatWeight, toCents } from '../i18n/format';
+import Icon from './Icon.astro';
+
+interface Props {
+  product: Product;
+  locale: Locale;
+  t: LocaleContent;
+  shopOpen: boolean;
+}
+const { product, locale, t, shopOpen } = Astro.props;
+const cents = toCents(product.price);
+const weight = formatWeight(product.weightGrams, locale);
+---
+
+{
+  shopOpen && product.stock !== 'out' && (
+    <aside class="sticky-buy" data-sticky-buy aria-label={t.product.stickyLabel} inert>
+      <div class="sticky-inner">
+        <div class="sticky-text">
+          <p class="sticky-name">
+            {product.name} <span class="sticky-weight">{weight}</span>
+          </p>
+          <p class="sticky-price">
+            <span class="price">{formatPrice(cents, locale)}</span>
+            <span class="sticky-unit">{formatUnitPrice(cents, product.weightGrams, locale)}</span>
+          </p>
+        </div>
+        <button
+          type="button"
+          class="btn btn-primary sticky-add"
+          data-add-to-cart
+          data-sku={product.sku}
+          data-stock={product.stock}
+        >
+          <Icon name="plus" />
+          <span>{t.product.stickyAdd}</span>
+          <span class="visually-hidden">
+            , {product.name} {weight}
+          </span>
+        </button>
+      </div>
+    </aside>
+  )
+}
+
+<script>
+  import '../scripts/sticky-buy';
+</script>
+
+<style>
+  .sticky-buy {
+    display: none;
+  }
+  @media (max-width: 899px) {
+    .sticky-buy {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 15;
+      display: block;
+      padding: var(--space-3) var(--gutter) calc(var(--space-3) + env(safe-area-inset-bottom));
+      border-top: 1px solid var(--kraft);
+      background: rgba(251, 246, 234, 0.97);
+      box-shadow: 0 -8px 24px rgba(22, 58, 28, 0.1);
+      transform: translateY(110%);
+      visibility: hidden;
+      transition:
+        transform var(--dur-base) var(--ease-out-strong),
+        visibility 0s linear var(--dur-base);
+    }
+    .sticky-buy.is-visible {
+      transform: none;
+      visibility: visible;
+      transition:
+        transform var(--dur-base) var(--ease-out-strong),
+        visibility 0s;
+    }
+    /* Room at the end of the page so the bar never hides the footer. */
+    :global(body:has(.sticky-buy.is-visible)) {
+      padding-bottom: 76px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sticky-buy,
+    .sticky-buy.is-visible {
+      transition: none;
+    }
+  }
+  .sticky-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    max-width: var(--container);
+    margin-inline: auto;
+  }
+  .sticky-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .sticky-name {
+    overflow: hidden;
+    color: var(--forest);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sticky-weight {
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+  .sticky-price {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+  .sticky-price .price {
+    font-size: 1.25rem;
+    line-height: 1.2;
+  }
+  .sticky-unit {
+    color: var(--ink-2);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .sticky-add {
+    flex: none;
+    min-height: 48px;
+    padding-inline: var(--space-6);
+  }
+</style>

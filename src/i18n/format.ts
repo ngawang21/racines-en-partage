@@ -21,6 +21,29 @@ export function formatPrice(cents: number, locale: Locale): string {
   return locale === 'fr' ? text.replaceAll(NBSP, NNBSP) : text;
 }
 
+/**
+ * Price per kilogram from a pack price in cents and its net weight (arrêté du
+ * 16 novembre 1999): "65,00 €/kg" in French, "€65.00/kg" in English. The cents
+ * per kilo are rounded half up. Pure, importable from client code.
+ */
+export function formatUnitPrice(cents: number, weightGrams: number, locale: Locale): string {
+  if (!Number.isInteger(cents))
+    throw new Error(`formatUnitPrice expects integer cents, got ${cents}`);
+  if (!(weightGrams > 0))
+    throw new Error(`formatUnitPrice expects a positive weight, got ${weightGrams}`);
+  // Integer arithmetic first so 8,90 € for 137 g does not pick up float noise.
+  const perKilo = Math.floor((cents * 1000 * 2 + weightGrams) / (2 * weightGrams));
+  return `${formatPrice(perKilo, locale)}/kg`;
+}
+
+/** An average rating with one decimal: "4,5" in French, "4.5" in English. */
+export function formatRating(value: number, locale: Locale): string {
+  return new Intl.NumberFormat(INTL_LOCALE[locale], {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
 /** A CMS price in euros (2 decimals) to integer cents, immune to float noise. */
 export function toCents(price: number): number {
   if (!Number.isFinite(price)) throw new Error(`toCents expects a finite number, got ${price}`);

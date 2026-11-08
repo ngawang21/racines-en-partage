@@ -323,3 +323,18 @@ a separate entry in `worker/` deployed with the static assets by one
   CGV aligned with L221-24 with a withdrawal form; English wording pass;
   admin CSP allows `'wasm-unsafe-eval'` for Sveltia's image codecs. Gates:
   unit 188, worker 167, build 36, e2e 44.
+- 2026-11-08 iteration 3 (owner notes of 2026-11-08, spec
+  `2026-11-08-iteration-3-features-design.md`, plan
+  `2026-11-08-iteration-3-implementation-plan.md`, reference study made with
+  REA on kasana.bio, Nature Snacks, Herboristerie du Valmont and Thés &
+  Traditions): Gmail address and SIRET, the owner's prices, origins and
+  descriptions, baobab 200 g, keywords; moderated verified reviews (daily
+  cron, token link, GitHub commit, owner publishes in Sveltia, aggregate
+  rating and JSON-LD), newsletter with double opt-in (Resend Audiences),
+  contact form and stock alert with Turnstile, order lookup by number and
+  e-mail, header search, recipes page, price per kilo, formats, cart
+  cross-sell, how-it-works band, Cloudflare Web Analytics switch, CMS
+  collection "Avis clients" and new settings, owner guide recipes, privacy
+  policy and legal notes updated, Hello Bank answer in the client letter.
+  Gates: unit 241, worker 332, build 47 (1 skipped: no out-of-stock product),
+  e2e 92 (2 skipped, same reason).

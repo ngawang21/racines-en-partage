@@ -2,6 +2,8 @@
 import type { Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
 import type { Product } from '../content/schemas';
+import { reviewStats } from '../content/merge';
+import { loadReviews, reviewsFor } from '../i18n/locale';
 import ProductCard from './ProductCard.astro';
 
 interface Props {
@@ -25,13 +27,22 @@ const {
   class: className,
   reveal = false,
 } = Astro.props;
+const reviews = await loadReviews();
 ---
 
 <ul class:list={['product-grid', className]} role="list" {id} data-product-grid>
   {
     products.map((product, index) => (
       <li data-product-item data-reveal={reveal ? '' : undefined}>
-        <ProductCard {product} {locale} {t} {shopOpen} {index} {headingLevel} />
+        <ProductCard
+          {product}
+          {locale}
+          {t}
+          {shopOpen}
+          {index}
+          {headingLevel}
+          rating={reviewStats(reviewsFor(product.slug, reviews))}
+        />
       </li>
     ))
   }

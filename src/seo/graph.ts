@@ -1,12 +1,16 @@
 // The schema.org graph of one page (spec 7). Pure: no Astro import, unit tested.
 import { SITE, type Locale } from '../consts';
-import type { Product, Settings, Stock } from '../content/schemas';
+import { reviewStats } from '../content/merge';
+import type { Product, Review, Settings, Stock } from '../content/schemas';
 import { toCents } from '../i18n/format';
 
 export const STORE_ID = `${SITE.url}/#store`;
 export const WEBSITE_ID = `${SITE.url}/#website`;
 
-export type PageKind = 'home' | 'shop' | 'category' | 'product' | 'faq' | 'page';
+export type PageKind = 'home' | 'shop' | 'category' | 'product' | 'faq' | 'recipes' | 'page';
+
+/** At most this many `review` nodes on a Product (the aggregate counts them all). */
+export const MAX_REVIEW_NODES = 5;
 
 /** One breadcrumb step: a name and the absolute url it points at. */
 export interface Crumb {
@@ -44,6 +48,34 @@ export interface ProductGraph {
   originCountryCode?: string;
   /** The relay method: amount in cents and destination countries. */
   shipping?: { amountCents: number; countries: string[]; minDays?: number; maxDays?: number };
+  /** Published reviews: the aggregate and the first `MAX_REVIEW_NODES`, newest first. */
+  rating?: { count: number; average: number };
+  reviews?: ReviewGraph[];
+}
+
+export interface ReviewGraph {
+  author: string;
+  /** 1 to 5. */
+  rating: number;
+  /** ISO day. */
+  date: string;
+  title?: string;
+  text: string;
+  locale: Locale;
+}
+
+export interface RecipeGraph {
+  name: string;
+  /** Absolute URL of the recipe (the product page recipe anchor). */
+  url: string;
+  /** Absolute image URLs. */
+  images: string[];
+  ingredients: string[];
+  steps: string[];
+  /** "2 tasses", when known. */
+  yield?: string;
+  /** The product the recipe is printed on. */
+  productName?: string;
 }
 
 export interface GraphInput {
@@ -61,6 +93,8 @@ export interface GraphInput {
   items?: Crumb[];
   /** FAQ page */
   faq?: Array<{ question: string; answer: string }>;
+  /** Recipes page */
+  recipes?: RecipeGraph[];
 }
 
 type Node = Record<string, unknown>;
@@ -115,7 +149,39 @@ const PAGE_TYPE: Record<PageKind, string> = {
   shop: 'CollectionPage',
   category: 'CollectionPage',
   faq: 'FAQPage',
+  recipes: 'CollectionPage',
 };
+
+function reviewNode(r: ReviewGraph): Node {
+  return {
+    '@type': 'Review',
+    author: { '@type': 'Person', name: r.author },
+    datePublished: r.date,
+    ...(r.title ? { name: r.title } : {}),
+    reviewBody: r.text,
+    inLanguage: r.locale,
+    reviewRating: { '@type': 'Rating', ratingValue: r.rating, bestRating: 5, worstRating: 1 },
+  };
+}
+
+function recipeNode(canonical: string, r: RecipeGraph, index: number): Node {
+  return {
+    '@type': 'Recipe',
+    '@id': `${canonical}#recipe-${index + 1}`,
+    name: r.name,
+    url: r.url,
+    ...(r.images.length > 0 ? { image: r.images } : {}),
+    ...(r.productName ? { description: r.productName } : {}),
+    author: { '@id': STORE_ID },
+    ...(r.yield ? { recipeYield: r.yield } : {}),
+    ...(r.ingredients.length > 0 ? { recipeIngredient: r.ingredients } : {}),
+    recipeInstructions: r.steps.map((text, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      text,
+    })),
+  };
+}
 
 function productNode(input: GraphInput, p: ProductGraph): Node {
   const offer: Node = {
@@ -168,19 +234,35 @@ function productNode(input: GraphInput, p: ProductGraph): Node {
       ? { countryOfOrigin: { '@type': 'Country', name: p.originCountryCode } }
       : {}),
     offers: offer,
+    ...(p.rating && p.rating.count > 0
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: p.rating.average,
+            reviewCount: p.rating.count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
+    ...(p.reviews && p.reviews.length > 0
+      ? { review: p.reviews.slice(0, MAX_REVIEW_NODES).map(reviewNode) }
+      : {}),
   };
 }
 
 /**
  * Product node input from a merged product: offer in EUR, shipping details
  * from the relay method (the first enabled method when relay is off), delivery
- * days read from its French estimate ("3 à 5 jours ouvrés").
+ * days read from its French estimate ("3 à 5 jours ouvrés"), and the rating
+ * of its published reviews (newest first) when there is at least one.
  */
 export function productGraphInput(
   p: Product,
   settings: Settings,
   imageUrls: string[],
   categoryName?: string,
+  reviews: readonly Review[] = [],
 ): ProductGraph {
   const enabled = settings.shipping.filter((s) => s.enabled);
   const method = enabled.find((s) => s.id === 'relay') ?? enabled[0];
@@ -201,6 +283,19 @@ export function productGraphInput(
       countries: method.countries,
       ...(days ? { minDays: Number(days[1]), maxDays: Number(days[2]) } : {}),
     },
+    ...(reviews.length > 0
+      ? {
+          rating: reviewStats(reviews),
+          reviews: reviews.slice(0, MAX_REVIEW_NODES).map((r) => ({
+            author: r.author,
+            rating: r.rating,
+            date: r.date,
+            ...(r.title ? { title: r.title } : {}),
+            text: r.text,
+            locale: r.locale,
+          })),
+        }
+      : {}),
   };
 }
 
@@ -262,6 +357,11 @@ export function buildGraph(input: GraphInput): { '@context': string; '@graph': N
         url: item.url,
       })),
     };
+  }
+  if (kind === 'recipes' && input.recipes?.length) {
+    const nodes = input.recipes.map((r, i) => recipeNode(canonical, r, i));
+    page.hasPart = nodes.map((n) => ({ '@id': n['@id'] }));
+    graph.push(...nodes);
   }
   if (kind === 'faq' && input.faq?.length) {
     page.mainEntity = input.faq.map((q) => ({

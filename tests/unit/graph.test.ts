@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { join } from 'node:path';
 import { mergeProduct } from '../../src/content/merge';
-import { settingsSchema } from '../../src/content/schemas';
+import { settingsSchema, type Review } from '../../src/content/schemas';
 import {
+  MAX_REVIEW_NODES,
   STORE_ID,
   WEBSITE_ID,
   availability,
@@ -13,13 +14,14 @@ import {
   serializeGraph,
   type GraphInput,
 } from '../../src/seo/graph';
+import { toCents } from '../../src/i18n/format';
 import { CONTENT, readYaml, yamlFolder } from './helpers';
 
 const store: GraphInput['store'] = {
   name: 'Racines en Partage',
   description: 'Poudres et tisanes',
   slogan: 'Deux terres. Un rituel. Un bien-être à partager.',
-  email: 'racinesenpartage@outlook.com',
+  email: 'racinesenpartage@gmail.com',
   telephone: '+33775689108',
   address: { street: '9 Rue du Marché', postcode: '95400', city: 'Arnouville', country: 'FR' },
   logo: 'https://racinesenpartage.fr/icons/icon-512.png',
@@ -109,7 +111,7 @@ describe('seo graph', () => {
     expect(product?.weight).toEqual({ '@type': 'QuantitativeValue', value: 100, unitCode: 'GRM' });
     expect(product?.offers).toMatchObject({
       '@type': 'Offer',
-      price: '8.90',
+      price: schemaPrice(toCents(moringa.price)),
       priceCurrency: 'EUR',
       availability: 'https://schema.org/InStock',
       itemCondition: 'https://schema.org/NewCondition',
@@ -128,6 +130,99 @@ describe('seo graph', () => {
       maxValue: 5,
     });
     expect(node(input, 'ItemPage')?.mainEntity).toEqual({ '@id': `${input.canonical}#product` });
+  });
+  it('has no rating without reviews', () => {
+    const product = productGraphInput(moringa, settings, []);
+    expect(product.rating).toBeUndefined();
+    const out = node({ ...home, kind: 'product', product }, 'Product');
+    expect(out?.aggregateRating).toBeUndefined();
+    expect(out?.review).toBeUndefined();
+  });
+  it('adds the aggregate rating and the first five reviews', () => {
+    const reviews: Review[] = Array.from({ length: 7 }, (_, i) => ({
+      id: `r${i}`,
+      product: moringa.slug,
+      rating: i === 0 ? 4 : 5,
+      author: `Client ${i}`,
+      locale: i === 1 ? 'en' : 'fr',
+      date: `2026-11-0${7 - i}`,
+      order: '',
+      verified: true,
+      published: true,
+      title: i === 0 ? 'Très bon' : '',
+      text: 'Un vrai goût de feuille, très doux.',
+      reply: '',
+    }));
+    const input: GraphInput = {
+      ...home,
+      kind: 'product',
+      canonical: 'https://racinesenpartage.fr/produits/poudre-de-moringa-100g/',
+      product: productGraphInput(moringa, settings, [], 'Poudres', reviews),
+    };
+    const product = node(input, 'Product');
+    expect(product?.aggregateRating).toEqual({
+      '@type': 'AggregateRating',
+      ratingValue: 4.9,
+      reviewCount: 7,
+      bestRating: 5,
+      worstRating: 1,
+    });
+    expect(product?.review).toHaveLength(MAX_REVIEW_NODES);
+    expect(product?.review[0]).toEqual({
+      '@type': 'Review',
+      author: { '@type': 'Person', name: 'Client 0' },
+      datePublished: '2026-11-07',
+      name: 'Très bon',
+      reviewBody: 'Un vrai goût de feuille, très doux.',
+      inLanguage: 'fr',
+      reviewRating: { '@type': 'Rating', ratingValue: 4, bestRating: 5, worstRating: 1 },
+    });
+    expect(product?.review[1].inLanguage).toBe('en');
+    expect(product?.review[1].name).toBeUndefined();
+  });
+  it('adds one Recipe per recipe on the recipes page', () => {
+    const canonical = 'https://racinesenpartage.fr/recettes/';
+    const input: GraphInput = {
+      ...home,
+      kind: 'recipes',
+      canonical,
+      recipes: [
+        {
+          name: 'Bissap glacé',
+          url: 'https://racinesenpartage.fr/produits/bissap/#recipe',
+          images: ['https://racinesenpartage.fr/_astro/b.webp'],
+          ingredients: ['20 g de fleurs', '1 l d’eau'],
+          steps: ['Infuser.', 'Filtrer.'],
+          yield: '1 litre',
+          productName: 'Fleurs d’hibiscus',
+        },
+        { name: 'Moringa', url: 'u', images: [], ingredients: [], steps: ['Mélanger.'] },
+      ],
+    };
+    expect(types(input)).toEqual(['OnlineStore', 'WebSite', 'CollectionPage', 'Recipe', 'Recipe']);
+    const recipe = node(input, 'Recipe');
+    expect(recipe).toEqual({
+      '@type': 'Recipe',
+      '@id': `${canonical}#recipe-1`,
+      name: 'Bissap glacé',
+      url: 'https://racinesenpartage.fr/produits/bissap/#recipe',
+      image: ['https://racinesenpartage.fr/_astro/b.webp'],
+      description: 'Fleurs d’hibiscus',
+      author: { '@id': STORE_ID },
+      recipeYield: '1 litre',
+      recipeIngredient: ['20 g de fleurs', '1 l d’eau'],
+      recipeInstructions: [
+        { '@type': 'HowToStep', position: 1, text: 'Infuser.' },
+        { '@type': 'HowToStep', position: 2, text: 'Filtrer.' },
+      ],
+    });
+    const second = buildGraph(input)['@graph'][4] as Record<string, unknown>;
+    expect(second.recipeIngredient).toBeUndefined();
+    expect(second.image).toBeUndefined();
+    expect(node(input, 'CollectionPage')?.hasPart).toEqual([
+      { '@id': `${canonical}#recipe-1` },
+      { '@id': `${canonical}#recipe-2` },
+    ]);
   });
   it('turns the FAQ into questions', () => {
     const faq = node({ ...home, kind: 'faq', faq: [{ question: 'Q ?', answer: 'R.' }] }, 'FAQPage');

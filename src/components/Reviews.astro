@@ -1,0 +1,239 @@
+---
+// "Avis clients" section of a product page (spec 2.1): average, stars and
+// count, the published reviews newest first (each in its own language), the
+// owner's reply, the verified badge, and the moderation notice French law
+// asks for (article L111-7-2 of the code de la consommation). Without a
+// review: the invitation sentence instead of the list.
+import type { Locale } from '../consts';
+import type { LocaleContent } from '../content/locale-schema';
+import type { Review } from '../content/schemas';
+import { reviewStats } from '../content/merge';
+import { interpolate } from '../i18n/fallback';
+import { formatDate, formatRating } from '../i18n/format';
+import Icon from './Icon.astro';
+import Stars from './Stars.astro';
+import { languageName, ratingLabel, reviewCountLabel } from './reviews';
+
+interface Props {
+  reviews: Review[];
+  locale: Locale;
+  t: LocaleContent;
+  id?: string;
+}
+const { reviews, locale, t, id = 'reviews' } = Astro.props;
+const stats = reviewStats(reviews);
+const titleId = `${id}-title`;
+---
+
+<section class="band-paper reviews" {id} aria-labelledby={titleId}>
+  <div class="container section reviews-layout">
+    <div class="reviews-side">
+      <p class="eyebrow">{t.reviews.kicker}</p>
+      <h2 id={titleId}>{t.reviews.title}</h2>
+      {
+        stats.count > 0 ? (
+          <div class="overall">
+            <p class="overall-avg">
+              <span class="visually-hidden">{t.reviews.average} </span>
+              {formatRating(stats.average, locale)}
+              <span class="overall-max" aria-hidden="true">
+                /5
+              </span>
+            </p>
+            <div class="overall-meta">
+              <Stars
+                rating={stats.average}
+                label={ratingLabel(stats.average, t, locale)}
+                size={20}
+              />
+              <p>{reviewCountLabel(stats.count, t, locale)}</p>
+            </div>
+          </div>
+        ) : (
+          <div class="empty">
+            <p class="empty-title">{t.reviews.emptyTitle}</p>
+            <p>{t.reviews.empty}</p>
+          </div>
+        )
+      }
+      <p class="moderation">{t.reviews.moderation}</p>
+    </div>
+
+    {
+      stats.count > 0 && (
+        <ol class="reviews-list" role="list">
+          {reviews.map((r) => {
+            const foreign = r.locale !== locale;
+            return (
+              <li>
+                <article class="review" lang={foreign ? r.locale : undefined}>
+                  <div class="review-head">
+                    <Stars rating={r.rating} label={ratingLabel(r.rating, t, locale)} size={16} />
+                    {r.verified && (
+                      <span class="verified" lang={foreign ? locale : undefined}>
+                        <Icon name="shield" size={16} />
+                        {t.reviews.verified}
+                      </span>
+                    )}
+                  </div>
+                  {r.title && <h3 class="review-title">{r.title}</h3>}
+                  <p class="review-text">{r.text}</p>
+                  <p class="review-by" lang={foreign ? locale : undefined}>
+                    {interpolate(t.reviews.by, {
+                      author: r.author,
+                      date: formatDate(r.date, locale),
+                    })}
+                    {foreign && (
+                      <>
+                        {' '}
+                        <span class="review-lang">
+                          {interpolate(t.reviews.writtenIn, {
+                            language: languageName(r.locale, locale),
+                          })}
+                        </span>
+                      </>
+                    )}
+                  </p>
+                  {r.reply && (
+                    <blockquote class="reply" lang={foreign ? locale : undefined}>
+                      <p class="reply-title">{t.reviews.reply}</p>
+                      <p>{r.reply}</p>
+                    </blockquote>
+                  )}
+                </article>
+              </li>
+            );
+          })}
+        </ol>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .reviews {
+    border-top: 1px solid var(--kraft);
+  }
+  .reviews-layout {
+    display: grid;
+    gap: var(--space-8);
+  }
+  @media (min-width: 900px) {
+    .reviews-layout {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.8fr);
+      gap: clamp(3rem, 1rem + 4vw, 5rem);
+      align-items: start;
+    }
+    .reviews-side {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-6));
+    }
+  }
+  .reviews-side h2 {
+    margin-top: var(--space-3);
+    font-size: var(--fs-4);
+  }
+  .overall {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+  }
+  .overall-avg {
+    color: var(--forest);
+    font-family: var(--font-display);
+    font-size: clamp(2.75rem, 2.3rem + 2vw, 3.5rem);
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .overall-max {
+    color: var(--ink-2);
+    font-size: 0.4em;
+    font-weight: 500;
+  }
+  .overall-meta {
+    display: grid;
+    gap: 4px;
+    color: var(--ink-2);
+    font-size: var(--fs--1);
+  }
+  .empty {
+    margin-top: var(--space-6);
+    padding: var(--space-6);
+    border: 1px dashed var(--kraft-deep);
+    border-radius: var(--radius-m);
+    background: var(--cream);
+  }
+  .empty-title {
+    margin-bottom: var(--space-2);
+    color: var(--forest);
+    font-weight: 600;
+  }
+  .moderation {
+    margin-top: var(--space-6);
+    color: var(--ink-2);
+    font-size: var(--fs--1);
+    line-height: 1.5;
+  }
+  .reviews-list {
+    display: grid;
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+  }
+  .review {
+    padding: clamp(var(--space-4), 1rem + 1vw, var(--space-6));
+    border: 1px solid var(--kraft);
+    border-radius: var(--radius-m);
+    background: var(--cream);
+  }
+  .review-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+  }
+  .verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--leaf-ink);
+    font-size: var(--fs--1);
+    font-weight: 600;
+  }
+  .review-title {
+    margin-top: var(--space-3);
+    font-size: var(--fs-1);
+    line-height: 1.3;
+  }
+  .review-text {
+    margin-top: var(--space-3);
+    line-height: 1.6;
+  }
+  .review-title + .review-text {
+    margin-top: var(--space-2);
+  }
+  .review-by {
+    margin-top: var(--space-3);
+    color: var(--ink-2);
+    font-size: var(--fs--1);
+  }
+  .review-lang {
+    font-style: italic;
+  }
+  .reply {
+    margin: var(--space-4) 0 0;
+    padding: var(--space-3) var(--space-4);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 var(--radius-s) var(--radius-s) 0;
+    background: var(--paper);
+    font-size: 0.9375rem;
+  }
+  .reply-title {
+    margin-bottom: 4px;
+    color: var(--forest);
+    font-weight: 600;
+  }
+</style>

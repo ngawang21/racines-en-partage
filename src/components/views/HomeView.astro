@@ -8,16 +8,19 @@ import {
   loadLocale,
   loadPage,
   loadProducts,
+  loadReviews,
   loadSettings,
 } from '../../i18n/locale';
 import { routePath } from '../../i18n/routing';
 import CategoryTiles from '../CategoryTiles.astro';
 import Commitment from '../Commitment.astro';
 import Hero from '../Hero.astro';
+import HowItWorks from '../HowItWorks.astro';
 import Ornament from '../Ornament.astro';
 import ProductGrid from '../ProductGrid.astro';
 import Reassurance from '../Reassurance.astro';
 import RecipeCards from '../RecipeCards.astro';
+import ReviewsBand from '../ReviewsBand.astro';
 import SectionHead from '../SectionHead.astro';
 import StoryBand from '../StoryBand.astro';
 
@@ -25,12 +28,13 @@ interface Props {
   locale: Locale;
 }
 const { locale } = Astro.props;
-const [t, home, products, categories, settings] = await Promise.all([
+const [t, home, products, categories, settings, reviews] = await Promise.all([
   loadLocale(locale),
   loadPage(locale, 'home'),
   loadProducts(locale),
   loadCategories(locale),
   loadSettings(),
+  loadReviews(),
 ]);
 const featured = products.filter((p) => p.featured).slice(0, 4);
 const bySlug = new Map(products.map((p) => [p.slug, p]));
@@ -66,6 +70,8 @@ const aboutHref = routePath('about', locale);
     />
   </section>
 
+  <HowItWorks {t} reveal />
+
   <StoryBand
     eyebrow={t.nav.about}
     title={home.storyTitle}
@@ -77,6 +83,8 @@ const aboutHref = routePath('about', locale);
     imageAlt=""
     link={{ href: aboutHref, label: home.hero.cta.secondary }}
   />
+
+  <ReviewsBand {reviews} {products} {locale} {t} reveal />
 
   <section class="container section" aria-labelledby="categories-title">
     <SectionHead id="categories-title" title={home.categoriesTitle} eyebrow={t.nav.shop} reveal />
@@ -92,6 +100,7 @@ const aboutHref = routePath('about', locale);
       id="recipes-title"
       title={home.recipesTitle}
       eyebrow={t.shop.recipesKicker}
+      link={{ href: routePath('recipes', locale), label: t.recipes.viewAll }}
       reveal
     />
     <RecipeCards products={recipeProducts} {locale} {t} reveal />

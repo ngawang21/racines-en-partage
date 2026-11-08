@@ -10,9 +10,14 @@ English at `/en/`, cart in the browser, Stripe Checkout and Mondial Relay
 through a Cloudflare Worker on `/api/*`, Sveltia CMS at `/admin/`. Private
 repository `ngawang21/racines-en-partage`, work on `main`.
 
-Source of truth: `docs/superpowers/specs/2026-11-01-racines-en-partage-shop-design.md`.
+Source of truth: `docs/superpowers/specs/2026-11-01-racines-en-partage-shop-design.md`
+(v1) and `docs/superpowers/specs/2026-11-08-iteration-3-features-design.md`
+(reviews, newsletter, forms, order lookup, search, recipes, unit prices).
 Build order, file ownership and the contracts between parallel workers:
-`docs/superpowers/plans/2026-11-01-racines-en-partage-implementation-plan.md`.
+`docs/superpowers/plans/2026-11-01-racines-en-partage-implementation-plan.md`
+and `docs/superpowers/plans/2026-11-08-iteration-3-implementation-plan.md`.
+The reference-site study behind the feature choices is
+`docs/superpowers/specs/2026-11-08-reference-sites-study.md`.
 
 ## Commands
 
@@ -50,15 +55,19 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   files keep plain spaces.
 - `src/content/{products,categories,pages}/{fr,en}/*.yml`,
   `src/content/legal/{fr,en}/{legal,terms,privacy}.md`,
-  `src/content/settings/shop.yml` (singleton), `src/content/locales/{fr,en}.json`.
+  `src/content/settings/shop.yml` (singleton), `src/content/locales/{fr,en}.json`,
+  `src/content/reviews/<product slug>--<order>.yml` (customer reviews, not
+  localised, written by the Worker or the owner, shown when `published`).
 - `src/content.config.ts`: glob collections. Products, categories and pages
   only assert "a YAML mapping" at the collection level (one collection holds
   a complete French file and a partial English one); the strict schemas run
   in the loaders.
 - `src/i18n/locale.ts` (build time, imports `astro:content`): `loadLocale`,
   `loadSettings`, `loadProducts`, `loadProduct`, `loadCategories`,
-  `loadPage`, `loadLegal`, `legalTokens`. Always read content through these,
-  never with `getCollection` directly.
+  `loadPage`, `loadLegal`, `loadReviews`, `reviewsFor`, `legalTokens`,
+  `formatSiren`. Always read content through these, never with
+  `getCollection` directly. `merge.ts` also holds `formatsOf` (100 g and
+  200 g siblings by French name), `reviewStats`, `publishedReviews`.
 - `src/i18n/fallback.ts` (pure): `deepFallback`, `interpolate`,
   `interpolateHtml`, `escapeHtml`, `pickLabel`.
 - `src/i18n/routing.ts` (pure, also imported by `astro.config.mjs`):
@@ -66,7 +75,23 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   `routeUrl`, `alternatesFor`, `matchRoute`, `getLocaleFromUrl`,
   `noindexPathFragments`. The spec's `404` row is the key `notFound`.
 - `src/i18n/format.ts` (pure): `formatPrice`, `toCents`, `formatWeight`,
-  `formatPhone`, `phoneE164`, `formatDate`, `localiseNutrition`.
+  `formatUnitPrice` (price per kilo, a legal requirement for pre-packaged
+  food), `formatRating`, `formatPhone`, `phoneE164`, `formatDate`,
+  `localiseNutrition`.
+- `src/search/match.ts` (pure): `buildIndex`, `search` over the embedded
+  client catalogue (name, category name, `keywords`); `src/scripts/search.ts`
+  drives `SearchDialog.astro` from the header.
+- `src/forms/`: `kit.ts` (validation, busy state, error mapping), `forms.ts`
+  (contact, newsletter, stock alert, newsletter landing), `turnstile.ts`
+  (loads Turnstile on first focus when `settings.forms.turnstileSiteKey` is
+  set), `review-token.ts` (decodes the review token payload for display only).
+- `src/cart/`: besides the cart, `order-view.ts` (shared order renderer of
+  the thanks and lookup pages), `page-lookup.ts`, `page-review.ts`,
+  `cross-sell.ts` (`pickCrossSell`), `cross-sell-view.ts`.
+- `worker/`: `tokens.ts` (HMAC tokens), `forms.ts` (contact, newsletter),
+  `reviews.ts` (`submitReview`, `inviteReviews` cron), `yaml.ts`,
+  `github.ts` (Contents API), `turnstile.ts`; `orders.ts` has
+  `findOrderByNumber`. `worker/README.md` lists every route.
 - `src/images.ts`: `resolveAsset(path)` and `hasAsset(path)` over
   `import.meta.glob('/src/assets/**/*.{webp,png,jpg,svg}')`.
 - `src/catalog/build.ts` (pure): `buildCatalog` (the Worker's
@@ -155,14 +180,33 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
 - The `assetsInlineLimit` guard keeps component scripts external so the CSP
   `script-src 'self'` holds. Only `application/ld+json` and
   `application/json` scripts may be inline (build test).
-- Legal Markdown is rendered first, then `{company}`, `{siren}`,
+- Legal Markdown is rendered first, then `{company}`, `{siren}`, `{siret}`,
   `{address}`, `{email}`, `{phone}`, `{host}` and `{vat}` are replaced in
   the HTML with escaped values. The Markdown renderer turns straight
   apostrophes into typographic ones.
-- An empty SIREN renders "en cours d'immatriculation"; `pnpm launch-check`
-  fails until it is set, until `launch.pricesConfirmed` is true and while a
-  `TODO` remains in a legal text (publication director, mediator).
-- Prettier formats YAML too and rewrites long flow mappings in `shop.yml`.
+- The settings hold `brand.siret` (14 digits); `{siren}` is its first nine
+  digits. An empty SIRET renders "en cours d'immatriculation";
+  `pnpm launch-check` fails while it is empty or fails the Luhn check, until
+  `launch.pricesConfirmed` is true (the two cacao prices are still
+  placeholders) and while a `TODO` remains in a legal text (publication
+  director, mediator).
+- `.prettierignore` excludes the owner-edited content folders
+  (`src/content/{products,categories,pages,legal,reviews,settings}`): Sveltia
+  writes its own YAML style and a CMS save must never fail `pnpm check`. The
+  unit tests still parse every file; format them by hand when you edit them.
+- Feature switches the owner controls (`settings.newsletter.enabled`,
+  `settings.newsletter.welcomeCode`, `settings.reviews.enabled`) reach the
+  Worker through `features` in `dist/catalog.json`; the Worker also disables
+  a route when its secret is missing (`FORMS_SECRET`, `RESEND_AUDIENCE_ID`,
+  `GITHUB_TOKEN`). Turnstile: the CMS site key and `TURNSTILE_SECRET_KEY` are
+  both set or both empty, otherwise every form fails with `CAPTCHA_FAILED`.
+- Reviews reach the repository as commits made by the Worker through the
+  GitHub Contents API (`GITHUB_TOKEN`, contents read and write on this
+  repository only) with `published: false`; nothing shows until the owner
+  toggles it in Sveltia. The invitation cron runs daily (`wrangler.jsonc`
+  `triggers`), 7 days after the order, idempotent through session metadata.
+- `playwright.config.ts` caps local workers at 16: the development machine has
+  128 cores and unbounded workers made the mobile checkout tests time out.
 - Barley contains gluten: the roasted barley file does not repeat the
   label's "sans gluten" and lists no gluten under `free_from`. The cacao
   nibs table repeats the moringa values and stays hidden

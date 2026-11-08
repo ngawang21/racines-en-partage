@@ -1,0 +1,107 @@
+---
+// "Comment ça marche" on the home page (spec 2.12): order, choose a pickup
+// point or the Arnouville pickup, receive and share.
+import type { LocaleContent } from '../content/locale-schema';
+import Icon, { type IconName } from './Icon.astro';
+import SectionHead from './SectionHead.astro';
+
+interface Props {
+  t: LocaleContent;
+  /** Fade up on scroll (home page, reveal.ts). */
+  reveal?: boolean;
+}
+const { t, reveal = false } = Astro.props;
+const s = t.shop.steps;
+const steps: Array<{ icon: IconName; title: string; text: string }> = [
+  { icon: 'cart', title: s.orderTitle, text: s.orderText },
+  { icon: 'pin', title: s.deliveryTitle, text: s.deliveryText },
+  { icon: 'flower', title: s.shareTitle, text: s.shareText },
+];
+---
+
+<section class="container section how" aria-labelledby="how-title">
+  <SectionHead id="how-title" title={t.shop.howTitle} eyebrow={t.shop.howKicker} {reveal} />
+  <ol class="steps" role="list">
+    {
+      steps.map((step, i) => (
+        <li class="step" data-reveal={reveal ? '' : undefined}>
+          <span class="step-icon">
+            <Icon name={step.icon} size={26} />
+            <span class="step-n" aria-hidden="true">
+              {i + 1}
+            </span>
+          </span>
+          <div>
+            <h3 class="step-title">{step.title}</h3>
+            <p class="step-text">{step.text}</p>
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+</section>
+
+<style>
+  .how {
+    border-top: 1px solid var(--line);
+  }
+  .steps {
+    display: grid;
+    gap: var(--space-6);
+    margin: 0;
+    padding: 0;
+    counter-reset: step;
+  }
+  @media (min-width: 760px) {
+    .steps {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-8);
+    }
+  }
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+  @media (min-width: 760px) {
+    .step {
+      flex-direction: column;
+    }
+  }
+  .step-icon {
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 60px;
+    height: 60px;
+    border: 1px solid var(--kraft);
+    border-radius: 50%;
+    background: var(--paper);
+    color: var(--forest);
+  }
+  .step-n {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--forest);
+    color: var(--cream);
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .step-title {
+    font-size: var(--fs-2);
+    line-height: 1.25;
+  }
+  .step-text {
+    margin-top: var(--space-2);
+    max-width: 34ch;
+    color: var(--ink-2);
+  }
+</style>

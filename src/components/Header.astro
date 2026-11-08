@@ -2,7 +2,8 @@
 // Site header (spec 5.5). Markup contract with wave 2B: the cart button is
 // `button[data-cart-toggle][aria-controls="cart-drawer"]` holding
 // `span[data-cart-count]`. The mobile menu is a <details>: it works without
-// script; header-menu.ts adds Escape, close on navigation and bfcache.
+// script; header-menu.ts adds Escape, close on navigation and bfcache. The
+// search button opens SearchDialog (mounted right after the header).
 import { Image } from 'astro:assets';
 import medallion from '../assets/brand/medallion.webp';
 import { SITE, type Locale } from '../consts';
@@ -10,6 +11,7 @@ import type { LocaleContent } from '../content/locale-schema';
 import { routePath, type RouteKey } from '../i18n/routing';
 import Icon from './Icon.astro';
 import LanguagePill from './LanguagePill.astro';
+import SearchDialog from './SearchDialog.astro';
 
 interface Props {
   locale: Locale;
@@ -19,10 +21,14 @@ interface Props {
 }
 const { locale, routeKey, slug, t } = Astro.props;
 const home = routePath('home', locale);
+// "Racines" / "en Partage": the wordmark stacks on two lines on narrow phones.
+const [firstWord, ...others] = SITE.name.split(' ');
+const rest = others.join(' ');
 const active = (keys: RouteKey[]): 'page' | undefined =>
   keys.includes(routeKey) ? 'page' : undefined;
 const links = [
   { href: routePath('shop', locale), label: t.nav.shop, current: active(['shop', 'category']) },
+  { href: routePath('recipes', locale), label: t.nav.recipes, current: active(['recipes']) },
   { href: routePath('about', locale), label: t.nav.about, current: active(['about']) },
   { href: routePath('faq', locale), label: t.nav.faq, current: active(['faq']) },
   { href: routePath('contact', locale), label: t.nav.contact, current: active(['contact']) },
@@ -55,7 +61,17 @@ const links = [
 
     <a class="brand" href={home} aria-current={routeKey === 'home' ? 'page' : undefined}>
       <Image src={medallion} alt="" width={40} height={40} densities={[1, 2]} loading="eager" />
-      <span class="wordmark">{SITE.name}</span>
+      <span class="wordmark">
+        {firstWord}
+        {
+          rest && (
+            <>
+              {' '}
+              <span class="wordmark-rest">{rest}</span>
+            </>
+          )
+        }
+      </span>
     </a>
 
     <nav class="desktop-nav" aria-label={t.nav.primary}>
@@ -76,6 +92,16 @@ const links = [
       <LanguagePill {locale} {routeKey} {slug} label={t.a11y.language} class="desktop-pill" />
       <button
         type="button"
+        class="icon-btn search-toggle"
+        data-search-open
+        aria-controls="search-dialog"
+        aria-haspopup="dialog"
+      >
+        <Icon name="search" />
+        <span class="visually-hidden">{t.a11y.openSearch}</span>
+      </button>
+      <button
+        type="button"
         class="icon-btn cart-toggle"
         data-cart-toggle
         aria-controls="cart-drawer"
@@ -88,6 +114,7 @@ const links = [
     </div>
   </div>
 </header>
+<SearchDialog {locale} {t} />
 
 <script>
   import './header-menu';
@@ -137,7 +164,8 @@ const links = [
       transform: rotate(-8deg);
     }
   }
-  /* One line at every width: 17 px on a 360 px phone, 19 px from 400 px. */
+  /* One line from 430 px (19 px). Narrower phones, where the search and cart
+     buttons leave too little room, stack it: "Racines" over "en Partage". */
   .wordmark {
     overflow: hidden;
     font-family: var(--font-display);
@@ -150,9 +178,19 @@ const links = [
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  @media (max-width: 429px) {
+    .wordmark {
+      font-size: 1rem;
+      line-height: 1.05;
+      white-space: normal;
+    }
+    .wordmark-rest {
+      display: block;
+    }
+  }
   .desktop-nav ul {
     display: flex;
-    gap: var(--space-6);
+    gap: clamp(var(--space-4), 0.5rem + 1.2vw, var(--space-6));
     margin: 0;
   }
   .desktop-nav a,

@@ -7,7 +7,8 @@
     "contact": "Contact",
     "cart": "Panier",
     "menu": "Menu",
-    "primary": "Navigation principale"
+    "primary": "Navigation principale",
+    "recipes": "Recettes"
   },
   "footer": {
     "shopTitle": "La boutique",
@@ -25,7 +26,9 @@
     "email": "E-mail",
     "hours": "Horaires",
     "moreQuestions": "Une autre question ?",
-    "writeUs": "Écrivez-nous ou appelez-nous, nous répondons personnellement."
+    "writeUs": "Écrivez-nous ou appelez-nous, nous répondons personnellement.",
+    "lookup": "Suivre ma commande",
+    "recipes": "Recettes"
   },
   "shop": {
     "title": "La boutique",
@@ -52,7 +55,18 @@
     "landsTo": "Notre maison",
     "recipeCta": "Voir la recette",
     "otherCategories": "Nos autres univers",
-    "recipesKicker": "De l’étiquette à la tasse"
+    "recipesKicker": "De l’étiquette à la tasse",
+    "howTitle": "Comment ça marche",
+    "howKicker": "En trois gestes",
+    "steps": {
+      "orderTitle": "Commandez",
+      "orderText": "Choisissez vos sachets et réglez en ligne, paiement sécurisé.",
+      "deliveryTitle": "Choisissez votre Point Relais",
+      "deliveryText": "Ou le retrait à Arnouville, si vous êtes dans le coin.",
+      "shareTitle": "Recevez et partagez",
+      "shareText": "Votre colis arrive en quelques jours. Il ne reste qu’à préparer la tasse."
+    },
+    "unitPrice": "Prix au kilo"
   },
   "product": {
     "addToCart": "Ajouter au panier",
@@ -97,7 +111,12 @@
     "packagedBy": "Conditionné en France par l’ESAT Les Oliviers (Gennevilliers, 92)",
     "gallery": "Photos du produit",
     "imageOf": "Photo {n} sur {total}",
-    "galleryDuo": "{name}, photo d’ensemble avec un autre produit de la gamme"
+    "galleryDuo": "{name}, photo d’ensemble avec un autre produit de la gamme",
+    "unitPrice": "Prix au kilo",
+    "formats": "Format",
+    "vegetal": "100 % végétal, sans additif ni conservateur",
+    "stickyAdd": "Ajouter",
+    "stickyLabel": "Ajout rapide au panier"
   },
   "cart": {
     "title": "Votre panier",
@@ -131,7 +150,10 @@
     "deliveryNote": "Point Relais, domicile ou retrait gratuit à Arnouville : vous choisirez à l’étape suivante.",
     "emptyLead": "Nos poudres, tisanes, graines et notre cacao vous attendent.",
     "unitPrice": "{price} l’unité",
-    "secureNote": "Paiement sécurisé par Stripe"
+    "secureNote": "Paiement sécurisé par Stripe",
+    "crossSellTitle": "Complétez votre commande",
+    "crossSellAdd": "Ajouter",
+    "crossSellAddOf": "Ajouter {name} au panier"
   },
   "checkout": {
     "title": "Votre commande",
@@ -212,7 +234,13 @@
     "payment": "Le service de paiement ne répond pas. Merci de réessayer dans quelques minutes.",
     "priceChanged": "Un prix a changé depuis l’ouverture de cette page. Rechargez la page pour voir le prix à jour, puis validez à nouveau.",
     "rateLimited": "Trop de tentatives en peu de temps. Patientez une minute, puis réessayez.",
-    "unavailable": "La boutique est momentanément indisponible. Merci de réessayer dans quelques minutes."
+    "unavailable": "La boutique est momentanément indisponible. Merci de réessayer dans quelques minutes.",
+    "captchaFailed": "La vérification anti-robot n’a pas abouti. Rechargez la page, puis réessayez.",
+    "alreadyReviewed": "Vous avez déjà donné votre avis sur ce produit pour cette commande. Merci !",
+    "invalidToken": "Ce lien n’est plus valide. Utilisez le lien le plus récent reçu par e-mail.",
+    "orderNotFound": "Aucune commande ne correspond à ce numéro et à cette adresse e-mail. Vérifiez les deux, puis réessayez.",
+    "mailFailed": "L’envoi n’a pas abouti. Réessayez dans quelques minutes, ou écrivez-nous directement par e-mail.",
+    "featureDisabled": "Ce service est momentanément fermé. Écrivez-nous par e-mail si besoin."
   },
   "legal": {
     "updated": "Dernière mise à jour : {date}",
@@ -221,11 +249,134 @@
     "vatIncluded": "Prix TTC, TVA incluse au taux de {rate} %",
     "nav": "Textes légaux"
   },
-  "reviews": {},
-  "recipes": {},
-  "search": {},
-  "forms": {},
-  "lookup": {},
+  "reviews": {
+    "title": "Avis clients",
+    "kicker": "Ils l’ont goûté",
+    "countOne": "{count} avis",
+    "countMany": "{count} avis",
+    "outOf": "{average} sur 5",
+    "average": "Note moyenne",
+    "verified": "Achat vérifié",
+    "reply": "Réponse de Racines en Partage",
+    "by": "{author}, le {date}",
+    "writtenIn": "Avis rédigé en {language}",
+    "moderation": "Les avis sont relus par Racines en Partage avant publication ; les avis vérifiés proviennent d’une commande passée sur ce site.",
+    "emptyTitle": "Pas encore d’avis sur ce produit.",
+    "empty": "Vous l’avez goûté ? Vous recevrez une invitation à donner votre avis une semaine après votre commande.",
+    "bandTitle": "Ils en parlent",
+    "bandKicker": "Avis clients",
+    "seeAll": "Lire les avis"
+  },
+  "recipes": {
+    "metaTitle": "Petites recettes : nos produits, de l’étiquette à la tasse",
+    "metaDescription": "Les recettes imprimées sur nos sachets, réunies sur une page : boissons, desserts et petits gestes du quotidien avec nos poudres, fleurs et graines.",
+    "title": "Petites recettes",
+    "intro": "Chaque sachet porte une recette simple, imprimée sur son étiquette. Les voici réunies, de la boisson du matin au dessert.",
+    "stepsOne": "{count} étape",
+    "stepsMany": "{count} étapes",
+    "ingredientsOne": "{count} ingrédient",
+    "ingredientsMany": "{count} ingrédients",
+    "with": "Avec",
+    "empty": "Les recettes arrivent bientôt.",
+    "viewAll": "Toutes les recettes"
+  },
+  "search": {
+    "open": "Rechercher",
+    "title": "Rechercher un produit",
+    "label": "Rechercher",
+    "placeholder": "Moringa, bissap, tisane…",
+    "close": "Fermer la recherche",
+    "hint": "Le nom d’un produit, d’une plante ou d’une catégorie.",
+    "suggestions": "Nos incontournables",
+    "empty": "Aucun produit ne correspond à « {query} ».",
+    "resultsOne": "{count} produit trouvé",
+    "resultsMany": "{count} produits trouvés",
+    "viewAll": "Voir toute la boutique"
+  },
+  "forms": {
+    "required": "Ce champ est obligatoire.",
+    "emailInvalid": "Saisissez une adresse e-mail complète, par exemple nom@exemple.fr.",
+    "tooShort": "{min} caractères au minimum.",
+    "tooLong": "{max} caractères au maximum.",
+    "validation": "Certains champs sont à vérifier. Corrigez-les, puis envoyez à nouveau.",
+    "sending": "Envoi en cours…",
+    "noscript": "Ce formulaire a besoin de JavaScript ; écrivez-nous à {email}.",
+    "privacyLink": "politique de confidentialité",
+    "honeypot": "Laissez ce champ vide",
+    "contact": {
+      "title": "Écrivez-nous",
+      "lead": "Une question sur un produit, une commande ou une recette ? Nous répondons personnellement, en général sous 48 heures.",
+      "name": "Votre nom",
+      "email": "Votre e-mail",
+      "message": "Votre message",
+      "submit": "Envoyer le message",
+      "success": "Merci, votre message est bien parti. Nous vous répondons très vite par e-mail.",
+      "consent": "Vos coordonnées servent uniquement à vous répondre. Voir notre {privacy}."
+    },
+    "newsletter": {
+      "title": "La lettre de Racines en Partage",
+      "lead": "Nouveautés, recettes et retours en stock, une à deux fois par mois.",
+      "email": "Votre e-mail",
+      "submit": "Je m’inscris",
+      "success": "Vérifiez votre boîte mail pour confirmer votre inscription.",
+      "consent": "Un e-mail de confirmation vous est envoyé, désinscription en un clic à tout moment. Voir notre {privacy}."
+    },
+    "stock": {
+      "title": "Prévenez-moi du retour",
+      "lead": "Laissez votre e-mail : nous vous écrivons dès que {name} revient en stock.",
+      "email": "Votre e-mail",
+      "submit": "Me prévenir",
+      "success": "C’est noté. Nous vous écrivons dès son retour.",
+      "consent": "Votre e-mail sert uniquement à vous prévenir. Voir notre {privacy}."
+    },
+    "review": {
+      "metaTitle": "Donner votre avis",
+      "metaDescription": "Donnez votre avis sur les produits Racines en Partage que vous avez commandés.",
+      "title": "Votre avis compte",
+      "lead": "Dites-nous ce que vous avez pensé de votre commande. Chaque avis est relu avant d’être publié sur la boutique.",
+      "invalid": "Ce lien d’avis n’est pas valide. Utilisez le lien reçu par e-mail, ou écrivez-nous.",
+      "expired": "Ce lien d’avis a expiré. Si vous souhaitez tout de même partager votre avis, écrivez-nous.",
+      "contactLink": "Nous écrire",
+      "rating": "Votre note",
+      "star": "{count} sur 5",
+      "ratingRequired": "Choisissez une note de 1 à 5 étoiles.",
+      "author": "Prénom ou pseudonyme",
+      "authorHint": "Il s’affiche avec votre avis ; votre e-mail, jamais.",
+      "titleField": "Titre (facultatif)",
+      "text": "Votre avis",
+      "textHint": "Entre {min} et {max} caractères : goût, utilisation, recette préférée.",
+      "counter": "{count} sur {max} caractères",
+      "submit": "Envoyer mon avis",
+      "success": "Merci ! Votre avis sur {name} sera publié après relecture."
+    },
+    "landing": {
+      "metaTitle": "Lettre d’information",
+      "metaDescription": "Confirmation de votre inscription à la lettre de Racines en Partage.",
+      "title": "La lettre de Racines en Partage",
+      "neutral": "Nouveautés, recettes et retours en stock, une à deux fois par mois. Saisissez votre e-mail ci-dessous : nous vous envoyons un lien de confirmation.",
+      "okTitle": "Inscription confirmée",
+      "ok": "Merci ! Vous recevrez notre prochaine lettre : nouveautés, recettes et retours en stock.",
+      "invalidTitle": "Ce lien ne fonctionne plus",
+      "invalid": "Le lien de confirmation a expiré ou n’est pas valide. Inscrivez-vous à nouveau ci-dessous : nous vous envoyons un nouveau lien.",
+      "toShop": "Découvrir la boutique"
+    }
+  },
+  "lookup": {
+    "metaTitle": "Suivre ma commande",
+    "metaDescription": "Retrouvez le détail de votre commande Racines en Partage avec son numéro et votre adresse e-mail.",
+    "title": "Suivre ma commande",
+    "lead": "Saisissez le numéro de commande reçu par e-mail et l’adresse e-mail utilisée pour commander.",
+    "number": "Numéro de commande",
+    "numberHint": "Il figure dans l’e-mail de confirmation, par exemple X9Y8Z7W6.",
+    "email": "Adresse e-mail",
+    "submit": "Retrouver ma commande",
+    "searching": "Recherche de votre commande…",
+    "found": "Commande retrouvée.",
+    "again": "Rechercher une autre commande",
+    "carrier": "Le suivi du colis vous parvient du transporteur : SMS et e-mail de Mondial Relay, ou lien de suivi Colissimo.",
+    "help": "Vous ne retrouvez pas votre commande ? {contact}",
+    "contactLink": "Écrivez-nous"
+  },
   "a11y": {
     "skip": "Aller au contenu",
     "openCart": "Ouvrir le panier",
@@ -237,6 +388,7 @@
     "announcement": "Annonce",
     "breadcrumb": "Fil d’Ariane",
     "newTab": "(s’ouvre dans un nouvel onglet)",
-    "medallionAlt": "Médaillon Racines en Partage : une fleur d’hibiscus et des feuilles"
+    "medallionAlt": "Médaillon Racines en Partage : une fleur d’hibiscus et des feuilles",
+    "openSearch": "Ouvrir la recherche"
   }
 }

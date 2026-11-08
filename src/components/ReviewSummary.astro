@@ -1,0 +1,78 @@
+---
+// Stars, average and count of a product's reviews (spec 2.1): under the price
+// on the product page (a link to the reviews section) and on product cards.
+// Renders nothing when there is no review.
+import type { Locale } from '../consts';
+import type { LocaleContent } from '../content/locale-schema';
+import { formatRating } from '../i18n/format';
+import Stars from './Stars.astro';
+import { ratingLabel, reviewCountLabel } from './reviews';
+
+interface Props {
+  stats: { count: number; average: number };
+  locale: Locale;
+  t: LocaleContent;
+  /** In-page link to the reviews section ("#reviews"); none on cards. */
+  href?: string;
+  size?: 'sm' | 'md';
+  class?: string;
+}
+const { stats, locale, t, href, size = 'sm', class: className } = Astro.props;
+const count = reviewCountLabel(stats.count, t, locale);
+const label = ratingLabel(stats.average, t, locale);
+const Tag = href ? 'a' : 'p';
+---
+
+{
+  stats.count > 0 && (
+    <Tag class:list={['review-summary', `review-summary-${size}`, className]} href={href}>
+      <Stars rating={stats.average} label={label} size={size === 'md' ? 18 : 14} />
+      <span class="avg" aria-hidden="true">
+        {formatRating(stats.average, locale)}
+      </span>
+      <span class="count">
+        <span class="visually-hidden">, </span>
+        {count}
+      </span>
+    </Tag>
+  )
+}
+
+<style>
+  .review-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    color: var(--ink-2);
+    font-size: var(--fs--1);
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+  .review-summary-md {
+    gap: 8px;
+    font-size: 0.9375rem;
+  }
+  .avg {
+    color: var(--forest);
+    font-weight: 600;
+  }
+  .count::before {
+    content: '·';
+    content: '·' / '';
+    margin-right: 6px;
+    color: var(--kraft-deep);
+  }
+  a.review-summary {
+    min-height: 44px;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 4px;
+    transition: text-decoration-color var(--dur-fast) ease;
+  }
+  @media (hover: hover) {
+    a.review-summary:hover {
+      text-decoration-color: var(--kraft-deep);
+    }
+  }
+</style>

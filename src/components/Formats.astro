@@ -1,0 +1,127 @@
+---
+// "Format" row of a product page (spec 2.5): one pill per format of the
+// family (same French name and category, see formatsOf), the current one
+// marked, each with its price per kilo so the saving reads at a glance.
+// Renders nothing for a product with a single format.
+import type { Locale } from '../consts';
+import type { LocaleContent } from '../content/locale-schema';
+import type { Product } from '../content/schemas';
+import { formatPrice, formatUnitPrice, formatWeight, toCents } from '../i18n/format';
+import { routePath } from '../i18n/routing';
+
+interface Props {
+  /** The product of the page. */
+  current: Product;
+  /** formatsOf(current, all), lightest first. */
+  formats: Product[];
+  locale: Locale;
+  t: LocaleContent;
+}
+const { current, formats, locale, t } = Astro.props;
+---
+
+{
+  formats.length > 1 && (
+    <div class="formats" role="group" aria-labelledby="formats-label">
+      <p class="formats-label" id="formats-label">
+        {t.product.formats}
+      </p>
+      <ul class="pills" role="list">
+        {formats.map((p) => {
+          const cents = toCents(p.price);
+          const weight = formatWeight(p.weightGrams, locale);
+          const isCurrent = p.slug === current.slug;
+          return (
+            <li>
+              <a
+                class="pill"
+                href={routePath('product', locale, p.slug)}
+                aria-current={isCurrent ? 'page' : undefined}
+              >
+                <span class="pill-main">
+                  <span class="pill-weight">{weight}</span>
+                  <span class="visually-hidden">, </span>
+                  <span class="pill-price">{formatPrice(cents, locale)}</span>
+                </span>
+                <span class="pill-unit">
+                  <span class="visually-hidden">{t.product.unitPrice} </span>
+                  {formatUnitPrice(cents, p.weightGrams, locale)}
+                </span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  )
+}
+
+<style>
+  .formats {
+    margin-top: var(--space-6);
+  }
+  .formats-label {
+    margin-bottom: var(--space-2);
+    color: var(--ink-2);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+  }
+  .pill {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 96px;
+    min-height: 52px;
+    padding: 6px 16px;
+    border: 1px solid var(--kraft-deep);
+    border-radius: var(--radius-s);
+    background: rgba(255, 255, 255, 0.55);
+    color: var(--forest);
+    line-height: 1.2;
+    text-decoration: none;
+    transition:
+      border-color var(--dur-fast) ease,
+      background-color var(--dur-fast) ease;
+  }
+  .pill-main {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .pill-weight {
+    font-weight: 600;
+  }
+  .pill-price {
+    font-size: 0.9375rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .pill-unit {
+    color: var(--ink-2);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .pill[aria-current] {
+    border-color: var(--forest);
+    background: var(--forest);
+    color: var(--cream);
+    box-shadow: inset 0 0 0 1px var(--forest);
+  }
+  .pill[aria-current] .pill-unit {
+    color: var(--cream-muted);
+  }
+  @media (hover: hover) {
+    .pill:not([aria-current]):hover {
+      border-color: var(--forest);
+      background: rgba(22, 58, 28, 0.04);
+    }
+  }
+</style>

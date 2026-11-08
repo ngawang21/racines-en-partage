@@ -7,7 +7,8 @@
     "contact": "Contact",
     "cart": "Basket",
     "menu": "Menu",
-    "primary": "Main navigation"
+    "primary": "Main navigation",
+    "recipes": "Recipes"
   },
   "footer": {
     "shopTitle": "The shop",
@@ -25,7 +26,9 @@
     "email": "E-mail",
     "hours": "Hours",
     "moreQuestions": "Another question?",
-    "writeUs": "Write to us or give us a call: we reply to every message ourselves."
+    "writeUs": "Write to us or give us a call: we reply to every message ourselves.",
+    "lookup": "Track my order",
+    "recipes": "Recipes"
   },
   "shop": {
     "title": "The shop",
@@ -52,7 +55,18 @@
     "landsTo": "Our home",
     "recipeCta": "See the recipe",
     "otherCategories": "Our other ranges",
-    "recipesKicker": "From the label to the cup"
+    "recipesKicker": "From the label to the cup",
+    "howTitle": "How it works",
+    "howKicker": "In three steps",
+    "steps": {
+      "orderTitle": "Order",
+      "orderText": "Pick your pouches and pay online, securely.",
+      "deliveryTitle": "Choose your pickup point",
+      "deliveryText": "Or collect your order in Arnouville if you are nearby.",
+      "shareTitle": "Receive and share",
+      "shareText": "Your parcel arrives within a few days. All that is left is to make the cup."
+    },
+    "unitPrice": "Price per kilo"
   },
   "product": {
     "addToCart": "Add to basket",
@@ -97,7 +111,12 @@
     "packagedBy": "Packed in France by ESAT Les Oliviers (Gennevilliers, 92)",
     "gallery": "Product photos",
     "imageOf": "Photo {n} of {total}",
-    "galleryDuo": "{name}, shown with another product from the range"
+    "galleryDuo": "{name}, shown with another product from the range",
+    "unitPrice": "Price per kilo",
+    "formats": "Size",
+    "vegetal": "100% plant-based, no additives or preservatives",
+    "stickyAdd": "Add",
+    "stickyLabel": "Quick add to basket"
   },
   "cart": {
     "title": "Your basket",
@@ -131,7 +150,10 @@
     "deliveryNote": "Pickup point, home delivery or free collection in Arnouville: you choose at the next step.",
     "emptyLead": "Our powders, herbal teas, seeds and cacao are waiting for you.",
     "unitPrice": "{price} each",
-    "secureNote": "Secure payment by Stripe"
+    "secureNote": "Secure payment by Stripe",
+    "crossSellTitle": "Complete your order",
+    "crossSellAdd": "Add",
+    "crossSellAddOf": "Add {name} to your basket"
   },
   "checkout": {
     "title": "Your order",
@@ -212,7 +234,13 @@
     "payment": "The payment service is not responding. Please try again in a few minutes.",
     "priceChanged": "A price has changed since this page was opened. Reload the page to see the current price, then confirm again.",
     "rateLimited": "Too many attempts in a short time. Please wait a minute, then try again.",
-    "unavailable": "The shop is briefly unavailable. Please try again in a few minutes."
+    "unavailable": "The shop is briefly unavailable. Please try again in a few minutes.",
+    "captchaFailed": "The anti-robot check did not go through. Reload the page, then try again.",
+    "alreadyReviewed": "You have already reviewed this product for this order. Thank you!",
+    "invalidToken": "This link is no longer valid. Please use the most recent link we e-mailed you.",
+    "orderNotFound": "No order matches this number and e-mail address. Check both, then try again.",
+    "mailFailed": "We could not send it. Try again in a few minutes, or write to us directly by e-mail.",
+    "featureDisabled": "This service is closed for now. Write to us by e-mail if you need anything."
   },
   "legal": {
     "updated": "Last updated: {date}",
@@ -221,11 +249,134 @@
     "vatIncluded": "Prices include VAT at {rate}%",
     "nav": "Legal texts"
   },
-  "reviews": {},
-  "recipes": {},
-  "search": {},
-  "forms": {},
-  "lookup": {},
+  "reviews": {
+    "title": "Customer reviews",
+    "kicker": "They tasted it",
+    "countOne": "{count} review",
+    "countMany": "{count} reviews",
+    "outOf": "{average} out of 5",
+    "average": "Average rating",
+    "verified": "Verified purchase",
+    "reply": "Reply from Racines en Partage",
+    "by": "{author}, {date}",
+    "writtenIn": "Review written in {language}",
+    "moderation": "Reviews are read by Racines en Partage before publication; verified reviews come from an order placed on this site.",
+    "emptyTitle": "No reviews of this product yet.",
+    "empty": "Tasted it? You will receive an invitation to review it one week after your order.",
+    "bandTitle": "What they say",
+    "bandKicker": "Customer reviews",
+    "seeAll": "Read the reviews"
+  },
+  "recipes": {
+    "metaTitle": "Little recipes: our products, from the label to the cup",
+    "metaDescription": "The recipes printed on our pouches, gathered on one page: drinks, desserts and small everyday rituals with our powders, flowers and seeds.",
+    "title": "Little recipes",
+    "intro": "Every pouch carries a simple recipe, printed on its label. Here they are together, from the morning drink to dessert.",
+    "stepsOne": "{count} step",
+    "stepsMany": "{count} steps",
+    "ingredientsOne": "{count} ingredient",
+    "ingredientsMany": "{count} ingredients",
+    "with": "With",
+    "empty": "Recipes are coming soon.",
+    "viewAll": "All recipes"
+  },
+  "search": {
+    "open": "Search",
+    "title": "Search the shop",
+    "label": "Search",
+    "placeholder": "Moringa, hibiscus, tea…",
+    "close": "Close search",
+    "hint": "The name of a product, a plant or a category.",
+    "suggestions": "Featured",
+    "empty": "No product matches “{query}”.",
+    "resultsOne": "{count} product found",
+    "resultsMany": "{count} products found",
+    "viewAll": "Browse the whole shop"
+  },
+  "forms": {
+    "required": "This field is required.",
+    "emailInvalid": "Enter a complete e-mail address, such as name@example.com.",
+    "tooShort": "At least {min} characters.",
+    "tooLong": "At most {max} characters.",
+    "validation": "Some fields need checking. Correct them, then send again.",
+    "sending": "Sending…",
+    "noscript": "This form needs JavaScript; write to us at {email}.",
+    "privacyLink": "privacy policy",
+    "honeypot": "Leave this field empty",
+    "contact": {
+      "title": "Write to us",
+      "lead": "A question about a product, an order or a recipe? We reply personally, usually within 48 hours.",
+      "name": "Your name",
+      "email": "Your e-mail",
+      "message": "Your message",
+      "submit": "Send the message",
+      "success": "Thank you, your message is on its way. We will reply by e-mail very soon.",
+      "consent": "Your details are only used to reply to you. See our {privacy}."
+    },
+    "newsletter": {
+      "title": "The Racines en Partage letter",
+      "lead": "New products, recipes and restocks, once or twice a month.",
+      "email": "Your e-mail",
+      "submit": "Sign me up",
+      "success": "Check your inbox to confirm your subscription.",
+      "consent": "We send you a confirmation e-mail; unsubscribe in one click at any time. See our {privacy}."
+    },
+    "stock": {
+      "title": "Tell me when it is back",
+      "lead": "Leave your e-mail: we will write as soon as {name} is back in stock.",
+      "email": "Your e-mail",
+      "submit": "Notify me",
+      "success": "Noted. We will write to you as soon as it is back.",
+      "consent": "Your e-mail is only used to let you know. See our {privacy}."
+    },
+    "review": {
+      "metaTitle": "Leave a review",
+      "metaDescription": "Review the Racines en Partage products you ordered.",
+      "title": "Your review matters",
+      "lead": "Tell us what you thought of your order. Every review is read before it appears in the shop.",
+      "invalid": "This review link is not valid. Please use the link we e-mailed you, or write to us.",
+      "expired": "This review link has expired. If you would still like to share your thoughts, write to us.",
+      "contactLink": "Write to us",
+      "rating": "Your rating",
+      "star": "{count} out of 5",
+      "ratingRequired": "Choose a rating from 1 to 5 stars.",
+      "author": "First name or nickname",
+      "authorHint": "It appears with your review; your e-mail never does.",
+      "titleField": "Title (optional)",
+      "text": "Your review",
+      "textHint": "Between {min} and {max} characters: taste, how you use it, a favourite recipe.",
+      "counter": "{count} of {max} characters",
+      "submit": "Send my review",
+      "success": "Thank you! Your review of {name} will appear once it has been read."
+    },
+    "landing": {
+      "metaTitle": "Newsletter",
+      "metaDescription": "Confirmation of your subscription to the Racines en Partage letter.",
+      "title": "The Racines en Partage letter",
+      "neutral": "New products, recipes and restocks, once or twice a month. Enter your e-mail below: we will send you a confirmation link.",
+      "okTitle": "Subscription confirmed",
+      "ok": "Thank you! You will receive our next letter: new products, recipes and restocks.",
+      "invalidTitle": "This link no longer works",
+      "invalid": "The confirmation link has expired or is not valid. Sign up again below: we will send you a new link.",
+      "toShop": "Discover the shop"
+    }
+  },
+  "lookup": {
+    "metaTitle": "Track my order",
+    "metaDescription": "Find the details of your Racines en Partage order with its number and your e-mail address.",
+    "title": "Track my order",
+    "lead": "Enter the order number from your confirmation e-mail and the e-mail address you ordered with.",
+    "number": "Order number",
+    "numberHint": "You will find it in the confirmation e-mail, for example X9Y8Z7W6.",
+    "email": "E-mail address",
+    "submit": "Find my order",
+    "searching": "Looking for your order…",
+    "found": "Order found.",
+    "again": "Look up another order",
+    "carrier": "Parcel tracking comes from the carrier: texts and e-mails from Mondial Relay, or a Colissimo tracking link.",
+    "help": "Cannot find your order? {contact}",
+    "contactLink": "Write to us"
+  },
   "a11y": {
     "skip": "Skip to content",
     "openCart": "Open the basket",
@@ -237,6 +388,7 @@
     "announcement": "Announcement",
     "breadcrumb": "Breadcrumb",
     "newTab": "(opens in a new tab)",
-    "medallionAlt": "Racines en Partage medallion: a hibiscus flower and leaves"
+    "medallionAlt": "Racines en Partage medallion: a hibiscus flower and leaves",
+    "openSearch": "Open search"
   }
 }

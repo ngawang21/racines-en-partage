@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { OG_LOCALE, SITE, type Locale } from '../consts';
 import { alternatesFor, routeUrl, type RouteKey } from '../i18n/routing';
 import { buildGraph, robotsContent, serializeGraph, type GraphInput } from '../seo/graph';
+import { recipeGraphInputs } from './recipes';
 
 export interface OgImage {
   /** Absolute URL. */
@@ -28,7 +29,10 @@ const { locale, routeKey, slug, title, description, noindex, graph } = Astro.pro
 const canonical = routeUrl(routeKey, locale, slug);
 // A noindex page is not part of the indexable language set: no alternates.
 const alternates = noindex ? [] : alternatesFor(routeKey, slug);
-const jsonLd = buildGraph({ ...graph, canonical, locale, title, description });
+// The recipes page names its kind only; its Recipe nodes are built here.
+const recipes =
+  graph.recipes ?? (graph.kind === 'recipes' ? await recipeGraphInputs(locale) : undefined);
+const jsonLd = buildGraph({ ...graph, recipes, canonical, locale, title, description });
 const isProduct = graph.kind === 'product';
 // Social cards are the 1200 x 630 JPEGs of `pnpm og` in public/og/: one per
 // product, the default card elsewhere (and for a product added since the

@@ -1,14 +1,16 @@
 ---
 // One product in a grid (spec 5.4 shop): 4:5 framed photo, weight and origin,
-// name, price, stock status when it is not plain "in stock", and the add
-// button of the cart contract. The data-* attributes feed shop-filter.ts.
+// name, review summary when there are reviews, price with the price per kilo,
+// stock status when it is not plain "in stock", and the add button of the
+// cart contract. The data-* attributes feed shop-filter.ts.
 import type { Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
 import type { Product } from '../content/schemas';
-import { formatPrice, formatWeight, toCents } from '../i18n/format';
+import { formatPrice, formatUnitPrice, formatWeight, toCents } from '../i18n/format';
 import { routePath } from '../i18n/routing';
 import AddToCart from './AddToCart.astro';
 import Picture from './Picture.astro';
+import ReviewSummary from './ReviewSummary.astro';
 import { STOCK_CLASS, stockLabel } from './storefront';
 
 interface Props {
@@ -19,8 +21,10 @@ interface Props {
   /** Position in the default ("featured") order, for sorting back. */
   index?: number;
   headingLevel?: 'h2' | 'h3';
+  /** Published reviews of the product (reviewStats); nothing shown at count 0. */
+  rating?: { count: number; average: number };
 }
-const { product: p, locale, t, shopOpen, index = 0, headingLevel = 'h3' } = Astro.props;
+const { product: p, locale, t, shopOpen, index = 0, headingLevel = 'h3', rating } = Astro.props;
 const Heading = headingLevel;
 const href = routePath('product', locale, p.slug);
 const cents = toCents(p.price);
@@ -56,8 +60,15 @@ const weight = formatWeight(p.weightGrams, locale);
     <Heading class="card-title">
       <a href={href}>{p.name}</a>
     </Heading>
+    {rating && rating.count > 0 && <ReviewSummary stats={rating} {locale} {t} />}
     <div class="card-foot">
-      <p class="price card-price">{formatPrice(cents, locale)}</p>
+      <p class="card-prices">
+        <span class="price card-price">{formatPrice(cents, locale)}</span>{' '}
+        <span class="card-unit">
+          <span class="visually-hidden">{t.shop.unitPrice} </span>
+          {formatUnitPrice(cents, p.weightGrams, locale)}
+        </span>
+      </p>
       <AddToCart
         sku={p.sku}
         stock={p.stock}
@@ -198,9 +209,22 @@ const weight = formatWeight(p.weightGrams, locale);
     margin-top: auto;
     padding-top: var(--space-2);
   }
+  .card-prices {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+    margin: 0;
+  }
   .card-price {
     font-size: var(--fs-2);
     line-height: 1.2;
+  }
+  .card-unit {
+    color: var(--ink-2);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
   .card-foot :global(.card-add) {
     position: relative;

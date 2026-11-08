@@ -13,6 +13,11 @@ const product = (sku: string, unitAmount: number, stock: ClientProduct['stock'] 
     unitAmount,
     stock,
     image: `/_astro/${sku}.webp`,
+    category: 'poudres',
+    categoryName: 'Poudres',
+    keywords: [],
+    related: [],
+    featured: false,
   }) satisfies ClientProduct;
 
 const catalog: ClientCatalog = {

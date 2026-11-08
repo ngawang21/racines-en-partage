@@ -3,6 +3,8 @@ import {
   formatDate,
   formatPhone,
   formatPrice,
+  formatRating,
+  formatUnitPrice,
   formatWeight,
   localiseNutrition,
   nowrapWeight,
@@ -88,5 +90,37 @@ describe('formatDate and localiseNutrition', () => {
     expect(localiseNutrition('< 2,5 g', 'en')).toBe('< 2.5 g');
     expect(localiseNutrition('400 à 450 kcal', 'en')).toBe('400 to 450 kcal');
     expect(localiseNutrition('< 2,5 g', 'fr')).toBe('< 2,5 g');
+  });
+});
+
+describe('formatUnitPrice', () => {
+  it('prints the price per kilo with the French narrow no-break space', () => {
+    expect(formatUnitPrice(650, 100, 'fr')).toBe('65,00\u202f€/kg');
+    expect(formatUnitPrice(1190, 200, 'fr')).toBe('59,50\u202f€/kg');
+    expect(formatUnitPrice(650, 100, 'fr')).not.toContain('\u00a0');
+  });
+  it('prints the sign first in English', () => {
+    expect(formatUnitPrice(650, 100, 'en')).toBe('€65.00/kg');
+    expect(formatUnitPrice(1450, 1000, 'en')).toBe('€14.50/kg');
+  });
+  it('rounds half up to the cent', () => {
+    // 1 cent for 400 g is 2.5 cents a kilo: up to 3.
+    expect(formatUnitPrice(1, 400, 'en')).toBe('€0.03/kg');
+    // 890 cents for 150 g is 5933.33 cents a kilo: down to 5933.
+    expect(formatUnitPrice(890, 150, 'fr')).toBe('59,33\u202f€/kg');
+    // 1 cent for 3 g is 333.33: 333; 2 cents for 3 g is 666.67: 667.
+    expect(formatUnitPrice(2, 3, 'en')).toBe('€6.67/kg');
+  });
+  it('refuses fractional cents and a missing weight', () => {
+    expect(() => formatUnitPrice(8.9, 100, 'fr')).toThrow();
+    expect(() => formatUnitPrice(890, 0, 'fr')).toThrow();
+  });
+});
+
+describe('formatRating', () => {
+  it('prints one decimal in the locale', () => {
+    expect(formatRating(4.5, 'fr')).toBe('4,5');
+    expect(formatRating(5, 'fr')).toBe('5,0');
+    expect(formatRating(4.25, 'en')).toBe('4.3');
   });
 });
