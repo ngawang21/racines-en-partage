@@ -9,6 +9,7 @@ import type { Product } from '../content/schemas';
 import { formatFamilies, groupFormats, reviewStats } from '../content/merge';
 import { loadProducts, loadReviews, loadSettings, reviewsFor } from '../i18n/locale';
 import ProductCard from './ProductCard.astro';
+import { gridColumnsStyle } from './storefront';
 
 interface Props {
   products: Product[];
@@ -20,6 +21,12 @@ interface Props {
   class?: string;
   /** Cards loaded eagerly (the first row of a page that opens on the grid). */
   eager?: number;
+  /**
+   * Pick the column count per viewport so the last row never holds one card
+   * alone (shop and category pages; storefront.ts balancedColumns). The shop
+   * filter recomputes it for the visible cards.
+   */
+  balance?: boolean;
 }
 const {
   products,
@@ -30,6 +37,7 @@ const {
   id,
   class: className,
   eager = 0,
+  balance = false,
 } = Astro.props;
 const [reviews, settings, all, allFr] = await Promise.all([
   loadReviews(),
@@ -41,7 +49,14 @@ const showRatings = settings.reviews.enabled;
 const groups = groupFormats(products, all, formatFamilies(allFr));
 ---
 
-<ul class:list={['product-grid', className]} role="list" {id} data-product-grid>
+<ul
+  class:list={['product-grid', className]}
+  role="list"
+  {id}
+  data-product-grid
+  data-balance={balance ? '' : undefined}
+  style={balance ? gridColumnsStyle(groups.length) : undefined}
+>
   {
     groups.map(({ lead, formats }, index) => (
       <li data-product-item>

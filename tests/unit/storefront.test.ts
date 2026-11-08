@@ -1,8 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { CARD_POUCH, POUCH_BOXES, originCountry, pouchCrop } from '../../src/components/storefront';
 import {
+  CARD_POUCH,
+  GRID_RANGES,
+  POUCH_BOXES,
+  balancedColumns,
+  gridColumnsStyle,
+  originCountry,
+  pouchCrop,
+} from '../../src/components/storefront';
+import {
+  compareProducts,
+  featuredFirst,
   formatFamilies,
   formatsOf,
   groupFormats,
@@ -252,5 +262,67 @@ describe('publishedReviews and reviewsFor', () => {
   it('filters one product, keeping the order', () => {
     expect(reviewsFor('a', shown).map((r) => r.id)).toEqual(['new', 'old']);
     expect(reviewsFor('zzz', shown)).toEqual([]);
+  });
+});
+
+describe('featuredFirst (the shop default order)', () => {
+  const categoryOrder = new Map(
+    [...yamlFolder('categories', 'fr')].map(([slug, raw]) => [
+      slug,
+      (raw as { order: number }).order,
+    ]),
+  );
+  const catalogue = [...all].sort(compareProducts(categoryOrder, 'fr'));
+  it('opens on the home selection, in the home order, then the catalogue', () => {
+    const shop = featuredFirst(catalogue);
+    const home = catalogue.filter((p) => p.featured);
+    expect(shop.slice(0, home.length)).toEqual(home);
+    expect(shop.slice(home.length)).toEqual(catalogue.filter((p) => !p.featured));
+    // One card per family: the featured families lead the grid.
+    const leads = groupFormats(shop, all, formatFamilies(all)).map((g) => g.lead.slug);
+    expect(leads.slice(0, 4)).toEqual([
+      'poudre-de-baobab-100g',
+      'poudre-de-moringa-100g',
+      'fleurs-d-hibiscus-bissap-100g',
+      'tubercules-de-souchet-200g',
+    ]);
+    expect(leads[0]).not.toBe('poudre-d-orge-grillee-100g');
+  });
+  it('keeps the order within each part', () => {
+    const list = [
+      make('a', 'A', 100),
+      make('b', 'B', 100, 'poudres', { featured: true }),
+      make('c', 'C', 100),
+      make('d', 'D', 100, 'poudres', { featured: true }),
+    ];
+    expect(featuredFirst(list).map((p) => p.slug)).toEqual(['b', 'd', 'a', 'c']);
+  });
+});
+
+describe('balancedColumns', () => {
+  const lone = (count: number, columns: number) => count > columns && count % columns === 1;
+  it('never leaves a lone last card when the range allows another count', () => {
+    for (let count = 1; count <= 16; count += 1) {
+      for (const range of Object.values(GRID_RANGES)) {
+        const columns = balancedColumns(count, range);
+        expect(columns).toBeGreaterThanOrEqual(range.min);
+        expect(columns).toBeLessThanOrEqual(range.max);
+        const avoidable = [range.preferred, range.preferred + 1, range.preferred - 1].some(
+          (c) => c >= range.min && c <= range.max && !lone(count, c),
+        );
+        if (avoidable) expect(lone(count, columns), `${count} in ${columns}`).toBe(false);
+      }
+    }
+  });
+  it('shop (nine cards): three rows of three, then five and four from 1280 px', () => {
+    expect(gridColumnsStyle(9)).toBe('--cols-md: 3; --cols-lg: 3; --cols-xl: 5; --cols-xxl: 5');
+  });
+  it('a category of four: two rows of two, then one row of four', () => {
+    expect(gridColumnsStyle(4)).toBe('--cols-md: 2; --cols-lg: 4; --cols-xl: 4; --cols-xxl: 5');
+  });
+  it('keeps the preferred count for a single row and for counts that already balance', () => {
+    expect(gridColumnsStyle(2)).toBe('--cols-md: 3; --cols-lg: 3; --cols-xl: 4; --cols-xxl: 5');
+    expect(gridColumnsStyle(8)).toBe('--cols-md: 3; --cols-lg: 3; --cols-xl: 4; --cols-xxl: 5');
+    expect(balancedColumns(6, GRID_RANGES.xxl)).toBe(4);
   });
 });

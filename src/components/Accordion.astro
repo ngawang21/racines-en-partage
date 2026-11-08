@@ -113,6 +113,11 @@ const Heading = level;
     padding-bottom: var(--space-6);
     color: var(--forest);
   }
+  /* Focused by accordion-target.ts after a "#recipe" link: no ring, the
+     panel was just scrolled into view and is not a control. */
+  .acc-body:focus {
+    outline: none;
+  }
   .acc-body :global(p + p),
   .acc-body :global(p + ul),
   .acc-body :global(ul + p),

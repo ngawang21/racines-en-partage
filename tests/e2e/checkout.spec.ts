@@ -3,7 +3,7 @@
 // in the total, review 11), pick pickup, accept the terms, pay with
 // /api/checkout mocked, check the request body and the thanks page. Runs in
 // both locales; the "mobile" project repeats everything at 390 px.
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import {
   PATHS,
   SESSION_ID,
@@ -137,6 +137,9 @@ for (const locale of ['fr', 'en'] as const satisfies readonly Locale[]) {
 
     // Thanks: the mocked order, and the cart is cleared because it is paid.
     await expect(page.locator('[data-thanks-number]')).toContainText('RP-2026-0042');
+    await expect(page.locator('h1')).toHaveText(
+      locale === 'fr' ? 'Merci pour votre commande' : 'Thank you for your order',
+    );
     await expect(page.locator('[data-thanks-lines] li')).toHaveCount(2);
     await expect(page.locator('[data-thanks-total]')).toHaveText(
       await formatInPage(page, subtotal, locale),
@@ -178,9 +181,14 @@ test('relay without a chosen point, then an out-of-stock answer from the API', a
   await postcode.fill('');
   await expect(postcode).not.toHaveAttribute('aria-invalid', 'true');
 
+  // No point chosen: the message sits under the postcode field the focus
+  // goes to (review 13), in its live region, not below the delivery cards.
   await page.locator('[data-co-terms]').check();
   await page.locator('[data-co-pay]').click();
-  await expect(page.locator('[data-co-delivery-error]')).toHaveText(/point relais/i);
+  await expect(postcodeError).toHaveText('Choisissez un Point Relais.');
+  await expect(postcode).toBeFocused();
+  await expect(postcode).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.locator('[data-co-delivery-error]')).toBeHidden();
 
   // Home delivery, the API answers OUT_OF_STOCK: the line is flagged with a remove action.
   await page.locator('.method-card', { hasText: 'domicile' }).click();
@@ -201,16 +209,21 @@ test('relay without a chosen point, then an out-of-stock answer from the API', a
 test('thanks page stays neutral without a session or when the order lookup fails', async ({
   page,
 }) => {
+  // No order: the heading does not thank for one (review 13).
   await page.goto(PATHS.en.thanks);
-  await expect(page.locator('[data-thanks-lead]')).toContainText('Thank you for visiting');
+  await expect(page.locator('h1')).toHaveText('Thank you for visiting');
+  await expect(page.locator('[data-thanks-lead]')).toContainText('Placed an order?');
   await expect(page.locator('[data-thanks-order]')).toBeHidden();
+  await page.goto(PATHS.fr.thanks);
+  await expect(page.locator('h1')).toHaveText('Merci de votre visite');
+  await expect(page.locator('h1')).not.toContainText('commande');
 
   await page.route('**/api/orders/**', (route) =>
     json(route, 404, { error: { code: 'NOT_FOUND', message: 'x' } }),
   );
   await page.goto(`${PATHS.fr.thanks}?session_id=${SESSION_ID}`);
   await expect(page.locator('[data-thanks]')).not.toHaveAttribute('aria-busy', 'true');
-  await expect(page.locator('[data-thanks-lead]')).toContainText('Merci de votre visite');
+  await expect(page.locator('h1')).toHaveText('Merci de votre visite');
   await expect(page.locator('[data-thanks-order]')).toBeHidden();
 });
 
@@ -252,7 +265,12 @@ for (const [code, status, text] of [
   ['PRICE_CHANGED', 409, /prix a changé/],
   ['RATE_LIMITED', 429, /Patientez une minute/],
   ['CATALOG_UNAVAILABLE', 503, /momentanément indisponible/],
-  ['FORBIDDEN_ORIGIN', 403, /Une erreur est survenue/],
+  [
+    'FORBIDDEN_ORIGIN',
+    403,
+    /Le paiement n’a pas pu démarrer\..*appelez‑nous au 07 75 68 91 08.*panier est conservé/,
+  ],
+  ['PAYMENT_PROVIDER_ERROR', 502, /appelez‑nous au 07 75 68 91 08/],
 ] as const) {
   test(`checkout shows a message for ${code} and the button works again`, async ({ page }) => {
     await page.goto(PATHS.fr.shop);
@@ -392,4 +410,157 @@ test('cart cross-sell never offers another format of a product in the cart', asy
     els.map((el) => (el as HTMLElement).dataset.crossSellSku!),
   ))
     expect(family(catalog.products[other]!)).not.toBe(family(catalog.products[sku!]!));
+});
+
+/**
+ * A stand-in for the Mondial Relay plugin (the real one is remote): the
+ * markup shapes of widget 4.0.11, a closed point first ("En vacances" in the
+ * search results), then an open one. FocusOnMap selects the open point.
+ */
+const FAKE_PLUGIN = `(function ($) {
+  var closed = { Pays: 'FR', ID: '016741', Available: false,
+    Warning: '<div class="PR-Warning">En vacances jusqu\\'au 11/11/2026</div>' };
+  var open = { Pays: 'FR', ID: '036408', Available: true, Nom: 'LOCKER SECURISTEST',
+    Adresse1: '47 BOULEVARD DE LA MUETTE', Adresse2: '', CP: '95140',
+    Ville: 'GARGES LES GONESSE' };
+  var item = function (p, i, name) {
+    return "<div class='PR-List-Item " + (p.Available ? '' : 'PR-Disabled') +
+      "' onclick='MR_jQuery(\\"#rep-relay-widget\\").trigger(\\"FocusOnMap\\"," + i + ")'>" +
+      "<input type='hidden' class='PR-Id' value='" + p.Pays + '-' + p.ID + "'/>" +
+      "<div class='PR-Name'>" + (i + 1) + ' - ' + name + '</div><div>34 AVENUE PAUL</div>' +
+      '<div></div><div>95400 - ARNOUVILLE</div></div>';
+  };
+  $.fn.MR_ParcelShopPicker = function (opts) {
+    var el = this;
+    var render = function () {
+      opts.OnSearchSuccess({ PRList: [closed, open] });
+      el.html('<div class="MR-Widget"><div class="MRW-Content"><div class="MRW-Results">' +
+        '<div class="MRW-RList">' + item(closed, 0, 'LOCKER 24/7 LIDL ARNOUVILLE') +
+        item(open, 1, 'LOCKER SECURISTEST') + '</div><div class="MRW-Map"></div></div>' +
+        '<div style="color: red">Attention : compte de démonstration</div></div></div>');
+    };
+    el.data('plugin_MR_ParcelShopPicker', true);
+    el.on('MR_DoSearch', render);
+    el.on('FocusOnMap', function (e, i) { if (i === 1) opts.OnParcelShopSelected(open); });
+    render();
+    return this;
+  };
+})(jQuery);`;
+
+const PLUGIN =
+  'https://widget.mondialrelay.com/parcelshop-picker/jquery.plugin.mondialrelay.parcelshoppicker.min.js';
+
+async function seedCheckout(page: Page, lines: Array<{ sku: string; quantity: number }>) {
+  await page.goto('/');
+  await page.evaluate(
+    (l) =>
+      localStorage.setItem(
+        'rep.cart.v1',
+        JSON.stringify({ version: 1, lines: l, updatedAt: new Date().toISOString() }),
+      ),
+    lines,
+  );
+  await page.goto(PATHS.fr.checkout);
+}
+
+test('relay list: closed point last with its reason, keyboard choice, no Google Fonts (review 13)', async ({
+  page,
+}) => {
+  const requested: string[] = [];
+  page.on('request', (request) => requested.push(request.url()));
+  await page.route(PLUGIN, (route) =>
+    route.fulfill({ contentType: 'text/javascript', body: FAKE_PLUGIN }),
+  );
+  await seedCheckout(page, [{ sku: 'REP-MOR-100', quantity: 1 }]);
+  const fallback = page.locator('[data-relay-fallback]');
+  await expect(fallback).toBeHidden();
+  await page.locator('[data-relay-postcode]').fill('95400');
+  await page.locator('[data-relay-go]').click();
+
+  const items = page.locator('#rep-relay-widget .PR-List-Item');
+  await expect(items).toHaveCount(2);
+  // Sentence case without the list number, the closed point moved last.
+  await expect(items.first().locator('.PR-Name')).toHaveText('Locker Securistest');
+  await expect(items.first()).toContainText('95400 Arnouville');
+  const closed = items.last();
+  await expect(closed).toHaveClass(/PR-Disabled/);
+  await expect(closed).toHaveAttribute('aria-disabled', 'true');
+  await expect(closed.locator('.rep-relay-closed')).toHaveText(
+    'Fermé jusqu’au 11/11/2026 : choisissez un autre Point Relais.',
+  );
+  // Picking it selects nothing and says why, next to the list.
+  await closed.click({ force: true });
+  await expect(page.locator('[data-relay-status]')).toHaveText(/Fermé jusqu’au 11\/11\/2026/);
+  await expect(page.locator('[data-relay-chosen]')).toBeHidden();
+  // The demonstration notice stays, quieter (not red).
+  const notice = page.locator('#rep-relay-widget [style*="color: red"]');
+  await expect(notice).toBeVisible();
+  expect(await notice.evaluate((el) => getComputedStyle(el).color)).not.toBe('rgb(255, 0, 0)');
+
+  // Keyboard: the open point is a button.
+  await items.first().focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('[data-relay-chosen]')).toBeVisible();
+  await expect(page.locator('[data-relay-name]')).toHaveText('Locker Securistest');
+  await expect(fallback).toBeHidden();
+  expect(requested.filter((url) => /fonts\.(googleapis|gstatic)\.com/.test(url))).toEqual([]);
+  // The widget stylesheet is the shop's, from the build.
+  expect(requested.some((url) => /\/_astro\/relay-widget\.[\w-]+\.css$/.test(url))).toBe(true);
+});
+
+test('relay: "La carte ne s’affiche pas ?" shows only when the widget fails to load', async ({
+  page,
+}) => {
+  // Third parties are blocked (beforeEach): the plugin request fails.
+  await seedCheckout(page, [{ sku: 'REP-MOR-100', quantity: 1 }]);
+  const fallback = page.locator('[data-relay-fallback]');
+  await expect(fallback).toBeHidden();
+  await page.locator('[data-relay-postcode]').fill('95400');
+  await page.locator('[data-relay-go]').click();
+  await expect(fallback).toBeVisible();
+  await expect(fallback).toHaveClass(/is-alert/);
+  await expect(fallback).toContainText('07 75 68 91 08');
+});
+
+test('phone checkout: a sticky total and Payer bar while the pay button is below', async ({
+  page,
+}) => {
+  const phone = (page.viewportSize()?.width ?? 1280) < 900;
+  await seedCheckout(page, [
+    { sku: 'REP-MOR-100', quantity: 2 },
+    { sku: 'REP-BAO-100', quantity: 1 },
+  ]);
+  await page.locator('.method-card', { hasText: 'Retrait' }).click();
+  const bar = page.locator('[data-co-bar]');
+  if (!phone) {
+    await expect(bar).toBeHidden();
+    return;
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(bar).toHaveClass(/is-visible/);
+  await expect(bar.locator('[data-co-bar-total]')).toHaveText(
+    (await page.locator('[data-co-total]').textContent())!,
+  );
+
+  // Terms not ticked: the bar takes the customer to them, with the message.
+  await bar.locator('[data-co-bar-pay]').click();
+  await expect(page.locator('[data-co-terms-error]')).toBeVisible();
+  await expect(page.locator('[data-co-terms]')).toBeFocused();
+  await expect(page.locator('[data-co-terms]')).toBeInViewport();
+
+  // Ticked: the bar pays (the API fails here, the basket stays).
+  await page.locator('[data-co-terms]').check();
+  let calls = 0;
+  await page.route('**/api/checkout', (route) => {
+    calls += 1;
+    return json(route, 403, { error: { code: 'FORBIDDEN_ORIGIN', message: 'x' } });
+  });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(bar).toHaveClass(/is-visible/);
+  await bar.locator('[data-co-bar-pay]').click();
+  await expect(page.locator('[data-co-error]')).toContainText('votre panier est conservé');
+  expect(calls).toBe(1);
+  // Once the pay button is on screen, the bar steps aside.
+  await page.locator('[data-co-pay]').scrollIntoViewIfNeeded();
+  await expect(bar).not.toHaveClass(/is-visible/);
 });

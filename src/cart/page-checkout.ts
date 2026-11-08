@@ -78,6 +78,13 @@ export function initCheckout(ctx: CartContext): void {
   const errorBox = q<HTMLElement>('[data-co-error]')!;
   const pay = q<HTMLButtonElement>('[data-co-pay]')!;
   const payLabel = q<HTMLElement>('[data-co-pay-label]')!;
+  const termsBox = terms.closest<HTMLElement>('.terms') ?? terms;
+  // Phones: total and "Payer" under the thumb while the pay button is below.
+  const bar = q<HTMLElement>('[data-co-bar]');
+  const barTotal = q<HTMLElement>('[data-co-bar-total]');
+  const barPay = q<HTMLButtonElement>('[data-co-bar-pay]');
+  // "Payer" failed for a reason the customer cannot fix: the way out, with the phone.
+  const payFailed = ctx.fmt(tc.payFailed || te.generic, { phone: root.dataset.phone ?? '' });
 
   const relayRoot = q<HTMLElement>('[data-relay]');
   const relay = relayRoot && {
@@ -94,7 +101,7 @@ export function initCheckout(ctx: CartContext): void {
     go: relayRoot.querySelector<HTMLButtonElement>('[data-relay-go]')!,
     status: relayRoot.querySelector<HTMLElement>('[data-relay-status]')!,
     frame: relayRoot.querySelector<HTMLElement>('[data-relay-frame]')!,
-    fallback: relayRoot.querySelector<HTMLElement>('.relay-fallback'),
+    fallback: relayRoot.querySelector<HTMLElement>('[data-relay-fallback]'),
     brand: relayRoot.dataset.brand || 'BDTEST',
     countries: (relayRoot.dataset.countries ?? 'FR').split(',').filter(Boolean),
   };
@@ -113,6 +120,8 @@ export function initCheckout(ctx: CartContext): void {
   let widget: Promise<RelayWidget> | null = null;
   // The pay button names the amount once the total is known ("Payer 13,90 €").
   let lastTotal = '';
+  let hasLines = false;
+  let payBelow = false;
   const payText = () =>
     lastTotal && tc.payAmount ? tc.payAmount.replace('{total}', lastTotal) : tc.pay;
 
@@ -157,7 +166,7 @@ export function initCheckout(ctx: CartContext): void {
 
   const render = (cart: CartState) => {
     const totals = computeTotals(cart, ctx.catalog);
-    const hasLines = cart.lines.length > 0;
+    hasLines = cart.lines.length > 0;
     if (content) content.hidden = !hasLines;
     if (empty) empty.hidden = hasLines;
     renderLines(lines, cart.lines, ctx, { variant: 'summary', flagged });
@@ -176,6 +185,7 @@ export function initCheckout(ctx: CartContext): void {
     shippingEl.classList.toggle('is-free', shipping === 0);
     const total = ctx.price(totals.subtotal + (shipping ?? 0));
     totalEl.textContent = total;
+    if (barTotal) barTotal.textContent = total;
     lastTotal = total;
     if (!inFlight) payLabel.textContent = payText();
     renderFreeShipping(free, totals, ctx);
@@ -203,8 +213,22 @@ export function initCheckout(ctx: CartContext): void {
       hideError();
     }
     pay.disabled = closed || inFlight;
+    if (barPay) barPay.disabled = closed || inFlight;
+    updateBar();
     root.removeAttribute('aria-busy');
   };
+
+  /** The bar shows while the pay button is still below the screen, as on the cart page. */
+  const updateBar = () => bar?.classList.toggle('is-visible', hasLines && payBelow && !closed);
+  if (bar && 'IntersectionObserver' in window) {
+    new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const viewportBottom = entry.rootBounds?.bottom ?? window.innerHeight;
+        payBelow = !entry.isIntersecting && entry.boundingClientRect.top >= viewportBottom;
+      }
+      updateBar();
+    }).observe(pay);
+  }
 
   // ---------------------------------------------------------------- errors
 
@@ -235,7 +259,9 @@ export function initCheckout(ctx: CartContext): void {
       return ctx.fmt(te.outOfStock, { names });
     }
     const key = ERROR_KEY[error.code] as keyof typeof te;
-    return te[key] || te.generic;
+    // An error the customer cannot act on: the phone number, and the basket is kept.
+    if (key === 'generic' || key === 'payment' || !te[key]) return payFailed;
+    return te[key];
   };
 
   // ----------------------------------------------------------------- relay
@@ -253,6 +279,8 @@ export function initCheckout(ctx: CartContext): void {
     lastRelay = point;
     searching = false;
     saveSearch();
+    setPostcodeError('');
+    if (relay) relay.status.textContent = '';
     if (selected === 'relay') ctx.store.setDelivery({ method: 'relay', relay: point });
     deliveryError.hidden = true;
     clearStaleError();
@@ -281,6 +309,11 @@ export function initCheckout(ctx: CartContext): void {
           allowedCountries: relay.countries,
           postcode: relay.postcode.value.trim(),
           onSelect: onRelaySelected,
+          closedNote: (until) =>
+            until ? ctx.fmt(tc.relayClosedUntil, { date: until }) : tc.relayClosed,
+          onClosedPick: (note) => {
+            relay.status.textContent = note;
+          },
         }),
       )
       .then((w) => {
@@ -291,7 +324,11 @@ export function initCheckout(ctx: CartContext): void {
         widget = null;
         relay.frame.hidden = true;
         relay.status.textContent = '';
-        relay.fallback?.classList.add('is-alert');
+        // Only now: "La carte ne s'affiche pas ? Écrivez-nous ou appelez-nous".
+        if (relay.fallback) {
+          relay.fallback.hidden = false;
+          relay.fallback.classList.add('is-alert');
+        }
         throw error;
       });
     return widget;
@@ -315,6 +352,7 @@ export function initCheckout(ctx: CartContext): void {
       return;
     }
     setPostcodeError('');
+    if (widget !== null) relay.status.textContent = '';
     saveSearch();
     const mounting = widget === null;
     const pending = ensureWidget();
@@ -352,6 +390,7 @@ export function initCheckout(ctx: CartContext): void {
     if (!enabled.has(method)) return;
     selected = method;
     deliveryError.hidden = true;
+    if (method !== 'relay') setPostcodeError('');
     clearStaleError();
     if (method === 'relay') {
       ctx.store.setDelivery(lastRelay ? { method: 'relay', relay: lastRelay } : undefined);
@@ -374,9 +413,20 @@ export function initCheckout(ctx: CartContext): void {
     pay.disabled = busy || closed;
     pay.setAttribute('aria-busy', String(busy));
     payLabel.textContent = busy ? tc.processing : payText();
+    if (barPay) {
+      barPay.disabled = busy || closed;
+      barPay.setAttribute('aria-busy', String(busy));
+    }
   };
+  const smoothScroll = (): ScrollBehavior =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
 
-  pay.addEventListener('click', async () => {
+  /**
+   * The pay button and the phone bar's "Payer" run the same steps: a missing
+   * delivery choice or unticked terms takes the customer to the field with its
+   * message; once everything is in order, the bar pays straight away.
+   */
+  const startPayment = async () => {
     if (inFlight || closed) return;
     hideError();
     const cart = ctx.store.getCart();
@@ -391,8 +441,11 @@ export function initCheckout(ctx: CartContext): void {
       return;
     }
     if (selected === 'relay' && cart.delivery?.method !== 'relay') {
-      showFieldError(deliveryError, tc.chooseRelay);
-      if (relay && !relay.search.hidden) relay.postcode.focus();
+      // Under the postcode field the focus goes to (review 13), not below the cards.
+      if (relay && !relay.search.hidden) {
+        setPostcodeError(tc.chooseRelay);
+        relay.postcode.focus();
+      } else showFieldError(deliveryError, tc.chooseRelay);
       return;
     }
     // A point remembered from an earlier visit, in a country the relay method
@@ -405,13 +458,15 @@ export function initCheckout(ctx: CartContext): void {
     ) {
       lastRelay = null;
       ctx.store.setDelivery(undefined);
-      showFieldError(deliveryError, tc.chooseRelay);
+      setPostcodeError(tc.chooseRelay);
       relay?.postcode.focus();
       return;
     }
     if (!terms.checked) {
       showFieldError(termsError, tc.acceptRequired);
-      terms.focus();
+      // Centred, so the phone bar never covers the box.
+      terms.focus({ preventScroll: true });
+      termsBox.scrollIntoView({ block: 'center', behavior: smoothScroll() });
       return;
     }
     const body = buildCheckoutRequest(cart, ctx.locale, ctx.catalog.products);
@@ -428,7 +483,7 @@ export function initCheckout(ctx: CartContext): void {
         return;
       }
       setBusy(false);
-      showError(te.generic);
+      showError(payFailed);
       return;
     }
     setBusy(false);
@@ -440,10 +495,14 @@ export function initCheckout(ctx: CartContext): void {
     if (error.code === 'SHOP_CLOSED') {
       closed = true;
       pay.disabled = true;
+      if (barPay) barPay.disabled = true;
+      updateBar();
     }
     showError(apiMessage(error));
-    errorBox.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  });
+    errorBox.scrollIntoView({ block: 'center', behavior: smoothScroll() });
+  };
+  pay.addEventListener('click', () => void startPayment());
+  barPay?.addEventListener('click', () => void startPayment());
 
   // Back from Stripe with the browser's back button: the page comes from the
   // back/forward cache with the button still busy.

@@ -151,13 +151,6 @@ const shopHref = routePath('shop', locale);
       </div>
 
       <div class="product-info">
-        {
-          category && (
-            <p class="eyebrow">
-              <a href={routePath('category', locale, category.slug)}>{category.name}</a>
-            </p>
-          )
-        }
         <h1>{product.name}</h1>
         <p class="tagline">{product.tagline}</p>
 
@@ -361,7 +354,7 @@ const shopHref = routePath('shop', locale);
             title={t.product.related}
             link={{ href: shopHref, label: t.shop.viewAll }}
           />
-          <ProductGrid products={related} {locale} {t} {shopOpen} />
+          <ProductGrid products={related} {locale} {t} {shopOpen} class="related-grid" />
         </div>
       </section>
     )
@@ -399,18 +392,9 @@ const shopHref = routePath('shop', locale);
       top: calc(var(--header-h) + var(--space-6));
     }
   }
-  .product-info .eyebrow a {
-    color: inherit;
-    text-decoration: none;
-  }
-  @media (hover: hover) {
-    .product-info .eyebrow a:hover {
-      color: var(--forest);
-      text-decoration: underline;
-    }
-  }
+  /* No kicker above the name: the breadcrumb already names the category. */
   h1 {
-    margin-top: var(--space-3);
+    margin-top: 0;
     font-size: clamp(2.25rem, 1.7rem + 2.2vw, 3.25rem);
     line-height: 1.05;
   }
@@ -616,6 +600,13 @@ const shopHref = routePath('shop', locale);
   .related {
     border-top: 1px solid var(--kraft);
   }
+  /* Never a lone card: four cards in four columns from 1280 px and two rows of
+     two on phones; the three-column range shows three. */
+  @media (min-width: 720px) and (max-width: 1279px) {
+    .related :global(.product-grid.related-grid > li:nth-child(n + 4)) {
+      display: none;
+    }
+  }
   .footnote {
     padding-block: var(--space-8) 0;
   }
@@ -625,9 +616,9 @@ const shopHref = routePath('shop', locale);
     font-size: var(--fs--1);
   }
   /* Phones: name, price and the add button within the first 844 px under a
-     square photo. The category eyebrow is the back link above the photo, the
-     weight and origin tags move under the add button (nothing there takes
-     focus, so the tab order still follows the screen), and the gaps tighten. */
+     square photo. The weight and origin tags move under the add button
+     (nothing there takes focus, so the tab order still follows the screen),
+     and the gaps tighten. */
   @media (max-width: 899px) {
     .product {
       padding-top: var(--space-3);
@@ -645,9 +636,6 @@ const shopHref = routePath('shop', locale);
     .product-info > * {
       order: 2;
     }
-    .product-info > .eyebrow {
-      display: none;
-    }
     .product-info > h1,
     .product-info > .tagline,
     .product-info > .price-row,
@@ -657,9 +645,6 @@ const shopHref = routePath('shop', locale);
     }
     .product-info > .facts {
       margin-top: var(--space-4);
-    }
-    h1 {
-      margin-top: 0;
     }
     .tagline {
       margin-top: var(--space-2);

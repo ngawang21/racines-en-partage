@@ -4,7 +4,8 @@ seoDescription: >-
   additives, packed in France by ESAT Les Oliviers. Delivery to Mondial Relay
   pickup points.
 hero:
-  title: West African plants, in a kraft pouch.
+  # A no-break space keeps “West African” on one line.
+  title: West African plants, in a kraft pouch.
   lead: >-
     Moringa, hibiscus, baobab, tiger nut, cacao: one ingredient per pouch, to
     brew, to blend into a smoothie or to sprinkle over a dish.
@@ -28,10 +29,6 @@ storyTitle: Two lands
 storyBody: >-
   Racines en Partage was born between two lands: West Africa, where moringa,
   bissap and tiger nut are part of everyday life, and France, where we live.
-  The moringa and tiger nut come from Niger, the baobab from Senegal, the
-  hibiscus from Cameroon, the cacao from Côte d’Ivoire. Two companions come
-  from further afield: psyllium from India and roasted barley from Germany.
-  Everything is packed in the Paris region.
 storyLands:
   from: [Niger, Senegal, Cameroon, Côte d’Ivoire, India, Germany]
   to: Arnouville
@@ -49,6 +46,4 @@ ritual:
 commitmentTitle: Our commitments
 commitmentBody: >-
   Our pouches are packed by ESAT Les Oliviers in Gennevilliers, a sheltered
-  workshop that supports people with disabilities through work. We state the
-  origin of every product, we keep ingredient lists short, and we add no
-  additive, no preservative and no colouring.
+  workshop that supports people with disabilities through work.

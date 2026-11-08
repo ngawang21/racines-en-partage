@@ -3,7 +3,7 @@
 // full grid. The grid is complete without JavaScript; shop-filter.ts filters
 // and sorts the rendered cards and mirrors the state in the URL hash.
 import { DEFAULT_LOCALE, type Locale } from '../../consts';
-import { formatFamilies, groupFormats } from '../../content/merge';
+import { featuredFirst, formatFamilies, groupFormats } from '../../content/merge';
 import Base from '../../layouts/Base.astro';
 import { loadCategories, loadLocale, loadProducts, loadSettings } from '../../i18n/locale';
 import { routePath, routeUrl } from '../../i18n/routing';
@@ -23,9 +23,11 @@ const [t, categories, loaded, settings, allFr] = await Promise.all([
   loadSettings(),
   loadProducts(DEFAULT_LOCALE),
 ]);
-// Default order: the catalogue order (category, then the owner's "Réorganiser"
-// position, then name). `featured` only picks the home page selection.
-const products = [...loaded];
+// Default order, "Nos incontournables": the home page selection first (the
+// `featured` products, in catalogue order), then the rest of the catalogue
+// (category, then the owner's "Réorganiser" position, then name). Each card
+// keeps its position in data-order, which the sort script falls back to.
+const products = featuredFirst(loaded);
 // The grid shows one card per product family (ProductGrid); the counts count cards.
 const groups = groupFormats(products, products, formatFamilies(allFr));
 const counts: Record<string, number> = {};
@@ -120,6 +122,7 @@ const sorts = [
       shopOpen={settings.shop.open}
       headingLevel="h2"
       eager={5}
+      balance
     />
     <p class="empty" data-empty hidden>{t.shop.empty}</p>
   </section>
@@ -198,83 +201,6 @@ const sorts = [
     .shop-bar .chips {
       flex: 1 1 auto;
     }
-  }
-  .chips {
-    display: flex;
-    gap: var(--space-2);
-    margin-inline: calc(var(--gutter) * -1);
-    padding-inline: var(--gutter) calc(var(--gutter) + 24px);
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-padding-inline: var(--gutter);
-    scroll-snap-type: x proximity;
-    scrollbar-width: none;
-    mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
-  }
-  .chips > * {
-    scroll-snap-align: start;
-  }
-  .chips::-webkit-scrollbar {
-    display: none;
-  }
-  @media (min-width: 900px) {
-    .chips {
-      flex-wrap: wrap;
-      margin-inline: 0;
-      padding-inline: 0;
-      overflow: visible;
-      mask-image: none;
-    }
-  }
-  .chip {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    gap: 8px;
-    min-height: 44px;
-    padding: 0 var(--space-4);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-pill);
-    background: rgba(255, 255, 255, 0.5);
-    color: var(--forest);
-    font-size: 0.9375rem;
-    font-weight: 500;
-    white-space: nowrap;
-    touch-action: manipulation;
-    transition:
-      background-color var(--dur-fast) ease,
-      border-color var(--dur-fast) ease,
-      color var(--dur-fast) ease,
-      transform var(--dur-press) var(--ease-out-strong);
-  }
-  @media (hover: hover) {
-    .chip:hover:not([aria-pressed='true']) {
-      border-color: var(--kraft-deep);
-      background: var(--cream);
-    }
-  }
-  .chip:active {
-    transform: scale(0.97);
-  }
-  .chip[aria-pressed='true'] {
-    border-color: var(--forest);
-    background: var(--forest);
-    color: var(--cream);
-  }
-  .chip-count {
-    min-width: 22px;
-    padding: 1px 6px;
-    border-radius: var(--radius-pill);
-    background: var(--paper);
-    color: var(--ink-2);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
-  }
-  .chip[aria-pressed='true'] .chip-count {
-    background: rgba(251, 246, 234, 0.16);
-    color: var(--cream);
   }
   .sort {
     display: flex;

@@ -1,0 +1,215 @@
+/* Mondial Relay Parcel Shop Picker, in the shop's own styles. The widget is
+   mounted with CSS: '0' (src/cart/relay-widget.ts), so none of its theme
+   stylesheets load: no magenta, no uppercase, and no Montserrat request to
+   fonts.googleapis.com (its style.min.css @imports it). Only the rules the
+   widget's markup needs to work are rebuilt here, scoped to .relay-widget.
+   Loaded with the relay-widget chunk, never on other pages. The checkout's
+   own postcode form drives the search (MR_DoSearch), so the widget's title,
+   search line and floating buttons stay hidden. */
+
+.relay-widget .MR-Widget {
+  position: relative;
+  width: 100%;
+  color: var(--forest);
+  font-family: var(--font-body);
+  font-size: var(--fs--1);
+  line-height: var(--lh-snug);
+}
+.relay-widget .MRW-Title,
+.relay-widget .MRW-Search,
+.relay-widget .MRW-ButtonCircle,
+.relay-widget .MRW-LockerModal,
+.relay-widget .progressBar {
+  display: none !important;
+}
+
+/* Errors the widget reports (no point for this postcode, service down). */
+.relay-widget .MRW-Errors {
+  margin: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-s);
+  background: rgba(224, 58, 58, 0.07);
+  color: var(--hibiscus-deep);
+  font-weight: 500;
+}
+
+/* List and map: side by side from 640 px, the map above the list below. */
+.relay-widget .MRW-Results {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  grid-template-areas: 'list map';
+  height: 420px;
+}
+.relay-widget .MRW-RList {
+  grid-area: list;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-right: 1px solid var(--line);
+}
+.relay-widget .MRW-Map {
+  grid-area: map;
+  /* The widget sets an inline height only with its own theme. */
+  height: 100% !important;
+  min-height: 0;
+  background: var(--paper);
+  font-family: var(--font-body);
+}
+@media (max-width: 639px) {
+  .relay-widget .MRW-Results {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'map'
+      'list';
+    grid-template-rows: 220px auto;
+    height: auto;
+  }
+  .relay-widget .MRW-RList {
+    overflow: visible;
+    border-top: 1px solid var(--line);
+    border-right: 0;
+  }
+}
+
+.relay-widget .PR-List-Item {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--line);
+  border-left: 3px solid transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease;
+}
+.relay-widget .PR-List-Item:last-child {
+  border-bottom: 0;
+}
+.relay-widget .PR-List-Item > div:empty {
+  display: none;
+}
+.relay-widget .PR-Name {
+  color: var(--forest);
+  font-size: var(--fs-0);
+  font-weight: 600;
+}
+.relay-widget .PR-List-Item.PR-hover,
+.relay-widget .PR-List-Item:focus-visible {
+  background: var(--paper);
+  border-left-color: var(--kraft-deep);
+}
+.relay-widget .PR-List-Item:focus-visible {
+  outline-offset: -3px;
+}
+.relay-widget .PR-List-Item.PR-Selected {
+  background: var(--paper);
+  border-left-color: var(--forest);
+}
+/* A closed point (holidays): listed last, greyed, with the reason. */
+.relay-widget .PR-List-Item.PR-Disabled {
+  background: transparent;
+  border-left-color: transparent;
+  cursor: not-allowed;
+}
+.relay-widget .PR-List-Item.PR-Disabled .PR-Name,
+.relay-widget .PR-List-Item.PR-Disabled > div {
+  color: var(--ink-2);
+  opacity: 0.75;
+}
+.relay-widget .rep-relay-closed {
+  margin-top: var(--space-1);
+  color: var(--hibiscus-deep);
+  font-weight: 600;
+}
+
+/* The demonstration account's notice (brand BDTEST): kept, but quiet. */
+.relay-widget .MR-Widget div[style*='color: red'] {
+  padding: var(--space-2) var(--space-4);
+  border-top: 1px solid var(--line);
+  color: var(--ink-2) !important;
+  font-size: 0.75rem;
+  line-height: var(--lh-snug);
+}
+
+/* Map markers and the point's card in the map popup. */
+.relay-widget .marker-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.relay-widget .marker-image {
+  display: block;
+  width: 40px;
+  height: 40px;
+  margin: auto;
+}
+.relay-widget .marker-text {
+  display: none;
+}
+.relay-widget .leaflet-popup-content-wrapper {
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-soft);
+}
+.relay-widget .leaflet-popup-content {
+  margin: var(--space-3) var(--space-4);
+  color: var(--forest);
+  font-family: var(--font-body);
+  font-size: var(--fs--1);
+  line-height: var(--lh-snug);
+}
+.relay-widget .InfoWindow {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 260px;
+}
+.relay-widget .InfoWindow .PR-Name {
+  font-size: var(--fs-0) !important;
+}
+.relay-widget .PR-Warning {
+  color: var(--hibiscus-deep);
+  font-weight: 600;
+}
+.relay-widget .Tabs-Btns {
+  display: flex;
+  gap: var(--space-1);
+}
+.relay-widget .Tabs-Btn {
+  padding: 2px var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  color: var(--forest);
+  cursor: pointer;
+}
+.relay-widget .Tabs-Btn-Selected {
+  border-color: var(--forest);
+  font-weight: 600;
+}
+.relay-widget .Tabs-Tab {
+  display: none;
+}
+.relay-widget .Tabs-Tab-Selected {
+  display: block;
+}
+.relay-widget .Tabs-Tab img {
+  max-width: 100%;
+  height: auto;
+}
+.relay-widget .PR-Hours {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.relay-widget .PR-Hours td {
+  padding: 1px var(--space-2) 1px 0;
+}
+.relay-widget .PR-Hours .d {
+  background: var(--paper);
+}
+.relay-widget .leaflet-control-attribution {
+  font-size: 0.6875rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .relay-widget .PR-List-Item {
+    transition: none;
+  }
+}

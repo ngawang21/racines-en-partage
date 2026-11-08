@@ -3,10 +3,11 @@
 // add-to-cart delegation, quantity steppers, drawer. The cart, checkout,
 // thanks, order lookup and review pages, and the forms, load their own
 // module on demand.
-import { getContext } from './context';
+import { getContext, type CartContext } from './context';
 import { createDrawer, type Drawer } from './drawer';
 import { itemCount, type CartState } from './store';
 import { addOutcome } from './add-outcome';
+import { capNote } from './lines';
 import { carryQueryToLanguageLinks, takeUrlToken } from './url-token';
 
 /** The forms src/forms/forms.ts enhances (the lookup and review pages load their own). */
@@ -96,9 +97,68 @@ function syncStepButtons(input: HTMLInputElement, max: number): void {
     const step = Number(btn.dataset.qtyStep);
     btn.setAttribute('aria-disabled', String(step < 0 ? value <= 1 : value >= max));
   }
+  syncCapNote?.(input);
+}
+
+/** Set by init once the context exists: the visible maximum line under a stepper. */
+let syncCapNote: ((input: HTMLInputElement) => void) | null = null;
+
+/**
+ * "10 sachets maximum par produit. Pour plus, écrivez-nous." under the
+ * product page's stepper and add button, while the stepper is at the maximum
+ * or the cart already holds the maximum of that product (an add then changes
+ * nothing, review 13). Created on first need, tied to the field.
+ */
+function capNoteSync(ctx: CartContext): (input: HTMLInputElement) => void {
+  return (input) => {
+    const sku = input.dataset.qtyFor;
+    if (!sku) return;
+    const max = ctx.store.maxQuantity;
+    const inCart = ctx.store.getCart().lines.find((l) => l.sku === sku)?.quantity ?? 0;
+    const atMax = !input.disabled && (Number(input.value) >= max || inCart >= max);
+    const id = `${input.id || `qty-${sku}`}-cap`;
+    let note = document.getElementById(id);
+    if (!note) {
+      if (!atMax) return;
+      const scope = scopeOf(input);
+      if (!scope) return;
+      note = document.createElement('p');
+      note.id = id;
+      note.className = 'qty-cap';
+      note.append(...capNote(ctx));
+      // Inside the product page's buy row (a wrapping flex row), as its last
+      // line under the stepper and the button; elsewhere after the stepper.
+      const buy = scope.closest('[data-buy-block]');
+      if (buy) buy.append(note);
+      else scope.after(note);
+      const described = input.getAttribute('aria-describedby');
+      input.setAttribute('aria-describedby', described ? `${described} ${id}` : id);
+    }
+    note.hidden = !atMax;
+  };
+}
+
+/**
+ * Cross-document view transitions (global.css, `@view-transition`) are run by
+ * the browser, not by a script here. A Back pressed while one runs skips it,
+ * and Chromium may then report the skipped transition's rejected promises
+ * ("AbortError: Transition was skipped") as unhandled in the console (review
+ * 13, phone). Nothing on the site waits for those promises: mark them handled
+ * wherever the page can see the transition.
+ */
+function quietSkippedTransitions(): void {
+  const quiet = (event: Event) => {
+    const vt = (event as Event & { viewTransition?: ViewTransition | null }).viewTransition;
+    if (!vt) return;
+    for (const promise of [vt.ready, vt.finished, vt.updateCallbackDone])
+      promise?.catch(() => undefined);
+  };
+  window.addEventListener('pageswap', quiet);
+  window.addEventListener('pagereveal', quiet);
 }
 
 function init(): void {
+  quietSkippedTransitions();
   // Bearer tokens leave the address bar before any other script reads it.
   const bearerPage = document.querySelector(
     '[data-review-page], [data-newsletter-landing], [data-account]',
@@ -126,7 +186,9 @@ function init(): void {
     for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-add-to-cart]'))
       btn.disabled = true;
 
-  for (const input of document.querySelectorAll<HTMLInputElement>('input[data-qty-for]')) {
+  syncCapNote = capNoteSync(ctx);
+  const qtyInputs = [...document.querySelectorAll<HTMLInputElement>('input[data-qty-for]')];
+  for (const input of qtyInputs) {
     input.max = String(store.maxQuantity);
     syncStepButtons(input, store.maxQuantity);
   }
@@ -134,6 +196,8 @@ function init(): void {
   const render = (cart: CartState) => {
     renderBadges(cart);
     drawer?.render(cart);
+    // The cart reaching the maximum of a product shows the note on its page.
+    for (const input of qtyInputs) syncCapNote?.(input);
   };
   render(store.getCart());
   store.subscribe(render);

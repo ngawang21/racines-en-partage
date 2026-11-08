@@ -13,6 +13,24 @@ export function unitPriceText(product: ClientProduct, ctx: CartContext): string 
   return formatUnitPrice(product.unitAmount, product.weightGrams, ctx.locale);
 }
 
+/**
+ * "10 sachets maximum par produit. Pour plus, écrivez-nous." with the contact
+ * link: the visible reason a + button is greyed and an add changed nothing
+ * (review 13). The maximum comes from the catalogue (`maxQuantityPerLine`).
+ */
+export function capNote(ctx: CartContext): Array<Node | string> {
+  const t = ctx.t.cart;
+  const max = ctx.store.maxQuantity;
+  if (!t.maxNote) return [ctx.fmt(t.maxReached, { max })];
+  return ctx
+    .fmt(t.maxNote, { max })
+    .split(/(\{contact\})/)
+    .filter(Boolean)
+    .map((part) =>
+      part === '{contact}' ? h('a', { href: ctx.path('contact') }, t.maxNoteContact) : part,
+    );
+}
+
 export type LineVariant = 'drawer' | 'page' | 'summary';
 
 export interface LineOptions {
@@ -111,6 +129,9 @@ function buildLine(line: CartLine, ctx: CartContext, variant: LineVariant): HTML
       h('p', { class: 'cart-line-kilo', 'data-line-kilo': true }),
       h('p', { class: 'cart-line-status', 'data-line-status': true, hidden: true }),
       h('div', { class: 'cart-line-actions', 'data-line-actions': true }, stepper, remove),
+      variant === 'summary'
+        ? null
+        : h('p', { class: 'cart-line-cap', 'data-line-cap': true, hidden: true }),
     ),
     h('p', { class: 'cart-line-total price', 'data-line-total': true }),
   );
@@ -158,6 +179,14 @@ function updateLine(li: HTMLLIElement, line: CartLine, ctx: CartContext, opts: L
     const blocked = step < 0 ? line.quantity <= 1 : line.quantity >= max;
     // aria-disabled rather than disabled: a disabled button would drop the focus.
     btn.setAttribute('aria-disabled', String(blocked));
+  }
+
+  // At the maximum: the note says why + is greyed (the live region says it too).
+  const cap = li.querySelector<HTMLElement>('[data-line-cap]');
+  if (cap) {
+    const atMax = line.quantity >= max && !unavailable;
+    if (atMax && !cap.hasChildNodes()) cap.replaceChildren(...capNote(ctx));
+    cap.hidden = !atMax;
   }
 
   const actions = li.querySelector<HTMLElement>('[data-line-actions]')!;

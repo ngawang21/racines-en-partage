@@ -432,10 +432,13 @@ one line per host and directive:
 | Host                                                                               | Directives                                          | What                                                                  |
 | ---------------------------------------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------- |
 | `widget.mondialrelay.com`                                                          | `script-src`, `style-src`, `img-src`, `connect-src` | plugin and its versioned script, styles, marker images, JSONP results |
-| `fonts.googleapis.com`                                                             | `style-src`                                         | the widget's font stylesheet                                          |
-| `fonts.gstatic.com`                                                                | `font-src`                                          | the widget's font files                                               |
 | `www.mondialrelay.com`                                                             | `img-src`                                           | one image loaded by the widget                                        |
 | `a.tile.openstreetmap.org`, `b.tile.openstreetmap.org`, `c.tile.openstreetmap.org` | `img-src`                                           | map tiles                                                             |
+
+No font host: the widget is mounted with `CSS: '0'`, so its theme stylesheet,
+which `@import`s Montserrat from Google Fonts (a request carrying the
+visitor's IP to Google), never loads; `src/styles/relay-widget.css` styles the
+widget instead and loads with it.
 
 The same list is the `REMOTE_HOSTS` constant of `src/cart/relay-widget.ts`;
 `tests/build/headers.test.ts` fails when the two checkout blocks of

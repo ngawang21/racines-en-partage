@@ -38,19 +38,20 @@
 # checkout routes (wave 2B)
 # The Mondial Relay Parcel Shop Picker loads on demand when the relay method
 # is chosen. jQuery 2.2.4 and Leaflet 1.9.4 are served from /vendor/ (same
-# origin). Remote: the plugin and its versioned script, styles, JSONP results
-# and marker images (widget.mondialrelay.com, one image from
-# www.mondialrelay.com), its font (fonts.googleapis.com, fonts.gstatic.com)
-# and the OpenStreetMap tiles. The hosts mirror REMOTE_HOSTS in
+# origin). Remote: the plugin and its versioned script, JSONP results and
+# marker images (widget.mondialrelay.com, one image from www.mondialrelay.com)
+# and the OpenStreetMap tiles. No font host: the widget is mounted without its
+# theme stylesheet (which pulled Montserrat from Google Fonts) and styled by
+# the shop's own stylesheet. The hosts mirror REMOTE_HOSTS in
 # src/cart/relay-widget.ts (tests/build/headers.test.ts); re-check them with
 # scripts/relay-capture.mjs. Everything else stays as strict as the global block.
 /commande/*
   ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://widget.mondialrelay.com https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://widget.mondialrelay.com https://fonts.googleapis.com; img-src 'self' data: https://widget.mondialrelay.com https://www.mondialrelay.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://widget.mondialrelay.com https://cloudflareinsights.com; frame-src https://challenges.cloudflare.com; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://widget.mondialrelay.com https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://widget.mondialrelay.com; img-src 'self' data: https://widget.mondialrelay.com https://www.mondialrelay.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; font-src 'self'; connect-src 'self' https://widget.mondialrelay.com https://cloudflareinsights.com; frame-src https://challenges.cloudflare.com; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
 
 /en/checkout/*
   ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://widget.mondialrelay.com https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://widget.mondialrelay.com https://fonts.googleapis.com; img-src 'self' data: https://widget.mondialrelay.com https://www.mondialrelay.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://widget.mondialrelay.com https://cloudflareinsights.com; frame-src https://challenges.cloudflare.com; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://widget.mondialrelay.com https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://widget.mondialrelay.com; img-src 'self' data: https://widget.mondialrelay.com https://www.mondialrelay.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; font-src 'self'; connect-src 'self' https://widget.mondialrelay.com https://cloudflareinsights.com; frame-src https://challenges.cloudflare.com; base-uri 'self'; form-action 'none'; frame-ancestors 'self'
 
 # admin route
 # Sveltia CMS at /admin/: the script is pinned to one version on unpkg (with

@@ -614,7 +614,9 @@ blockquote {
   }
 }
 
-/* Product grid: 2, 3 then 4 columns. */
+/* Product grid: 2, 3, then 4 columns from 1280 px (names and prices of the
+   first row above the fold at 1440 x 900), 5 in the wide container from
+   1600 px. The home selection takes 4 from 1080 px. */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -629,10 +631,13 @@ blockquote {
     gap: var(--space-12) var(--space-6);
   }
 }
-/* Three columns up to 1599 px (nine products fill three rows, no lone card);
-   the home selection asks for four itself. */
 @media (min-width: 1080px) {
   .featured-grid.product-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1280px) {
+  .product-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
@@ -642,6 +647,117 @@ blockquote {
   .container-wide .product-grid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
+}
+/* Balanced grids (shop and category pages) never end on a lone card: the
+   column count of each range comes from the card count (storefront.ts
+   balancedColumns, written as --cols-* on the grid and recomputed by the shop
+   filter). Nine cards: three rows of three to 1279 px, five and four from
+   1280 px. Four cards: two rows of two to 1079 px, one row of four above.
+   Phones keep two columns, so an odd count ends on one card there. */
+@media (min-width: 720px) {
+  .product-grid[data-balance] {
+    grid-template-columns: repeat(var(--cols-md, 3), minmax(0, 1fr));
+  }
+}
+@media (min-width: 1080px) {
+  .product-grid[data-balance] {
+    grid-template-columns: repeat(var(--cols-lg, 3), minmax(0, 1fr));
+  }
+}
+@media (min-width: 1280px) {
+  .product-grid[data-balance] {
+    grid-template-columns: repeat(var(--cols-xl, 4), minmax(0, 1fr));
+  }
+}
+@media (min-width: 1600px) {
+  .product-grid[data-balance] {
+    grid-template-columns: repeat(var(--cols-xxl, 5), minmax(0, 1fr));
+  }
+}
+
+/* Category chips: filter buttons on the shop (aria-pressed), links on the
+   category pages (aria-current). One scrolling row bleeding to the screen
+   edges on phones, with a fade on the right that says it scrolls; wrapping
+   from 900 px. */
+.chips {
+  display: flex;
+  gap: var(--space-2);
+  margin-inline: calc(var(--gutter) * -1);
+  padding-inline: var(--gutter) calc(var(--gutter) + 24px);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: var(--gutter);
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+}
+.chips > * {
+  scroll-snap-align: start;
+}
+.chips::-webkit-scrollbar {
+  display: none;
+}
+@media (min-width: 900px) {
+  .chips {
+    flex-wrap: wrap;
+    margin-inline: 0;
+    padding-inline: 0;
+    overflow: visible;
+    mask-image: none;
+  }
+}
+.chip {
+  display: inline-flex;
+  text-decoration: none;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--forest);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  white-space: nowrap;
+  touch-action: manipulation;
+  transition:
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    transform var(--dur-press) var(--ease-out-strong);
+}
+@media (hover: hover) {
+  .chip:hover:not([aria-pressed='true'], [aria-current='page']) {
+    border-color: var(--kraft-deep);
+    background: var(--cream);
+  }
+}
+.chip:active {
+  transform: scale(0.97);
+}
+.chip[aria-pressed='true'],
+.chip[aria-current='page'] {
+  border-color: var(--forest);
+  background: var(--forest);
+  color: var(--cream);
+}
+.chip-count {
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.chip[aria-pressed='true'] .chip-count,
+.chip[aria-current='page'] .chip-count {
+  background: rgba(251, 246, 234, 0.16);
+  color: var(--cream);
 }
 
 /* Small rounded label used for weight, origin and "free from" values. */

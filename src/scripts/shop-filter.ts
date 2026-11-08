@@ -1,6 +1,9 @@
 // Shop page filtering and sorting on the rendered DOM (spec 5.4). Progressive
 // enhancement: the server renders every card; this script hides, shows and
 // reorders them, and mirrors the state in the hash ("#cat=poudres&sort=name").
+// The default order ("featured") is the server's: the home selection first,
+// then the catalogue (ShopView, featuredFirst), kept in each card's data-order.
+import { gridColumnsStyle } from '../components/storefront';
 
 type Sort = 'featured' | 'price-asc' | 'price-desc' | 'name';
 const SORTS: readonly Sort[] = ['featured', 'price-asc', 'price-desc', 'name'];
@@ -61,6 +64,8 @@ if (tools && grid) {
       grid.append(li);
     }
     if (empty) empty.hidden = shown > 0;
+    // Column counts that never leave the last visible card alone.
+    if (grid.hasAttribute('data-balance')) grid.setAttribute('style', gridColumnsStyle(shown));
     if (count) {
       const one = locale === 'fr' ? shown <= 1 : shown === 1;
       const template = (one ? tools.dataset.countOne : tools.dataset.countMany) ?? '%n';

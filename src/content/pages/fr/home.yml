@@ -4,7 +4,8 @@ seoDescription: >-
   additifs, conditionnés en France par l’ESAT Les Oliviers. Livraison en Point
   Relais Mondial Relay.
 hero:
-  title: Les plantes d’Afrique de l’Ouest, en sachet kraft.
+  # A no-break space joins “de” and “l’Ouest” (one line break fewer).
+  title: Les plantes d’Afrique de l’Ouest, en sachet kraft.
   lead: >-
     Moringa, bissap, baobab, souchet, cacao : un seul ingrédient par sachet,
     à infuser, à mixer dans un smoothie ou à saupoudrer sur un plat.
@@ -26,14 +27,12 @@ reassurance:
 featuredTitle: Nos incontournables
 storyTitle: Deux terres
 # Owner to validate (Marie’s own words welcome). Keep storyLands.from in line
-# with the product origins (a unit test checks).
+# with the product origins (a unit test checks). The lands show as chips under
+# the text, so the text does not list them again (a unit test checks).
 storyBody: >-
   Racines en Partage est née entre deux terres : l’Afrique de l’Ouest, où le
   moringa, le bissap et le souchet font partie du quotidien, et la France, où
-  nous vivons. Le moringa et le souchet viennent du Niger, le baobab du
-  Sénégal, le bissap du Cameroun, le cacao de Côte d’Ivoire. Deux compagnons
-  viennent d’ailleurs : le psyllium d’Inde et l’orge grillée d’Allemagne. Tout
-  est mis en sachet en Île-de-France.
+  nous vivons.
 storyLands:
   from: [Niger, Sénégal, Cameroun, Côte d’Ivoire, Inde, Allemagne]
   to: Arnouville
@@ -54,9 +53,9 @@ ritual:
     text: Un chocolat chaud au cacao de Côte d’Ivoire.
     product: poudre-de-cacao-100g
 commitmentTitle: Nos engagements
+# The three commitments (origin, short lists, no additive) are the list next
+# to this text (locales, shop.commitments): the text tells the ESAT only.
 commitmentBody: >-
   Nos sachets sont conditionnés par l’ESAT Les Oliviers, à Gennevilliers, un
   établissement qui accompagne par le travail des personnes en situation de
-  handicap. Nous indiquons l’origine de chaque produit, nous gardons des listes
-  d’ingrédients courtes, et nous n’ajoutons ni additif, ni conservateur, ni
-  colorant.
+  handicap.

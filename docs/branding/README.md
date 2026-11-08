@@ -49,7 +49,8 @@ Outputs, committed, written to `docs/branding/card/` and copied to
 
 The same run writes the contact card `public/racines-en-partage.vcf`
 (vCard 3.0: name, organisation, phone, e-mail, site, address). The page
-`/carte/` (`/en/card/`, noindex, footer "Informations") shows the previews
+`/carte/` (`/en/card/`, noindex, reached by its URL only: no site link since
+review 13, the owner keeps it in her bookmarks) shows the previews
 and offers the PDF, the shareable image and the vCard.
 
 For the printer: 85 x 55 mm, 3 mm bleed, 300 dpi, RGB; the printer converts

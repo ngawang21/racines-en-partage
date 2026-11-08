@@ -30,7 +30,8 @@
     "lookup": "Suivre ma commande",
     "recipes": "Recettes",
     "account": "Mon espace",
-    "card": "Carte de visite"
+    "card": "Carte de visite",
+    "writeUsLink": "Nous écrire"
   },
   "shop": {
     "title": "La boutique",
@@ -63,14 +64,20 @@
     "steps": {
       "orderTitle": "Commandez",
       "orderText": "Choisissez vos sachets et réglez en ligne, paiement sécurisé.",
-      "deliveryTitle": "Choisissez votre Point Relais",
-      "deliveryText": "Ou le retrait à Arnouville, si vous êtes dans le coin.",
+      "deliveryTitle": "Choisissez la livraison",
+      "deliveryText": "En Point Relais, à domicile, ou retrait à Arnouville si vous êtes dans le coin.",
       "shareTitle": "Recevez et partagez",
       "shareText": "Votre colis arrive en quelques jours. Il ne reste qu’à préparer la tasse."
     },
     "unitPrice": "Prix au kilo",
     "recipesLink": "Nos recettes",
-    "priceFrom": "dès"
+    "priceFrom": "dès",
+    "categoriesNav": "Catégories de la boutique",
+    "commitments": {
+      "origin": "L’origine écrite sur chaque sachet",
+      "ingredients": "Des listes d’ingrédients courtes",
+      "additives": "Ni additif, ni conservateur, ni colorant"
+    }
   },
   "product": {
     "addToCart": "Ajouter au panier",
@@ -161,7 +168,9 @@
     "crossSellAddOf": "Ajouter {name} au panier",
     "shippingFrom": "Dès {amount} en Point Relais",
     "shippingFromFree": "Dès {amount} en Point Relais, offerte dès {threshold}",
-    "shippingOffered": "Offerte"
+    "shippingOffered": "Offerte",
+    "maxNote": "{max} sachets maximum par produit. Pour plus, {contact}.",
+    "maxNoteContact": "écrivez‑nous"
   },
   "checkout": {
     "title": "Votre commande",
@@ -199,7 +208,11 @@
     "pickupTitle": "Adresse de retrait",
     "unavailableLines": "Retirez les produits indisponibles pour continuer.",
     "postcodeRequired": "Saisissez un code postal pour rechercher un Point Relais.",
-    "postcodeInvalid": "Ce code postal n’est pas valide : 3 à 10 chiffres ou lettres, par exemple 95400."
+    "postcodeInvalid": "Ce code postal n’est pas valide : 3 à 10 chiffres ou lettres, par exemple 95400.",
+    "relayClosed": "Fermé en ce moment : choisissez un autre Point Relais.",
+    "relayClosedUntil": "Fermé jusqu’au {date} : choisissez un autre Point Relais.",
+    "payFailed": "Le paiement n’a pas pu démarrer. Réessayez, ou appelez‑nous au {phone} : votre panier est conservé.",
+    "barPay": "Payer"
   },
   "thanks": {
     "title": "Merci pour votre commande",
@@ -207,7 +220,7 @@
     "metaDescription": "Merci pour votre commande chez Racines en Partage.",
     "lead": "Nous avons bien reçu votre paiement. Un e-mail de confirmation est en route.",
     "pending": "Votre paiement est en cours de validation. Vous recevrez un e-mail dès qu’il sera confirmé.",
-    "neutral": "Merci de votre visite. Pour toute question sur une commande, écrivez‑nous ou appelez‑nous.",
+    "neutral": "Vous avez passé commande ? Le récapitulatif vous attend dans votre boîte mail.",
     "orderNumber": "Commande n° {number}",
     "linesTitle": "Votre commande",
     "deliveryTitle": "Livraison",
@@ -226,7 +239,10 @@
     "statusPending": "En attente de confirmation",
     "statusUnpaid": "Non payée",
     "discount": "Remise",
-    "loadFailed": "Nous n’arrivons pas à afficher votre commande pour le moment. Si votre paiement a abouti, vous recevrez un e-mail de confirmation. Vous pouvez aussi recharger cette page dans quelques minutes."
+    "loadFailed": "Nous n’arrivons pas à afficher votre commande pour le moment. Si votre paiement a abouti, vous recevrez un e-mail de confirmation. Vous pouvez aussi recharger cette page dans quelques minutes.",
+    "titleLoading": "Votre commande",
+    "titleNeutral": "Merci de votre visite",
+    "titleUnpaid": "Paiement non abouti"
   },
   "errors": {
     "notFoundTitle": "Page introuvable",

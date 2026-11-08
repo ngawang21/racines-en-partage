@@ -1025,9 +1025,10 @@ refusent les envois.
 ## 21. Télécharger ma carte de visite
 
 Votre carte de visite est prête sur le site, à l’adresse
-**racinesenpartage.fr/carte/** (lien **Carte de visite** en bas de chaque
-page, colonne **Informations**). La page montre le recto et le verso, et
-propose trois fichiers :
+**racinesenpartage.fr/carte/**. Cette page est pour vous : elle n’apparaît
+pas dans le menu ni en bas des pages du site, et les moteurs de recherche ne
+l’indexent pas. Gardez l’adresse dans vos favoris. La page montre le recto
+et le verso, et propose trois fichiers :
 
 - **PDF pour l’imprimeur** : la carte à imprimer, recto et verso.
 - **Image à partager** : les deux faces sur une seule image, à envoyer par

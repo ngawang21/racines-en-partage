@@ -316,6 +316,30 @@ html.has-drawer {
   justify-self: start;
   margin-top: var(--space-1);
 }
+.cart-line-cap,
+.qty-cap {
+  color: var(--ink-2);
+  font-size: var(--fs--1);
+  line-height: var(--lh-snug);
+}
+.cart-line-cap {
+  margin-top: var(--space-1);
+}
+.qty-cap {
+  margin-top: var(--space-2);
+}
+/* In the product page's wrapping buy row: a full line of its own. */
+[data-buy-block] > .qty-cap {
+  flex-basis: 100%;
+  margin-top: 0;
+}
+.cart-line-cap a,
+.qty-cap a {
+  color: var(--forest);
+  font-weight: 600;
+  text-decoration-color: var(--gold);
+  text-underline-offset: 3px;
+}
 .cart-line-actions {
   display: flex;
   flex-wrap: wrap;
@@ -788,7 +812,8 @@ html.has-drawer {
       transform var(--dur-base) var(--ease-out-strong),
       visibility 0s;
   }
-  .cart-page:has(.cart-bar.is-visible) {
+  .cart-page:has(.cart-bar.is-visible),
+  .checkout:has(.cart-bar.is-visible) {
     padding-bottom: calc(var(--space-16) + 76px + env(safe-area-inset-bottom));
   }
 }
@@ -814,6 +839,9 @@ html.has-drawer {
   flex: none;
   min-height: 48px;
   padding-inline: var(--space-6);
+}
+.co-bar .cart-bar-action {
+  gap: var(--space-2);
 }
 
 /* --------------------------------------------------------------- checkout */
@@ -1249,36 +1277,7 @@ html.has-drawer {
   color: var(--hibiscus-deep);
 }
 
-/* The widget brings its own markup and styles: our postcode form drives it
-   (MR_DoSearch), so its title and search line are hidden, and its type and
-   colours are brought closer to the shop's. */
-.relay-widget .MR-Widget {
-  max-width: none !important;
-  margin: 0 !important;
-  border: 0 !important;
-  font-family: var(--font-body) !important;
-}
-.relay-widget .MRW-Title,
-.relay-widget .MRW-Search {
-  display: none !important;
-}
-.relay-widget .MRW-Results {
-  margin: 0 !important;
-}
-.relay-widget .PR-List-Item {
-  border-left-color: var(--kraft) !important;
-  font-family: var(--font-body) !important;
-}
-.relay-widget .PR-List-Item.PR-Selected {
-  background: var(--paper) !important;
-  border-left-color: var(--forest) !important;
-}
-@media (hover: hover) {
-  .relay-widget .PR-List-Item:hover {
-    background: var(--paper) !important;
-    border-left-color: var(--forest) !important;
-  }
-}
+/* The widget's own look: src/styles/relay-widget.css, loaded with it. */
 
 /* ----------------------------------------------------------------- thanks */
 
@@ -1871,17 +1870,20 @@ html.has-drawer {
     padding-block: var(--space-12) var(--space-24);
   }
 }
+/* Left on the container edge like every other page (review 13), the title
+   at the page-head size, the form card kept to a readable width. */
 .lookup-head {
   display: grid;
-  justify-items: center;
+  justify-items: start;
   gap: var(--space-4);
-  max-width: 40rem;
-  margin: 0 auto var(--space-8);
-  text-align: center;
+  max-width: 44rem;
+  margin: 0 0 var(--space-8);
+}
+.lookup-head .rep-title {
+  font-size: var(--fs-6);
 }
 .lookup-search {
-  max-width: 30rem;
-  margin-inline: auto;
+  max-width: 32rem;
 }
 .lookup-form {
   padding: clamp(var(--space-6), 4vw, var(--space-8));
@@ -1893,11 +1895,10 @@ html.has-drawer {
   margin-top: var(--space-6);
   color: var(--ink-2);
   font-size: var(--fs--1);
-  text-align: center;
 }
 .lookup-result-head {
   display: grid;
-  justify-items: center;
+  justify-items: start;
   gap: var(--space-4);
   margin-bottom: var(--space-8);
 }
@@ -2151,12 +2152,10 @@ main:has(> .nl-landing:last-child) + .site-footer {
 }
 .account-loading {
   color: var(--ink-2);
-  text-align: center;
 }
 .account-out,
 .account-narrow {
-  max-width: 30rem;
-  margin-inline: auto;
+  max-width: 32rem;
 }
 .account-notice {
   margin-bottom: var(--space-6);
@@ -2165,7 +2164,6 @@ main:has(> .nl-landing:last-child) + .site-footer {
   display: grid;
   gap: var(--space-6);
   max-width: 64rem;
-  margin-inline: auto;
 }
 .account-bar {
   display: flex;

@@ -12,6 +12,7 @@ import {
   safeRedirect,
 } from '../../src/cart/api';
 import {
+  closedUntil,
   decodeEntities,
   displayCase,
   hoursTableHtml,
@@ -167,6 +168,21 @@ describe('displayCase', () => {
 
 const NOW = new Date('2026-11-01T00:00:00Z');
 const cart = (patch: Partial<CartState>): CartState => ({ ...emptyCart(NOW), ...patch });
+
+describe('closedUntil (closed relay points, review 13)', () => {
+  it('reads the reopening date of the widget warning', () => {
+    expect(closedUntil('<div class="PR-Warning">En vacances jusqu\'au 11/11/2026</div>')).toBe(
+      '11/11/2026',
+    );
+    expect(closedUntil('Fermé jusqu’au 3/1/2027')).toBe('03/01/2027');
+  });
+  it('has no date for anything else', () => {
+    expect(closedUntil('')).toBeNull();
+    expect(closedUntil('Fermé')).toBeNull();
+    expect(closedUntil(undefined)).toBeNull();
+    expect(closedUntil(42)).toBeNull();
+  });
+});
 
 describe('checkout request (spec 6.3)', () => {
   it('builds the contract body', () => {

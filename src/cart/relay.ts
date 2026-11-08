@@ -173,6 +173,17 @@ export function parseInlineHandler(code: string): InlineAction | null {
 }
 
 /**
+ * The reopening date of a closed point, from the `Warning` of the widget's
+ * search results ("En vacances jusqu'au 11/11/2026", in HTML): "11/11/2026",
+ * or null when the text names no date.
+ */
+export function closedUntil(warning: unknown): string | null {
+  if (typeof warning !== 'string') return null;
+  const date = /\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/.exec(warning.replace(/<[^>]*>/g, ' '));
+  return date ? `${date[1]!.padStart(2, '0')}/${date[2]!.padStart(2, '0')}/${date[3]}` : null;
+}
+
+/**
  * Display form of the widget's upper-case labels: "LOCKER 24/7 LIDL
  * ARNOUVILLE" reads "Locker 24/7 Lidl Arnouville". Mixed-case text is kept.
  */

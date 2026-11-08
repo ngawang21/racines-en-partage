@@ -519,6 +519,13 @@ const links = [
   .mobile-foot :global(.mobile-pill) {
     justify-self: start;
   }
+  /* The menu pill sits by the thumb: full 44 px targets, not the header's
+     36 px with a grown hit area. */
+  .mobile-foot :global(.pill.mobile-pill a) {
+    min-width: 56px;
+    min-height: 44px;
+    font-size: 0.8125rem;
+  }
   .desktop-nav,
   .tools :global(.desktop-pill) {
     display: none;

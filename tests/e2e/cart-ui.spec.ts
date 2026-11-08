@@ -3,7 +3,7 @@
 // the customer acts on it (C3), and the thanks page that keeps its order
 // across languages (C6) and empties a paid cart on arrival (C7).
 import { expect, test, type Page } from '@playwright/test';
-import { PATHS, SESSION_ID, blockThirdParties, json, orderFixture } from './helpers';
+import { PATHS, SESSION_ID, blockThirdParties, json, orderFixture, readCatalog } from './helpers';
 
 const PRODUCT = '/produits/poudre-de-moringa-100g/';
 const SKU = 'REP-MOR-100';
@@ -132,6 +132,94 @@ test('a session that was not completed gives the cart back (C7)', async ({ page 
   await page.route(`**/api/orders/${SESSION_ID}`, (route) => json(route, 200, order));
   await seedCart(page, [{ sku: SKU, quantity: 2 }], `${PATHS.fr.thanks}?session_id=${SESSION_ID}`);
   await expect(page.locator('[data-thanks-cart]')).toBeVisible();
+  await expect(page.locator('h1')).toHaveText('Paiement non abouti');
   await expect(page.locator('[data-cart-count]').first()).toHaveText('2');
   expect((await storedCart(page)).lines).toEqual([{ sku: SKU, quantity: 2 }]);
 });
+
+test('the maximum per product is visible under the stepper and on the cart lines (review 13)', async ({
+  page,
+}) => {
+  await seedCart(page, [{ sku: SKU, quantity: 7 }], PRODUCT);
+  const { maxQuantityPerLine: max } = await readCatalog(page);
+  const note = `${max} sachets maximum par produit. Pour plus, écrivez‑nous.`;
+  const qty = page.locator(`input[data-qty-for="${SKU}"]`);
+  const pageNote = page.locator('.qty-cap');
+  await expect(pageNote).toHaveCount(0);
+
+  // Typed past the maximum: the field drops to it and says so, visibly.
+  await qty.fill(String(max + 2));
+  await qty.press('Tab');
+  await expect(qty).toHaveValue(String(max));
+  await expect(pageNote).toBeVisible();
+  await expect(pageNote).toHaveText(note);
+  await expect(pageNote.getByRole('link')).toHaveAttribute('href', '/contact/');
+  expect((await qty.getAttribute('aria-describedby')) ?? '').toContain(
+    (await pageNote.getAttribute('id'))!,
+  );
+
+  // The add stops at the maximum; the drawer line explains why + is grey.
+  await page.locator('[data-buy-block] button[data-add-to-cart]').click();
+  const drawer = page.locator('#cart-drawer');
+  const line = drawer.locator(`li[data-sku="${SKU}"]`);
+  await expect(line.locator('[data-line-qty]')).toHaveValue(String(max));
+  await expect(line.locator('[data-line-cap]')).toBeVisible();
+  await expect(line.locator('[data-line-cap]')).toHaveText(note);
+  await page.keyboard.press('Escape');
+  await expect(drawer).toBeHidden();
+
+  // Pressed again at the maximum: the drawer opens, nothing changes, the
+  // visible lines say why (and the live region still announces it).
+  await qty.fill('1');
+  await qty.press('Tab');
+  await expect(qty).toHaveValue('1');
+  await expect(pageNote).toBeVisible();
+  await page.locator('[data-buy-block] button[data-add-to-cart]').click();
+  await expect(drawer).toBeVisible();
+  await expect(line.locator('[data-line-cap]')).toBeVisible();
+  await expect(drawer.locator('[data-cart-live]')).toContainText(`${max} sachets au maximum`);
+  expect((await storedCart(page)).lines).toEqual([{ sku: SKU, quantity: max }]);
+
+  // One less: the notes go.
+  await line.locator('[data-line-step="-1"]').click();
+  await expect(line.locator('[data-line-cap]')).toBeHidden();
+  await page.keyboard.press('Escape');
+  await expect(pageNote).toBeHidden();
+
+  // The cart page line says it too.
+  await seedCart(page, [{ sku: SKU, quantity: max }], PATHS.fr.cart);
+  await expect(
+    page.locator(`[data-cart-page-lines] li[data-sku="${SKU}"] [data-line-cap]`),
+  ).toHaveText(note);
+});
+
+test('a "#recipe" link lands on the open panel with the focus but no ring (review 13)', async ({
+  page,
+}) => {
+  await page.goto(PRODUCT);
+  test.skip((await page.locator('#recipe').count()) === 0, 'no recipe on this product');
+  await page.goto('/');
+  await page.goto(`${PRODUCT}#recipe`);
+  const panel = page
+    .locator('#recipe')
+    .locator('xpath=ancestor::div[contains(@class,"acc-body")][1]');
+  await expect(panel).toBeFocused();
+  await expect(panel).toBeInViewport();
+  expect(await panel.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('none');
+  await expect(page.locator('details:has(#recipe) > summary')).not.toBeFocused();
+});
+
+for (const path of ['/mon-compte/', '/ma-commande/']) {
+  test(`${path} sits on the page edge, not centred (review 13)`, async ({ page }) => {
+    await page.goto(path);
+    const title = page.locator('main h1');
+    const form = page.locator('main form').first();
+    await expect(form).toBeVisible();
+    const t = (await title.boundingBox())!;
+    const f = (await form.boundingBox())!;
+    const width = page.viewportSize()!.width;
+    expect(Math.abs(t.x - f.x)).toBeLessThan(2);
+    expect(t.x).toBeLessThan(width / 6);
+    expect(await title.evaluate((el) => getComputedStyle(el).textAlign)).not.toBe('center');
+  });
+}

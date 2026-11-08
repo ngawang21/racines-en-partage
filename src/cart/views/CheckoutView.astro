@@ -12,7 +12,7 @@ import { loadSettings } from '../../i18n/locale';
 import { routePath } from '../../i18n/routing';
 import { getClientCatalog } from '../catalog';
 import { pageStrings, serializeStrings } from '../strings';
-import { countryName } from '../address';
+import { countryName, displayPhone } from '../address';
 import { wholePrice } from '../shipping-hint';
 
 interface Props {
@@ -33,7 +33,12 @@ const threshold = catalog.freeShippingFrom;
 const roundPrice = (cents: number) => wholePrice(formatPrice(cents, locale));
 ---
 
-<section class="container checkout" data-checkout aria-busy="true">
+<section
+  class="container checkout"
+  data-checkout
+  data-phone={displayPhone(settings.brand.phone, locale)}
+  aria-busy="true"
+>
   <header class="rep-head">
     <h1 class="rep-title">{t.checkout.title}</h1>
     <a class="text-link" href={routePath('cart', locale)}>
@@ -215,6 +220,28 @@ const roundPrice = (cents: number) => wholePrice(formatPrice(cents, locale));
         </p>
       </section>
     </aside>
+  </div>
+
+  {
+    /* Phones: while "Payer" is still below the fold, a bar keeps the total and
+     the action under the thumb (as on the cart page). It runs the pay button's
+     steps: a missing choice takes the customer to it, otherwise it pays.
+     Hidden (visibility) until page-checkout.ts shows it. */
+  }
+  <div class="cart-bar co-bar" data-co-bar>
+    <p class="cart-bar-total">
+      <span class="cart-bar-label">{t.cart.total}</span>
+      <span class="price" data-co-bar-total></span>
+    </p>
+    <button
+      type="button"
+      class="btn btn-primary cart-bar-action"
+      data-co-bar-pay
+      disabled={!shopOpen}
+    >
+      <Icon name="lock" size={18} />
+      <span>{t.checkout.barPay}</span>
+    </button>
   </div>
 </section>
 <script type="application/json" id="rep-page-strings" set:html={serializeStrings(pageStrings(t))} />

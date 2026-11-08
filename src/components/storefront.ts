@@ -101,3 +101,52 @@ export function pouchCrop(
   offset = Math.min(0, Math.max(offset, frameH - photoH * scale));
   return { scale: Math.round(scale * 1000) / 1000, offset: Math.round(offset * 1000) / 1000 };
 }
+
+/**
+ * The column ranges of a balanced product grid (shop and category pages), by
+ * viewport: the preferred count and the counts it may switch to. Phones keep
+ * two columns whatever the count (a third would make 105 px cards).
+ */
+export const GRID_RANGES = {
+  /** 720 to 1079 px: four columns would make 150 px cards at 720. */
+  md: { preferred: 3, min: 2, max: 3 },
+  /** 1080 to 1279 px. */
+  lg: { preferred: 3, min: 3, max: 4 },
+  /** 1280 to 1599 px: four columns keep names and prices above the fold at 1440 x 900. */
+  xl: { preferred: 4, min: 4, max: 5 },
+  /** From 1600 px. */
+  xxl: { preferred: 5, min: 4, max: 5 },
+} as const;
+
+export type GridRange = keyof typeof GRID_RANGES;
+
+/**
+ * The column count of a grid of `count` cards that never leaves one card
+ * alone on the last row: the preferred count, else one more, else one fewer,
+ * within the range. A grid that fits on one row keeps the preferred count (an
+ * empty slot on the right is not an orphan), and the preferred count stays
+ * when no allowed count avoids the lone card.
+ */
+export function balancedColumns(
+  count: number,
+  range: { preferred: number; min: number; max: number },
+): number {
+  const lone = (columns: number) => count > columns && count % columns === 1;
+  const { preferred, min, max } = range;
+  if (!lone(preferred)) return preferred;
+  for (const columns of [preferred + 1, preferred - 1]) {
+    if (columns >= min && columns <= max && !lone(columns)) return columns;
+  }
+  return preferred;
+}
+
+/**
+ * The custom properties of a balanced grid of `count` cards, one per range
+ * ("--cols-md: 2; --cols-lg: 4; ..."), read by the `.product-grid[data-balance]`
+ * rules of global.css. The shop filter recomputes them for the visible cards.
+ */
+export function gridColumnsStyle(count: number): string {
+  return (Object.keys(GRID_RANGES) as GridRange[])
+    .map((range) => `--cols-${range}: ${balancedColumns(count, GRID_RANGES[range])}`)
+    .join('; ');
+}

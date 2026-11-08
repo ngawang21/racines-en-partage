@@ -29,6 +29,11 @@ export async function initThanks(ctx: CartContext): Promise<void> {
   if (!root || !tt) return;
   const q = <T extends HTMLElement>(sel: string) => root.querySelector<T>(sel);
   const loading = q<HTMLElement>('[data-thanks-loading]');
+  const title = q<HTMLElement>('[data-thanks-title]');
+  /** The heading follows the state: neutral, loading, found or not completed. */
+  const setTitle = (text: string) => {
+    if (title && text && title.textContent !== text) title.textContent = text;
+  };
   const done = () => {
     root.removeAttribute('aria-busy');
     if (loading) loading.textContent = '';
@@ -36,9 +41,12 @@ export async function initThanks(ctx: CartContext): Promise<void> {
 
   const sessionId = new URLSearchParams(window.location.search).get('session_id');
   if (!isSessionId(sessionId)) {
+    // A direct visit: no order to thank for (the static heading already says so).
+    setTitle(tt.titleNeutral);
     done();
     return;
   }
+  setTitle(tt.titleLoading);
   const storage = localStorageOrNull();
   const paidCart = ctx.store.getCart();
   const cleared = claimOrderClear(storage, sessionId);
@@ -52,7 +60,10 @@ export async function initThanks(ctx: CartContext): Promise<void> {
     lookup = await getOrder(sessionId);
   }
   done();
-  if (lookup.status === 'missing') return;
+  if (lookup.status === 'missing') {
+    setTitle(tt.titleNeutral);
+    return;
+  }
   if (lookup.status === 'failed') {
     const lead = q<HTMLElement>('[data-thanks-lead]');
     if (lead) lead.textContent = tt.loadFailed;
@@ -71,6 +82,7 @@ export async function initThanks(ctx: CartContext): Promise<void> {
   if (lead)
     lead.textContent =
       order.status === 'paid' ? tt.lead : order.status === 'pending' ? tt.pending : tt.unpaid;
+  setTitle(order.status === 'unpaid' ? tt.titleUnpaid : tt.title);
   // Not completed after all: put the lines back (unless a cart was filled
   // meanwhile, in another tab) and forget the claim, so a later successful
   // payment of the same session still empties the cart.

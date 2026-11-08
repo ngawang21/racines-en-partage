@@ -102,6 +102,16 @@ export function compareProducts(
     a.weightGrams - b.weightGrams;
 }
 
+/**
+ * The shop's default order ("Nos incontournables"): the featured products
+ * first, in catalogue order (the home page selection, in the same order),
+ * then the rest of the catalogue. Pass the products in catalogue order
+ * (compareProducts); the partition is stable.
+ */
+export function featuredFirst<T extends Pick<Product, 'featured'>>(products: readonly T[]): T[] {
+  return [...products.filter((p) => p.featured), ...products.filter((p) => !p.featured)];
+}
+
 export function mergeCategory(slug: string, frRaw: unknown, enRaw?: unknown): Category {
   const fr = parseOrThrow(categorySchema, frRaw, `categories/fr/${slug}.yml`);
   if (enRaw === undefined) return { ...fr, slug };

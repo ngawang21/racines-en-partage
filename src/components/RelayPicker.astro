@@ -85,7 +85,8 @@ const regionNames = new Intl.DisplayNames([locale === 'fr' ? 'fr-FR' : 'en-GB'],
       <div id="rep-relay-widget" class="relay-widget"></div>
     </div>
     <input type="hidden" id="rep-relay-id" data-relay-target />
-    <p class="relay-fallback">
+    {/* Shown by page-checkout.ts only when the widget fails to load. */}
+    <p class="relay-fallback" data-relay-fallback hidden>
       {t.checkout.relayFallback}{' '}
       <a href={`mailto:${email}`}>{email}</a>
       {' · '}

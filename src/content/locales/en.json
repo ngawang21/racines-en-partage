@@ -30,7 +30,8 @@
     "lookup": "Track my order",
     "recipes": "Recipes",
     "account": "My account",
-    "card": "Business card"
+    "card": "Business card",
+    "writeUsLink": "Write to us"
   },
   "shop": {
     "title": "The shop",
@@ -63,14 +64,20 @@
     "steps": {
       "orderTitle": "Order",
       "orderText": "Pick your pouches and pay online, securely.",
-      "deliveryTitle": "Choose your pickup point",
-      "deliveryText": "Or collect your order in Arnouville if you are nearby.",
+      "deliveryTitle": "Choose your delivery",
+      "deliveryText": "To a pickup point, to your door, or collect it in Arnouville if you are nearby.",
       "shareTitle": "Receive and share",
       "shareText": "Your parcel arrives within a few days. All that is left is to make the cup."
     },
     "unitPrice": "Price per kilo",
     "recipesLink": "Our recipes",
-    "priceFrom": "from"
+    "priceFrom": "from",
+    "categoriesNav": "Shop categories",
+    "commitments": {
+      "origin": "The origin written on every pouch",
+      "ingredients": "Short ingredient lists",
+      "additives": "No additive, preservative or colouring"
+    }
   },
   "product": {
     "addToCart": "Add to basket",
@@ -161,7 +168,9 @@
     "crossSellAddOf": "Add {name} to your basket",
     "shippingFrom": "From {amount} to a pickup point",
     "shippingFromFree": "From {amount} to a pickup point, free from {threshold}",
-    "shippingOffered": "Free"
+    "shippingOffered": "Free",
+    "maxNote": "Up to {max} per product. For more, {contact}.",
+    "maxNoteContact": "write to us"
   },
   "checkout": {
     "title": "Your order",
@@ -199,7 +208,11 @@
     "pickupTitle": "Collection address",
     "unavailableLines": "Remove the unavailable products to continue.",
     "postcodeRequired": "Enter a postcode to find a pickup point.",
-    "postcodeInvalid": "This postcode is not valid: 3 to 10 digits or letters, for example 95400."
+    "postcodeInvalid": "This postcode is not valid: 3 to 10 digits or letters, for example 95400.",
+    "relayClosed": "Closed at the moment: please choose another pickup point.",
+    "relayClosedUntil": "Closed until {date}: please choose another pickup point.",
+    "payFailed": "The payment could not start. Try again, or call us on {phone}: your basket is kept.",
+    "barPay": "Pay"
   },
   "thanks": {
     "title": "Thank you for your order",
@@ -207,7 +220,7 @@
     "metaDescription": "Thank you for your order from Racines en Partage.",
     "lead": "We have received your payment. A confirmation e-mail is on its way.",
     "pending": "Your payment is being confirmed. You will receive an e-mail as soon as it goes through.",
-    "neutral": "Thank you for visiting. If you have any questions about an order, write to us or give us a call.",
+    "neutral": "Placed an order? Your summary is waiting in your inbox.",
     "orderNumber": "Order no. {number}",
     "linesTitle": "Your order",
     "deliveryTitle": "Delivery",
@@ -226,7 +239,10 @@
     "statusPending": "Awaiting confirmation",
     "statusUnpaid": "Unpaid",
     "discount": "Discount",
-    "loadFailed": "We cannot show your order right now. If your payment went through, you will receive a confirmation e-mail. You can also reload this page in a few minutes."
+    "loadFailed": "We cannot show your order right now. If your payment went through, you will receive a confirmation e-mail. You can also reload this page in a few minutes.",
+    "titleLoading": "Your order",
+    "titleNeutral": "Thank you for visiting",
+    "titleUnpaid": "Payment not completed"
   },
   "errors": {
     "notFoundTitle": "Page not found",

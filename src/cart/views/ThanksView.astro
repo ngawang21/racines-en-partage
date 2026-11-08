@@ -26,7 +26,11 @@ const contactParts = t.thanks.nextContact.split(/(\{email\}|\{phone\})/);
 <section class="container thanks" data-thanks aria-busy="true">
   <header class="thanks-head">
     <span class="thanks-mark" aria-hidden="true"><Icon name="flower" size={30} /></span>
-    <h1 class="rep-title">{t.thanks.title}</h1>
+    {
+      /* Neutral until page-thanks.ts knows more (review 13): "Votre commande"
+       while the order loads, "Merci pour votre commande" once it is found. */
+    }
+    <h1 class="rep-title" data-thanks-title>{t.thanks.titleNeutral}</h1>
     <p class="lead thanks-lead" data-thanks-lead>{t.thanks.neutral}</p>
     <p class="thanks-number" data-thanks-number hidden></p>
     <p class="thanks-loading" role="status" data-thanks-loading></p>

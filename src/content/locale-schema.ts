@@ -44,6 +44,7 @@ export const localeSchema = z.object({
     recipes: text,
     account: text,
     card: text,
+    writeUsLink: text,
   }),
   shop: ns({
     title: text,
@@ -84,6 +85,8 @@ export const localeSchema = z.object({
     unitPrice: text,
     recipesLink: text,
     priceFrom: text,
+    categoriesNav: text,
+    commitments: ns({ origin: text, ingredients: text, additives: text }),
   }),
   product: ns({
     addToCart: text,
@@ -170,6 +173,8 @@ export const localeSchema = z.object({
     shippingFrom: text,
     shippingFromFree: text,
     shippingOffered: text,
+    maxNote: text,
+    maxNoteContact: text,
   }),
   checkout: ns({
     title: text,
@@ -208,6 +213,10 @@ export const localeSchema = z.object({
     unavailableLines: text,
     postcodeRequired: text,
     postcodeInvalid: text,
+    relayClosed: text,
+    relayClosedUntil: text,
+    payFailed: text,
+    barPay: text,
   }),
   thanks: ns({
     title: text,
@@ -235,6 +244,9 @@ export const localeSchema = z.object({
     statusUnpaid: text,
     discount: text,
     loadFailed: text,
+    titleLoading: text,
+    titleNeutral: text,
+    titleUnpaid: text,
   }),
   errors: ns({
     notFoundTitle: text,

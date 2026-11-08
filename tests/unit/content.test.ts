@@ -334,7 +334,7 @@ describe('merge', () => {
     const merged = mergeProduct('poudre-de-moringa-100g', fr, { name: '', tagline: null });
     expect(merged.name).toBe('Poudre de moringa');
     expect(merged.tagline).toBe((fr as any).tagline);
-    expect(merged.recipe?.title).toBe('Smoothie au Moringa');
+    expect(merged.recipe?.title).toBe('Smoothie au moringa');
   });
   it('ignores the order key the CMS writes into the English file', () => {
     const fr = frProducts.get('poudre-de-baobab-100g');
@@ -517,9 +517,34 @@ describe('pages', () => {
       const from = storyLands.from;
       for (const p of products) expect(from, `${locale} ${p.slug}`).toContain(country(p));
       expect(new Set(from).size, locale).toBe(from.length);
-      // The story paragraph names the same lands.
-      for (const land of from) expect(storyBody, `${locale} ${land}`).toContain(land);
+      // The lands show as chips under the story: the paragraph does not list
+      // them a second time (review 13, each fact once on the home page).
+      for (const land of from) expect(storyBody, `${locale} ${land}`).not.toContain(land);
     }
+  });
+  it('the home page names the ESAT once outside the trust strip, in the commitments', () => {
+    for (const locale of ['fr', 'en'] as const) {
+      const home = mergePage(
+        'home',
+        pages('fr').get('home'),
+        locale === 'fr' ? undefined : pages('en').get('home'),
+      );
+      expect(home.commitmentBody, locale).toContain('ESAT Les Oliviers');
+      const elsewhere = [home.hero.title, home.hero.lead, home.storyBody, home.ritualTitle]
+        .concat(home.ritual.map((m) => m.text))
+        .join(' ');
+      expect(elsewhere, locale).not.toContain('ESAT');
+    }
+  });
+  it('the home hero keeps its last words together', () => {
+    const title = (locale: 'fr' | 'en') =>
+      mergePage(
+        'home',
+        pages('fr').get('home'),
+        locale === 'fr' ? undefined : pages('en').get('home'),
+      ).hero.title;
+    expect(title('fr')).toContain('de\u00a0l’Ouest');
+    expect(title('en')).toContain('West\u00a0African');
   });
   it('the home ritual points at three different products that carry a recipe', () => {
     for (const locale of ['fr', 'en'] as const) {

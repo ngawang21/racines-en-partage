@@ -36,8 +36,9 @@ const legalLinks = [
   { href: routePath('legal', locale), label: t.footer.legal },
   { href: routePath('terms', locale), label: t.footer.terms },
   { href: routePath('privacy', locale), label: t.footer.privacy },
-  { href: routePath('card', locale), label: t.footer.card },
 ];
+// The business card page (/carte/, noindex) is the owner's tool, reached by
+// its URL (docs/guide-proprietaire.md), not a shopper link.
 const year = new Date().getFullYear();
 ---
 

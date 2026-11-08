@@ -90,6 +90,7 @@ const aboutHref = routePath('about', locale);
     title={home.commitmentTitle}
     body={home.commitmentBody}
     link={{ href: aboutHref, label: home.hero.cta.secondary }}
+    {t}
   />
 </Base>
 
@@ -98,12 +99,12 @@ const aboutHref = routePath('about', locale);
      in the three-column range, four from 1080 px, five from 1600 px when the
      owner features five (four columns otherwise). */
   @media (min-width: 720px) and (max-width: 1079px) {
-    .featured :global(.featured-grid > li:nth-child(n + 4)) {
+    .featured :global(.product-grid.featured-grid > li:nth-child(n + 4)) {
       display: none;
     }
   }
   @media (min-width: 1080px) and (max-width: 1599px) {
-    .featured :global(.featured-grid > li:nth-child(n + 5)) {
+    .featured :global(.product-grid.featured-grid > li:nth-child(n + 5)) {
       display: none;
     }
   }
@@ -113,7 +114,7 @@ const aboutHref = routePath('about', locale);
     }
   }
   @media (max-width: 719px) {
-    .featured :global(.featured-grid > li:nth-child(n + 5)) {
+    .featured :global(.product-grid.featured-grid > li:nth-child(n + 5)) {
       display: none;
     }
   }

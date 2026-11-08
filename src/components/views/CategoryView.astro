@@ -1,7 +1,8 @@
 ---
-// Category page, both locales (spec 5.4): a compact head (title, intro and
-// the count; the category photo only serves as the share image, the cards
-// are the pictures here), the grid, then links to the other categories.
+// Category page, both locales (spec 5.4): a compact head (title and intro;
+// the category photo only serves as the share image, the cards are the
+// pictures here), the shop's category chips as links (the current one
+// selected) with the count, the grid, then links to the other categories.
 import { DEFAULT_LOCALE, type Locale } from '../../consts';
 import { formatFamilies, groupFormats } from '../../content/merge';
 import Base from '../../layouts/Base.astro';
@@ -27,8 +28,20 @@ const [t, categories, products, settings, allFr] = await Promise.all([
 const category = categories.find((c) => c.slug === slug);
 if (!category) throw new Error(`unknown category ${slug}`);
 const listed = products.filter((p) => p.category === slug);
-// One card per product family (ProductGrid): the count counts cards.
-const cards = groupFormats(listed, products, formatFamilies(allFr)).length;
+// One card per product family (ProductGrid): the counts count cards.
+const groups = groupFormats(products, products, formatFamilies(allFr));
+const counts: Record<string, number> = {};
+for (const { lead } of groups) counts[lead.category] = (counts[lead.category] ?? 0) + 1;
+const cards = counts[slug] ?? 0;
+const chips = [
+  { href: routePath('shop', locale), label: t.shop.all, count: groups.length, current: false },
+  ...categories.map((c) => ({
+    href: routePath('category', locale, c.slug),
+    label: c.name,
+    count: counts[c.slug] ?? 0,
+    current: c.slug === slug,
+  })),
+];
 const others = categories.filter((c) => c.slug !== slug);
 ---
 
@@ -58,13 +71,25 @@ const others = categories.filter((c) => c.slug !== slug);
       ]}
     />
     <h1>{category.name}</h1>
-    <div class="cat-lead">
-      <p class="lead">{category.intro}</p>
-      <p class="cat-count">{countLabel(cards, t, locale)}</p>
-    </div>
+    <p class="lead">{category.intro}</p>
   </div>
 
   <section class="container-wide cat-grid" aria-label={category.name}>
+    <div class="cat-bar">
+      <nav class="chips" aria-label={t.shop.categoriesNav}>
+        {
+          chips.map((c) => (
+            <a class="chip" href={c.href} aria-current={c.current ? 'page' : undefined}>
+              <span>{c.label}</span>
+              <span class="chip-count" aria-hidden="true">
+                {c.count}
+              </span>
+            </a>
+          ))
+        }
+      </nav>
+      <p class="cat-count">{countLabel(cards, t, locale)}</p>
+    </div>
     {
       listed.length > 0 ? (
         <ProductGrid
@@ -74,6 +99,7 @@ const others = categories.filter((c) => c.slug !== slug);
           shopOpen={settings.shop.open}
           headingLevel="h2"
           eager={5}
+          balance
         />
       ) : (
         <p class="empty">{t.shop.empty}</p>
@@ -103,7 +129,7 @@ const others = categories.filter((c) => c.slug !== slug);
 <style>
   /* Compact head, as on the shop page: a full row of cards above the fold. */
   .cat-head {
-    padding-block: var(--space-6);
+    padding-block: 20px var(--space-6);
   }
   .cat-head :global(.crumbs) {
     margin-bottom: var(--space-3);
@@ -112,31 +138,40 @@ const others = categories.filter((c) => c.slug !== slug);
     font-size: clamp(2.25rem, 1.9rem + 1.2vw, 3rem);
     line-height: 1.05;
   }
-  .cat-lead {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-2) var(--space-6);
-    margin-top: var(--space-2);
-  }
   .cat-head .lead {
-    flex: 1 1 32rem;
     max-width: 72ch;
-    margin-top: 0;
+    margin-top: var(--space-2);
     font-size: 1.0625rem;
     line-height: 1.5;
   }
+  /* The shop's chip row (global .chips), the count at its end, as on the
+     shop page. */
+  .cat-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-6);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+  .cat-bar .chips {
+    flex: 0 0 calc(100% + 2 * var(--gutter));
+    min-width: 0;
+  }
+  @media (min-width: 900px) {
+    .cat-bar .chips {
+      flex: 1 1 auto;
+    }
+  }
   .cat-count {
-    flex: none;
+    margin: 0;
     color: var(--ink-2);
     font-size: var(--fs--1);
-    font-weight: 600;
-    letter-spacing: 0.01em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
-  .cat-grid {
-    padding-top: var(--space-6);
-    border-top: 1px solid var(--line);
+  .cat-grid :global(.product-grid) {
+    margin-top: 20px;
   }
   .empty {
     padding-block: var(--space-12);
