@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ClientProduct } from '../../src/catalog/build';
-import { formatFamily, pickCrossSell } from '../../src/cart/cross-sell';
+import { formatFamily, pickCrossSell, pickFeatured } from '../../src/cart/cross-sell';
 
 const product = (
   sku: string,
@@ -175,5 +175,29 @@ describe('pickCrossSell: formats and complements (review 11)', () => {
       product('B-100', { slug: 'b-100g' }),
     );
     expect(skus(pickCrossSell([line('A-100')], c))).toEqual(['B-100']);
+  });
+});
+
+describe('pickFeatured (empty cart, review 14)', () => {
+  it('takes the featured products first, then the others, never out of stock', () => {
+    const catalog = catalogOf(
+      product('A'),
+      product('B', { featured: true }),
+      product('OUT', { stock: 'out', featured: true }),
+      product('C', { featured: true }),
+      product('D'),
+      product('E'),
+    );
+    expect(skus(pickFeatured(catalog))).toEqual(['B', 'C', 'A', 'D']);
+    expect(skus(pickFeatured(catalog, 2))).toEqual(['B', 'C']);
+  });
+
+  it('shows one format per product', () => {
+    const catalog = catalogOf(
+      product('MOR-100', { slug: 'poudre-de-moringa-100g', featured: true }),
+      product('MOR-200', { slug: 'poudre-de-moringa-200g', featured: true }),
+      product('BAO-100', { slug: 'poudre-de-baobab-100g' }),
+    );
+    expect(skus(pickFeatured(catalog))).toEqual(['MOR-100', 'BAO-100']);
   });
 });

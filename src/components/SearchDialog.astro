@@ -6,9 +6,13 @@
 // data-add-to-cart and data-sku are set when a row is rendered, so the
 // template holds no button without a SKU). No network
 // request. Strings travel as data attributes; `{query}` and `{count}` are
-// replaced client side.
-import type { Locale } from '../consts';
+// replaced client side. The formats of one product share a row, as in the
+// grids: `data-families` maps each heavier format's slug to its family
+// (formatFamilies over the French catalogue, the language that defines one).
+import { DEFAULT_LOCALE, type Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
+import { formatFamilies } from '../content/merge';
+import { loadProducts } from '../i18n/locale';
 import { routePath } from '../i18n/routing';
 import Icon from './Icon.astro';
 
@@ -17,6 +21,9 @@ interface Props {
   t: LocaleContent;
 }
 const { locale, t } = Astro.props;
+const families = Object.fromEntries(
+  [...formatFamilies(await loadProducts(DEFAULT_LOCALE))].filter(([slug, lead]) => slug !== lead),
+);
 ---
 
 <dialog
@@ -29,6 +36,8 @@ const { locale, t } = Astro.props;
   data-results-one={t.search.resultsOne.replace('{count}', '%n')}
   data-results-many={t.search.resultsMany.replace('{count}', '%n')}
   data-out={t.product.stockOut}
+  data-from={t.shop.priceFrom}
+  data-families={JSON.stringify(families)}
 >
   <div class="search-panel">
     <h2 id="search-title" class="visually-hidden">{t.search.title}</h2>
@@ -65,6 +74,8 @@ const { locale, t } = Astro.props;
           <div class="sr-text">
             <a class="sr-name" href=""></a>
             <span class="sr-meta">
+              <span class="sr-formats" role="group" aria-label={t.product.formats} hidden></span>
+              <span class="sr-from" hidden>{t.shop.priceFrom}{' '}</span>
               <span class="sr-price"></span>
               <span aria-hidden="true"> · </span>
               <span class="visually-hidden">{t.product.unitPrice} </span>
@@ -309,6 +320,38 @@ const { locale, t } = Astro.props;
     color: var(--ink-2);
     font-size: var(--fs--1);
     font-variant-numeric: tabular-nums;
+  }
+  /* The formats of a grouped row: a line of small chips over the price,
+     above the row's covering link (as on the product cards). */
+  .search-results :global(.sr-formats:not([hidden])) {
+    display: flex;
+    gap: 4px;
+    margin-block: 2px 4px;
+  }
+  .search-results :global(.sr-format) {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 8px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: rgba(255, 255, 255, 0.5);
+    color: var(--forest);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: none;
+    touch-action: manipulation;
+    transition: border-color var(--dur-fast) ease;
+  }
+  .search-results :global(.sr-format[data-shown]) {
+    border-color: var(--forest);
+  }
+  @media (hover: hover) {
+    .search-results :global(.sr-format:hover) {
+      border-color: var(--forest);
+    }
   }
   .search-results :global(.sr-price) {
     color: var(--forest);

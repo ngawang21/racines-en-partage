@@ -1,8 +1,10 @@
 ---
-// Home page, both locales (spec 5.4): hero, trust strip, bestsellers, how it
-// works, the story band, reviews, recipes, then the commitments. The hero's
-// slogan is the only kicker on the page; the shop's filter chips replace the
-// category tiles (eleven products do not need them).
+// Home page, both locales (spec 5.4): hero, trust strip, bestsellers, the
+// story band, reviews, the ritual, then the commitments: one idea each, every
+// claim said once (review 14). "Comment ça marche" left the page: the strip
+// and the FAQ already tell ordering and delivery (HowItWorks.astro stays for
+// now). The shop's filter chips replace the category tiles (eleven products
+// do not need them).
 import medallion from '../../assets/brand/medallion.webp';
 import type { Locale } from '../../consts';
 import Base from '../../layouts/Base.astro';
@@ -10,7 +12,6 @@ import { loadLocale, loadPage, loadProducts, loadReviews, loadSettings } from '.
 import { routePath } from '../../i18n/routing';
 import Commitment from '../Commitment.astro';
 import Hero from '../Hero.astro';
-import HowItWorks from '../HowItWorks.astro';
 import ProductGrid from '../ProductGrid.astro';
 import Reassurance from '../Reassurance.astro';
 import ReviewsBand from '../ReviewsBand.astro';
@@ -55,8 +56,6 @@ const aboutHref = routePath('about', locale);
       class="featured-grid"
     />
   </section>
-
-  <HowItWorks {t} />
 
   <StoryBand
     title={home.storyTitle}

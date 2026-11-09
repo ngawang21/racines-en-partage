@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   CARD_POUCH,
+  CARD_POUCH_SQUARE,
   GRID_RANGES,
   POUCH_BOXES,
   balancedColumns,
@@ -11,6 +12,7 @@ import {
   pouchCrop,
 } from '../../src/components/storefront';
 import {
+  categoryProducts,
   compareProducts,
   featuredFirst,
   formatFamilies,
@@ -220,6 +222,19 @@ describe('pouchCrop', () => {
       expect(pouchCrop(file), file).not.toBeNull();
     }
   });
+  it('puts every pouch at the same place and height in a square frame too', () => {
+    const photoH = 1600 / 1067;
+    for (const [name, box] of Object.entries(POUCH_BOXES)) {
+      const crop = pouchCrop(`/src/assets/products/${name}.webp`, 1, undefined, CARD_POUCH_SQUARE)!;
+      expect(crop.scale, name).toBeGreaterThanOrEqual(1);
+      expect(crop.offset, name).toBeLessThanOrEqual(0);
+      expect(crop.offset + photoH * crop.scale, name).toBeGreaterThanOrEqual(1 - 0.002);
+      const top = crop.offset + box.top * photoH * crop.scale;
+      const height = (box.bottom - box.top) * photoH * crop.scale;
+      expect(top, name).toBeCloseTo(CARD_POUCH_SQUARE.top, 2);
+      expect(height, name).toBeCloseTo(CARD_POUCH_SQUARE.height, 2);
+    }
+  });
   it('leaves an unmeasured photo to the default crop', () => {
     expect(pouchCrop('/src/assets/products/new-product.webp')).toBeNull();
   });
@@ -299,6 +314,41 @@ describe('featuredFirst (the shop default order)', () => {
   });
 });
 
+describe('categoryProducts (category pages)', () => {
+  const categoryOrder = new Map(
+    [...yamlFolder('categories', 'fr')].map(([slug, raw]) => [
+      slug,
+      (raw as { order: number }).order,
+    ]),
+  );
+  const catalogue = [...all].sort(compareProducts(categoryOrder, 'fr'));
+  it('follows the shop order: featured first, then the CMS order, never the name', () => {
+    const powders = categoryProducts(catalogue, 'poudres');
+    expect(powders.every((p) => p.category === 'poudres')).toBe(true);
+    expect(powders.map((p) => p.slug)).toEqual(
+      featuredFirst(catalogue)
+        .filter((p) => p.category === 'poudres')
+        .map((p) => p.slug),
+    );
+    // The barley (Germany, CMS position 1, first by name) no longer leads.
+    const leads = groupFormats(powders, all, formatFamilies(all)).map((g) => g.lead.slug);
+    expect(leads[0]).toBe('poudre-de-baobab-100g');
+    expect(leads.indexOf('poudre-d-orge-grillee-100g')).toBeGreaterThan(
+      leads.indexOf('poudre-de-moringa-100g'),
+    );
+  });
+  it('keeps the catalogue order inside each part', () => {
+    const list = [
+      make('a', 'A', 100),
+      make('b', 'B', 100, 'cacao', { featured: true }),
+      make('c', 'C', 100, 'poudres', { featured: true }),
+      make('d', 'D', 100),
+    ];
+    expect(categoryProducts(list, 'poudres').map((p) => p.slug)).toEqual(['c', 'a', 'd']);
+    expect(categoryProducts(list, 'graines')).toEqual([]);
+  });
+});
+
 describe('balancedColumns', () => {
   const lone = (count: number, columns: number) => count > columns && count % columns === 1;
   it('never leaves a lone last card when the range allows another count', () => {
@@ -314,15 +364,24 @@ describe('balancedColumns', () => {
       }
     }
   });
-  it('shop (nine cards): three rows of three, then five and four from 1280 px', () => {
-    expect(gridColumnsStyle(9)).toBe('--cols-md: 3; --cols-lg: 3; --cols-xl: 5; --cols-xxl: 5');
+  it('shop (nine cards): three full rows of three to 1599 px, square frames from 1080 px, five from 1600 px', () => {
+    expect(gridColumnsStyle(9)).toBe(
+      '--cols-md: 3; --cols-lg: 3; --cols-xl: 3; --cols-xxl: 5; --square-lg: 1; --square-xl: 1',
+    );
   });
-  it('a category of four: two rows of two, then one row of four', () => {
-    expect(gridColumnsStyle(4)).toBe('--cols-md: 2; --cols-lg: 4; --cols-xl: 4; --cols-xxl: 5');
+  it('a category of four: two rows of two, then one full row of four from 1080 px', () => {
+    expect(gridColumnsStyle(4)).toBe('--cols-md: 2; --cols-lg: 4; --cols-xl: 4; --cols-xxl: 4');
   });
-  it('keeps the preferred count for a single row and for counts that already balance', () => {
-    expect(gridColumnsStyle(2)).toBe('--cols-md: 3; --cols-lg: 3; --cols-xl: 4; --cols-xxl: 5');
-    expect(gridColumnsStyle(8)).toBe('--cols-md: 3; --cols-lg: 3; --cols-xl: 4; --cols-xxl: 5');
+  it('prefers a full last row over a hole, with three columns or more', () => {
+    // Eight: two full rows of four from 1080 px; three columns keep their hole at md (two would double the cards).
+    expect(gridColumnsStyle(8)).toBe('--cols-md: 3; --cols-lg: 4; --cols-xl: 4; --cols-xxl: 4');
     expect(balancedColumns(6, GRID_RANGES.xxl)).toBe(4);
+    expect(balancedColumns(10, GRID_RANGES.xxl)).toBe(5);
+  });
+  it('keeps the preferred count for one or two cards', () => {
+    expect(gridColumnsStyle(2)).toBe(
+      '--cols-md: 3; --cols-lg: 3; --cols-xl: 3; --cols-xxl: 5; --square-lg: 1; --square-xl: 1',
+    );
+    expect(balancedColumns(1, GRID_RANGES.xl)).toBe(3);
   });
 });

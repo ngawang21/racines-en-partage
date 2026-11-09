@@ -241,10 +241,16 @@ const shopHref = routePath('shop', locale);
               </li>
             )
           }
-          <li>
-            <Icon name="leaf" size={20} />
-            <span>{t.product.vegetal}</span>
-          </li>
+          {
+            // "Sans additif" once on the page: the "Ne contient pas" tags say it
+            // when they list the additives.
+            !product.free_from.includes('additifs') && (
+              <li>
+                <Icon name="leaf" size={20} />
+                <span>{t.product.vegetal}</span>
+              </li>
+            )
+          }
           <li>
             <Icon name="pin" size={20} />
             <span>{t.product.packagedBy}</span>

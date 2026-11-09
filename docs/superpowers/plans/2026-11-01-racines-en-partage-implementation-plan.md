@@ -439,3 +439,19 @@ a separate entry in `worker/` deployed with the static assets by one
   business card out of the footer; search with one-typo tolerance and
   synonyms; phone menu language buttons at 44 px. Gates: unit 309, worker
   395, build 49 (1 skipped), e2e 172 (2 skipped).
+- 2026-11-09, design pass 5 round 5: fourth independent rating 7.5/10 (a
+  different reviewer, `out/review/14/rating-4.md`, local). Applied: no layout
+  shift on the cart, checkout and account pages (reserved height, CLS under
+  0.05 asserted by e2e); relay error under the results list with focus on
+  the first open point, the postcode never marked invalid, aligned search
+  row, map and popups kept inside the widget under the phone pay bar; human
+  form errors in view with the shop e-mail; Back closes the drawer; empty
+  cart and drawer show four featured products; phone cart lines under 220 px;
+  checkout quantity tag; honest hero ("Des plantes ..."), correct alt texts,
+  settle 400 ms; "Comment ça marche" off the home (component kept), each
+  claim once; category pages in catalogue order; shop three full rows with
+  square frames up to 1599 px and a tighter head; recipe cards consistent;
+  one search row per product with format chips; phone header tucks again
+  after the menu closes; scroll cue on the chip row; `src/content/formats.ts`
+  shared by build and client. Gates: unit 321, worker 395, build 49
+  (1 skipped), e2e 194 (2 skipped).

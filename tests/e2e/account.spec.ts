@@ -76,6 +76,28 @@ test('logged out: the sign-in form sends a link', async ({ page }) => {
   expect(calls).toEqual([{ email: 'awa@gmail.com', locale: 'fr' }]);
 });
 
+test('logged out: a sign-in link that cannot be sent says so in view, with the address (B4)', async ({
+  page,
+}) => {
+  await page.route('**/api/account/orders', (route) =>
+    json(route, 401, { error: { code: 'UNAUTHENTICATED', message: 'x' } }),
+  );
+  await page.route('**/api/account/login', (route) =>
+    json(route, 502, { error: { code: 'MAIL_FAILED', message: 'x' } }),
+  );
+  await page.goto(ACCOUNT.en);
+  const form = page.locator('form[data-form="account_login"]');
+  await form.getByLabel(/e-mail/i).fill('sam@example.com');
+  await form.locator('[data-form-submit]').click();
+  const status = form.locator('[data-form-status]');
+  await expect(status).toHaveText(
+    /^We could not send your message\. Try again in a moment, or write to us directly at \S+@\S+\.$/,
+  );
+  await expect(status).toHaveAttribute('role', 'alert');
+  await expect(status).toBeFocused();
+  await expect(status).toBeInViewport();
+});
+
 for (const [label, answer] of [
   ['unreachable', 'abort'],
   ['missing (static preview)', 'html404'],

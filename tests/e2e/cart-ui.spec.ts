@@ -223,3 +223,147 @@ for (const path of ['/mon-compte/', '/ma-commande/']) {
     expect(await title.evaluate((el) => getComputedStyle(el).textAlign)).not.toBe('center');
   });
 }
+
+// Review 14 -----------------------------------------------------------------
+
+declare global {
+  interface Window {
+    __cls?: number;
+  }
+}
+
+const CLS_PAGES = [
+  { path: PATHS.fr.cart, ready: '[data-cart-page-content]', chunk: 'page-cart' },
+  { path: PATHS.fr.checkout, ready: '[data-checkout-content]', chunk: 'page-checkout' },
+  { path: '/mon-compte/', ready: '[data-account-state="out"]', chunk: 'page-account' },
+] as const;
+
+for (const { path, ready, chunk } of CLS_PAGES) {
+  test(`${path} does not shift when the browser fills it in: CLS under 0.05 (B1)`, async ({
+    page,
+  }) => {
+    // Phone project at 390 x 844, desktop measured at 1440 x 900.
+    if ((page.viewportSize()?.width ?? 0) >= 900)
+      await page.setViewportSize({ width: 1440, height: 900 });
+    await page.route('**/api/account/orders', (route) =>
+      json(route, 401, { error: { code: 'UNAUTHENTICATED', message: 'x' } }),
+    );
+    // The page's module is held until the shell has painted, as on a slow
+    // phone: whatever the first paint shows must not move afterwards.
+    let release = () => {};
+    const painted = new Promise<void>((resolve) => (release = resolve));
+    await page.route(new RegExp(`/_astro/${chunk}\\.[\\w-]+\\.js$`), async (route) => {
+      await painted;
+      await route.continue();
+    });
+    await page.addInitScript(() => {
+      window.__cls = 0;
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries() as Array<
+          PerformanceEntry & { value: number; hadRecentInput: boolean }
+        >)
+          if (!entry.hadRecentInput) window.__cls! += entry.value;
+      }).observe({ type: 'layout-shift', buffered: true });
+    });
+    await seedCart(
+      page,
+      [
+        { sku: SKU, quantity: 2 },
+        { sku: 'REP-BAO-100', quantity: 1 },
+      ],
+      path,
+    );
+    const frames = () =>
+      page.evaluate(
+        () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+      );
+    await page.waitForFunction(
+      () => performance.getEntriesByName('first-contentful-paint').length > 0,
+    );
+    await frames();
+    release();
+    await expect(page.locator(ready)).toBeVisible();
+    // Layout-shift entries arrive after the frame that caused them.
+    await frames();
+    await page.waitForTimeout(200);
+    expect(await page.evaluate(() => window.__cls)).toBeLessThan(0.05);
+  });
+}
+
+test('Back with the drawer open closes it and stays on the page (B5)', async ({ page }) => {
+  await page.goto('/');
+  await page.goto(PATHS.fr.shop);
+  const drawer = page.locator('#cart-drawer');
+  const toggle = page.locator('[data-cart-toggle]').filter({ visible: true }).first();
+  await toggle.click();
+  await expect(drawer).toBeVisible();
+  await page.goBack();
+  await expect(drawer).toBeHidden();
+  expect(new URL(page.url()).pathname).toBe(PATHS.fr.shop);
+  await expect(page.locator('html')).not.toHaveClass(/has-drawer/);
+  await expect(toggle).toBeFocused();
+
+  // Escape (and the close button) leave no entry behind: Back then leaves the page.
+  await toggle.click();
+  await expect(drawer).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(drawer).toBeHidden();
+  await toggle.click();
+  await drawer.locator('[data-drawer-close]').click();
+  await expect(drawer).toBeHidden();
+  await expect.poll(() => page.evaluate(() => window.history.state)).toBeNull();
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+});
+
+test('an empty cart shows four products under its message, in the drawer and on the page', async ({
+  page,
+}) => {
+  await page.goto(PATHS.fr.cart);
+  const featured = page.locator('main [data-cart-featured]');
+  await expect(page.locator('[data-cart-page-empty]')).toBeVisible();
+  await expect(featured).toBeVisible();
+  await expect(featured.getByRole('heading')).toHaveText('Nos incontournables');
+  await expect(featured.locator('[data-cross-sell-sku]')).toHaveCount(4);
+
+  // The drawer, too; an add from it fills the cart and the list goes.
+  await page.locator('[data-cart-toggle]').filter({ visible: true }).first().click();
+  const drawer = page.locator('#cart-drawer');
+  const inDrawer = drawer.locator('[data-cart-featured]');
+  await expect(inDrawer.locator('[data-cross-sell-sku]')).toHaveCount(4);
+  const sku = (await inDrawer
+    .locator('[data-cross-sell-sku]')
+    .first()
+    .getAttribute('data-cross-sell-sku'))!;
+  await inDrawer.locator('button[data-add-to-cart]').first().click();
+  await expect(drawer.locator(`li[data-sku="${sku}"] .cart-line-name`)).toBeFocused();
+  await expect(inDrawer).toBeHidden();
+  expect((await storedCart(page)).lines).toEqual([{ sku, quantity: 1 }]);
+  await expect(featured).toBeHidden();
+});
+
+test('phone cart lines: "Retirer" on the stepper row, a line about 200 px tall', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedCart(
+    page,
+    [
+      { sku: SKU, quantity: 2 },
+      { sku: 'REP-BAO-100', quantity: 1 },
+    ],
+    PATHS.fr.cart,
+  );
+  const lines = page.locator('[data-cart-page-lines] > li');
+  await expect(lines).toHaveCount(2);
+  for (const line of await lines.all()) {
+    const box = (await line.boundingBox())!;
+    expect(box.height).toBeLessThanOrEqual(220);
+    const stepper = (await line.locator('.qty').boundingBox())!;
+    const remove = (await line.locator('[data-line-remove]').boundingBox())!;
+    expect(Math.abs(stepper.y + stepper.height / 2 - (remove.y + remove.height / 2))).toBeLessThan(
+      4,
+    );
+    expect(remove.x).toBeGreaterThan(stepper.x + stepper.width);
+  }
+});

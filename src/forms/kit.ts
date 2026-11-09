@@ -9,7 +9,8 @@
 //       <input id="x" aria-describedby="x-error"> <p id="x-error" data-field-error></p>
 //       <button type="submit" data-form-submit>
 //     </div>
-//     <p data-form-status role="status"></p>        polite: sending, errors
+//     <p data-form-status role="status"></p>        sending (polite); an error
+//                                                    turns it into an alert
 //     <div data-form-done tabindex="-1" hidden>      success, takes the focus
 //       <p data-form-done-text>...</p>
 //     </div>
@@ -93,11 +94,44 @@ export function liveRevalidation(form: HTMLFormElement, s: FormStrings): void {
   });
 }
 
-export function setStatus(form: HTMLElement, text: string, kind: 'info' | 'error' = 'info'): void {
+/**
+ * The status line under a form. Information (sending) is polite; an error is
+ * an alert that takes the focus and scrolls into view (review 14: a failure
+ * below the fold was announced but never seen). `email`, when given, becomes
+ * a mailto link wherever the message prints it.
+ */
+export function setStatus(
+  form: HTMLElement,
+  text: string,
+  kind: 'info' | 'error' = 'info',
+  email?: string,
+): void {
   const status = form.querySelector<HTMLElement>('[data-form-status]');
   if (!status) return;
+  const error = kind === 'error' && text !== '';
   status.classList.toggle('is-error', kind === 'error');
-  status.textContent = text;
+  status.setAttribute('role', error ? 'alert' : 'status');
+  if (email && error && text.includes(email)) {
+    const parts = text.split(email);
+    const nodes: Array<Node | string> = [];
+    parts.forEach((part, index) => {
+      if (index > 0) {
+        const link = document.createElement('a');
+        link.href = `mailto:${email}`;
+        link.textContent = email;
+        nodes.push(link);
+      }
+      if (part) nodes.push(part);
+    });
+    status.replaceChildren(...nodes);
+  } else {
+    status.textContent = text;
+  }
+  if (!error) return;
+  status.tabIndex = -1;
+  status.focus({ preventScroll: true });
+  const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  status.scrollIntoView({ block: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
 }
 
 /** Busy: aria-disabled (not disabled, which would drop the focus) and a status line. */
@@ -113,11 +147,29 @@ export function setBusy(form: HTMLFormElement, busy: boolean, s: FormStrings): v
 
 export const isBusy = (form: HTMLFormElement): boolean => form.hasAttribute('aria-busy');
 
-/** The customer-facing message of an API error, in the form's words. */
-export function errorMessage(error: ApiError, s: FormStrings): string {
+/**
+ * Errors that only mean "it did not go through": nothing for the customer to
+ * correct. The contact, newsletter, stock alert and sign-in forms then say so
+ * in plain words, with the shop's address (`forms.sendFailed`).
+ */
+const NOT_SENT = new Set(['generic', 'mailFailed', 'unavailable', 'payment']);
+
+/**
+ * The customer-facing message of an API error, in the form's words. With
+ * `sendFailed`, a failure the customer cannot fix reads "Nous n’avons pas pu
+ * envoyer votre message. Réessayez dans un instant, ou écrivez‑nous
+ * directement à {email}." rather than the generic error.
+ */
+export function errorMessage(
+  error: ApiError,
+  s: FormStrings,
+  options: { sendFailed?: boolean } = {},
+): string {
   if (error.code === 'VALIDATION_ERROR' || error.code === 'PAYLOAD_TOO_LARGE')
     return s.forms.validation;
   const key = ERROR_KEY[error.code] as keyof FormStrings['errors'];
+  if (options.sendFailed && s.forms.sendFailed && (NOT_SENT.has(key) || !s.errors[key]))
+    return interpolate(s.forms.sendFailed, { email: s.email });
   return s.errors[key] || s.errors.generic;
 }
 

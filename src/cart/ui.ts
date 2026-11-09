@@ -60,11 +60,11 @@ function bump(): void {
 
 /**
  * The quantity input that goes with an add button: the product page stepper,
- * except for buttons in the search dialog or a cross-sell list, which always
- * add one.
+ * except for buttons in the search dialog, a cross-sell list or the empty
+ * cart's featured list, which always add one.
  */
 function qtyInputFor(sku: string, add: Element): HTMLInputElement | null {
-  if (add.closest('dialog[data-search], [data-cross-sell]')) return null;
+  if (add.closest('dialog[data-search], [data-cross-sell], [data-cart-featured]')) return null;
   return document.querySelector<HTMLInputElement>(`input[data-qty-for="${CSS.escape(sku)}"]`);
 }
 
@@ -216,7 +216,7 @@ function init(): void {
       const input = qtyInputFor(sku, add);
       const quantity = input ? clampInput(input, store.maxQuantity) : 1;
       const before = store.getCart().lines.find((l) => l.sku === sku)?.quantity ?? 0;
-      const suggestion = add.closest('[data-cross-sell]');
+      const suggestion = add.closest('[data-cross-sell], [data-cart-featured]');
       store.addLine(sku, quantity);
       const after = store.getCart().lines.find((l) => l.sku === sku)?.quantity ?? 0;
       add.classList.add('is-added');

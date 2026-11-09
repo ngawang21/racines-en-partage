@@ -4,8 +4,9 @@ seoDescription: >-
   additifs, conditionnés en France par l’ESAT Les Oliviers. Livraison en Point
   Relais Mondial Relay.
 hero:
-  # A no-break space joins “de” and “l’Ouest” (one line break fewer).
-  title: Les plantes d’Afrique de l’Ouest, en sachet kraft.
+  # No-break spaces join “de” and “l’Ouest” (one line break fewer) and keep
+  # “en” with “sachet” (no “en” hanging at a line end on phones).
+  title: Des plantes d’Afrique de l’Ouest, en sachet kraft.
   lead: >-
     Moringa, bissap, baobab, souchet, cacao : un seul ingrédient par sachet,
     à infuser, à mixer dans un smoothie ou à saupoudrer sur un plat.
@@ -14,7 +15,7 @@ hero:
     secondary: Notre histoire
   imageAlt: >-
     Trois sachets kraft Racines en Partage, orge grillée, hibiscus et moringa,
-    posés sur le sable entre des feuilles de palmier
+    posés sur des feuilles de palmier
 reassurance:
   - icon: leaf
     text: 100 % végétal, sans additif ni conservateur
@@ -53,9 +54,11 @@ ritual:
     text: Un chocolat chaud au cacao de Côte d’Ivoire.
     product: poudre-de-cacao-100g
 commitmentTitle: Nos engagements
-# The three commitments (origin, short lists, no additive) are the list next
-# to this text (locales, shop.commitments): the text tells the ESAT only.
+# The three commitments (origin, short lists, a serving idea) are the list
+# next to this text (locales, shop.commitments): the text tells who the ESAT
+# is. The trust strip already says the pouches are packed there: each claim
+# once on the home page.
 commitmentBody: >-
-  Nos sachets sont conditionnés par l’ESAT Les Oliviers, à Gennevilliers, un
-  établissement qui accompagne par le travail des personnes en situation de
-  handicap.
+  L’ESAT Les Oliviers, à Gennevilliers, accompagne par le travail des personnes
+  en situation de handicap. Pesée, ensachage, étiquetage : chaque sachet passe
+  entre leurs mains.

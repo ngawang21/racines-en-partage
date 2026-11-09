@@ -16,7 +16,7 @@ import { routePath } from '../i18n/routing';
 import AddToCart from './AddToCart.astro';
 import Picture from './Picture.astro';
 import ReviewSummary from './ReviewSummary.astro';
-import { STOCK_CLASS, originCountry, pouchCrop, stockLabel } from './storefront';
+import { CARD_POUCH_SQUARE, STOCK_CLASS, originCountry, pouchCrop, stockLabel } from './storefront';
 
 interface Props {
   /** The format the card shows and adds: the lightest of its family. */
@@ -33,6 +33,8 @@ interface Props {
   rating?: { count: number; average: number };
   /** Above the fold on a grid page: the photo loads at once. */
   eager?: boolean;
+  /** Overrides the card preset's `sizes` (the wider cards of a balanced grid). */
+  sizes?: string;
 }
 const {
   product: p,
@@ -44,6 +46,7 @@ const {
   headingLevel = 'h3',
   rating,
   eager = false,
+  sizes,
 } = Astro.props;
 const Heading = headingLevel;
 const href = routePath('product', locale, p.slug);
@@ -51,6 +54,8 @@ const cents = toCents(p.price);
 const weight = formatWeight(p.weightGrams, locale);
 const several = formats.length > 1;
 const crop = pouchCrop(p.images[0]!);
+// The square frames of a three-column shop grid (global.css, --square).
+const square = pouchCrop(p.images[0]!, 1, undefined, CARD_POUCH_SQUARE);
 ---
 
 <article
@@ -66,12 +71,15 @@ const crop = pouchCrop(p.images[0]!);
   <div
     class="frame card-media"
     data-crop={crop ? '' : undefined}
-    style={crop ? `--crop-s: ${crop.scale}; --crop-y: ${crop.offset}` : undefined}
+    style={crop && square
+      ? `--crop-s: ${crop.scale}; --crop-y: ${crop.offset}; --crop-s1: ${square.scale}; --crop-y1: ${square.offset}`
+      : undefined}
   >
     <Picture
       src={p.images[0]!}
       alt=""
       preset="card"
+      {sizes}
       loading={eager ? 'eager' : 'lazy'}
       fetchpriority={eager && index === 0 ? 'high' : undefined}
     />
@@ -152,9 +160,12 @@ const crop = pouchCrop(p.images[0]!);
   }
   /* Hover: the card rises 2 px, the frame takes the shadow and a deeper
      kraft edge, and the photo eases up a few percent inside its frame. */
+  /* 4:5, square in the three-column shop grid from 1080 px (--square, 0 or
+     1, set by global.css from the grid's --square-* flags). */
   .card-media {
     position: relative;
     isolation: isolate;
+    aspect-ratio: 1 / calc(1.25 - 0.25 * var(--square, 0));
     transition:
       box-shadow 320ms var(--ease-out-strong),
       border-color 200ms ease;
@@ -165,8 +176,13 @@ const crop = pouchCrop(p.images[0]!);
   }
   /* Measured photos (pouchCrop): the photo is scaled and shifted so the
      pouch top sits 18 % below the frame top and the pouch fills 70 % of the
-     frame height, the same in every card. Margins in percent refer to the
-     frame width, which is what --crop-y is expressed in. */
+     frame height, the same in every card (7 % and 86 % in a square frame:
+     --crop-s1 and --crop-y1, picked by --square). Margins in percent refer
+     to the frame width, which is what --crop-y is expressed in. */
+  .card-media[data-crop] {
+    --cs: calc(var(--crop-s) + (var(--crop-s1) - var(--crop-s)) * var(--square, 0));
+    --cy: calc(var(--crop-y) + (var(--crop-y1) - var(--crop-y)) * var(--square, 0));
+  }
   .card-media[data-crop] :global(picture) {
     position: relative;
     display: block;
@@ -176,11 +192,11 @@ const crop = pouchCrop(p.images[0]!);
     position: absolute;
     top: 0;
     left: 50%;
-    width: calc(var(--crop-s) * 100%);
+    width: calc(var(--cs) * 100%);
     max-width: none;
     height: auto;
-    margin-top: calc(var(--crop-y) * 100%);
-    margin-left: calc(var(--crop-s) * -50%);
+    margin-top: calc(var(--cy) * 100%);
+    margin-left: calc(var(--cs) * -50%);
     object-fit: fill;
   }
   @media (hover: hover) and (pointer: fine) {

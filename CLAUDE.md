@@ -71,9 +71,11 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   `loadSettings`, `loadProducts`, `loadProduct`, `loadCategories`,
   `loadPage`, `loadLegal`, `loadReviews`, `reviewsFor`, `legalTokens`,
   `formatSiren`. Always read content through these, never with
-  `getCollection` directly. `merge.ts` also holds `formatsOf` (100 g and
-  200 g siblings by French name), `formatFamilies`, `groupFormats` (one grid
-  card per product, the lightest format leads, chips link the others),
+  `getCollection` directly. `src/content/formats.ts` (pure, no zod, also
+  used by the client search) holds `formatsOf` (100 g and 200 g siblings by
+  French name), `formatFamilies`, `groupFormats` (one grid card per product,
+  the lightest format leads, chips link the others), re-exported by
+  `merge.ts`, which adds
   `relatedProducts` (four cards, never a format of the current product),
   `reviewStats`, `publishedReviews`. `src/components/storefront.ts` adds
   `originCountry` (country before the comma) and `pouchCrop` (per-photo crop

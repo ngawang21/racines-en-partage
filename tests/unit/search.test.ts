@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import type { ClientProduct } from '../../src/catalog/build';
-import { buildIndex, nearPrefix, normalise, search } from '../../src/search/match';
+import { formatFamilies } from '../../src/content/formats';
+import {
+  bareName,
+  buildIndex,
+  groupRows,
+  nearPrefix,
+  normalise,
+  search,
+  searchGroups,
+} from '../../src/search/match';
 
 const product = (
   sku: string,
@@ -129,5 +138,63 @@ describe('nearPrefix', () => {
     expect(nearPrefix('hibcuss', 'hibiscus')).toBe(false);
     expect(nearPrefix('baobab', 'bissap')).toBe(false);
     expect(nearPrefix('moringaxx', 'moringa')).toBe(false);
+  });
+});
+
+describe('searchGroups (one row per product, as in the grids)', () => {
+  const sized = (sku: string, name: string, grams: number, keywords: string[] = []) => ({
+    ...product(sku, `${name} ${grams}\u00a0g`, 'Poudres', keywords),
+    weightGrams: grams,
+    unitAmount: grams === 100 ? 600 : 1100,
+  });
+  // Catalogue order puts the 200 g first, so the row must still lead with the 100 g.
+  const list = [
+    sized('BAO-200', 'Poudre de baobab', 200),
+    sized('BAO-100', 'Poudre de baobab', 100),
+    sized('MOR-100', 'Poudre de moringa', 100),
+    sized('MOR-200', 'Poudre de moringa', 200),
+    sized('ORG-100', 'Poudre d’orge grillée', 100, ['tsampa']),
+  ];
+  const groupIndex = buildIndex({ products: Object.fromEntries(list.map((p) => [p.sku, p])) });
+  // Families are defined on the French names without the weight (formatFamilies).
+  const families = formatFamilies(list.map((p) => ({ ...p, name: bareName(p.name) })));
+  const rows = (q: string, limit?: number) =>
+    searchGroups(groupIndex, q, families, limit).map(
+      (g) => `${g.shown.sku}:${g.formats.map((f) => f.sku).join('+')}`,
+    );
+
+  it('folds the formats of a product into one row showing the lightest', () => {
+    expect(rows('baobab')).toEqual(['BAO-100:BAO-100+BAO-200']);
+    expect(rows('poudre')).toEqual([
+      'BAO-100:BAO-100+BAO-200',
+      'MOR-100:MOR-100+MOR-200',
+      'ORG-100:ORG-100',
+    ]);
+  });
+  it('shows the format the query names, with every format still listed', () => {
+    expect(rows('baobab 200')).toEqual(['BAO-200:BAO-100+BAO-200']);
+    expect(rows('moringa 100')).toEqual(['MOR-100:MOR-100+MOR-200']);
+  });
+  it('counts and limits rows, not formats', () => {
+    expect(rows('poudre', 2)).toHaveLength(2);
+    expect(rows('poudre', 0)).toEqual([]);
+    expect(rows('')).toEqual([]);
+  });
+  it('keeps a product without a family as its own row', () => {
+    expect(searchGroups(groupIndex, 'tsampa', new Map())[0]!.formats).toHaveLength(1);
+  });
+  it('groups the suggestions the same way', () => {
+    const featured = [list[0]!, list[2]!];
+    expect(groupRows(featured, list, families).map((g) => [g.shown.sku, g.formats.length])).toEqual(
+      [
+        ['BAO-100', 2],
+        ['MOR-100', 2],
+      ],
+    );
+  });
+  it('strips the weight from a catalogue name', () => {
+    expect(bareName('Poudre de moringa 100\u00a0g')).toBe('Poudre de moringa');
+    expect(bareName('Tiger nut powder 1.5\u00a0kg')).toBe('Tiger nut powder');
+    expect(bareName('Poudre de cacao')).toBe('Poudre de cacao');
   });
 });

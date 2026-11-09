@@ -648,12 +648,15 @@ blockquote {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
-/* Balanced grids (shop and category pages) never end on a lone card: the
-   column count of each range comes from the card count (storefront.ts
-   balancedColumns, written as --cols-* on the grid and recomputed by the shop
-   filter). Nine cards: three rows of three to 1279 px, five and four from
-   1280 px. Four cards: two rows of two to 1079 px, one row of four above.
-   Phones keep two columns, so an odd count ends on one card there. */
+/* Balanced grids (shop and category pages) prefer a full last row and never
+   end on a lone card: the column count of each range comes from the card
+   count (storefront.ts balancedColumns, written as --cols-* on the grid and
+   recomputed by the shop filter). Nine cards: three rows of three to 1599 px
+   (about 420 px cards at 1440), five and four from 1600 px. Four cards: two
+   rows of two to 1079 px, one row of four above. Phones keep two columns, so
+   an odd count ends on one card there. Three columns from 1080 px get square
+   photo frames (--square, read by ProductCard) so the first row's names and
+   prices stay above the fold at 1440 x 900. */
 @media (min-width: 720px) {
   .product-grid[data-balance] {
     grid-template-columns: repeat(var(--cols-md, 3), minmax(0, 1fr));
@@ -661,25 +664,38 @@ blockquote {
 }
 @media (min-width: 1080px) {
   .product-grid[data-balance] {
+    --square: var(--square-lg, 0);
     grid-template-columns: repeat(var(--cols-lg, 3), minmax(0, 1fr));
   }
 }
 @media (min-width: 1280px) {
   .product-grid[data-balance] {
-    grid-template-columns: repeat(var(--cols-xl, 4), minmax(0, 1fr));
+    --square: var(--square-xl, 0);
+    grid-template-columns: repeat(var(--cols-xl, 3), minmax(0, 1fr));
   }
 }
 @media (min-width: 1600px) {
   .product-grid[data-balance] {
+    --square: 0;
     grid-template-columns: repeat(var(--cols-xxl, 5), minmax(0, 1fr));
   }
 }
 
 /* Category chips: filter buttons on the shop (aria-pressed), links on the
    category pages (aria-current). One scrolling row bleeding to the screen
-   edges on phones, with a fade on the right that says it scrolls; wrapping
-   from 900 px. */
+   edges on phones, with a 56 px fade on the right edge that says it scrolls
+   while chips are still hidden there; wrapping from 900 px. Where
+   scroll-driven animations exist, the fade lifts as the row reaches its end
+   (CSS only). The fade is the base value, so it shows whenever the timeline
+   is inactive; a row that fits ends at least 44 px (its end padding) before
+   the edge, so the fade then barely touches it. */
+@property --chips-fade {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 56px;
+}
 .chips {
+  --chips-fade: 56px;
   display: flex;
   gap: var(--space-2);
   margin-inline: calc(var(--gutter) * -1);
@@ -689,7 +705,22 @@ blockquote {
   scroll-padding-inline: var(--gutter);
   scroll-snap-type: x proximity;
   scrollbar-width: none;
-  mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(to left, transparent, #000 var(--chips-fade));
+}
+@supports (animation-timeline: scroll()) {
+  .chips {
+    animation: rep-chips-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
+}
+@keyframes rep-chips-fade {
+  0%,
+  85% {
+    --chips-fade: 56px;
+  }
+  100% {
+    --chips-fade: 0px;
+  }
 }
 .chips > * {
   scroll-snap-align: start;
@@ -704,6 +735,7 @@ blockquote {
     padding-inline: 0;
     overflow: visible;
     mask-image: none;
+    animation: none;
   }
 }
 .chip {

@@ -46,6 +46,11 @@ const [reviews, settings, all, allFr] = await Promise.all([
   loadProducts(DEFAULT_LOCALE),
 ]);
 const showRatings = settings.reviews.enabled;
+// Balanced grids show three columns up to 1599 px (square frames from
+// 1080 px, the photo up to 1.13 times the card width), five from 1600 px.
+const sizes = balance
+  ? '(min-width: 1600px) 330px, (min-width: 1080px) 34vw, (min-width: 720px) 36vw, 54vw'
+  : undefined;
 const groups = groupFormats(products, all, formatFamilies(allFr));
 ---
 
@@ -69,6 +74,7 @@ const groups = groupFormats(products, all, formatFamilies(allFr));
           {index}
           {headingLevel}
           eager={index < eager}
+          {sizes}
           rating={
             showRatings
               ? reviewStats(formats.flatMap((f) => reviewsFor(f.slug, reviews)))

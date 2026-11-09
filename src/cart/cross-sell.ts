@@ -50,3 +50,21 @@ export function pickCrossSell(
   const siblings = candidates.filter((p) => categories.has(p.category));
   return [...complements, ...siblings].slice(0, max);
 }
+
+/**
+ * Up to `max` products for an empty cart: the featured ones in catalogue
+ * order, then the others, one format per product, never out of stock. Pure.
+ */
+export function pickFeatured(catalog: Pick<ClientCatalog, 'products'>, max = 4): ClientProduct[] {
+  const all = Object.values(catalog.products).filter((p) => p.stock !== 'out');
+  const families = new Set<string>();
+  const picks: ClientProduct[] = [];
+  for (const product of [...all.filter((p) => p.featured), ...all.filter((p) => !p.featured)]) {
+    const family = formatFamily(product);
+    if (families.has(family)) continue;
+    families.add(family);
+    picks.push(product);
+    if (picks.length === max) break;
+  }
+  return picks;
+}

@@ -7,18 +7,26 @@
 import type { Locale } from '../consts';
 import { getClientCatalog, serializeForScript } from '../cart/catalog';
 import { cartStrings, formStrings, serializeStrings } from '../cart/strings';
-import { loadLocale } from '../i18n/locale';
+import { loadLocale, loadSettings } from '../i18n/locale';
 
 interface Props {
   locale: Locale;
 }
 const { locale } = Astro.props;
-const [catalog, t] = await Promise.all([getClientCatalog(locale), loadLocale(locale)]);
+const [catalog, t, settings] = await Promise.all([
+  getClientCatalog(locale),
+  loadLocale(locale),
+  loadSettings(),
+]);
 ---
 
 <script type="application/json" id="rep-catalog" set:html={serializeForScript(catalog)} />
 <script type="application/json" id="rep-strings" set:html={serializeStrings(cartStrings(t))} />
-<script type="application/json" id="rep-form-strings" set:html={serializeStrings(formStrings(t))} />
+<script
+  type="application/json"
+  id="rep-form-strings"
+  set:html={serializeStrings(formStrings(t, settings.brand.email))}
+/>
 <script>
   import '../cart/ui.ts';
 </script>

@@ -114,4 +114,13 @@ const { locale, t, shopOpen } = Astro.props;
     <p class="cart-empty-lead">{t.cart.emptyLead}</p>
     <a class="btn btn-primary" href={routePath('shop', locale)}>{t.cart.continue}</a>
   </div>
+  <section
+    class="cross-sell cart-featured"
+    aria-labelledby="cart-page-featured"
+    data-cart-featured
+    hidden
+  >
+    <h2 id="cart-page-featured" class="cross-sell-title">{t.cart.featuredTitle}</h2>
+    <ul class="cross-sell-list" role="list" data-cross-sell-list></ul>
+  </section>
 </section>

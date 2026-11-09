@@ -61,6 +61,15 @@ const shopOpen = settings.shop.open;
         <p class="cart-empty-lead">{t.cart.emptyLead}</p>
         <a class="btn btn-secondary" href={routePath('shop', locale)}>{t.cart.continue}</a>
       </div>
+      <section
+        class="cross-sell cart-featured cd-featured"
+        aria-labelledby="cart-drawer-featured"
+        data-cart-featured
+        hidden
+      >
+        <h3 id="cart-drawer-featured" class="cross-sell-title">{t.cart.featuredTitle}</h3>
+        <ul class="cross-sell-list" role="list" data-cross-sell-list></ul>
+      </section>
     </div>
 
     <footer class="cd-foot" data-drawer-foot hidden>

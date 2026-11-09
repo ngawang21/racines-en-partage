@@ -76,7 +76,7 @@
     "commitments": {
       "origin": "The origin written on every pouch",
       "ingredients": "Short ingredient lists",
-      "additives": "No additive, preservative or colouring"
+      "usage": "A serving idea on every label"
     }
   },
   "product": {
@@ -164,6 +164,7 @@
     "unitPrice": "{price} each",
     "secureNote": "Secure payment by Stripe",
     "crossSellTitle": "Complete your order",
+    "featuredTitle": "Our favourites",
     "crossSellAdd": "Add",
     "crossSellAddOf": "Add {name} to your basket",
     "shippingFrom": "From {amount} to a pickup point",
@@ -302,6 +303,8 @@
     "stepsMany": "{count} steps",
     "ingredientsOne": "{count} ingredient",
     "ingredientsMany": "{count} ingredients",
+    "linesIngredients": "Ingredients",
+    "linesSteps": "Steps",
     "with": "With",
     "empty": "Recipes are coming soon.",
     "viewAll": "All recipes"
@@ -326,12 +329,13 @@
     "tooLong": "At most {max} characters.",
     "validation": "Some fields need checking. Correct them, then send again.",
     "sending": "Sending…",
+    "sendFailed": "We could not send your message. Try again in a moment, or write to us directly at {email}.",
     "noscript": "This form needs JavaScript; write to us at {email}.",
     "privacyLink": "privacy policy",
     "honeypot": "Leave this field empty",
     "contact": {
       "title": "Write to us",
-      "lead": "A question about a product, an order or a recipe? We reply personally, usually within 48 hours.",
+      "lead": "We usually reply within 48 hours.",
       "name": "Your name",
       "email": "Your e-mail",
       "message": "Your message",

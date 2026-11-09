@@ -395,6 +395,38 @@ html.has-drawer {
   font-variation-settings: 'SOFT' 50;
   font-size: var(--fs-1);
 }
+/* Phones (review 14): the body's lines join the line's own grid, so the
+   stepper and "Retirer" share one row under the name, across the full width
+   beside the picture, and a line stays about 200 px tall. */
+@media (max-width: 699px) {
+  .cart-line--page {
+    grid-template-columns: 72px minmax(0, 1fr) auto;
+    gap: 2px var(--space-4);
+    padding-block: var(--space-4);
+  }
+  .cart-line--page .cart-line-media {
+    grid-row: 1 / span 3;
+    width: 72px;
+  }
+  .cart-line--page .cart-line-body {
+    display: contents;
+  }
+  .cart-line--page .cart-line-name {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .cart-line--page .cart-line-total {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .cart-line--page .cart-line-body > :not(.cart-line-name) {
+    grid-column: 2 / -1;
+  }
+  .cart-line--page .cart-line-actions {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+}
 @media (min-width: 700px) {
   .cart-line--page {
     grid-template-columns: 112px 1fr auto;
@@ -416,21 +448,28 @@ html.has-drawer {
 .cart-line--summary .cart-line-media {
   width: 56px;
 }
+/* "×2" on the thumbnail: a small kraft tag in the body font, square-cornered
+   and inside the picture, so it never reads as one of the round step
+   numbers beside it (review 14). A single unit shows none: the line already
+   says "1 × 6,00 €". */
 .cart-line-badge {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  min-width: 24px;
-  height: 24px;
-  padding: 0 6px;
-  border-radius: var(--radius-pill);
-  background: var(--forest);
-  color: var(--cream);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  line-height: 24px;
+  right: 3px;
+  bottom: 3px;
+  min-width: 22px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--kraft);
+  color: var(--forest);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
   text-align: center;
   font-variant-numeric: tabular-nums;
+}
+.cart-line-badge:empty {
+  display: none;
 }
 .cart-line--summary .cart-line-total {
   font-size: var(--fs-0);
@@ -559,7 +598,7 @@ html.has-drawer {
   padding: var(--space-6);
 }
 .cd-empty {
-  padding-top: var(--space-12);
+  padding-top: var(--space-8);
 }
 .cd-foot {
   display: grid;
@@ -602,6 +641,17 @@ html.has-drawer {
 }
 
 /* ------------------------------------------------------------- page heads */
+
+/* The cart, the checkout and the customer space are filled in the browser:
+   their first paint holds only the heading. Each keeps at least a screen's
+   height, so the footer starts below the fold and the content arriving
+   pushes nothing visible (review 14: CLS 0.62 on a phone, all from the
+   footer; tests/e2e/cart-ui.spec.ts measures it). */
+.cart-page,
+.checkout,
+.account {
+  min-height: calc(100svh - var(--header-h));
+}
 
 .cart-page,
 .checkout,
@@ -1203,23 +1253,49 @@ html.has-drawer {
 .relay-search[hidden] {
   display: none;
 }
+/* Labels on row 1, controls on row 2 (each field a subgrid of the two rows,
+   so the labels share a baseline and the controls a line whatever their
+   heights), the postcode error on row 3 across the whole row: a message
+   moves nothing beside it (review 14). Phones put the button on row 4. */
 .relay-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-3);
+  grid-template-rows: auto auto auto auto;
+  gap: 0 var(--space-3);
   align-items: end;
 }
-.relay-go {
+.relay-fields > .field {
+  grid-row: 1 / span 2;
+  grid-template-rows: subgrid;
+  gap: 0;
+}
+.relay-fields > .field label {
+  margin-bottom: var(--space-1);
+}
+.relay-fields > .field-error {
+  grid-row: 3;
   grid-column: 1 / -1;
+}
+.relay-go {
+  grid-row: 4;
+  grid-column: 1 / -1;
+  margin-top: var(--space-3);
 }
 @media (min-width: 640px) {
   .relay-fields {
     grid-template-columns: 9rem 11rem auto;
+    grid-template-rows: auto auto auto;
     justify-content: start;
   }
   .relay-go {
-    grid-column: auto;
+    grid-row: 2;
+    grid-column: 3;
+    margin-top: 0;
   }
+}
+/* "Choisissez un Point Relais." under the list (or the search row). */
+.relay-error:empty {
+  display: none;
 }
 .field {
   display: grid;
@@ -1251,6 +1327,12 @@ html.has-drawer {
   display: none;
 }
 .relay-widget-frame {
+  /* Its own stacking context under the phone pay bar (z-index 15): Leaflet's
+     panes and controls (z-index 400 to 1000) and the opening-hours popup
+     stay inside the frame and below the bar (review 14). */
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
   min-width: 0;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -1439,6 +1521,15 @@ html.has-drawer {
 .cd-cross-sell {
   margin-top: var(--space-4);
   padding-top: var(--space-4);
+}
+/* An empty cart is a shop window (review 14): four products under the message. */
+.cd-featured {
+  margin-top: var(--space-8);
+}
+.cart-page > .cart-featured {
+  max-width: 48rem;
+  margin-inline: auto;
+  margin-top: 0;
 }
 .cross-sell-title {
   color: var(--ink-2);

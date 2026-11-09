@@ -544,6 +544,9 @@ describe('pages', () => {
         locale === 'fr' ? undefined : pages('en').get('home'),
       ).hero.title;
     expect(title('fr')).toContain('de\u00a0l’Ouest');
+    expect(title('fr')).toContain('en\u00a0sachet');
+    // An indefinite headline: two of the products come from India and Germany (review 14).
+    expect(title('fr')).toMatch(/^Des plantes/);
     expect(title('en')).toContain('West\u00a0African');
   });
   it('the home ritual points at three different products that carry a recipe', () => {

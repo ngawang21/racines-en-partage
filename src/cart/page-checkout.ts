@@ -97,6 +97,8 @@ export function initCheckout(ctx: CartContext): void {
     search: relayRoot.querySelector<HTMLElement>('[data-relay-search]')!,
     postcode: relayRoot.querySelector<HTMLInputElement>('[data-relay-postcode]')!,
     postcodeError: relayRoot.querySelector<HTMLElement>('[data-relay-postcode-error]')!,
+    fields: relayRoot.querySelector<HTMLElement>('.relay-fields')!,
+    choose: relayRoot.querySelector<HTMLElement>('[data-relay-error]')!,
     country: relayRoot.querySelector<HTMLInputElement | HTMLSelectElement>('[data-relay-country]')!,
     go: relayRoot.querySelector<HTMLButtonElement>('[data-relay-go]')!,
     status: relayRoot.querySelector<HTMLElement>('[data-relay-status]')!,
@@ -280,6 +282,7 @@ export function initCheckout(ctx: CartContext): void {
     searching = false;
     saveSearch();
     setPostcodeError('');
+    setChooseError(false);
     if (relay) relay.status.textContent = '';
     if (selected === 'relay') ctx.store.setDelivery({ method: 'relay', relay: point });
     deliveryError.hidden = true;
@@ -343,8 +346,53 @@ export function initCheckout(ctx: CartContext): void {
     else relay.postcode.removeAttribute('aria-invalid');
   };
 
+  /** The open points of the results list, in list order (closed ones are last). */
+  const openPoints = (): HTMLElement[] =>
+    relay
+      ? [
+          ...relay.frame.querySelectorAll<HTMLElement>(
+            '.PR-List-Item:not(.PR-Disabled):not([aria-disabled="true"])',
+          ),
+        ]
+      : [];
+
+  /**
+   * "Choisissez un Point Relais." (review 14): never on the postcode, which is
+   * valid. Under the results list when there is one, the focus then on its
+   * first open point (described by the message); otherwise under the search
+   * row, the focus on the postcode. The paragraph is an alert, so the message
+   * is announced as it appears.
+   */
+  const setChooseError = (show: boolean) => {
+    if (!relay) return;
+    const { choose } = relay;
+    for (const point of relay.frame.querySelectorAll('[aria-describedby="rep-relay-error"]'))
+      point.removeAttribute('aria-describedby');
+    if (!show) {
+      choose.textContent = '';
+      return;
+    }
+    const points = relay.frame.hidden ? [] : openPoints();
+    const anchor = points.length > 0 ? relay.frame : relay.fields;
+    if (anchor.nextElementSibling !== choose) {
+      choose.textContent = '';
+      anchor.after(choose);
+    }
+    choose.textContent = tc.chooseRelay;
+    const first = points[0];
+    if (first) {
+      first.setAttribute('aria-describedby', choose.id);
+      first.focus({ preventScroll: true });
+      first.scrollIntoView({ block: 'center', behavior: smoothScroll() });
+    } else {
+      relay.postcode.focus({ preventScroll: true });
+      relay.fields.scrollIntoView({ block: 'center', behavior: smoothScroll() });
+    }
+  };
+
   const runSearch = () => {
     if (!relay) return;
+    setChooseError(false);
     const postcode = relay.postcode.value.trim();
     if (!POSTCODE_RE.test(postcode)) {
       setPostcodeError(postcode === '' ? tc.postcodeRequired : tc.postcodeInvalid);
@@ -390,7 +438,10 @@ export function initCheckout(ctx: CartContext): void {
     if (!enabled.has(method)) return;
     selected = method;
     deliveryError.hidden = true;
-    if (method !== 'relay') setPostcodeError('');
+    if (method !== 'relay') {
+      setPostcodeError('');
+      setChooseError(false);
+    }
     clearStaleError();
     if (method === 'relay') {
       ctx.store.setDelivery(lastRelay ? { method: 'relay', relay: lastRelay } : undefined);
@@ -441,11 +492,9 @@ export function initCheckout(ctx: CartContext): void {
       return;
     }
     if (selected === 'relay' && cart.delivery?.method !== 'relay') {
-      // Under the postcode field the focus goes to (review 13), not below the cards.
-      if (relay && !relay.search.hidden) {
-        setPostcodeError(tc.chooseRelay);
-        relay.postcode.focus();
-      } else showFieldError(deliveryError, tc.chooseRelay);
+      // In the picker, next to what is missing (review 14), not below the cards.
+      if (relay && !relay.search.hidden) setChooseError(true);
+      else showFieldError(deliveryError, tc.chooseRelay);
       return;
     }
     // A point remembered from an earlier visit, in a country the relay method
@@ -458,8 +507,7 @@ export function initCheckout(ctx: CartContext): void {
     ) {
       lastRelay = null;
       ctx.store.setDelivery(undefined);
-      setPostcodeError(tc.chooseRelay);
-      relay?.postcode.focus();
+      setChooseError(true);
       return;
     }
     if (!terms.checked) {

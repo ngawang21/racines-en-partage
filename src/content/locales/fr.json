@@ -76,7 +76,7 @@
     "commitments": {
       "origin": "L’origine écrite sur chaque sachet",
       "ingredients": "Des listes d’ingrédients courtes",
-      "additives": "Ni additif, ni conservateur, ni colorant"
+      "usage": "Une idée d’utilisation sur chaque étiquette"
     }
   },
   "product": {
@@ -164,6 +164,7 @@
     "unitPrice": "{price} l’unité",
     "secureNote": "Paiement sécurisé par Stripe",
     "crossSellTitle": "Complétez votre commande",
+    "featuredTitle": "Nos incontournables",
     "crossSellAdd": "Ajouter",
     "crossSellAddOf": "Ajouter {name} au panier",
     "shippingFrom": "Dès {amount} en Point Relais",
@@ -302,6 +303,8 @@
     "stepsMany": "{count} étapes",
     "ingredientsOne": "{count} ingrédient",
     "ingredientsMany": "{count} ingrédients",
+    "linesIngredients": "Ingrédients",
+    "linesSteps": "Étapes",
     "with": "Avec",
     "empty": "Les recettes arrivent bientôt.",
     "viewAll": "Toutes les recettes"
@@ -326,12 +329,13 @@
     "tooLong": "{max} caractères au maximum.",
     "validation": "Certains champs sont à vérifier. Corrigez-les, puis envoyez à nouveau.",
     "sending": "Envoi en cours…",
+    "sendFailed": "Nous n’avons pas pu envoyer votre message. Réessayez dans un instant, ou écrivez‑nous directement à {email}.",
     "noscript": "Ce formulaire a besoin de JavaScript ; écrivez‑nous à {email}.",
     "privacyLink": "politique de confidentialité",
     "honeypot": "Laissez ce champ vide",
     "contact": {
       "title": "Écrivez‑nous",
-      "lead": "Une question sur un produit, une commande ou une recette ? Nous répondons personnellement, en général sous 48 heures.",
+      "lead": "Nous répondons en général sous 48 heures.",
       "name": "Votre nom",
       "email": "Votre e-mail",
       "message": "Votre message",

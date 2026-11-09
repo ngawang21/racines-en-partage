@@ -1,8 +1,10 @@
 ---
-// "Nos engagements", the last band of the home page, on paper: the ESAT
-// partnership told once (title, body and the story link on the left) and the
-// three product commitments as a short list with icons on the right, so the
-// band holds both edges from 900 px. One column on phones.
+// "Nos engagements", the last band of the home page, on paper: who the ESAT
+// is and what its team does (title, body and the story link on the left; the
+// trust strip already says where the pouches are packed) and three label
+// commitments as a short list with icons on the right (origin, short lists,
+// a serving idea: the strip already promises "no additive"), so the band
+// holds both edges from 900 px. One column on phones.
 import type { LocaleContent } from '../content/locale-schema';
 import Icon, { type IconName } from './Icon.astro';
 
@@ -17,7 +19,7 @@ const c = t.shop.commitments;
 const items: Array<{ icon: IconName; text: string }> = [
   { icon: 'pin', text: c.origin },
   { icon: 'leaf', text: c.ingredients },
-  { icon: 'check', text: c.additives },
+  { icon: 'check', text: c.usage },
 ];
 ---
 

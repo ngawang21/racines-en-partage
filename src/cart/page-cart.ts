@@ -1,6 +1,6 @@
 // Cart page: renders the browser cart into the static shell of CartView.astro.
 import type { CartContext } from './context';
-import { renderCrossSell } from './cross-sell-view';
+import { renderCrossSell, renderFeatured } from './cross-sell-view';
 import { renderFreeShipping } from './free-shipping';
 import { bindLineEvents, renderLines } from './lines';
 import { shippingHint, shippingHintText } from './shipping-hint';
@@ -21,6 +21,7 @@ export function initCartPage(ctx: CartContext): void {
   const checkout = q<HTMLAnchorElement>('[data-cart-page-checkout]');
   const free = q<HTMLElement>('[data-free-shipping]');
   const crossSell = q<HTMLElement>('[data-cross-sell]');
+  const featured = q<HTMLElement>('[data-cart-featured]');
   const bar = q<HTMLElement>('[data-cart-bar]');
   const barSubtotal = q<HTMLElement>('[data-cart-bar-subtotal]');
   const barCheckout = q<HTMLAnchorElement>('[data-cart-bar-checkout]');
@@ -71,6 +72,7 @@ export function initCartPage(ctx: CartContext): void {
     }
     renderFreeShipping(free, totals, ctx);
     renderCrossSell(crossSell, cart, ctx);
+    renderFeatured(featured, cart, ctx);
     const blocked = totals.unknownSkus.length > 0 || totals.outOfStockSkus.length > 0;
     if (alert) alert.hidden = !blocked;
     for (const link of [checkout, barCheckout]) {

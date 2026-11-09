@@ -54,13 +54,6 @@ const regionNames = new Intl.DisplayNames([locale === 'fr' ? 'fr-FR' : 'en-GB'],
           aria-describedby="rep-relay-postcode-error"
           data-relay-postcode
         />
-        <p
-          id="rep-relay-postcode-error"
-          class="field-error"
-          aria-live="polite"
-          data-relay-postcode-error
-        >
-        </p>
       </div>
       {
         countries.length > 1 ? (
@@ -79,7 +72,21 @@ const regionNames = new Intl.DisplayNames([locale === 'fr' ? 'fr-FR' : 'en-GB'],
       <button type="button" class="btn btn-secondary relay-go" data-relay-go>
         {t.checkout.relaySearch}
       </button>
+      {/* Postcode errors only, across the row (cart.css): never "choose a point". */}
+      <p
+        id="rep-relay-postcode-error"
+        class="field-error"
+        aria-live="polite"
+        data-relay-postcode-error
+      >
+      </p>
     </div>
+    {
+      /* "Choisissez un Point Relais." when "Payer" comes before a choice: here
+       under the search row, moved under the results list once there is one
+       (page-checkout.ts). The postcode stays valid (review 14). */
+    }
+    <p id="rep-relay-error" class="field-error relay-error" role="alert" data-relay-error></p>
     <p class="relay-status" role="status" data-relay-status></p>
     <div class="relay-widget-frame" data-relay-frame hidden>
       <div id="rep-relay-widget" class="relay-widget"></div>

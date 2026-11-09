@@ -5,12 +5,22 @@
 // cart script handles them. Escape and a backdrop click close the dialog
 // (native cancel plus a click on the dialog box itself); focus returns to the
 // button that opened it. Enter opens the first result. The catalogue is the
-// one the cart context already parsed (getContext memoises it per page).
-import type { ClientCatalog, ClientProduct } from '../catalog/build';
+// one the cart context already parsed (getContext memoises it per page). The
+// formats of one product share a row (searchGroups, the dialog's
+// data-families): the name without its weight, a chip per format, "dès" before
+// the lightest format's price, and the add button of the format shown.
+import type { ClientCatalog } from '../catalog/build';
 import { getContext } from '../cart/context';
 import type { Locale } from '../consts';
-import { formatPrice, formatUnitPrice } from '../i18n/format';
-import { buildIndex, search, type SearchIndex } from '../search/match';
+import { formatPrice, formatUnitPrice, formatWeight } from '../i18n/format';
+import {
+  bareName,
+  buildIndex,
+  groupRows,
+  searchGroups,
+  type SearchGroup,
+  type SearchIndex,
+} from '../search/match';
 
 const LIMIT = 8;
 const SUGGESTIONS = 4;
@@ -42,10 +52,19 @@ function initSearch(): void {
   const row = q<HTMLTemplateElement>('template[data-search-row]');
   const locale = (dialog.dataset.locale ?? 'fr') as Locale;
   const strings = dialog.dataset;
+  const families = new Map<string, string>(
+    (() => {
+      try {
+        return Object.entries(JSON.parse(strings.families ?? '{}') as Record<string, string>);
+      } catch {
+        return [];
+      }
+    })(),
+  );
 
   let catalog: ClientCatalog | null = null;
   let index: SearchIndex = [];
-  let shown: ClientProduct[] = [];
+  let shown: SearchGroup[] = [];
   let opener: HTMLElement | null = null;
   let statusTimer = 0;
 
@@ -55,13 +74,32 @@ function initSearch(): void {
     index = catalog ? buildIndex(catalog) : [];
   };
 
-  const renderRow = (p: ClientProduct): HTMLLIElement => {
+  const renderRow = ({ shown: p, formats }: SearchGroup): HTMLLIElement => {
     const li = (row.content.firstElementChild as HTMLLIElement).cloneNode(true) as HTMLLIElement;
+    const several = formats.length > 1;
     const img = li.querySelector('img')!;
     img.src = p.image;
     const link = li.querySelector<HTMLAnchorElement>('.sr-name')!;
     link.href = p.url;
-    link.textContent = p.name;
+    link.textContent = several ? bareName(p.name) : p.name;
+    if (several) {
+      const chips = li.querySelector<HTMLElement>('.sr-formats')!;
+      for (const f of formats) {
+        const chip = document.createElement('a');
+        chip.className = 'sr-format';
+        chip.href = f.url;
+        chip.textContent = formatWeight(f.weightGrams, locale);
+        if (f.slug === p.slug) chip.dataset.shown = '';
+        const name = document.createElement('span');
+        name.className = 'visually-hidden';
+        name.textContent = `, ${bareName(f.name)}`;
+        chip.append(name);
+        chips.append(chip);
+      }
+      chips.hidden = false;
+      // "dès" when the row shows the lightest format, as on the product cards.
+      li.querySelector<HTMLElement>('.sr-from')!.hidden = p.slug !== formats[0]!.slug;
+    }
     li.querySelector('.sr-price')!.textContent = formatPrice(p.unitAmount, locale);
     li.querySelector('.sr-unit')!.textContent = formatUnitPrice(
       p.unitAmount,
@@ -97,14 +135,18 @@ function initSearch(): void {
     const query = input.value.trim();
     const products = catalog ? Object.values(catalog.products) : [];
     if (query === '') {
-      shown = products.filter((p) => p.featured).slice(0, SUGGESTIONS);
+      shown = groupRows(
+        products.filter((p) => p.featured),
+        products,
+        families,
+      ).slice(0, SUGGESTIONS);
       hint.hidden = false;
       label.hidden = shown.length === 0;
       window.clearTimeout(statusTimer);
       status.textContent = '';
     } else {
-      // Every match is counted; the list shows the first LIMIT.
-      const matches = search(index, query, Number.POSITIVE_INFINITY);
+      // Every row is counted; the list shows the first LIMIT.
+      const matches = searchGroups(index, query, families);
       shown = matches.slice(0, LIMIT);
       hint.hidden = true;
       label.hidden = true;
@@ -159,7 +201,7 @@ function initSearch(): void {
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const first = shown[0];
-    if (input.value.trim() !== '' && first) window.location.assign(first.url);
+    if (input.value.trim() !== '' && first) window.location.assign(first.shown.url);
   });
   // Leaving the page by a result link: closed again when restored from the bfcache.
   window.addEventListener('pageshow', (event) => {

@@ -74,6 +74,13 @@ export const POUCH_BOXES: Readonly<Record<string, { top: number; bottom: number 
 export const CARD_POUCH = { top: 0.18, height: 0.7 } as const;
 
 /**
+ * The same in the square frames of a three-column shop grid from 1080 px
+ * (wide cards, balanced grids only): the tallest pouch fills 86 % of the
+ * height at the photo's own width, so every pouch takes that height, centred.
+ */
+export const CARD_POUCH_SQUARE = { top: 0.07, height: 0.86 } as const;
+
+/**
  * The crop of a product photo in a card frame, so every pouch has the same
  * scale and height (CARD_POUCH): `scale` is the photo width over the frame
  * width (1 or more, the photo always covers the frame) and `offset` the
@@ -85,6 +92,7 @@ export function pouchCrop(
   src: string,
   frameRatio = 4 / 5,
   photoRatio = 1067 / 1600,
+  target: { top: number; height: number } = CARD_POUCH,
 ): { scale: number; offset: number } | null {
   const name = src
     .split('/')
@@ -94,9 +102,9 @@ export function pouchCrop(
   if (!box) return null;
   const frameH = 1 / frameRatio; // frame height in frame widths
   const photoH = 1 / photoRatio; // photo height in photo widths
-  let scale = (CARD_POUCH.height * frameH) / ((box.bottom - box.top) * photoH);
+  let scale = (target.height * frameH) / ((box.bottom - box.top) * photoH);
   scale = Math.max(1, scale);
-  let offset = CARD_POUCH.top * frameH - box.top * photoH * scale;
+  let offset = target.top * frameH - box.top * photoH * scale;
   // Never leave a gap: the photo starts at or above the frame top and ends at or below its bottom.
   offset = Math.min(0, Math.max(offset, frameH - photoH * scale));
   return { scale: Math.round(scale * 1000) / 1000, offset: Math.round(offset * 1000) / 1000 };
@@ -112,41 +120,60 @@ export const GRID_RANGES = {
   md: { preferred: 3, min: 2, max: 3 },
   /** 1080 to 1279 px. */
   lg: { preferred: 3, min: 3, max: 4 },
-  /** 1280 to 1599 px: four columns keep names and prices above the fold at 1440 x 900. */
-  xl: { preferred: 4, min: 4, max: 5 },
+  /**
+   * 1280 to 1599 px: three columns of about 420 px at 1440 show the pouch
+   * big; their square frames (SQUARE_RANGES) keep the first row's names and
+   * prices above the fold at 1440 x 900.
+   */
+  xl: { preferred: 3, min: 3, max: 4 },
   /** From 1600 px. */
   xxl: { preferred: 5, min: 4, max: 5 },
 } as const;
 
 export type GridRange = keyof typeof GRID_RANGES;
 
+/** Ranges where a three-column balanced grid uses square photo frames (CARD_POUCH_SQUARE). */
+export const SQUARE_RANGES: readonly GridRange[] = ['lg', 'xl'];
+
+/** Fewest columns a grid switches to for a full last row (two would double the cards). */
+const FULL_ROW_MIN = 3;
+
 /**
- * The column count of a grid of `count` cards that never leaves one card
- * alone on the last row: the preferred count, else one more, else one fewer,
- * within the range. A grid that fits on one row keeps the preferred count (an
- * empty slot on the right is not an orphan), and the preferred count stays
- * when no allowed count avoids the lone card.
+ * The column count of a grid of `count` cards. One row: as many columns as
+ * cards when the range allows it and there are three or more (a full row, no
+ * hole), else the preferred count. Several rows, by the allowed counts
+ * closest to the preferred one (the larger first on a tie): a full last row
+ * first (three columns or more), else a last row that does not hold one card
+ * alone, else the preferred count.
  */
 export function balancedColumns(
   count: number,
   range: { preferred: number; min: number; max: number },
 ): number {
-  const lone = (columns: number) => count > columns && count % columns === 1;
   const { preferred, min, max } = range;
-  if (!lone(preferred)) return preferred;
-  for (const columns of [preferred + 1, preferred - 1]) {
-    if (columns >= min && columns <= max && !lone(columns)) return columns;
-  }
-  return preferred;
+  if (count <= preferred) return count >= Math.max(min, FULL_ROW_MIN) ? count : preferred;
+  const allowed: number[] = [];
+  for (let columns = min; columns <= max; columns += 1) allowed.push(columns);
+  allowed.sort((a, b) => Math.abs(a - preferred) - Math.abs(b - preferred) || b - a);
+  return (
+    allowed.find((columns) => columns >= FULL_ROW_MIN && count % columns === 0) ??
+    allowed.find((columns) => count % columns !== 1) ??
+    preferred
+  );
 }
 
 /**
  * The custom properties of a balanced grid of `count` cards, one per range
- * ("--cols-md: 2; --cols-lg: 4; ..."), read by the `.product-grid[data-balance]`
- * rules of global.css. The shop filter recomputes them for the visible cards.
+ * ("--cols-md: 2; --cols-lg: 4; ..."), then "--square-lg: 1" for each range
+ * of SQUARE_RANGES that shows three columns, read by the
+ * `.product-grid[data-balance]` rules of global.css and the card frames. The
+ * shop filter recomputes them for the visible cards.
  */
 export function gridColumnsStyle(count: number): string {
-  return (Object.keys(GRID_RANGES) as GridRange[])
-    .map((range) => `--cols-${range}: ${balancedColumns(count, GRID_RANGES[range])}`)
-    .join('; ');
+  const ranges = Object.keys(GRID_RANGES) as GridRange[];
+  const columns = new Map(ranges.map((r) => [r, balancedColumns(count, GRID_RANGES[r])]));
+  return [
+    ...ranges.map((r) => `--cols-${r}: ${columns.get(r)}`),
+    ...SQUARE_RANGES.filter((r) => columns.get(r) === 3).map((r) => `--square-${r}: 1`),
+  ].join('; ');
 }

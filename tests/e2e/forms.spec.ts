@@ -74,7 +74,7 @@ test.describe('contact form', () => {
   for (const [code, status, text] of [
     ['RATE_LIMITED', 429, /Patientez une minute/],
     ['CAPTCHA_FAILED', 400, /vérification anti-robot/],
-    ['MAIL_FAILED', 502, /envoi n’a pas abouti/],
+    ['MAIL_FAILED', 502, /^Nous n’avons pas pu envoyer votre message\. Réessayez dans un instant/],
     ['VALIDATION_ERROR', 400, /Certains champs sont à vérifier/],
     ['FEATURE_DISABLED', 404, /momentanément fermé/],
   ] as const) {
@@ -91,6 +91,25 @@ test.describe('contact form', () => {
       await expect(form.locator('[data-form-fields]')).toBeVisible();
     });
   }
+
+  test('a failed send is in view, focused and human, with the address (B4)', async ({ page }) => {
+    await mockApi(page, '/api/contact', 500, { error: { code: 'INTERNAL_ERROR', message: 'x' } });
+    await page.goto(CONTACT.fr);
+    const form = page.locator('form[data-form="contact"]');
+    await form.getByLabel('Votre nom').fill('Awa');
+    await form.getByLabel(/Votre e.mail/).fill('awa@exemple.fr');
+    await form.getByLabel('Votre message').fill('Une question sur le moringa.');
+    await form.locator('[data-form-submit]').click();
+    const status = form.locator('[data-form-status]');
+    await expect(status).toHaveText(
+      /^Nous n’avons pas pu envoyer votre message\. Réessayez dans un instant, ou écrivez.nous directement à \S+@\S+\.$/,
+    );
+    await expect(status).not.toContainText('Une erreur est survenue');
+    await expect(status).toHaveAttribute('role', 'alert');
+    await expect(status).toBeFocused();
+    await expect(status).toBeInViewport();
+    await expect(status.getByRole('link')).toHaveAttribute('href', /^mailto:\S+@\S+$/);
+  });
 
   test('says so when the network fails (English)', async ({ page }) => {
     await page.route('**/api/contact', (route) => route.abort());

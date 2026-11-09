@@ -100,7 +100,7 @@ function enhance(form: HTMLFormElement, kind: Kind, s: FormStrings): void {
       showDone(form);
       return;
     }
-    setStatus(form, errorMessage(result.error, s), 'error');
+    setStatus(form, errorMessage(result.error, s, { sendFailed: true }), 'error', s.email);
   });
 }
 

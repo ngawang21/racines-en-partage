@@ -35,16 +35,19 @@ export function pageStrings(t: LocaleContent): PageStrings {
 export interface FormStrings {
   forms: Pick<
     LocaleContent['forms'],
-    'required' | 'emailInvalid' | 'tooShort' | 'tooLong' | 'validation' | 'sending'
+    'required' | 'emailInvalid' | 'tooShort' | 'tooLong' | 'validation' | 'sending' | 'sendFailed'
   >;
   errors: LocaleContent['errors'];
+  /** The shop's address, offered when a send fails (`forms.sendFailed`). */
+  email: string;
 }
 
-export function formStrings(t: LocaleContent): FormStrings {
-  const { required, emailInvalid, tooShort, tooLong, validation, sending } = t.forms;
+export function formStrings(t: LocaleContent, email: string): FormStrings {
+  const { required, emailInvalid, tooShort, tooLong, validation, sending, sendFailed } = t.forms;
   return {
-    forms: { required, emailInvalid, tooShort, tooLong, validation, sending },
+    forms: { required, emailInvalid, tooShort, tooLong, validation, sending, sendFailed },
     errors: t.errors,
+    email,
   };
 }
 

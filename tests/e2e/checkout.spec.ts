@@ -181,13 +181,22 @@ test('relay without a chosen point, then an out-of-stock answer from the API', a
   await postcode.fill('');
   await expect(postcode).not.toHaveAttribute('aria-invalid', 'true');
 
-  // No point chosen: the message sits under the postcode field the focus
-  // goes to (review 13), in its live region, not below the delivery cards.
+  // No point chosen and no search yet: the message sits under the search row
+  // in its alert, the focus on the postcode, which is not marked invalid
+  // (review 14), and nothing appears below the delivery cards.
   await page.locator('[data-co-terms]').check();
   await page.locator('[data-co-pay]').click();
-  await expect(postcodeError).toHaveText('Choisissez un Point Relais.');
+  const choose = page.locator('#rep-relay-error');
+  await expect(choose).toHaveText('Choisissez un Point Relais.');
+  await expect(choose).toHaveAttribute('role', 'alert');
+  await expect(postcodeError).toHaveText('');
   await expect(postcode).toBeFocused();
-  await expect(postcode).toHaveAttribute('aria-invalid', 'true');
+  await expect(postcode).not.toHaveAttribute('aria-invalid', 'true');
+  expect(
+    await choose.evaluate(
+      (el) => el.previousElementSibling?.classList.contains('relay-fields') ?? false,
+    ),
+  ).toBe(true);
   await expect(page.locator('[data-co-delivery-error]')).toBeHidden();
 
   // Home delivery, the API answers OUT_OF_STOCK: the line is flagged with a remove action.
@@ -563,4 +572,137 @@ test('phone checkout: a sticky total and Payer bar while the pay button is below
   // Once the pay button is on screen, the bar steps aside.
   await page.locator('[data-co-pay]').scrollIntoViewIfNeeded();
   await expect(bar).not.toHaveClass(/is-visible/);
+});
+
+test('relay: "Payer" before a choice points at the list, never at the valid postcode (B2)', async ({
+  page,
+}) => {
+  // No smooth scrolling: the boxes are measured once the page has moved.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.route(PLUGIN, (route) =>
+    route.fulfill({ contentType: 'text/javascript', body: FAKE_PLUGIN }),
+  );
+  await seedCheckout(page, [{ sku: 'REP-MOR-100', quantity: 1 }]);
+  const postcode = page.locator('[data-relay-postcode]');
+  await postcode.fill('95400');
+  await page.locator('[data-relay-go]').click();
+  const items = page.locator('#rep-relay-widget .PR-List-Item');
+  await expect(items).toHaveCount(2);
+
+  // Labels on one baseline, controls on one row, before and after the message.
+  const row = async () => {
+    const boxes = await Promise.all(
+      ['label[for="rep-relay-postcode"]', 'label[for="rep-relay-country"]'].map(
+        async (sel) => (await page.locator(sel).boundingBox())!,
+      ),
+    );
+    const controls = await Promise.all(
+      ['#rep-relay-postcode', '#rep-relay-country'].map(
+        async (sel) => (await page.locator(sel).boundingBox())!,
+      ),
+    );
+    return { labels: boxes.map((b) => Math.round(b.y)), controls: controls.map((b) => b.y) };
+  };
+  const before = await row();
+  expect(before.labels[0]).toBe(before.labels[1]);
+  expect(Math.abs(before.controls[0]! - before.controls[1]!)).toBeLessThan(1);
+
+  await page.locator('[data-co-terms]').check();
+  await page.locator('[data-co-pay]').click();
+  const choose = page.locator('#rep-relay-error');
+  await expect(choose).toHaveText('Choisissez un Point Relais.');
+  // Under the results list, the focus on the first open point, which it describes.
+  expect(
+    await choose.evaluate(
+      (el) => el.previousElementSibling?.hasAttribute('data-relay-frame') ?? false,
+    ),
+  ).toBe(true);
+  const first = items.first();
+  await expect(first).toBeFocused();
+  await expect(first).not.toHaveClass(/PR-Disabled/);
+  await expect(first).toHaveAttribute('aria-describedby', 'rep-relay-error');
+  await expect(postcode).not.toHaveAttribute('aria-invalid', 'true');
+  await expect(page.locator('#rep-relay-postcode-error')).toHaveText('');
+  // The page scrolled to the list: same row, same label-to-control distance.
+  const after = await row();
+  expect(after.labels[0]).toBe(after.labels[1]);
+  expect(Math.abs(after.controls[0]! - after.controls[1]!)).toBeLessThan(1);
+  expect(
+    Math.abs(after.controls[0]! - after.labels[0]! - (before.controls[0]! - before.labels[0]!)),
+  ).toBeLessThan(1);
+
+  // Choosing the point clears the message.
+  await page.keyboard.press('Enter');
+  await expect(page.locator('[data-relay-chosen]')).toBeVisible();
+  await expect(choose).toHaveText('');
+});
+
+test('relay map: the widget stays in its own layer under the phone pay bar (B3)', async ({
+  page,
+}) => {
+  await page.route(PLUGIN, (route) =>
+    route.fulfill({ contentType: 'text/javascript', body: FAKE_PLUGIN }),
+  );
+  await seedCheckout(page, [{ sku: 'REP-MOR-100', quantity: 1 }]);
+  await page.locator('[data-relay-postcode]').fill('95400');
+  await page.locator('[data-relay-go]').click();
+  const frame = page.locator('[data-relay-frame]');
+  await expect(frame.locator('.PR-List-Item')).toHaveCount(2);
+  const style = await frame.evaluate((el) => {
+    const css = getComputedStyle(el);
+    return { isolation: css.isolation, overflow: css.overflow, zIndex: css.zIndex };
+  });
+  expect(style).toEqual({ isolation: 'isolate', overflow: 'hidden', zIndex: '0' });
+
+  // A Leaflet-like popup (z-index 700, taller than the map) never paints over
+  // the bar, nor outside the frame.
+  await frame.locator('.MRW-Map').evaluate((map) => {
+    (map as HTMLElement).style.position = 'relative';
+    const popup = document.createElement('div');
+    popup.id = 'fake-popup';
+    popup.style.cssText =
+      'position:absolute;left:0;top:0;width:100%;height:2000px;z-index:700;background:red';
+    map.append(popup);
+  });
+  const bar = page.locator('[data-co-bar]');
+  if ((page.viewportSize()?.width ?? 1280) >= 900) return;
+  await frame.evaluate((el) => {
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo(0, top + 60 - window.innerHeight + 40);
+  });
+  await expect(bar).toHaveClass(/is-visible/);
+  const hit = await bar.evaluate((el) => {
+    const box = el.getBoundingClientRect();
+    const node = document.elementFromPoint(box.left + 20, box.top + box.height / 2);
+    return node ? el.contains(node) || node === el : false;
+  });
+  expect(hit).toBe(true);
+});
+
+test('checkout summary: the quantity reads "×2" in a small kraft tag, none for one unit', async ({
+  page,
+}) => {
+  await seedCheckout(page, [
+    { sku: 'REP-MOR-100', quantity: 2 },
+    { sku: 'REP-BAO-100', quantity: 1 },
+  ]);
+  const two = page.locator('[data-co-lines] li[data-sku="REP-MOR-100"] [data-line-badge]');
+  const one = page.locator('[data-co-lines] li[data-sku="REP-BAO-100"] [data-line-badge]');
+  await expect(two).toHaveText('×2');
+  await expect(one).toBeHidden();
+  const [badge, step] = await Promise.all([
+    two.evaluate((el) => {
+      const css = getComputedStyle(el);
+      return { radius: css.borderTopLeftRadius, height: el.getBoundingClientRect().height };
+    }),
+    page
+      .locator('.co-step')
+      .first()
+      .evaluate((el) => {
+        const css = getComputedStyle(el);
+        return { radius: css.borderTopLeftRadius, height: el.getBoundingClientRect().height };
+      }),
+  ]);
+  expect(badge.radius).not.toBe(step.radius);
+  expect(badge.height).toBeLessThan(step.height * 0.7);
 });

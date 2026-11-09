@@ -8,12 +8,13 @@
 import type { ClientProduct } from '../catalog/build';
 import { nowrapWeight } from '../i18n/format';
 import type { CartContext } from './context';
-import { pickCrossSell } from './cross-sell';
+import { pickCrossSell, pickFeatured } from './cross-sell';
 import { h, icon } from './dom';
 import { unitPriceText } from './lines';
 import type { CartState } from './store';
 
 const MAX_SUGGESTIONS = 2;
+const MAX_FEATURED = 4;
 
 function buildItem(product: ClientProduct, ctx: CartContext): HTMLLIElement {
   const kilo = unitPriceText(product, ctx);
@@ -66,6 +67,25 @@ export function renderCrossSell(root: HTMLElement | null, cart: CartState, ctx: 
   if (!list) return;
   // A paused shop sells nothing: no suggestion either.
   const picks = ctx.shopOpen ? pickCrossSell(cart.lines, ctx.catalog, MAX_SUGGESTIONS) : [];
+  root.hidden = picks.length === 0;
+  const wanted = picks.map((p) => p.sku).join(' ');
+  if (list.dataset.skus === wanted) return;
+  list.dataset.skus = wanted;
+  list.replaceChildren(...picks.map((p) => buildItem(p, ctx)));
+}
+
+/**
+ * The empty cart as a shop window (review 14): "Nos incontournables" under
+ * the empty message of the drawer and the cart page, with the cross-sell
+ * items and their add buttons. Shown only while the cart is empty.
+ *   <section data-cart-featured hidden><ul data-cross-sell-list></ul></section>
+ */
+export function renderFeatured(root: HTMLElement | null, cart: CartState, ctx: CartContext): void {
+  if (!root) return;
+  const list = root.querySelector<HTMLElement>('[data-cross-sell-list]');
+  if (!list) return;
+  const picks =
+    ctx.shopOpen && cart.lines.length === 0 ? pickFeatured(ctx.catalog, MAX_FEATURED) : [];
   root.hidden = picks.length === 0;
   const wanted = picks.map((p) => p.sku).join(' ');
   if (list.dataset.skus === wanted) return;

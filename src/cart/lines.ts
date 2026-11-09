@@ -169,8 +169,9 @@ function updateLine(li: HTMLLIElement, line: CartLine, ctx: CartContext, opts: L
   status.hidden = statusText === '';
   status.className = `cart-line-status badge ${unavailable || flagged ? 'badge-stock-out' : 'badge-stock-low'}`;
 
+  // "×2" from two units (review 14); one unit shows no tag (CSS :empty).
   const badge = li.querySelector<HTMLElement>('[data-line-badge]');
-  if (badge) badge.textContent = String(line.quantity);
+  if (badge) badge.textContent = line.quantity > 1 ? `×${line.quantity}` : '';
 
   const input = li.querySelector<HTMLInputElement>('[data-line-qty]');
   if (input && document.activeElement !== input) input.value = String(line.quantity);

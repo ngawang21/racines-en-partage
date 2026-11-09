@@ -133,23 +133,42 @@ const sorts = [
 </script>
 
 <style>
-  /* Compact head: at 1440 x 900 a full row of cards sits above the fold. */
+  /* Compact head: at 1440 x 900 the grid starts near y = 300, so the first
+     row's names, prices and add buttons sit above the fold (H1 at 40 px; from
+     1200 px the lead and the recipes link share its line; the chips, count
+     and sort on one line). */
   .shop-head {
-    padding-block: 20px var(--space-6);
+    padding-block: var(--space-4) 20px;
+  }
+  @media (min-width: 1200px) {
+    .shop-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      column-gap: var(--space-8);
+    }
+    .shop-head :global(.crumbs) {
+      flex: 0 0 100%;
+    }
+    .shop-head .shop-lead {
+      flex: 1 1 0;
+      min-width: 0;
+      margin-top: 0;
+    }
   }
   .shop-head :global(.crumbs) {
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
   }
   .shop-head h1 {
-    font-size: clamp(2.25rem, 1.9rem + 1.2vw, 3rem);
+    font-size: clamp(2.125rem, 1.75rem + 0.9vw, 2.5rem);
     line-height: 1.05;
   }
   .shop-lead {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: var(--space-2) var(--space-6);
-    margin-top: var(--space-2);
+    gap: var(--space-1) var(--space-6);
+    margin-top: var(--space-1);
   }
   .shop-head .lead {
     flex: 1 1 32rem;

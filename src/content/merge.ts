@@ -3,6 +3,7 @@
 // Pure (no Astro import) so vitest covers it.
 import { z } from 'zod';
 import { deepFallback } from '../i18n/fallback';
+import { formatFamilies, groupFormats } from './formats';
 import {
   CATEGORY_TRANSLATED_KEYS,
   PAGE_SCHEMAS,
@@ -112,6 +113,18 @@ export function featuredFirst<T extends Pick<Product, 'featured'>>(products: rea
   return [...products.filter((p) => p.featured), ...products.filter((p) => !p.featured)];
 }
 
+/**
+ * The products of a category page, in the shop's default order: the
+ * featured ones first, then the catalogue (featuredFirst). Pass the products
+ * in catalogue order (compareProducts), as the loaders return them.
+ */
+export function categoryProducts<T extends Pick<Product, 'featured' | 'category'>>(
+  products: readonly T[],
+  category: string,
+): T[] {
+  return featuredFirst(products.filter((p) => p.category === category));
+}
+
 export function mergeCategory(slug: string, frRaw: unknown, enRaw?: unknown): Category {
   const fr = parseOrThrow(categorySchema, frRaw, `categories/fr/${slug}.yml`);
   if (enRaw === undefined) return { ...fr, slug };
@@ -140,67 +153,7 @@ export function mergePage<K extends PageKey>(
   ) as PageContent<K>;
 }
 
-/**
- * The formats of a product (spec 2.5): the products of the same category with
- * the same French name (moringa 100 g and 200 g), the product itself included,
- * lightest first. `name` is shared through the French file, so pass products
- * merged in French, or in any locale whose names are translated together. A
- * list of one means there is no other format and no "Format" row.
- */
-export function formatsOf(product: Product, all: readonly Product[]): Product[] {
-  const key = (p: Product) => p.name.trim().toLocaleLowerCase('fr');
-  const family = all.filter(
-    (p) => p.category === product.category && key(p) === key(product) && p.slug !== product.slug,
-  );
-  return [product, ...family].sort(
-    (a, b) => a.weightGrams - b.weightGrams || a.slug.localeCompare(b.slug),
-  );
-}
-
-/**
- * The family of every product: slug to the slug of the lightest format of
- * its family (formatsOf). Pass products merged in French, the language that
- * defines a family; the map then serves every locale.
- */
-export function formatFamilies(all: readonly Product[]): Map<string, string> {
-  return new Map(all.map((p) => [p.slug, formatsOf(p, all)[0]!.slug]));
-}
-
-/** One card of a grid: a product family shown through its lightest format. */
-export interface ProductGroup {
-  /** The format the card shows and adds to the cart: the lightest one. */
-  lead: Product;
-  /** Every format of the family, lightest first; one item when there is no other. */
-  formats: Product[];
-}
-
-/**
- * One group per product family (moringa 100 g and 200 g make one card), in
- * the order of the first member met in `products`. Each group lists the
- * family's formats taken from `all`, so a home selection holding only the
- * 100 g still offers the 200 g. A slug missing from `families` is its own
- * family.
- */
-export function groupFormats(
-  products: readonly Product[],
-  all: readonly Product[] = products,
-  families: ReadonlyMap<string, string> = formatFamilies(all),
-): ProductGroup[] {
-  const key = (p: Product) => families.get(p.slug) ?? p.slug;
-  const groups: ProductGroup[] = [];
-  const seen = new Set<string>();
-  for (const product of products) {
-    const k = key(product);
-    if (seen.has(k)) continue;
-    seen.add(k);
-    const members = all.filter((p) => key(p) === k);
-    const formats = (members.some((p) => p.slug === product.slug) ? members : [product, ...members])
-      .slice()
-      .sort((a, b) => a.weightGrams - b.weightGrams || a.slug.localeCompare(b.slug));
-    groups.push({ lead: formats[0]!, formats });
-  }
-  return groups;
-}
+export { formatFamilies, formatsOf, groupFormats, type ProductGroup } from './formats';
 
 /**
  * "Dans le même esprit" of a product page: `limit` other products, one

@@ -12,8 +12,11 @@
 // Tucked header (phones and small tablets, below 1024 px; spec 8.2): scrolling down slides the header out of
 // view, scrolling up brings it back, so the small screen is for the product.
 // Transform only (Header.astro styles), never while the menu, the search or
-// the cart drawer is open, never under reduced motion, and focus inside the
-// header always shows it.
+// the cart drawer is open, never under reduced motion. Keyboard focus moving
+// into the header shows it (focusin); focus merely left there does not hold
+// it on screen: after the menu closed with Escape, focus stays on its button,
+// and a :focus-visible check in the scroll handler kept the header from ever
+// tucking again (review 14). Tab, Enter or the button's click bring it back.
 
 const TUCK_DELTA = 8;
 
@@ -62,10 +65,7 @@ function initTuck(header: HTMLElement, menu: HTMLDetailsElement): void {
   const phone = window.matchMedia('(max-width: 1023px)');
   const still = window.matchMedia('(prefers-reduced-motion: reduce)');
   const overlayOpen = () =>
-    menu.open ||
-    document.querySelector('#search-dialog[open], #cart-drawer[open]') !== null ||
-    // Keyboard focus only: a tapped button keeps focus but needs no header.
-    header.querySelector(':focus-visible') !== null;
+    menu.open || document.querySelector('#search-dialog[open], #cart-drawer[open]') !== null;
   let lastY = window.scrollY;
   let frame = 0;
 

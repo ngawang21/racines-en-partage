@@ -3,7 +3,10 @@
 // product page (the recipe accordion carries id="recipe"). Type-led cards on
 // the paper ground, no photo: the pouch is already in the product cards, and
 // the drink photos do not exist yet. A small hibiscus flower, the product as
-// a kicker, the recipe title, two or three lines, then "Voir la recette".
+// a kicker, the recipe title, then always the same kind of excerpt: the
+// first three ingredients when the recipe lists them, else its first three
+// steps, under a label that says which ("Ingrédients" or "Étapes"), then
+// "Voir la recette".
 // `layout="row"` (home) swipes on phones; `layout="grid"` (recipes page)
 // wraps and adds the number of steps and ingredients.
 import type { Locale } from '../consts';
@@ -32,7 +35,9 @@ const plural = (n: number, one: string, many: string) =>
   {
     withRecipe.map((p) => {
       const r = p.recipe!;
-      const lines = (r.ingredients?.length ? r.ingredients : r.steps).slice(0, 3);
+      const fromIngredients = (r.ingredients?.length ?? 0) > 0;
+      const lines = (fromIngredients ? r.ingredients! : r.steps).slice(0, 3);
+      const Lines = fromIngredients ? 'ul' : 'ol';
       return (
         <li>
           <article class="recipe">
@@ -69,11 +74,14 @@ const plural = (n: number, one: string, many: string) =>
                 )}
               </p>
             )}
-            <ul class="recipe-lines">
+            <p class="recipe-lines-label">
+              {fromIngredients ? t.recipes.linesIngredients : t.recipes.linesSteps}
+            </p>
+            <Lines class="recipe-lines">
               {lines.map((l) => (
                 <li>{l}</li>
               ))}
-            </ul>
+            </Lines>
             <span class="recipe-cta" aria-hidden="true">
               {t.shop.recipeCta}
             </span>
@@ -169,7 +177,7 @@ const plural = (n: number, one: string, many: string) =>
   }
   .recipe-media {
     margin: calc(-1 * clamp(var(--space-4), 1rem + 1vw, var(--space-6)))
-      calc(-1 * clamp(var(--space-4), 1rem + 1vw, var(--space-6))) var(--space-5);
+      calc(-1 * clamp(var(--space-4), 1rem + 1vw, var(--space-6))) 20px;
     overflow: hidden;
     aspect-ratio: 3 / 2;
     border-radius: var(--radius-m) var(--radius-m) 0 0;
@@ -221,8 +229,14 @@ const plural = (n: number, one: string, many: string) =>
     font-size: var(--fs--1);
     font-weight: 600;
   }
+  .recipe-lines-label {
+    margin-top: var(--space-4);
+    color: var(--forest);
+    font-size: var(--fs--1);
+    font-weight: 600;
+  }
   .recipe-lines {
-    margin: var(--space-4) 0 var(--space-6);
+    margin: var(--space-2) 0 var(--space-6);
     padding: 0;
     list-style: none;
     color: var(--ink-2);

@@ -49,6 +49,10 @@
 }
 .relay-widget .MRW-Map {
   grid-area: map;
+  /* The popups stay in the map (the frame, cart.css, is the stacking context
+     under the phone pay bar). */
+  position: relative;
+  overflow: hidden;
   /* The widget sets an inline height only with its own theme. */
   height: 100% !important;
   min-height: 0;
@@ -61,8 +65,13 @@
     grid-template-areas:
       'map'
       'list';
-    grid-template-rows: 220px auto;
+    grid-template-rows: 260px auto;
     height: auto;
+  }
+  /* Pinch zooms on a phone: the buttons only hid the start of the popup's
+     lines (review 14). */
+  .relay-widget .leaflet-control-zoom {
+    display: none;
   }
   .relay-widget .MRW-RList {
     overflow: visible;
@@ -150,6 +159,11 @@
   box-shadow: var(--shadow-soft);
 }
 .relay-widget .leaflet-popup-content {
+  /* Taller than the map otherwise (the opening hours): it scrolls inside, so
+     Leaflet's auto-pan can keep the whole popup in the map. */
+  max-height: 300px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   margin: var(--space-3) var(--space-4);
   color: var(--forest);
   font-family: var(--font-body);
@@ -206,6 +220,12 @@
 }
 .relay-widget .leaflet-control-attribution {
   font-size: 0.6875rem;
+}
+
+@media (max-width: 639px) {
+  .relay-widget .leaflet-popup-content {
+    max-height: 170px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

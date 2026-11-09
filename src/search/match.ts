@@ -6,8 +6,11 @@
 // punctuation ("hibis" finds "Fleurs d'hibiscus", "karkade" finds "karkadé",
 // "the" finds the "thé" keyword). Synonyms live in the product `keywords`.
 // When nothing matches exactly, a second pass forgives one typo per word of
-// four letters or more ("hibicus", "moringua", "cacoa").
+// four letters or more ("hibicus", "moringua", "cacoa"). searchGroups then
+// folds the formats of one product (moringa 100 g and 200 g) into one row, as
+// the product grids do (src/content/formats.ts, zod-free for the client).
 import type { ClientCatalog, ClientProduct } from '../catalog/build';
+import { groupFormats } from '../content/formats';
 
 /** Lower case, accents and ligatures folded, every non-alphanumeric run to one space. */
 export function normalise(text: string): string {
@@ -111,12 +114,73 @@ function termScore(term: string, entry: IndexEntry, fuzzy = false): number {
  * correct query never brings in near misses.
  */
 export function search(index: SearchIndex, query: string, limit = 8): ClientProduct[] {
-  const terms = [...new Set(words(query))];
-  if (terms.length === 0 || limit <= 0) return [];
-  const exact = rank(index, terms, false);
-  return (exact.length > 0 ? exact : rank(index, terms, true))
+  if (limit <= 0) return [];
+  return matches(index, query)
     .slice(0, limit)
     .map((s) => s.entry.product);
+}
+
+/** Every match of `query`, scored, best first: exact prefixes, else one typo forgiven. */
+function matches(index: SearchIndex, query: string): Array<{ entry: IndexEntry; score: number }> {
+  const terms = [...new Set(words(query))];
+  if (terms.length === 0) return [];
+  const exact = rank(index, terms, false);
+  return exact.length > 0 ? exact : rank(index, terms, true);
+}
+
+/** One search row: the format it shows and adds, and every format of its family, lightest first. */
+export interface SearchGroup {
+  shown: ClientProduct;
+  formats: ClientProduct[];
+}
+
+/**
+ * The matches of `query` with one row per product family (`families`: slug to
+ * the slug of the family's lightest format, formatFamilies; a slug missing
+ * from it is its own family), in the order of each family's best match, at
+ * most `limit` rows. A row lists every format of the catalogue and shows the
+ * lightest, unless the query scores a heavier one higher ("baobab 200").
+ */
+export function searchGroups(
+  index: SearchIndex,
+  query: string,
+  families: ReadonlyMap<string, string>,
+  limit = Number.POSITIVE_INFINITY,
+): SearchGroup[] {
+  if (limit <= 0) return [];
+  const found = matches(index, query);
+  const score = new Map(found.map((s) => [s.entry.product.slug, s.score]));
+  const all = index.map((e) => e.product);
+  return groupFormats(
+    found.map((s) => s.entry.product),
+    all,
+    families,
+  )
+    .slice(0, limit)
+    .map(({ lead, formats }) => ({
+      shown: formats.reduce(
+        (best, f) => ((score.get(f.slug) ?? 0) > (score.get(best.slug) ?? 0) ? f : best),
+        lead,
+      ),
+      formats,
+    }));
+}
+
+/** The same rows for a list without a query (the suggestions): each family once, its lightest format shown. */
+export function groupRows(
+  products: readonly ClientProduct[],
+  all: readonly ClientProduct[],
+  families: ReadonlyMap<string, string>,
+): SearchGroup[] {
+  return groupFormats(products, all, families).map(({ lead, formats }) => ({
+    shown: lead,
+    formats,
+  }));
+}
+
+/** "Poudre de moringa 100 g" to "Poudre de moringa": a catalogue name without its weight. */
+export function bareName(name: string): string {
+  return name.replace(/\s+\d+(?:[.,]\d+)?\s*k?g$/u, '');
 }
 
 function rank(
