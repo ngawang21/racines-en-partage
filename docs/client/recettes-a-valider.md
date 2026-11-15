@@ -3,8 +3,11 @@
 Bonjour Marie,
 
 Chaque produit a maintenant au moins une recette, avec sa propre page sur le
-site. Les cinq recettes de vos étiquettes n’ont pas changé (ingrédients et
-étapes sont vos mots) ; j’y ai seulement ajouté quelques conseils. Les dix
+site. Les cinq recettes de vos étiquettes gardent leurs ingrédients et leurs
+quantités ; j’y ai ajouté quelques conseils et fait trois retouches de forme :
+le smoothie et la boisson au baobab sont écrits comme les autres (« Mettez »,
+« Mixez », au lieu de « Mettre », « Mixer »), et le chocolat chaud délaye
+d’abord le cacao dans un peu de lait froid, pour éviter les grumeaux. Les dix
 « recettes de la maison » sont nouvelles : je les ai écrites à partir de
 recettes publiques, en comparant au moins deux sources pour chacune. Le site
 les présente comme « Recette de la maison », jamais comme votre recette de

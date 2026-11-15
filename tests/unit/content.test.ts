@@ -279,6 +279,8 @@ describe('seed catalogue (spec appendix A, owner sheet of 2026-11-08)', () => {
       'grues-de-cacao-100g',
       'poudre-de-baobab-100g',
       'poudre-de-baobab-200g',
+      'poudre-de-moringa-100g',
+      'poudre-de-moringa-200g',
       'poudre-de-souchet-100g',
       'teguments-de-psyllium-200g',
       'tubercules-de-souchet-200g',

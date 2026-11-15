@@ -9,7 +9,10 @@ images:
   - /src/assets/products/moringa-100.webp
 stock: in_stock
 featured: true
-nutritionVerified: true
+# The label's table repeats the roasted barley values and its energy does not
+# add up (361 kcal from its own figures, 308 printed): hidden until the owner
+# confirms the figures with her supplier (docs/client/presentation.md).
+nutritionVerified: false
 nutrition:
   energy: 1290 kJ / 308 kcal
   fat: 3,0 g
@@ -19,7 +22,7 @@ nutrition:
   fibre: 13 g
   protein: 13 g
   salt: < 0,03 g
-free_from: [additifs, conservateurs, colorants, gluten]
+free_from: [additifs, conservateurs, colorants]
 related: [poudre-de-moringa-200g, poudre-de-baobab-100g]
 name: Poudre de moringa
 tagline: Le vert franc des feuilles du Niger, dans une poudre fine.
@@ -28,8 +31,8 @@ description: >-
   Niger sont séchées puis broyées en une poudre fine, rien d’autre. Surnommé «
   arbre de vie », le moringa est consommé depuis longtemps dans plusieurs
   régions d’Afrique de l’Ouest, notamment au Niger, au Mali, en Côte d’Ivoire et
-  au Sénégal. Source de protéines végétales et riche en fibres, sa poudre à la
-  saveur légèrement herbacée se glisse dans un smoothie, un yaourt ou une sauce.
+  au Sénégal. Sa poudre à la saveur légèrement herbacée se glisse dans un
+  smoothie, un yaourt ou une sauce.
   Le format 100 g, pour faire connaissance.
 ingredients: >-
   100 % feuilles de Moringa (Moringa oleifera) séchées et broyées. Sans
@@ -41,7 +44,7 @@ howMade: >-
   La poudre de moringa est obtenue à partir des feuilles séchées, qui sont
   soigneusement broyées pour obtenir une poudre fine et naturelle.
 benefits:
-  - Source de protéines végétales
+  - Feuilles de moringa du Niger
   - Feuilles séchées et réduites en poudre, sans rien ajouter
   - Goût herbacé, entre épinard et thé vert
 keywords:

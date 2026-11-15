@@ -9,7 +9,10 @@ images:
   - /src/assets/products/moringa-200.webp
 stock: in_stock
 featured: false
-nutritionVerified: true
+# The label's table repeats the roasted barley values and its energy does not
+# add up (361 kcal from its own figures, 308 printed): hidden until the owner
+# confirms the figures with her supplier (docs/client/presentation.md).
+nutritionVerified: false
 nutrition:
   energy: 1290 kJ / 308 kcal
   fat: 3,0 g
@@ -19,7 +22,7 @@ nutrition:
   fibre: 13 g
   protein: 13 g
   salt: < 0,03 g
-free_from: [additifs, conservateurs, colorants, gluten]
+free_from: [additifs, conservateurs, colorants]
 related: [poudre-de-moringa-100g, poudre-d-orge-grillee-100g]
 name: Poudre de moringa
 tagline: Le grand format pour un rituel de chaque jour.
@@ -27,18 +30,17 @@ description: >-
   La même poudre de feuilles de moringa du Niger, en sachet de 200 g pour celles
   et ceux qui en ont fait une habitude. Surnommé « arbre de vie », le moringa
   est consommé depuis longtemps au Niger, au Mali, en Côte d’Ivoire et au
-  Sénégal. Source de protéines végétales et riche en fibres, sa poudre trouve sa
-  place partout : un smoothie, une soupe, une sauce, un yaourt.
+  Sénégal. Sa poudre trouve sa place partout : un smoothie, une soupe, une
+  sauce, un yaourt.
 ingredients: >-
   100 % feuilles de moringa séchées, broyées. Produit fini vendu en poudre (non
-  en feuilles entières). Sans additifs, sans conservateur, sans colorant, sans
-  gluten.
+  en feuilles entières). Sans additifs, sans conservateur, sans colorant.
 usage:
   - À incorporer dans vos boissons, préparations culinaires (soupes, sauces, plats), smoothies ou jus.
   - Dans vos smoothies.
   - Dans vos yaourts, soupes ou desserts.
 benefits:
-  - Source de protéines végétales
+  - Feuilles de moringa du Niger
   - Feuilles séchées et réduites en poudre, sans rien ajouter
   - Format 200 g pour un usage quotidien
 keywords:

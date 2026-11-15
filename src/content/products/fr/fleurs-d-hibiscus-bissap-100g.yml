@@ -19,7 +19,10 @@ nutrition:
   fibre: 13 g
   protein: 3,2 g
   salt: < 0,03 g
-free_from: [additifs, conservateurs, colorants, gluten]
+# No gluten under free_from and no "sans gluten" wording: the same workshop
+# packs roasted barley, and the claim needs 20 mg/kg or less (EU regulation
+# 828/2014). To restore once the ESAT confirms how the lines are kept apart.
+free_from: [additifs, conservateurs, colorants]
 related: [poudre-de-baobab-100g, tubercules-de-souchet-200g]
 name: Fleurs d’hibiscus (bissap)
 tagline: Les calices rouge rubis du bissap, du Cameroun, à boire chaud ou glacé.
@@ -31,7 +34,7 @@ description: >-
   noms en Afrique : bissap en Côte d’Ivoire et au Sénégal, foléré au Cameroun,
   dah en Guinée, wonjo en Gambie, zobo au Nigeria ou encore karkadé en Égypte et
   au Soudan. Elle se déguste chaude ou froide, selon vos envies.
-ingredients: 100 % fleurs d’hibiscus séchées (calices). Sans additifs, sans conservateur, sans colorant, sans gluten.
+ingredients: 100 % fleurs d’hibiscus séchées (calices). Sans additifs, sans conservateur, sans colorant.
 usage:
   - À incorporer dans vos boissons, infusions, sirops, jus ou recettes selon vos envies.
   - En infusion chaude ou froide.

@@ -10,7 +10,10 @@ images:
 stock: in_stock
 featured: false
 nutritionVerified: false # no table printed on the label
-free_from: [additifs, gluten]
+# No gluten under free_from and no "sans gluten" wording: the same workshop
+# packs roasted barley, and the claim needs 20 mg/kg or less (EU regulation
+# 828/2014). To restore once the ESAT confirms how the lines are kept apart.
+free_from: [additifs]
 related: [poudre-d-orge-grillee-100g, poudre-de-souchet-100g]
 name: Téguments de psyllium
 tagline: L’enveloppe des graines de psyllium blond, aussi appelée ispaghul.
@@ -21,7 +24,7 @@ description: >-
   un grand verre d’eau, à un yaourt, ou à une pâte à pain sans gluten pour la
   lier. Veillez à les consommer avec suffisamment d’eau et à suivre les
   instructions figurant sur l’emballage.
-ingredients: Téguments de Psyllium 100 % naturels, sans additif, sans gluten.
+ingredients: Téguments de Psyllium 100 % naturels, sans additif.
 usage:
   - À incorporer dans vos boissons, préparations crues ou cuites ou recettes selon vos envies.
   - À consommer avec une quantité suffisante d’eau.

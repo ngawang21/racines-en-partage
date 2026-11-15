@@ -10,7 +10,10 @@ images:
 stock: in_stock
 featured: false
 nutritionVerified: false # no table printed on the label
-free_from: [gluten]
+# No gluten under free_from and no "sans gluten" wording: the same workshop
+# packs roasted barley, and the claim needs 20 mg/kg or less (EU regulation
+# 828/2014). To restore once the ESAT confirms how the lines are kept apart.
+free_from: []
 related: [tubercules-de-souchet-200g, poudre-de-cacao-100g]
 name: Poudre de souchet
 tagline: La douceur naturelle du souchet, prête à mélanger.
@@ -21,12 +24,11 @@ description: >-
   texture fine et sa saveur douce, légèrement sucrée, avec des notes de
   noisette. À incorporer selon vos envies dans vos boissons, vos porridges, vos
   pâtes à gâteaux et vos préparations culinaires.
-ingredients: Produit 100 % végétal, sans gluten. Poudre obtenue après broyage des tubercules de souchet.
+ingredients: Produit 100 % végétal. Poudre obtenue après broyage des tubercules de souchet.
 usage:
   - À incorporer dans vos boissons, préparations crues ou cuites ou recettes selon vos envies.
 howMade: La poudre de souchet est obtenue après broyage des tubercules de souchet.
 benefits:
-  - Sans gluten
   - Tubercules de souchet broyés, sans rien ajouter
   - Goût doux de noisette et d’amande
 keywords:
