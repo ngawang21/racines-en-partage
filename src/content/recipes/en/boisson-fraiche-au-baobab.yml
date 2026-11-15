@@ -1,0 +1,12 @@
+# Translated fields only: shared fields (product, source, minutes, image) come from the French file.
+title: 'Chilled baobab drink'
+summary: 'Baobab powder stirred into cold water: a tangy drink, ready in two minutes.'
+yield: '1 tall glass'
+ingredients:
+  - '1 to 2 teaspoons of baobab powder'
+  - '250 ml of cold water'
+  - '1 teaspoon of honey or sugar, to taste'
+  - 'A few ice cubes'
+steps:
+  - 'Mix the baobab powder with a little water, then gradually add the rest of the water.'
+  - 'Sweeten to taste and serve well chilled.'

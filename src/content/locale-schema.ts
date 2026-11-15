@@ -33,6 +33,9 @@ export const localeSchema = z.object({
     packagedBy: text,
     copyright: text,
     instagram: text,
+    facebook: text,
+    /** "Suivez-nous sur {network}": the accessible name of a social icon link. */
+    followOn: text,
     maps: text,
     address: text,
     phone: text,

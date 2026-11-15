@@ -88,7 +88,7 @@ const store: StoreInfo = {
   address: settings.brand.address,
   logo: `${SITE.url}/icons/icon-512.png`,
   image: ogImage.url,
-  sameAs: settings.brand.instagram ? [settings.brand.instagram] : [],
+  sameAs: [settings.brand.facebook, settings.brand.instagram].filter(Boolean),
 };
 const defaultCrumbs: Crumb[] | undefined =
   routeKey === 'shop'

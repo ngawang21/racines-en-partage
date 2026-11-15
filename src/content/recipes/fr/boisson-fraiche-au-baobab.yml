@@ -1,0 +1,16 @@
+# Recette de l’étiquette du sachet (source: label). Les textes viennent de l’étiquette.
+order: 2
+product: poudre-de-baobab-100g
+source: label
+prepMinutes: 5
+title: 'Boisson fraîche au baobab'
+summary: 'La poudre de baobab délayée dans l’eau fraîche : une boisson acidulée, prête en deux minutes.'
+yield: '1 grand verre'
+ingredients:
+  - '1 à 2 cuillères à café de poudre de baobab'
+  - '250 ml d’eau fraîche'
+  - '1 cuillère à café de miel ou de sucre selon votre goût'
+  - 'Quelques glaçons'
+steps:
+  - 'Mélanger la poudre de baobab avec un peu d’eau, puis ajouter progressivement le reste de l’eau.'
+  - 'Sucrer selon votre goût et servir bien frais.'

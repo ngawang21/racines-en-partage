@@ -21,3 +21,14 @@ export function resolveAsset(path: string): ImageMetadata {
   }
   return mod.default;
 }
+
+/**
+ * The close-up of a pouch's contents, cut from the owner's photo through the
+ * pouch window: `/src/assets/products/<file>` has its strip (2:1) at
+ * `/src/assets/products/detail/<file>`. Undefined while the strip does not
+ * exist, so callers render it only when it is there.
+ */
+export function detailAsset(productImage: string): string | undefined {
+  const path = productImage.replace('/src/assets/products/', '/src/assets/products/detail/');
+  return path !== productImage && hasAsset(path) ? path : undefined;
+}

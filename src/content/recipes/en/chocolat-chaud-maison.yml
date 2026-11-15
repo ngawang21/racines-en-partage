@@ -1,0 +1,14 @@
+# Translated fields only: shared fields (product, source, minutes, image) come from the French file.
+title: 'Homemade hot chocolate'
+summary: 'Plant milk, a few spoons of cocoa powder and ten minutes over a low heat: the hot chocolate from the label.'
+yield: '1 litre, 4 cups'
+ingredients:
+  - '1 litre of plant milk (almond, oat or other)'
+  - '2 to 3 tablespoons of cocoa powder'
+  - 'Sugar, to taste'
+steps:
+  - 'Heat 1 litre of plant milk (almond, oat or other).'
+  - 'Add 2 to 3 tablespoons of cocoa powder.'
+  - 'Sweeten to taste and stir well.'
+  - 'Simmer for 10 minutes, stirring.'
+  - 'Enjoy piping hot.'

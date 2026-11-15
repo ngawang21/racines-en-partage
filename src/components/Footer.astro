@@ -21,6 +21,11 @@ interface Props {
 const { locale, t, settings, compact = false } = Astro.props;
 const { brand } = settings;
 const siret = brand.siret.trim();
+// Social pages the owner keeps: round icon links under the tagline.
+const socials = [
+  { name: 'facebook' as const, href: brand.facebook, label: t.footer.facebook },
+  { name: 'instagram' as const, href: brand.instagram, label: t.footer.instagram },
+].filter((s) => s.href);
 const addressLine = postalLine(brand.address, locale);
 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressLine)}`;
 const shopLinks = [
@@ -58,6 +63,22 @@ const year = new Date().getFullYear();
         <span class="wordmark">{SITE.name}</span>
       </a>
       <p class="tagline">{pickLabel(brand.tagline, locale)}</p>
+      {
+        socials.length > 0 && (
+          <ul class="socials" role="list">
+            {socials.map((s) => (
+              <li>
+                <a class="social" href={s.href} rel="noopener" target="_blank">
+                  <Icon name={s.name} size={22} />
+                  <span class="visually-hidden">
+                    {interpolate(t.footer.followOn, { network: s.label })} {t.a11y.newTab}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
       {siret && <p class="siret">SIRET {siret}</p>}
     </div>
 
@@ -83,17 +104,6 @@ const year = new Date().getFullYear();
             <span>{brand.email}</span>
           </a>
         </li>
-        {
-          brand.instagram && (
-            <li>
-              <a href={brand.instagram} rel="noopener" target="_blank">
-                <Icon name="instagram" size={18} />
-                <span>{t.footer.instagram}</span>
-                <span class="visually-hidden">{t.a11y.newTab}</span>
-              </a>
-            </li>
-          )
-        }
       </ul>
     </div>
 
@@ -183,6 +193,34 @@ const year = new Date().getFullYear();
     font-style: italic;
     font-size: var(--fs-1);
     max-width: 28ch;
+  }
+  .socials {
+    display: flex;
+    gap: var(--space-3);
+    margin: var(--space-4) 0 0;
+    padding: 0;
+  }
+  .social {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(251, 246, 234, 0.28);
+    border-radius: 50%;
+    color: var(--cream);
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease,
+      transform var(--dur-press) var(--ease-out-strong);
+  }
+  .social:active {
+    transform: scale(0.96);
+  }
+  @media (hover: hover) {
+    .social:hover {
+      border-color: var(--gold);
+      background: rgba(251, 246, 234, 0.08);
+    }
   }
   .siret {
     margin-top: var(--space-3);

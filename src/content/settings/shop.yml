@@ -9,6 +9,7 @@ brand:
   phone: '0775689108'
   address: { street: 9 Rue du Marché, postcode: '95400', city: Arnouville, country: FR }
   instagram: '' # URL or empty
+  facebook: 'https://www.facebook.com/racinesenpartage/' # URL or empty
   siret: '911 858 843 00020' # 14 digits; the legal texts print the SIREN (first 9) and the SIRET
   packagedBy: 'ESAT Les Oliviers (Gennevilliers, 92)'
 shop:

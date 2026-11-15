@@ -1,0 +1,20 @@
+# Recette de l’étiquette du sachet (source: label). Les textes viennent de l’étiquette.
+order: 4
+product: tubercules-de-souchet-200g
+source: label
+prepMinutes: 15
+restMinutes: 720
+title: 'Horchata de souchet (lait de souchet)'
+summary: 'Les tubercules trempent une nuit, puis se mixent avec de l’eau fraîche : un lait végétal doux, au goût d’amande et de noisette.'
+yield: '1 litre environ'
+ingredients:
+  - '250 g de tubercules de souchet'
+  - '1 litre d’eau pour le trempage'
+  - '1 litre d’eau fraîche'
+  - 'Miel ou sirop, selon votre goût'
+steps:
+  - 'Faites tremper 250 g de tubercules de souchet dans 1 litre d’eau pendant 12 h.'
+  - 'Égouttez et rincez.'
+  - 'Mixez avec 1 litre d’eau fraîche.'
+  - 'Filtrez à l’aide d’un tissu propre.'
+  - 'Sucrez selon votre goût (miel, sirop, etc.).'

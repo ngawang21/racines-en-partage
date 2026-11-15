@@ -29,7 +29,7 @@ interface Props {
   minimal?: boolean;
 }
 const { locale, routeKey, slug, t, settings, minimal = false } = Astro.props;
-const { phone, email } = settings.brand;
+const { phone, email, facebook } = settings.brand;
 const phoneLabel = locale === 'fr' ? formatPhone(phone) : formatPhoneIntl(phone);
 const home = routePath('home', locale);
 // "Racines" / "en Partage": the wordmark stacks on two lines on narrow phones.
@@ -80,6 +80,15 @@ const links = [
                     <a href={`mailto:${email}`}>
                       <Icon name="mail" size={20} />
                       <span>{email}</span>
+                    </a>
+                  </li>
+                )}
+                {facebook && (
+                  <li>
+                    <a href={facebook} rel="noopener" target="_blank">
+                      <Icon name="facebook" size={20} />
+                      <span>{t.footer.facebook}</span>
+                      <span class="visually-hidden">{t.a11y.newTab}</span>
                     </a>
                   </li>
                 )}

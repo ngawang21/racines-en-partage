@@ -577,8 +577,9 @@ dans les textes légaux.
 **Coordonnées et entreprise**
 
 Dépliez **Entreprise et coordonnées** : nom, devise, e-mail de contact,
-téléphone (10 chiffres collés, `0775689108`), adresse, lien Instagram
-complet, **Numéro SIRET** et atelier de conditionnement. Ces informations
+téléphone (10 chiffres collés, `0775689108`), adresse, liens Facebook et
+Instagram complets (une icône ronde apparaît dans le pied de page pour
+chacun), **Numéro SIRET** et atelier de conditionnement. Ces informations
 apparaissent dans le pied de page, la page Contact et les textes légaux.
 
 Le numéro SIRET a 14 chiffres, collés ou groupés comme sur votre avis de

@@ -1,0 +1,19 @@
+# Recette de l’étiquette du sachet (source: label). Les textes viennent de l’étiquette.
+order: 5
+product: poudre-de-cacao-100g
+source: label
+prepMinutes: 5
+cookMinutes: 10
+title: 'Chocolat chaud maison'
+summary: 'Du lait végétal, quelques cuillères de poudre de cacao et dix minutes à feu doux : le chocolat chaud de l’étiquette.'
+yield: '1 litre, soit 4 tasses'
+ingredients:
+  - '1 litre de lait végétal (amande, avoine ou autre)'
+  - '2 à 3 cuillères à soupe de poudre de cacao'
+  - 'Sucre, selon votre goût'
+steps:
+  - 'Faites chauffer 1 litre de lait végétal (amande, avoine ou autre).'
+  - 'Ajoutez 2 à 3 cuillères à soupe de poudre de cacao.'
+  - 'Sucrez selon votre goût et mélangez bien.'
+  - 'Laissez frémir 10 minutes en remuant.'
+  - 'Dégustez bien chaud.'

@@ -1,7 +1,7 @@
 ---
 // Contact page body: the contact form (spec iteration 3, 2.3) next to the
 // contact details (spec 5.4): address with a Google Maps link (no embed),
-// phone, e-mail, Instagram when set, and the hours text.
+// phone, e-mail, Facebook and Instagram when set, and the hours text.
 import type { Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
 import type { ContactPage, Settings } from '../content/schemas';
@@ -68,6 +68,22 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
           </a>
         </dd>
       </div>
+      {
+        brand.facebook && (
+          <div class="card">
+            <dt>
+              <Icon name="facebook" size={20} />
+              {t.footer.facebook}
+            </dt>
+            <dd>
+              <a class="link-arrow" href={brand.facebook} rel="noopener" target="_blank">
+                {brand.facebook.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+                <span class="visually-hidden">{t.a11y.newTab}</span>
+              </a>
+            </dd>
+          </div>
+        )
+      }
       {
         brand.instagram && (
           <div class="card">

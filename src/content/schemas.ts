@@ -130,6 +130,62 @@ export const productTranslationSchema = z.object({
   seoDescription: optText,
 });
 
+// --------------------------------------------- recipes with their own page
+
+/** "label": printed on the pouch. "house": written for the site, the owner validates it. */
+export const RECIPE_SOURCES = ['label', 'house'] as const;
+
+/** Shared fields of a recipe file (`src/content/recipes/fr/<slug>.yml`). */
+export const recipeSharedSchema = z.object({
+  /** Position on the recipes page; missing sorts last. */
+  order: z.number().int().nonnegative().optional(),
+  hidden: z.boolean().default(false),
+  /** Slug of the product the recipe uses; its page is linked and sells it. */
+  product: text,
+  source: z.enum(RECIPE_SOURCES),
+  prepMinutes: z.number().int().positive(),
+  cookMinutes: z.number().int().positive().optional(),
+  /** Soaking, infusing or chilling. */
+  restMinutes: z.number().int().positive().optional(),
+  /** The drink or dish once made (owner photo); the pouch close-up stands in until then. */
+  image: z.string().regex(ASSET_IMAGE_PATH).optional(),
+});
+
+/** Translated fields of a recipe, complete (French file, or English after the fallback). */
+export const recipeTranslatedSchema = z.object({
+  title: text,
+  /** One or two sentences under the title, also the card text. */
+  summary: text,
+  /** "1 litre", "2 verres". */
+  yield: text,
+  ingredients: textList.min(1),
+  steps: textList.min(1),
+  /** Variations and serving ideas, no health claim. */
+  tips: textList.default([]),
+  imageAlt: text.optional(),
+  seoTitle: text.optional(),
+  seoDescription: text.optional(),
+});
+
+/** A French recipe file. */
+export const recipeEntrySchema = recipeSharedSchema.extend(recipeTranslatedSchema.shape);
+export type RecipeEntryFile = z.infer<typeof recipeEntrySchema>;
+/** A recipe as the site uses it: the file plus its slug (the file name, same in both locales). */
+export type RecipeEntry = RecipeEntryFile & { slug: string };
+
+/** An English recipe file: translated fields only, each may be empty. */
+export const recipeTranslationSchema = z.object({
+  title: optText,
+  summary: optText,
+  yield: optText,
+  ingredients: optList,
+  steps: optList,
+  tips: optList,
+  imageAlt: optText,
+  seoTitle: optText,
+  seoDescription: optText,
+});
+
 export const PRODUCT_TRANSLATED_KEYS = Object.keys(
   productTranslatedSchema.shape,
 ) as (keyof typeof productTranslatedSchema.shape)[];
@@ -275,6 +331,7 @@ export const settingsSchema = z.object({
       country: z.string().regex(/^[A-Z]{2}$/),
     }),
     instagram: z.union([z.literal(''), z.url()]).default(''),
+    facebook: z.union([z.literal(''), z.url()]).default(''),
     /** 14 digits, spaces allowed ("911 858 843 00020"); the SIREN is its first 9 digits. */
     siret: z
       .string()

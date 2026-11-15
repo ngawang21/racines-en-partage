@@ -1,0 +1,15 @@
+# Translated fields only: shared fields (product, source, minutes, image) come from the French file.
+title: 'Moringa smoothie'
+summary: 'A spoon of moringa powder, a banana, a piece of fruit: the green smoothie from the label, for the morning.'
+yield: '1 tall glass'
+ingredients:
+  - '1 teaspoon of moringa powder'
+  - '1 very ripe banana'
+  - '1 apple or a few pieces of pineapple'
+  - '200 ml of water or plant milk'
+  - '1 teaspoon of honey, to taste'
+  - 'A few ice cubes'
+steps:
+  - 'Put all the ingredients in a blender.'
+  - 'Blend until smooth and creamy.'
+  - 'Serve chilled.'

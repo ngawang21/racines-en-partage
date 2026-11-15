@@ -1,0 +1,19 @@
+# Recette de l’étiquette du sachet (source: label). Les textes viennent de l’étiquette.
+order: 1
+product: fleurs-d-hibiscus-bissap-100g
+source: label
+prepMinutes: 5
+restMinutes: 15
+title: 'Infusion de bissap'
+summary: 'L’infusion de l’étiquette : des fleurs d’hibiscus, de l’eau frémissante et un quart d’heure de patience. À boire chaude, ou bien fraîche le lendemain.'
+yield: '1 litre'
+ingredients:
+  - '1 litre d’eau'
+  - '2 à 3 cuillères à soupe de fleurs d’hibiscus'
+  - 'Miel, menthe ou citron, selon vos goûts'
+steps:
+  - 'Faites bouillir 1 litre d’eau.'
+  - 'Ajoutez 2 à 3 cuillères à soupe de fleurs d’hibiscus.'
+  - 'Laissez infuser 10 à 15 minutes.'
+  - 'Filtrez et dégustez chaud ou froid.'
+  - 'Vous pouvez ajouter un peu de miel, de menthe ou de citron selon vos goûts.'

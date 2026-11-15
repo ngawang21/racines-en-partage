@@ -1118,6 +1118,12 @@ singletons:
             type: url
             required: false
             hint: Facultatif. L'adresse complète, par exemple https://www.instagram.com/racinesenpartage/.
+          - name: facebook
+            label: Lien Facebook
+            widget: string
+            type: url
+            required: false
+            hint: Facultatif. L'adresse complète de votre page, par exemple https://www.facebook.com/racinesenpartage/.
           - name: siret
             label: Numéro SIRET
             widget: string
