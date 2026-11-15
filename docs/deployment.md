@@ -262,22 +262,24 @@ visitors after the switch. **Time:** 2 minutes, then up to 24 hours of
 waiting. **State on 2026-11-15:** on (DS key tag 57304).
 
 1. `ovh.com/manager` > sign in > **Web Cloud** > **Domains & DNS** >
-   `racinesenpartage.fr` > tab **Overview**.
-2. Find the card **DNS configuration**. It lists the two DNS servers, then a
-   line **DNSSEC**: "You are protected against DNS spoofing attempts.",
-   status **Enabled**.
-3. Click that DNSSEC line (or the switch or **...** next to it) and choose
-   to disable it. A window opens: confirm.
-   - Not on that card? Same page, **Resource Map** > the **DNSSEC
-     (Anti-spoofing)** item.
+   `racinesenpartage.fr` > tab **DNS Zone**.
+2. The tab shows, in order: **Records** (11 entries), **DNS servers**,
+   **Anycast DNS**, then **DNSSEC**: "Zone signing", **Enabled**, "You are
+   protected against DNS data tampering.", and below it **DS records**: key
+   tag 57304, algorithm 8 (RSASHA256), **Active**.
+3. In the **DNSSEC** block, click the **Enabled** switch (or the **...** or
+   action next to "Zone signing") and choose to disable it. A window opens:
+   confirm.
    - Older layout (French): **Noms de domaine** > `racinesenpartage.fr` >
      **Informations générales** > box **Sécurité** > switch above
      **Délégation sécurisée - DNSSEC**.
-4. Change nothing else on that page. Do not buy **Anycast DNS** (Cloudflare
-   replaces OVHcloud's DNS) and leave the **DNS Zone** tab alone.
+4. Change nothing else. Do not buy **Anycast DNS** (Cloudflare replaces
+   OVHcloud's DNS), do not edit the **Records**, and do not touch **DNS
+   servers** yet (that is 4.4).
 
-**Check, right away:** the DNSSEC line shows **Disabled**, or a pending
-operation.
+**Check, right away:** **DNSSEC** shows **Disabled**, or a pending
+operation. The **DS records** entry (key tag 57304) disappears when
+OVHcloud has removed it from the registry.
 
 **Check, then every few hours:** this prints nothing (today it prints
 `57304 8 2 7909...`).
@@ -315,11 +317,12 @@ active within 28 days is deleted.
 
 Only after 4.2's check passes.
 
-1. **Web Cloud** > **Domains & DNS** > `racinesenpartage.fr` > tab
-   **Overview** > card **DNS configuration** ("Configuration: OVHcloud
-   default (internal)") > its edit action (**Modify** or **...**;
-   unverified, the new layout is not in OVHcloud's guides yet). Older
-   layout: tab **Serveurs DNS** > **Modifier les serveurs DNS**.
+1. **Web Cloud** > **Domains & DNS** > `racinesenpartage.fr` > tab **DNS
+   Zone** > block **DNS servers** ("Configuration: OVHcloud default
+   (internal)", `dns103.ovh.net`, `ns103.ovh.net`) > its edit action
+   (**Modify** or **...**; unverified, the new layout is not in OVHcloud's
+   guides yet). Older layout: tab **Serveurs DNS** > **Modifier les
+   serveurs DNS**.
 2. Choose to use your own DNS servers: **Option 2 : Utiliser mes propres
    DNS (ou ceux d'un autre fournisseur DNS)** in the French layout.
 3. First DNS server: the first Cloudflare nameserver, associated IP empty >
