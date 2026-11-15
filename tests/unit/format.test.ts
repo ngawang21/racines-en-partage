@@ -5,6 +5,7 @@ import {
   formatPrice,
   formatRating,
   formatUnitPrice,
+  formatMinutes,
   formatWeight,
   localiseNutrition,
   nowrapWeight,
@@ -122,5 +123,22 @@ describe('formatRating', () => {
     expect(formatRating(4.5, 'fr')).toBe('4,5');
     expect(formatRating(5, 'fr')).toBe('5,0');
     expect(formatRating(4.25, 'en')).toBe('4.3');
+  });
+});
+
+describe('formatMinutes (recipe times)', () => {
+  const NNBSP = '\u202f';
+  const NBSP = '\u00a0';
+  it('prints minutes, hours, then hours and minutes', () => {
+    expect(formatMinutes(15, 'fr')).toBe(`15${NNBSP}min`);
+    expect(formatMinutes(15, 'en')).toBe(`15${NBSP}min`);
+    expect(formatMinutes(720, 'fr')).toBe(`12${NNBSP}h`);
+    expect(formatMinutes(60, 'en')).toBe(`1${NBSP}h`);
+    expect(formatMinutes(90, 'fr')).toBe(`1${NNBSP}h${NNBSP}30`);
+    expect(formatMinutes(65, 'en')).toBe(`1${NBSP}h${NBSP}05${NBSP}min`);
+  });
+  it('refuses a part of a minute', () => {
+    expect(() => formatMinutes(2.5, 'fr')).toThrow();
+    expect(() => formatMinutes(-1, 'fr')).toThrow();
   });
 });

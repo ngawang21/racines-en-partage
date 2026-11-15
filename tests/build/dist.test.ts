@@ -16,6 +16,14 @@ const SITE = 'https://racinesenpartage.fr';
 const LOCALES = ['fr', 'en'] as const;
 const productSlugs = [...yamlFolder('products', 'fr').keys()];
 const categorySlugs = [...yamlFolder('categories', 'fr').keys()];
+/** The recipes the site shows: not hidden, about a product that is not hidden. */
+const recipeSlugs = [...yamlFolder('recipes', 'fr')]
+  .filter(([, raw]) => {
+    const r = raw as { hidden?: boolean; product: string };
+    const product = yamlFolder('products', 'fr').get(r.product) as { hidden?: boolean } | undefined;
+    return !r.hidden && product !== undefined && !product.hidden;
+  })
+  .map(([slug]) => slug);
 const settings = settingsSchema.parse(readYaml(join(CONTENT, 'settings/shop.yml')));
 
 /** dist file of a route path: "/boutique/" -> "boutique/index.html". */
@@ -33,7 +41,13 @@ const PAGES: Page[] = (Object.keys(ROUTES) as RouteKey[])
   .flatMap((key) =>
     LOCALES.flatMap((locale) => {
       const slugs =
-        key === 'product' ? productSlugs : key === 'category' ? categorySlugs : [undefined];
+        key === 'product'
+          ? productSlugs
+          : key === 'category'
+            ? categorySlugs
+            : key === 'recipe'
+              ? recipeSlugs
+              : [undefined];
       return slugs.map((slug) => ({
         key,
         locale,
@@ -66,8 +80,12 @@ beforeAll(() => {
 describe('routes', () => {
   it('builds every route of spec section 3 in both locales', () => {
     // 11 routes of spec section 3, plus recipes, lookup, review, newsletter,
-    // account and the business card page (iteration 3).
-    expect(PAGES.length).toBe(2 * (17 + productSlugs.length + categorySlugs.length));
+    // account and the business card page (iteration 3), and one page per
+    // recipe (iteration 4).
+    expect(recipeSlugs.length).toBeGreaterThanOrEqual(5);
+    expect(PAGES.length).toBe(
+      2 * (17 + productSlugs.length + categorySlugs.length + recipeSlugs.length),
+    );
     for (const p of ALL) expect(existsSync(join(dist, p.file)), p.file).toBe(true);
   });
   it('writes catalog.json, the sitemap and robots.txt', () => {

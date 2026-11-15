@@ -1,0 +1,12 @@
+---
+import type { GetStaticPaths } from 'astro';
+import RecipeView from '../../../components/views/RecipeView.astro';
+import { loadRecipes } from '../../../i18n/locale';
+
+export const getStaticPaths = (async () =>
+  (await loadRecipes('en')).map((item) => ({
+    params: { slug: item.slug },
+  }))) satisfies GetStaticPaths;
+---
+
+<RecipeView locale="en" slug={String(Astro.params.slug)} />

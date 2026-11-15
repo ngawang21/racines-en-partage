@@ -1,0 +1,31 @@
+# Recette de la maison (source: house), écrite pour le site à partir de sources publiques ; à valider par la propriétaire (docs/client/recettes-a-valider.md).
+order: 15
+product: teguments-de-psyllium-200g
+source: house
+prepMinutes: 15
+cookMinutes: 20
+restMinutes: 15
+title: 'Pains plats au sarrasin et au psyllium'
+summary: 'Le psyllium gonfle dans l’eau tiède et lie la farine de sarrasin : une pâte souple qui s’abaisse au rouleau, pour des pains plats cuits à la poêle, au goût franc de sarrasin.'
+yield: '6 pains plats'
+ingredients:
+  - '250 g de farine de sarrasin'
+  - '15 g de téguments de psyllium (2 cuillères à soupe bombées)'
+  - '280 ml d’eau tiède'
+  - '2 cuillères à soupe d’huile d’olive'
+  - '1 cuillère à café de sel'
+  - '1 cuillère à café de levure chimique'
+steps:
+  - 'Dans un bol, fouettez le psyllium avec l’eau tiède et l’huile. Laissez gonfler 5 minutes : le mélange devient un gel.'
+  - 'Dans un saladier, mélangez la farine de sarrasin, le sel et la levure.'
+  - 'Ajoutez le gel de psyllium et mélangez à la main jusqu’à obtenir une boule de pâte souple, un peu collante.'
+  - 'Couvrez et laissez reposer 10 minutes.'
+  - 'Partagez la pâte en 6 boules et abaissez chacune au rouleau en un disque fin, entre deux feuilles de papier cuisson.'
+  - 'Faites cuire à sec dans une poêle bien chaude, 2 à 3 minutes de chaque côté, jusqu’à ce que des taches dorées apparaissent.'
+  - 'Empilez les pains dans un torchon propre pour qu’ils restent souples.'
+tips:
+  - 'Comme l’indique son sachet, le psyllium se consomme avec une quantité suffisante d’eau : servez ces pains avec un grand verre d’eau.'
+  - 'Garnissez-les comme des galettes : fromage frais et herbes, légumes grillés, houmous.'
+  - 'Ils se gardent un jour dans un torchon et se réchauffent quelques secondes à la poêle.'
+seoTitle: 'Pains plats au sarrasin et au psyllium, à la poêle'
+seoDescription: 'Des pains plats à la farine de sarrasin, liés par les téguments de psyllium et cuits à la poêle. Six pains souples, prêts en 50 minutes.'

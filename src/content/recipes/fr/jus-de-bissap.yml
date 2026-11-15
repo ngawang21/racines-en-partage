@@ -1,0 +1,32 @@
+# Recette de la maison (source: house), écrite pour le site à partir de sources publiques ; à valider par la propriétaire (docs/client/recettes-a-valider.md).
+order: 6
+product: fleurs-d-hibiscus-bissap-100g
+source: house
+prepMinutes: 10
+cookMinutes: 10
+restMinutes: 120
+title: 'Jus de bissap'
+summary: 'La boisson rouge que l’on sert glacée au Sénégal, à table comme à la rupture du jeûne : des fleurs d’hibiscus infusées serré, sucrées, parfumées à la menthe et à la vanille.'
+yield: '1 litre, soit 5 à 6 verres'
+ingredients:
+  - '50 g de fleurs d’hibiscus (la moitié du sachet)'
+  - '1 litre d’eau'
+  - '80 à 100 g de sucre, selon votre goût'
+  - '1 sachet de sucre vanillé (7,5 g)'
+  - '1 petit bouquet de menthe fraîche (une dizaine de feuilles)'
+  - '1 cuillère à café d’eau de fleur d’oranger (facultatif)'
+  - 'Des glaçons, pour servir'
+steps:
+  - 'Rincez rapidement les fleurs d’hibiscus à l’eau froide.'
+  - 'Portez l’eau à ébullition, ajoutez les fleurs et laissez frémir 10 minutes à feu doux.'
+  - 'Hors du feu, ajoutez les feuilles de menthe et laissez infuser 5 minutes, pas plus.'
+  - 'Filtrez au-dessus d’une carafe en pressant bien les fleurs avec le dos d’une cuillère.'
+  - 'Ajoutez le sucre et le sucre vanillé pendant que le jus est encore chaud, et remuez jusqu’à ce qu’ils soient fondus.'
+  - 'Laissez refroidir, ajoutez l’eau de fleur d’oranger, puis placez au moins 2 heures au réfrigérateur.'
+  - 'Servez bien frais, sur des glaçons.'
+tips:
+  - 'Version à froid, plus douce : laissez tremper les fleurs dans l’eau froide au moins 4 heures au réfrigérateur, ou toute une nuit, puis filtrez et sucrez.'
+  - 'Au Sénégal, on y ajoute souvent un morceau de gingembre frais râpé, à faire infuser avec les fleurs.'
+  - 'Il se garde 3 jours au réfrigérateur, en bouteille fermée.'
+seoTitle: 'Jus de bissap glacé à la menthe et à la vanille'
+seoDescription: 'Le jus de bissap comme au Sénégal : fleurs d’hibiscus infusées, sucre vanillé, menthe fraîche et une touche de fleur d’oranger. Vingt minutes de préparation, à servir bien frais.'

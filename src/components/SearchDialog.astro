@@ -9,11 +9,16 @@
 // replaced client side. The formats of one product share a row, as in the
 // grids: `data-families` maps each heavier format's slug to its family
 // (formatFamilies over the French catalogue, the language that defines one).
+// Recipes come second: #rep-recipes embeds each one's slug, title and product
+// name (about 1.5 KB for fourteen), `data-recipe-path` the locale's recipe
+// URL with `%s` for the slug; at most three are listed under the products.
 import { DEFAULT_LOCALE, type Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
 import { formatFamilies } from '../content/merge';
-import { loadProducts } from '../i18n/locale';
-import { routePath } from '../i18n/routing';
+import { serializeForScript } from '../catalog/build';
+import { loadProducts, loadRecipes } from '../i18n/locale';
+import { ROUTES, routePath } from '../i18n/routing';
+import type { ClientRecipe } from '../search/match';
 import Icon from './Icon.astro';
 
 interface Props {
@@ -21,9 +26,20 @@ interface Props {
   t: LocaleContent;
 }
 const { locale, t } = Astro.props;
+const [productsFr, products, recipes] = await Promise.all([
+  loadProducts(DEFAULT_LOCALE),
+  loadProducts(locale),
+  loadRecipes(locale),
+]);
 const families = Object.fromEntries(
-  [...formatFamilies(await loadProducts(DEFAULT_LOCALE))].filter(([slug, lead]) => slug !== lead),
+  [...formatFamilies(productsFr)].filter(([slug, lead]) => slug !== lead),
 );
+const productName = new Map(products.map((p) => [p.slug, p.name]));
+const clientRecipes: ClientRecipe[] = recipes.map((r) => ({
+  slug: r.slug,
+  title: r.title,
+  product: productName.get(r.product) ?? '',
+}));
 ---
 
 <dialog
@@ -38,6 +54,9 @@ const families = Object.fromEntries(
   data-out={t.product.stockOut}
   data-from={t.shop.priceFrom}
   data-families={JSON.stringify(families)}
+  data-recipe-path={ROUTES.recipe[locale].replace('[slug]', '%s')}
+  data-recipes-one={t.search.recipesOne.replace('{count}', '%n')}
+  data-recipes-many={t.search.recipesMany.replace('{count}', '%n')}
 >
   <div class="search-panel">
     <h2 id="search-title" class="visually-hidden">{t.search.title}</h2>
@@ -68,6 +87,24 @@ const families = Object.fromEntries(
       <p class="search-status" role="status" data-search-status></p>
       <p class="search-label" data-search-label hidden>{t.search.suggestions}</p>
       <ul id="search-results" class="search-results" role="list" data-search-results></ul>
+      <div class="search-recipes" data-search-recipes hidden>
+        <p class="search-label" id="search-recipes-title">{t.search.recipes}</p>
+        <ul
+          class="search-recipe-list"
+          role="list"
+          aria-labelledby="search-recipes-title"
+          data-search-recipe-list
+        >
+        </ul>
+      </div>
+      <template data-search-recipe-row>
+        <li>
+          <a class="sr-recipe" href="">
+            <span class="sr-recipe-title"></span>
+            <span class="sr-recipe-product"></span>
+          </a>
+        </li>
+      </template>
       <template data-search-row>
         <li>
           <img src="" alt="" width="56" height="56" loading="lazy" decoding="async" />
@@ -96,6 +133,8 @@ const families = Object.fromEntries(
     </div>
   </div>
 </dialog>
+
+<script type="application/json" id="rep-recipes" set:html={serializeForScript(clientRecipes)} />
 
 <script>
   import '../scripts/search';
@@ -368,6 +407,46 @@ const families = Object.fromEntries(
   .search-results :global(.sr-add svg) {
     width: 18px;
     height: 18px;
+  }
+  .search-recipes[hidden] {
+    display: none;
+  }
+  .search-recipes .search-label {
+    margin-top: var(--space-2);
+  }
+  .search-recipe-list {
+    display: grid;
+    gap: 2px;
+    margin: var(--space-2) 0 var(--space-4);
+    padding: 0;
+  }
+  .search-recipe-list :global(.sr-recipe) {
+    display: grid;
+    gap: 2px;
+    min-height: 48px;
+    padding: var(--space-2);
+    border-radius: var(--radius-s);
+    color: var(--forest);
+    text-decoration: none;
+  }
+  @media (hover: hover) {
+    .search-recipe-list :global(.sr-recipe:hover) {
+      background: var(--paper);
+    }
+  }
+  .search-recipe-list :global(.sr-recipe:focus-visible) {
+    outline: 3px solid var(--hibiscus);
+    outline-offset: 0;
+    box-shadow: none;
+    background: var(--paper);
+  }
+  .search-recipe-list :global(.sr-recipe-title) {
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .search-recipe-list :global(.sr-recipe-product) {
+    color: var(--ink-2);
+    font-size: var(--fs--1);
   }
   .search-all {
     margin-top: var(--space-2);

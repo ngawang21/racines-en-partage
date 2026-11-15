@@ -1,0 +1,27 @@
+# Recette de la maison (source: house), écrite pour le site à partir de sources publiques ; à valider par la propriétaire (docs/client/recettes-a-valider.md).
+order: 14
+product: poudre-d-orge-grillee-100g
+source: house
+prepMinutes: 2
+cookMinutes: 5
+title: 'Tsampa au lait et au miel'
+summary: 'Une bouillie du matin prête en cinq minutes : la tsampa fouettée dans du lait chaud, une noisette de beurre, un filet de miel. Le goût toasté de l’orge, tout en douceur.'
+yield: '1 bol'
+ingredients:
+  - '250 ml de lait, ou de lait végétal'
+  - '4 cuillères à soupe bombées de poudre d’orge grillée (environ 40 g)'
+  - '1 pincée de sel'
+  - '1 noisette de beurre (facultatif)'
+  - '1 à 2 cuillères à café de miel'
+steps:
+  - 'Faites chauffer le lait dans une petite casserole jusqu’aux premiers frémissements.'
+  - 'Versez la tsampa en pluie avec la pincée de sel, en fouettant pour éviter les grumeaux.'
+  - 'Laissez épaissir 2 à 3 minutes à feu doux, sans cesser de remuer.'
+  - 'Hors du feu, ajoutez le beurre, puis versez dans un bol.'
+  - 'Arrosez de miel et dégustez chaud.'
+tips:
+  - 'La tsampa est déjà grillée : quelques minutes sur le feu suffisent, juste pour la texture.'
+  - 'Version froide : mélangez 2 cuillères à soupe de tsampa à un yaourt ou à du fromage blanc, avec un peu de miel.'
+  - 'Ajoutez une banane écrasée, des fruits rouges ou une pincée de cannelle.'
+seoTitle: 'Tsampa au lait et au miel, la bouillie du matin'
+seoDescription: 'La tsampa, poudre d’orge grillée, fouettée dans du lait chaud avec un filet de miel : une bouillie au goût toasté, prête en cinq minutes.'

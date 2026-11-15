@@ -16,6 +16,7 @@ guide (French): `docs/guide-proprietaire.md`.
 ```text
 src/content/
   products/{fr,en}/<slug>.yml      one product per file, same file name in both locales
+  recipes/{fr,en}/<slug>.yml       one recipe per file, its own page (section 9)
   categories/{fr,en}/<slug>.yml    poudres, infusions, graines, cacao
   pages/{fr,en}/<key>.yml          home, about, faq, contact
   legal/{fr,en}/<key>.md           legal, terms, privacy (frontmatter + Markdown)
@@ -23,23 +24,28 @@ src/content/
   settings/shop.yml                singleton, not translated (labels are { fr, en })
   locales/{fr,en}.json             UI strings, not in the CMS
 src/assets/products/               product photos (CMS uploads land here)
+src/assets/products/detail/        2:1 close-ups of each pouch's contents (detailAsset)
+src/assets/recipes/                recipe photos uploaded from the CMS
 src/assets/brand/                  category and page photos, logo medallion
 ```
 
 The file name is the slug and the URL: `products/fr/poudre-de-moringa-100g.yml`
 is `/produits/poudre-de-moringa-100g/` and `/en/products/poudre-de-moringa-100g/`.
-Category slugs give `/boutique/<slug>/` and `/en/shop/<slug>/`.
+Category slugs give `/boutique/<slug>/` and `/en/shop/<slug>/`, recipe slugs
+`/recettes/<slug>/` and `/en/recipes/<slug>/`.
 
-| File                       | Schema (`src/content/schemas.ts`)                                   | Merge (`src/content/merge.ts`) | Loader (`src/i18n/locale.ts`) |
-| -------------------------- | ------------------------------------------------------------------- | ------------------------------ | ----------------------------- |
-| `products/fr/*.yml`        | `productSchema` (`productSharedSchema` + `productTranslatedSchema`) | `mergeProduct`                 | `loadProducts`, `loadProduct` |
-| `products/en/*.yml`        | `productTranslationSchema` (translated keys only, each nullish)     | `mergeProduct`                 | same                          |
-| `categories/{fr,en}/*.yml` | `categorySchema`, `categoryTranslationSchema`                       | `mergeCategory`                | `loadCategories`              |
-| `pages/{fr,en}/<key>.yml`  | `PAGE_SCHEMAS[key]`                                                 | `mergePage`                    | `loadPage`                    |
-| `legal/{fr,en}/<key>.md`   | `legalFrontmatterSchema` (body is Markdown)                         | none (EN missing: FR file)     | `loadLegal`                   |
-| `reviews/*.yml`            | `reviewSchema` (complete file, carries its own `locale`)            | none                           | `loadReviews`, `reviewsFor`   |
-| `settings/shop.yml`        | `settingsSchema`                                                    | none                           | `loadSettings`                |
-| `locales/{fr,en}.json`     | `localeSchema` (`src/content/locale-schema.ts`)                     | `deepFallback`                 | `loadLocale`                  |
+| File                       | Schema (`src/content/schemas.ts`)                                     | Merge (`src/content/merge.ts`) | Loader (`src/i18n/locale.ts`) |
+| -------------------------- | --------------------------------------------------------------------- | ------------------------------ | ----------------------------- |
+| `products/fr/*.yml`        | `productSchema` (`productSharedSchema` + `productTranslatedSchema`)   | `mergeProduct`                 | `loadProducts`, `loadProduct` |
+| `products/en/*.yml`        | `productTranslationSchema` (translated keys only, each nullish)       | `mergeProduct`                 | same                          |
+| `recipes/fr/*.yml`         | `recipeEntrySchema` (`recipeSharedSchema` + `recipeTranslatedSchema`) | `mergeRecipe`                  | `loadRecipes`, `loadRecipe`   |
+| `recipes/en/*.yml`         | `recipeTranslationSchema` (translated keys only, each nullish)        | `mergeRecipe`                  | same                          |
+| `categories/{fr,en}/*.yml` | `categorySchema`, `categoryTranslationSchema`                         | `mergeCategory`                | `loadCategories`              |
+| `pages/{fr,en}/<key>.yml`  | `PAGE_SCHEMAS[key]`                                                   | `mergePage`                    | `loadPage`                    |
+| `legal/{fr,en}/<key>.md`   | `legalFrontmatterSchema` (body is Markdown)                           | none (EN missing: FR file)     | `loadLegal`                   |
+| `reviews/*.yml`            | `reviewSchema` (complete file, carries its own `locale`)              | none                           | `loadReviews`, `reviewsFor`   |
+| `settings/shop.yml`        | `settingsSchema`                                                      | none                           | `loadSettings`                |
+| `locales/{fr,en}.json`     | `localeSchema` (`src/content/locale-schema.ts`)                       | `deepFallback`                 | `loadLocale`                  |
 
 Always read content through the loaders of `src/i18n/locale.ts`, never with
 `getCollection`: the loaders apply the strict schemas, the French fallback and
@@ -54,17 +60,20 @@ translations only.
 - **Shared fields** (products: `order`, `hidden`, `sku`, `category`, `price`,
   `weightGrams`, `originCountryCode`, `images`, `stock`,
   `featured`, `nutritionVerified`, `nutrition`, `free_from`, `related`;
-  categories: `order`, `image`) are read from the French file only. Whatever
+  recipes: `order`, `hidden`, `product`, `source`, `prepMinutes`,
+  `cookMinutes`, `restMinutes`, `image`; categories: `order`, `image`) are
+  read from the French file only. Whatever
   the English file says about them is ignored, so the two locales can never
   disagree on a price or a stock status.
-- **Translated fields** (`PRODUCT_TRANSLATED_KEYS`, `CATEGORY_TRANSLATED_KEYS`,
+- **Translated fields** (`PRODUCT_TRANSLATED_KEYS`, `RECIPE_TRANSLATED_KEYS`,
+  `CATEGORY_TRANSLATED_KEYS`,
   derived from the translated schemas) come from the English file, and every
   gap is filled from French by `deepFallback` (`src/i18n/fallback.ts`): a
   missing key, `null`, an empty or blank string and an empty array all fall
   back. Arrays of objects fall back item by item, by index. A missing English
   file is the same as an empty one.
 - **Pages** have no shared/translated split: the whole English page is
-  `deepFallback(en, fr)`. Fields that are not text (the ritual `product`, the
+  `deepFallback(en, fr)`. Fields that are not text (the ritual `recipe`, the
   reassurance `icon`, the about `image`) may simply be left out of the English
   file.
 - The merged English value is validated again with the strict schema
@@ -82,8 +91,8 @@ Nutrition values are shared and written as printed on the French label
    product was deleted in the CMS while another file still lists it) is
    dropped, with one build warning per link ("Ignoring related links to
    deleted products"). Deleting a product therefore never fails the build.
-   The home ritual is already tolerant (`HomeView` links an unknown product
-   slug to the shop).
+   The home ritual is already tolerant (`HomeView` links an unknown or
+   hidden recipe to the recipes page), and so are the recipes (section 9).
 2. `validateCatalog` then checks the whole catalogue, hidden products
    included (unique SKU and slug, known category, images, no self link).
 3. `publishedProducts`: products with `hidden: true` are left out, along with
@@ -104,29 +113,29 @@ each group the CMS order applies.
 0.256.1 from unpkg, pinned with Subresource Integrity, see section 7; the
 config's first line points at the JSON schema for editor completion).
 
-| Model                              | CMS                                                                                                                                                                                                                                                                               |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `{fr,en}` folders                  | Global `i18n.structure: multiple_folders`, `default_locale: fr`, `initial_locales: all`. Entry collections use `folder: src/content/<name>`; file collections use `{{locale}}` in `file:` and need `i18n: true` on the collection and on each file.                               |
-| Optional English                   | `initial_locales` being set lets the owner switch English off per entry (entry menu, "Désactiver anglais"): the English file is then deleted on save and the site shows French. No translated field is required in English, so a half-done translation saves too.                 |
-| Shared product or category field   | `i18n: false`: edited in French only, hidden in the English pane, stored in the French file only (Sveltia leaves a non-localised field out of the other locales' files). Subfields inherit it.                                                                                    |
-| Shared page field                  | `i18n: duplicate` on the ritual `product`, the reassurance `icon` and the about `image`: read-only copy in English, written into the English file, where `deepFallback` makes it harmless.                                                                                        |
-| Translated field                   | `i18n: true` and `required: [fr]` (or `false` when optional): required in French only, so a blank English value is allowed and falls back. Subfields of a translated object or list need their own `i18n: true`.                                                                  |
-| Optional field (`.optional()`)     | `required: false`. The global `output.omit_empty_optional_fields: true` leaves it out of the file when empty. Without it the CMS would write `''`, which `text.optional()` refuses in the French file.                                                                            |
-| Slug = file name = URL             | Products: `slug.template: '{{name}}-{{weightGrams}}g'` with `editable: [create]`, so a new product gets `poudre-de-moringa-100g` and the slug can never change afterwards (no broken URL, no broken `related`). Categories: `{{name}}`, editable on create.                       |
-| `order` (products, categories)     | Collection option `reorder` (products: `{ group: category }`, a named view group). Not a form field: Sveltia writes `order` at the top of every locale's file of each moved entry, and gives a new entry the next number. The English copy is stripped by the translation schema. |
-| `hidden`                           | Boolean "Masquer ce produit du site", default `false`; list filter "Masqués du site"; the list summary appends " (masqué)" with `{{hidden \| ternary(...)}}`.                                                                                                                     |
-| References                         | `category`, `related` and the home ritual `product` are `relation` fields with `value_field: '{{slug}}'` (the file name). `related` filters out the product itself (`sku` equal to `{{fields.sku}}`) and hidden products; the ritual `product` filters out hidden products.       |
-| Enums                              | `select` options with French labels and the schema values (`STOCK`, `FREE_FROM`, `REASSURANCE_ICONS`, `SHIPPING_METHODS`, VAT modes). Up to five options render as radio buttons or checkboxes, which suits a phone.                                                              |
-| Prices                             | `number`, `value_type: float`, `step: 0.01`, and `pattern` `^\d+(\.\d{1,2})?$` (Sveltia tests numbers as strings) mirroring the two-decimal refine of `euros`. Sveltia's number input accepts both "8,90" and "8.90" in a French UI.                                              |
-| Product description                | `text`, not `richtext`: `ProductView` prints the description as plain paragraphs split on blank lines, so Markdown emphasis would show its asterisks.                                                                                                                             |
-| Product `keywords`                 | Translated `list` of `string` items, `required: false`: search words the name does not carry (bissap, karkadé, tsampa, chufa). An empty English list falls back to French. Placed after `related`, before the Google texts.                                                       |
-| Settings groups with a default     | `forms`, `newsletter`, `analytics` and `reviews` are `.default(...)` objects in `settingsSchema` (an older `shop.yml` still parses) but plain, always shown objects in the CMS, so the owner never meets an "add" toggle. The unit test allows that one required mismatch.        |
-| `brand.siret`                      | `string`, `required: false`, `pattern` `^(\d{14}\|\d{3} \d{3} \d{3} \d{5})?$` mirroring the schema (14 digits, plain or grouped 3 3 3 5, or empty). The legal tokens `{siren}` (first 9 digits) and `{siret}` derive from it.                                                     |
-| Reviews                            | Entry collection `reviews`, `i18n: false`, see section 8.                                                                                                                                                                                                                         |
-| Settings labels `{ fr, en }`       | `object` with two `string` subfields, `en` optional (empty falls back to `fr` through `pickLabel`). The singleton has no i18n.                                                                                                                                                    |
-| `shop.freeShippingFrom`            | `required: false`: emptied, it is left out of the file, which the schema (`nullish`) and every consumer read as "never free".                                                                                                                                                     |
-| `shop.currency` (`literal('eur')`) | `hidden` field with `default: eur`.                                                                                                                                                                                                                                               |
-| Legal Markdown                     | File collection, `format: frontmatter`, `body` as `richtext` limited to headings 2 and 3, bold, italic, links and lists, no editor component; `updated` is a `datetime` (`YYYY-MM-DD`, `auto_now`). A warning sits in the collection description and the body hint.               |
+| Model                              | CMS                                                                                                                                                                                                                                                                                                                    |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `{fr,en}` folders                  | Global `i18n.structure: multiple_folders`, `default_locale: fr`, `initial_locales: all`. Entry collections use `folder: src/content/<name>`; file collections use `{{locale}}` in `file:` and need `i18n: true` on the collection and on each file.                                                                    |
+| Optional English                   | `initial_locales` being set lets the owner switch English off per entry (entry menu, "Désactiver anglais"): the English file is then deleted on save and the site shows French. No translated field is required in English, so a half-done translation saves too.                                                      |
+| Shared product or category field   | `i18n: false`: edited in French only, hidden in the English pane, stored in the French file only (Sveltia leaves a non-localised field out of the other locales' files). Subfields inherit it.                                                                                                                         |
+| Shared page field                  | `i18n: duplicate` on the ritual `recipe`, the reassurance `icon` and the about `image`: read-only copy in English, written into the English file, where `deepFallback` makes it harmless.                                                                                                                              |
+| Translated field                   | `i18n: true` and `required: [fr]` (or `false` when optional): required in French only, so a blank English value is allowed and falls back. Subfields of a translated object or list need their own `i18n: true`.                                                                                                       |
+| Optional field (`.optional()`)     | `required: false`. The global `output.omit_empty_optional_fields: true` leaves it out of the file when empty. Without it the CMS would write `''`, which `text.optional()` refuses in the French file.                                                                                                                 |
+| Slug = file name = URL             | Products: `slug.template: '{{name}}-{{weightGrams}}g'` with `editable: [create]`, so a new product gets `poudre-de-moringa-100g` and the slug can never change afterwards (no broken URL, no broken `related`). Categories: `{{name}}`, editable on create.                                                            |
+| `order` (products, categories)     | Collection option `reorder` (products: `{ group: category }`, a named view group). Not a form field: Sveltia writes `order` at the top of every locale's file of each moved entry, and gives a new entry the next number. The English copy is stripped by the translation schema.                                      |
+| `hidden`                           | Boolean "Masquer ce produit du site", default `false`; list filter "Masqués du site"; the list summary appends " (masqué)" with `{{hidden \| ternary(...)}}`.                                                                                                                                                          |
+| References                         | `category`, `related`, the recipe `product` and the home ritual `recipe` are `relation` fields with `value_field: '{{slug}}'` (the file name). `related` filters out the product itself (`sku` equal to `{{fields.sku}}`) and hidden products; the recipe `product` and the ritual `recipe` filter out hidden entries. |
+| Enums                              | `select` options with French labels and the schema values (`STOCK`, `FREE_FROM`, `REASSURANCE_ICONS`, `SHIPPING_METHODS`, VAT modes). Up to five options render as radio buttons or checkboxes, which suits a phone.                                                                                                   |
+| Prices                             | `number`, `value_type: float`, `step: 0.01`, and `pattern` `^\d+(\.\d{1,2})?$` (Sveltia tests numbers as strings) mirroring the two-decimal refine of `euros`. Sveltia's number input accepts both "8,90" and "8.90" in a French UI.                                                                                   |
+| Product description                | `text`, not `richtext`: `ProductView` prints the description as plain paragraphs split on blank lines, so Markdown emphasis would show its asterisks.                                                                                                                                                                  |
+| Product `keywords`                 | Translated `list` of `string` items, `required: false`: search words the name does not carry (bissap, karkadé, tsampa, chufa). An empty English list falls back to French. Placed after `related`, before the Google texts.                                                                                            |
+| Settings groups with a default     | `forms`, `newsletter`, `analytics` and `reviews` are `.default(...)` objects in `settingsSchema` (an older `shop.yml` still parses) but plain, always shown objects in the CMS, so the owner never meets an "add" toggle. The unit test allows that one required mismatch.                                             |
+| `brand.siret`                      | `string`, `required: false`, `pattern` `^(\d{14}\|\d{3} \d{3} \d{3} \d{5})?$` mirroring the schema (14 digits, plain or grouped 3 3 3 5, or empty). The legal tokens `{siren}` (first 9 digits) and `{siret}` derive from it.                                                                                          |
+| Reviews                            | Entry collection `reviews`, `i18n: false`, see section 8.                                                                                                                                                                                                                                                              |
+| Settings labels `{ fr, en }`       | `object` with two `string` subfields, `en` optional (empty falls back to `fr` through `pickLabel`). The singleton has no i18n.                                                                                                                                                                                         |
+| `shop.freeShippingFrom`            | `required: false`: emptied, it is left out of the file, which the schema (`nullish`) and every consumer read as "never free".                                                                                                                                                                                          |
+| `shop.currency` (`literal('eur')`) | `hidden` field with `default: eur`.                                                                                                                                                                                                                                                                                    |
+| Legal Markdown                     | File collection, `format: frontmatter`, `body` as `richtext` limited to headings 2 and 3, bold, italic, links and lists, no editor component; `updated` is a `datetime` (`YYYY-MM-DD`, `auto_now`). A warning sits in the collection description and the body hint.                                                    |
 
 Other choices in the config:
 
@@ -226,6 +235,15 @@ Other choices in the config:
   grouped; refuses 9 digits) and a hint with an example on every new
   setting;
 - the `keywords` field (optional translated list of strings);
+- the `recipes` collection: fields equal the recipe schema keys at every
+  level with matching `required` flags, shared fields `i18n: false` and
+  translated ones `i18n: true`, never required in English, a label and a
+  hint on every field, `source` a select of `RECIPE_SOURCES` labelled
+  "Étiquette du sachet" and "Recette de la maison", `product` a relation to
+  `products` without hidden ones, photos under `/src/assets/recipes`, the
+  new-recipe defaults against `recipeEntrySchema`, the slug pattern against
+  every file, `reorder`; the home ritual `recipe` relation names existing
+  recipes in both locales;
 - the `reviews` collection: fields equal `reviewSchema` keys with matching
   `required` flags, no i18n, `published` and `verified` default `false`
   (`verified` read-only), relation to `products` by `{{slug}}`, limits and
@@ -348,11 +366,16 @@ product `origin` fields (the part before any comma), each named in
 locale, so a new origin means a new land and a sentence in the story.
 `ownerNote` (optional) is the owner's signed note, shown under the story
 once written. `ritualTitle` and `ritual` (exactly three moments: `time`,
-`text`, `product` slug) feed the "Un rituel, trois moments" band, each
-moment linking to the product's printed recipe (`#recipe`); a unit test
-checks the three products differ and carry a recipe. A product recipe may
-carry an `image` (`/src/assets/recipes/...`, uploaded from the CMS): the
-recipes page shows it above the card when set.
+`text`, `recipe` slug) feed the "Un rituel, trois moments" band, each
+moment linking to its recipe page and naming the recipe's product, with the
+close-up of the product's contents above the time when that strip exists; a
+unit test checks the three recipes exist, are shown and use three different
+products.
+
+Product fields added in iteration 4: `imageNote` (optional, translated), a
+line printed under the gallery when the photos are not exactly this pouch
+(set on `poudre-de-baobab-200g`, whose photo is the 100 g pouch). The
+product `recipe` object is gone: recipes are their own files (section 9).
 
 ## 7. Admin page and CSP
 
@@ -472,3 +495,73 @@ hides every review section of the site without touching the files. Reviews
 of a hidden product are not shown. Deleting a review in the CMS deletes the
 file; the Stripe session keeps its `reviewed_<sku>` mark, so the customer
 cannot post the same review again.
+
+## 9. Recipes
+
+Spec: section 2 of
+`docs/superpowers/specs/2026-11-15-iteration-4-recipes-photos-design.md`.
+
+**Files.** `src/content/recipes/{fr,en}/<slug>.yml`, the same split as the
+products: the French file is complete, the English one holds translated
+fields only and falls back field by field (`mergeRecipe`). The slug is the
+file name, the same in both locales (French words), and the page is
+`/recettes/<slug>/` and `/en/recipes/<slug>/` (route key `recipe`, indexable,
+with sitemap alternates).
+
+| Key                                         | Shared | Notes                                                                               |
+| ------------------------------------------- | ------ | ----------------------------------------------------------------------------------- |
+| `order`                                     | yes    | recipes page position, written by the CMS "Réorganiser"; missing sorts last         |
+| `hidden`                                    | yes    | left out of the site, kept in the CMS                                               |
+| `product`                                   | yes    | slug of the product used; a product in two formats is named by its lightest format  |
+| `source`                                    | yes    | `label` (printed on the pouch, the label's words) or `house` (written for the site) |
+| `prepMinutes`, `cookMinutes`, `restMinutes` | yes    | whole minutes; rest is soaking, infusing or chilling; cook and rest optional        |
+| `image`                                     | yes    | optional photo of the dish (`/src/assets/recipes/...`)                              |
+| `title`, `summary`, `yield`                 | no     | the summary is also the card text                                                   |
+| `ingredients`, `steps`                      | no     | at least one each; steps print numbered                                             |
+| `tips`                                      | no     | optional variations and serving ideas                                               |
+| `imageAlt`, `seoTitle`, `seoDescription`    | no     | optional                                                                            |
+
+No health or nutrition claim anywhere in a recipe (EU regulation 1924/2006).
+House recipes are listed with their references for the owner in
+`docs/client/recettes-a-valider.md`.
+
+**Loading.** `loadRecipes(locale)` merges every file, fails the build on a
+missing photo file (`validateRecipes`), then `publishedRecipes` drops hidden
+recipes and those whose product is deleted or hidden, with one build warning
+("Ignoring recipes of a deleted or hidden product"), so removing a product
+never fails the build. The list is typeset in French and sorted by
+`compareRecipes` (`order`, then title). `loadRecipe(locale, slug)` reads one.
+The unit tests (`tests/unit/recipes.test.ts`) hold the files to the stricter
+rule: every recipe names an existing product, by its lightest format.
+
+**Where recipes show.**
+
+- `/recettes/` (`RecipesView`): one `RecipeCards` card per recipe (product
+  name, title, summary, total time, "Recette de l’étiquette" or "Recette de
+  la maison"), the whole card linking to the recipe page; the structured
+  data is an `ItemList` of the recipe pages.
+- The recipe page (`RecipeView`): breadcrumb, source, title, summary, the
+  facts row (preparation, cooking, rest, quantity, each only when set,
+  `formatMinutes`), the ingredients beside the numbered steps, the tips, the
+  product card with its add button, and up to three other recipes
+  (`otherRecipes`: the same product first, then the following ones). The
+  picture (`recipePicture`) is the recipe `image`, else the product's
+  contents close-up (`detailAsset`, a 2:1 strip), else none. `Recipe`
+  JSON-LD (`recipeGraphInput`): name, description, image (the recipe photo,
+  else the product photo), ingredients, `HowToStep` instructions, ISO 8601
+  `prepTime`, `cookTime` and `totalTime`, yield, keywords (the product name
+  and its search keywords), author and publisher (the shop), language, plus
+  the breadcrumb list.
+- The product page: the "Petite recette" accordion (`id="recipe"`) shows the
+  product's first recipe (`recipesFor`: any format of the family, label
+  recipes first) with a link to its page, then the other recipes as links.
+- The home ritual band (`pages/*/home.yml`, `ritual[].recipe`).
+- The header search: `SearchDialog` embeds `#rep-recipes` (slug, title and
+  product name per recipe); `searchRecipes` matches the title and the
+  product name like the products (accents and one typo forgiven) and the
+  dialog lists at most three under the products.
+
+**CMS.** Collection `recipes` ("Recettes"), `reorder: true`, slug from the
+title (editable on create only), `source` a select ("Étiquette du sachet",
+"Recette de la maison"), `product` a relation to the shown products. The
+folder is in `.prettierignore` like the other owner-edited content.

@@ -317,7 +317,6 @@ describe('seed catalogue (spec appendix A, owner sheet of 2026-11-08)', () => {
     for (const p of productsEn) {
       const fr = bySlug.get(p.slug)!;
       expect(p.usage.length, p.slug).toBe(fr.usage.length);
-      expect(p.recipe?.steps.length, p.slug).toBe(fr.recipe?.steps.length);
     }
   });
 });
@@ -334,7 +333,7 @@ describe('merge', () => {
     const merged = mergeProduct('poudre-de-moringa-100g', fr, { name: '', tagline: null });
     expect(merged.name).toBe('Poudre de moringa');
     expect(merged.tagline).toBe((fr as any).tagline);
-    expect(merged.recipe?.title).toBe('Smoothie au moringa');
+    expect(merged.storage).toBe((fr as any).storage);
   });
   it('ignores the order key the CMS writes into the English file', () => {
     const fr = frProducts.get('poudre-de-baobab-100g');
@@ -549,16 +548,23 @@ describe('pages', () => {
     expect(title('fr')).toMatch(/^Des plantes/);
     expect(title('en')).toContain('West\u00a0African');
   });
-  it('the home ritual points at three different products that carry a recipe', () => {
+  it('the home ritual points at three shown recipes of three different products', () => {
+    const recipes = yamlFolder('recipes', 'fr');
     for (const locale of ['fr', 'en'] as const) {
       const home = mergePage(
         'home',
         pages('fr').get('home'),
         locale === 'fr' ? undefined : pages('en').get('home'),
       );
-      const slugs = home.ritual.map((m) => m.product);
-      expect(new Set(slugs).size, locale).toBe(3);
-      for (const slug of slugs) expect(bySlug.get(slug)?.recipe, `${locale} ${slug}`).toBeDefined();
+      const slugs = home.ritual.map((m) => m.recipe);
+      const products = slugs.map((slug) => {
+        const raw = recipes.get(slug) as { product: string; hidden?: boolean } | undefined;
+        expect(raw, `${locale} ${slug}`).toBeDefined();
+        expect(raw?.hidden ?? false, `${locale} ${slug}`).toBe(false);
+        expect(bySlug.get(raw!.product)?.hidden, `${locale} ${slug}`).toBe(false);
+        return raw!.product;
+      });
+      expect(new Set(products).size, locale).toBe(3);
     }
   });
   it('the home reassurance strip carries the owner promise, in order', () => {

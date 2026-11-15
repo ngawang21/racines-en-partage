@@ -4,7 +4,13 @@ import { getImage } from 'astro:assets';
 import { DEFAULT_LOCALE, SITE, type Locale } from '../../consts';
 import type { Product } from '../../content/schemas';
 import Base from '../../layouts/Base.astro';
-import { formatFamilies, formatsOf, relatedProducts, reviewStats } from '../../content/merge';
+import {
+  formatFamilies,
+  formatsOf,
+  recipesFor,
+  relatedProducts,
+  reviewStats,
+} from '../../content/merge';
 import { formatPrice, formatUnitPrice, formatWeight, toCents } from '../../i18n/format';
 import { interpolate } from '../../i18n/fallback';
 import {
@@ -12,6 +18,7 @@ import {
   loadLocale,
   loadProduct,
   loadProducts,
+  loadRecipes,
   loadReviews,
   loadSettings,
   reviewsFor,
@@ -40,7 +47,7 @@ interface Props {
   slug: string;
 }
 const { locale, slug } = Astro.props;
-const [t, product, all, settings, categories, allFr, published] = await Promise.all([
+const [t, product, all, settings, categories, allFr, published, recipes] = await Promise.all([
   loadLocale(locale),
   loadProduct(locale, slug),
   loadProducts(locale),
@@ -48,6 +55,7 @@ const [t, product, all, settings, categories, allFr, published] = await Promise.
   loadCategories(locale),
   loadProducts(DEFAULT_LOCALE),
   loadReviews(),
+  loadRecipes(locale),
 ]);
 const category = categories.find((c) => c.slug === product.category);
 const images = product.images.map(resolveAsset);
@@ -100,7 +108,12 @@ const gallery = [
 
 // "Dans le même esprit": four other products, one format each, never a
 // format of this one (relatedProducts; families are defined in French).
-const related = relatedProducts(product, all, formatFamilies(allFr));
+const families = formatFamilies(allFr);
+const related = relatedProducts(product, all, families);
+
+// "Petite recette": the product's first recipe (the label's first), any
+// format of the family; its other recipes follow as links.
+const [recipe, ...moreRecipes] = recipesFor(product.slug, recipes, families);
 
 const paragraphs = product.description.split(/\n\s*\n/).filter(Boolean);
 const shopHref = routePath('shop', locale);
@@ -147,7 +160,16 @@ const shopHref = routePath('shop', locale);
 
     <div class="product-layout">
       <div class="product-media">
-        <Gallery images={gallery} label={t.product.gallery} thumbLabel={t.product.imageOf} />
+        <Gallery
+          images={gallery}
+          label={t.product.gallery}
+          thumbLabel={t.product.imageOf}
+          enlargeLabel={t.product.enlarge}
+          closeLabel={t.product.closePhoto}
+          previousLabel={t.product.previousPhoto}
+          nextLabel={t.product.nextPhoto}
+        />
+        {product.imageNote && <p class="image-note">{product.imageNote}</p>}
       </div>
 
       <div class="product-info">
@@ -286,28 +308,40 @@ const shopHref = routePath('shop', locale);
             <ul class="bullets">{product.usage.map((u) => <li>{u}</li>)}</ul>
           </Accordion>
           {
-            product.recipe && (
+            recipe && (
               <Accordion
-                title={`${t.product.recipe}${locale === 'fr' ? '\u00a0: ' : ': '}${product.recipe.title}`}
+                title={`${t.product.recipe}${colon} ${recipe.title}`}
                 level="h2"
                 id="recipe"
               >
-                {product.recipe.ingredients && product.recipe.ingredients.length > 0 && (
+                <h3 class="mini-title">{t.product.recipeIngredients}</h3>
+                <ul class="bullets">
+                  {recipe.ingredients.map((i) => (
+                    <li>{i}</li>
+                  ))}
+                </ul>
+                <h3 class="mini-title">{t.product.recipeSteps}</h3>
+                <ol class="steps">
+                  {recipe.steps.map((s) => (
+                    <li>{s}</li>
+                  ))}
+                </ol>
+                <a class="link-arrow recipe-open" href={routePath('recipe', locale, recipe.slug)}>
+                  {t.product.recipeOpen}
+                  <Icon name="chevron" />
+                </a>
+                {moreRecipes.length > 0 && (
                   <>
-                    <h3 class="mini-title">{t.product.recipeIngredients}</h3>
-                    <ul class="bullets">
-                      {product.recipe.ingredients.map((i) => (
-                        <li>{i}</li>
+                    <h3 class="mini-title">{t.product.recipeMore}</h3>
+                    <ul class="more-recipes" role="list">
+                      {moreRecipes.map((r) => (
+                        <li>
+                          <a href={routePath('recipe', locale, r.slug)}>{r.title}</a>
+                        </li>
                       ))}
                     </ul>
                   </>
                 )}
-                <h3 class="mini-title">{t.product.recipeSteps}</h3>
-                <ol class="steps">
-                  {product.recipe.steps.map((s) => (
-                    <li>{s}</li>
-                  ))}
-                </ol>
               </Accordion>
             )
           }
@@ -593,6 +627,36 @@ const shopHref = routePath('shop', locale);
     color: var(--kraft-ink);
     font-family: var(--font-display);
     font-weight: 600;
+  }
+  .accordions :global(.recipe-open) {
+    margin-top: var(--space-3);
+  }
+  .more-recipes {
+    display: grid;
+    gap: var(--space-1);
+    margin: 0;
+  }
+  .more-recipes a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--forest);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: var(--kraft-deep);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+  @media (hover: hover) {
+    .more-recipes a:hover {
+      text-decoration-color: var(--forest);
+    }
+  }
+  .image-note {
+    margin-top: var(--space-3);
+    color: var(--ink-2);
+    font-size: var(--fs--1);
+    line-height: 1.45;
   }
   .free-from {
     margin-top: var(--space-8);

@@ -1,13 +1,14 @@
 // The schema.org graph of one page (spec 7). Pure: no Astro import, unit tested.
 import { SITE, type Locale } from '../consts';
 import { reviewStats } from '../content/merge';
-import type { Product, Review, Settings, Stock } from '../content/schemas';
+import type { Product, RecipeEntry, Review, Settings, Stock } from '../content/schemas';
 import { toCents } from '../i18n/format';
 
 export const STORE_ID = `${SITE.url}/#store`;
 export const WEBSITE_ID = `${SITE.url}/#website`;
 
-export type PageKind = 'home' | 'shop' | 'category' | 'product' | 'faq' | 'recipes' | 'page';
+export type PageKind =
+  'home' | 'shop' | 'category' | 'product' | 'faq' | 'recipes' | 'recipe' | 'page';
 
 /** At most this many `review` nodes on a Product (the aggregate counts them all). */
 export const MAX_REVIEW_NODES = 5;
@@ -64,18 +65,22 @@ export interface ReviewGraph {
   locale: Locale;
 }
 
+/** A recipe page's `Recipe` node (schema.org Recipe, Google's recipe rich result). */
 export interface RecipeGraph {
   name: string;
-  /** Absolute URL of the recipe (the product page recipe anchor). */
-  url: string;
-  /** Absolute image URLs. */
+  description: string;
+  /** Absolute image URLs: the recipe photo, else the product photo (Google requires one). */
   images: string[];
   ingredients: string[];
   steps: string[];
-  /** "2 tasses", when known. */
-  yield?: string;
-  /** The product the recipe is printed on. */
-  productName?: string;
+  prepMinutes: number;
+  cookMinutes?: number;
+  /** Soaking, infusing or chilling: counted in the total time only. */
+  restMinutes?: number;
+  /** "1 litre", "2 verres". */
+  yield: string;
+  /** The product name and its other names (bissap, karkadé). */
+  keywords: string[];
 }
 
 export interface GraphInput {
@@ -89,12 +94,12 @@ export interface GraphInput {
   breadcrumbs?: Crumb[];
   /** product pages */
   product?: ProductGraph;
-  /** shop and category pages: the listed products */
+  /** shop, category and recipes pages: the listed products or recipes */
   items?: Crumb[];
   /** FAQ page */
   faq?: Array<{ question: string; answer: string }>;
-  /** Recipes page */
-  recipes?: RecipeGraph[];
+  /** recipe pages */
+  recipe?: RecipeGraph;
 }
 
 type Node = Record<string, unknown>;
@@ -150,6 +155,7 @@ const PAGE_TYPE: Record<PageKind, string> = {
   category: 'CollectionPage',
   faq: 'FAQPage',
   recipes: 'CollectionPage',
+  recipe: 'WebPage',
 };
 
 function reviewNode(r: ReviewGraph): Node {
@@ -164,22 +170,40 @@ function reviewNode(r: ReviewGraph): Node {
   };
 }
 
-function recipeNode(canonical: string, r: RecipeGraph, index: number): Node {
+/** Minutes as an ISO 8601 duration: 15 to "PT15M", 90 to "PT1H30M", 720 to "PT12H". */
+export function isoDuration(minutes: number): string {
+  if (!Number.isInteger(minutes) || minutes < 0)
+    throw new Error(`isoDuration expects whole minutes, got ${minutes}`);
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `PT${m}M`;
+  return m === 0 ? `PT${h}H` : `PT${h}H${m}M`;
+}
+
+function recipeNode(input: GraphInput, r: RecipeGraph): Node {
+  const total = r.prepMinutes + (r.cookMinutes ?? 0) + (r.restMinutes ?? 0);
   return {
     '@type': 'Recipe',
-    '@id': `${canonical}#recipe-${index + 1}`,
+    '@id': `${input.canonical}#recipe`,
     name: r.name,
-    url: r.url,
-    ...(r.images.length > 0 ? { image: r.images } : {}),
-    ...(r.productName ? { description: r.productName } : {}),
+    description: r.description,
+    url: input.canonical,
+    image: r.images,
     author: { '@id': STORE_ID },
-    ...(r.yield ? { recipeYield: r.yield } : {}),
-    ...(r.ingredients.length > 0 ? { recipeIngredient: r.ingredients } : {}),
+    publisher: { '@id': STORE_ID },
+    inLanguage: input.locale,
+    prepTime: isoDuration(r.prepMinutes),
+    ...(r.cookMinutes ? { cookTime: isoDuration(r.cookMinutes) } : {}),
+    totalTime: isoDuration(total),
+    recipeYield: r.yield,
+    ...(r.keywords.length > 0 ? { keywords: r.keywords.join(', ') } : {}),
+    recipeIngredient: r.ingredients,
     recipeInstructions: r.steps.map((text, i) => ({
       '@type': 'HowToStep',
       position: i + 1,
       text,
     })),
+    mainEntityOfPage: { '@id': input.canonical },
   };
 }
 
@@ -300,10 +324,35 @@ export function productGraphInput(
 }
 
 /**
+ * Recipe node input from a merged recipe, its product and absolute image
+ * URLs (the recipe photo, else the product's). The keywords are the product
+ * name and its search keywords, each once.
+ */
+export function recipeGraphInput(
+  r: RecipeEntry,
+  product: Pick<Product, 'name' | 'keywords'>,
+  imageUrls: string[],
+): RecipeGraph {
+  return {
+    name: r.title,
+    description: r.seoDescription ?? r.summary,
+    images: imageUrls,
+    ingredients: r.ingredients,
+    steps: r.steps,
+    prepMinutes: r.prepMinutes,
+    ...(r.cookMinutes ? { cookMinutes: r.cookMinutes } : {}),
+    ...(r.restMinutes ? { restMinutes: r.restMinutes } : {}),
+    yield: r.yield,
+    keywords: [...new Set([product.name, ...product.keywords])],
+  };
+}
+
+/**
  * The schema.org graph of one page. The store and the site are the same nodes
  * everywhere, referenced by `@id`; the page node is typed by its kind
- * (CollectionPage on shop and category, FAQPage on the FAQ, ItemPage on a
- * product, WebPage otherwise) and adds breadcrumbs, a product or a list.
+ * (CollectionPage on shop, category and recipes, FAQPage on the FAQ, ItemPage
+ * on a product, WebPage otherwise) and adds breadcrumbs, a product, a recipe
+ * or a list.
  */
 export function buildGraph(input: GraphInput): { '@context': string; '@graph': Node[] } {
   const { canonical, locale, title, description, kind } = input;
@@ -346,7 +395,11 @@ export function buildGraph(input: GraphInput): { '@context': string; '@graph': N
     page.mainEntity = { '@id': `${canonical}#product` };
     graph.push(productNode(input, input.product));
   }
-  if ((kind === 'shop' || kind === 'category') && input.items?.length) {
+  if (kind === 'recipe' && input.recipe) {
+    page.mainEntity = { '@id': `${canonical}#recipe` };
+    graph.push(recipeNode(input, input.recipe));
+  }
+  if ((kind === 'shop' || kind === 'category' || kind === 'recipes') && input.items?.length) {
     page.mainEntity = {
       '@type': 'ItemList',
       numberOfItems: input.items.length,
@@ -357,11 +410,6 @@ export function buildGraph(input: GraphInput): { '@context': string; '@graph': N
         url: item.url,
       })),
     };
-  }
-  if (kind === 'recipes' && input.recipes?.length) {
-    const nodes = input.recipes.map((r, i) => recipeNode(canonical, r, i));
-    page.hasPart = nodes.map((n) => ({ '@id': n['@id'] }));
-    graph.push(...nodes);
   }
   if (kind === 'faq' && input.faq?.length) {
     page.mainEntity = input.faq.map((q) => ({

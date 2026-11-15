@@ -36,13 +36,13 @@ ritualTitle: One ritual, three moments
 ritual:
   - time: In the morning
     text: A spoon of moringa in the smoothie.
-    product: poudre-de-moringa-100g
+    recipe: smoothie-au-moringa
   - time: In the afternoon
     text: Iced hibiscus, brewed the day before.
-    product: fleurs-d-hibiscus-bissap-100g
+    recipe: jus-de-bissap
   - time: In the evening
     text: Hot chocolate with Ivorian cacao.
-    product: poudre-de-cacao-100g
+    recipe: chocolat-chaud-maison
 commitmentTitle: Our commitments
 commitmentBody: >-
   ESAT Les Oliviers in Gennevilliers is a sheltered workshop that supports

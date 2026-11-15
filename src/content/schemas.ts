@@ -44,15 +44,6 @@ export const nutritionSchema = z.object({
 });
 export type Nutrition = z.infer<typeof nutritionSchema>;
 
-export const recipeSchema = z.object({
-  title: text,
-  ingredients: textList.optional(),
-  steps: textList.min(1),
-  /** The drink or dish once made (owner photo); the recipe cards show it when set. */
-  image: z.string().regex(ASSET_IMAGE_PATH).optional(),
-});
-export type Recipe = z.infer<typeof recipeSchema>;
-
 /** Shared fields: read from the French file only. */
 export const productSharedSchema = z.object({
   /**
@@ -89,11 +80,15 @@ export const productTranslatedSchema = z.object({
   ingredients: text,
   usage: textList.min(1),
   howMade: text.optional(),
-  recipe: recipeSchema.optional(),
   benefits: textList.default([]),
   storage: text,
   /** Search words the name does not carry (regional names: bissap, karkadé, tsampa, chufa). */
   keywords: textList.default([]),
+  /**
+   * A line under the gallery when the photo is not exactly this pouch ("Photo
+   * du sachet de 100 g ; le 200 g est le même, en plus grand.").
+   */
+  imageNote: text.optional(),
   seoTitle: text.optional(),
   seoDescription: text.optional(),
 });
@@ -122,10 +117,10 @@ export const productTranslationSchema = z.object({
   ingredients: optText,
   usage: optList,
   howMade: optText,
-  recipe: z.object({ title: optText, ingredients: optList, steps: optList }).nullish(),
   benefits: optList,
   storage: optText,
   keywords: optList,
+  imageNote: optText,
   seoTitle: optText,
   seoDescription: optText,
 });
@@ -186,6 +181,10 @@ export const recipeTranslationSchema = z.object({
   seoDescription: optText,
 });
 
+export const RECIPE_TRANSLATED_KEYS = Object.keys(
+  recipeTranslatedSchema.shape,
+) as (keyof typeof recipeTranslatedSchema.shape)[];
+
 export const PRODUCT_TRANSLATED_KEYS = Object.keys(
   productTranslatedSchema.shape,
 ) as (keyof typeof productTranslatedSchema.shape)[];
@@ -237,9 +236,9 @@ export const homePageSchema = z.object({
   storyLands: z.object({ from: textList.min(1), to: text }),
   /** A few sentences in the owner's own voice, signed; shown in the story band once written. */
   ownerNote: z.object({ text, signature: text }).optional(),
-  /** "Un rituel, trois moments": a time of day, one sentence, the product (its recipe anchor). */
+  /** "Un rituel, trois moments": a time of day, one sentence, the slug of a recipe. */
   ritualTitle: text,
-  ritual: z.array(z.object({ time: text, text, product: text })).length(3, 'exactly 3 moments'),
+  ritual: z.array(z.object({ time: text, text, recipe: text })).length(3, 'exactly 3 moments'),
   commitmentTitle: text,
   commitmentBody: text,
 });
@@ -430,5 +429,28 @@ export function validateCatalog(input: {
     }
   }
   if (slugs.size !== products.length) problems.push('duplicate product slug');
+  return problems;
+}
+
+/**
+ * Checks of the recipe files against the catalogue: the product exists (by
+ * slug, hidden ones included) and the photo file is there. Returns the
+ * problems, empty when valid. The loader drops a recipe of an unknown or
+ * hidden product with a warning; the unit tests hold the files to this.
+ */
+export function validateRecipes(input: {
+  recipes: Array<Pick<RecipeEntry, 'slug' | 'product' | 'image'>>;
+  productSlugs: readonly string[];
+  assetExists: (path: string) => boolean;
+}): string[] {
+  const { recipes, productSlugs, assetExists } = input;
+  const problems: string[] = [];
+  for (const r of recipes) {
+    if (!productSlugs.includes(r.product))
+      problems.push(`${r.slug}: unknown product "${r.product}"`);
+    if (r.image && !assetExists(r.image)) problems.push(`${r.slug}: missing image ${r.image}`);
+  }
+  if (new Set(recipes.map((r) => r.slug)).size !== recipes.length)
+    problems.push('duplicate recipe slug');
   return problems;
 }

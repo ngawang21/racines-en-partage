@@ -266,52 +266,6 @@ collections:
         required: false
         i18n: true
         hint: Facultatif. Quelques phrases sur la fabrication, par exemple « Les feuilles séchées sont broyées finement ».
-      - name: recipe
-        label: Petite recette
-        widget: object
-        required: false
-        collapsed: auto
-        i18n: true
-        summary: '{{fields.title}}'
-        hint: Facultatif. Laissez vide s'il n'y a pas de recette sur l'étiquette.
-        fields:
-          - name: title
-            label: Titre de la recette
-            widget: string
-            i18n: true
-            required: [fr]
-            hint: Par exemple « Smoothie au moringa ».
-          - name: image
-            label: Photo de la recette
-            widget: image
-            required: false
-            choose_url: false
-            media_folder: /src/assets/recipes
-            public_folder: /src/assets/recipes
-            media_libraries:
-              default:
-                config:
-                  transformations:
-                    raster_image: { format: webp, quality: 82, width: 1600, height: 1600 }
-            i18n: true
-            hint: Facultatif. La boisson ou le plat une fois préparé, en largeur ; la page Recettes l'affiche dès qu'elle est là.
-          - name: ingredients
-            label: Ingrédients de la recette
-            label_singular: ingrédient
-            widget: list
-            required: false
-            i18n: true
-            field: { name: item, label: Ingrédient, widget: string, i18n: true }
-            hint: Un ingrédient par ligne, par exemple « 1 banane bien mûre ».
-          - name: steps
-            label: Étapes
-            label_singular: étape
-            widget: list
-            min: 1
-            i18n: true
-            required: [fr]
-            field: { name: item, label: Étape, widget: text, i18n: true }
-            hint: Une étape par ligne, dans l'ordre, par exemple « Mixer jusqu'à obtenir une préparation lisse ».
       - name: storage
         label: Conservation
         widget: text
@@ -423,6 +377,14 @@ collections:
         hint: >-
           Facultatif. Mots que les clientes et clients peuvent taper dans la recherche et que le nom ne
           contient pas, par exemple bissap, karkadé, foléré ; un mot par ligne.
+      - name: imageNote
+        label: Note sous les photos
+        widget: string
+        required: false
+        i18n: true
+        hint: >-
+          Facultatif. Une ligne sous les photos quand elles ne montrent pas exactement ce sachet, par
+          exemple « Photo du sachet de 100 g ; le 200 g est le même, en plus grand. ».
       - name: seoTitle
         label: Titre pour Google
         widget: string
@@ -437,6 +399,192 @@ collections:
         maxlength: 170
         i18n: true
         hint: Facultatif. Une ou deux phrases de 160 caractères environ, affichées sous le titre dans Google.
+
+  # ------------------------------------------------------------------- recipes
+  # One file per recipe, the same split as the products: shared fields (product,
+  # times, photo) in the French file only, texts translated, English optional.
+  # Fields mirror recipeSharedSchema and recipeTranslatedSchema in
+  # src/content/schemas.ts.
+  - name: recipes
+    label: Recettes
+    label_singular: Recette
+    description: >-
+      Une fiche par recette, chacune avec sa page (racinesenpartage.fr/recettes/...). Le produit, les
+      temps et la photo se règlent en français ; l'anglais ne demande que les textes, et il est
+      facultatif.
+    icon: restaurant
+    folder: src/content/recipes
+    format: yml
+    extension: yml
+    i18n: true
+    create: true
+    delete: true
+    duplicate: true
+    identifier_field: title
+    slug:
+      template: '{{title}}'
+      editable: [create]
+      hint: >-
+        Adresse de la page de la recette (racinesenpartage.fr/recettes/...). Proposée à partir du
+        titre, modifiable seulement à la création.
+      pattern: ['^[a-z0-9]+(-[a-z0-9]+)*$', 'Lettres minuscules sans accent, chiffres et tirets']
+    aliases_field: false
+    # "Réorganiser": the order of the recipes page, saved as `order` in each file.
+    reorder: true
+    summary: "{{title}}{{hidden | ternary(' (masquée)', '')}}"
+    preview_path: /recettes/{{slug}}/
+    view_filters:
+      - { label: Recettes des étiquettes, field: source, pattern: '^label$' }
+      - { label: Recettes de la maison, field: source, pattern: '^house$' }
+      - { label: Masquées du site, field: hidden, pattern: true }
+    view_groups:
+      groups:
+        - { name: product, label: Produit, field: product }
+    fields:
+      - name: title
+        label: Titre de la recette
+        widget: string
+        i18n: true
+        required: [fr]
+        hint: Court et précis, par exemple « Jus de bissap à la menthe ».
+      - name: product
+        label: Produit utilisé
+        widget: relation
+        collection: products
+        value_field: '{{slug}}'
+        display_fields: ['{{name}} ({{weightGrams}} g)']
+        search_fields: [name]
+        filters:
+          - { field: hidden, values: [true], exclude: true }
+        i18n: false
+        hint: >-
+          Le sachet que la recette utilise ; la page de la recette le propose à l'achat. Pour un
+          produit en deux formats, choisissez le plus petit, par exemple « Poudre de baobab (100 g) ».
+      - name: source
+        label: Origine de la recette
+        widget: select
+        default: house
+        options:
+          - { label: Étiquette du sachet, value: label }
+          - { label: Recette de la maison, value: house }
+        i18n: false
+        hint: >-
+          « Étiquette du sachet » : la recette imprimée sur le sachet, recopiée mot pour mot.
+          « Recette de la maison » : une recette écrite pour le site ; la page l'indique.
+      - name: hidden
+        label: Masquer cette recette du site
+        widget: boolean
+        default: false
+        i18n: false
+        hint: Cochée, la recette disparaît du site mais reste ici, par exemple le temps de la relire.
+      - name: summary
+        label: Résumé
+        widget: text
+        i18n: true
+        required: [fr]
+        hint: >-
+          Une ou deux phrases sous le titre, reprises sur la carte de la recette ; le goût et le
+          geste, sans allégation santé, par exemple « Le bissap glacé du Sénégal, parfumé à la menthe. ».
+      - name: image
+        label: Photo de la recette
+        widget: image
+        required: false
+        choose_url: false
+        media_folder: /src/assets/recipes
+        public_folder: /src/assets/recipes
+        media_libraries:
+          default:
+            config:
+              transformations:
+                raster_image: { format: webp, quality: 82, width: 1600, height: 1600 }
+        i18n: false
+        hint: >-
+          Facultatif. La boisson ou le plat une fois préparé, de préférence en largeur ; sans photo,
+          la page montre le contenu du sachet en gros plan.
+      - name: imageAlt
+        label: Description de la photo
+        widget: string
+        required: false
+        i18n: true
+        hint: Facultatif. Ce que montre la photo, pour les personnes malvoyantes, par exemple « Deux verres de bissap glacé ».
+      - name: prepMinutes
+        label: Préparation
+        widget: number
+        value_type: int
+        min: 1
+        step: 1
+        default: 10
+        after_input: minutes
+        i18n: false
+        hint: Le temps de préparation en minutes, par exemple 10.
+      - name: cookMinutes
+        label: Cuisson
+        widget: number
+        value_type: int
+        min: 1
+        step: 1
+        required: false
+        after_input: minutes
+        i18n: false
+        hint: Facultatif. Le temps de cuisson en minutes, par exemple 10 ; laissez vide sans cuisson.
+      - name: restMinutes
+        label: Repos, trempage ou infusion
+        widget: number
+        value_type: int
+        min: 1
+        step: 1
+        required: false
+        after_input: minutes
+        i18n: false
+        hint: >-
+          Facultatif. Le temps d'attente en minutes, par exemple 15 pour une infusion ou 720 pour
+          une nuit de trempage (12 heures).
+      - name: yield
+        label: Quantité obtenue
+        widget: string
+        i18n: true
+        required: [fr]
+        hint: Par exemple « 1 litre » ou « 2 verres ».
+      - name: ingredients
+        label: Ingrédients
+        label_singular: ingrédient
+        widget: list
+        min: 1
+        i18n: true
+        required: [fr]
+        field: { name: item, label: Ingrédient, widget: string, i18n: true }
+        hint: Un ingrédient par ligne, avec sa quantité, par exemple « 1 banane bien mûre ».
+      - name: steps
+        label: Étapes
+        label_singular: étape
+        widget: list
+        min: 1
+        i18n: true
+        required: [fr]
+        field: { name: item, label: Étape, widget: text, i18n: true }
+        hint: Une étape par ligne, dans l'ordre, par exemple « Mixez jusqu'à obtenir une préparation lisse. ».
+      - name: tips
+        label: Astuces et variantes
+        label_singular: astuce
+        widget: list
+        required: false
+        i18n: true
+        field: { name: item, label: Astuce, widget: text, i18n: true }
+        hint: Facultatif. Une idée par ligne, par exemple « Remplacez la menthe par de la fleur d'oranger. ».
+      - name: seoTitle
+        label: Titre pour Google
+        widget: string
+        required: false
+        maxlength: 70
+        i18n: true
+        hint: Facultatif. Le titre de l'onglet et du résultat Google, par exemple « Jus de bissap maison » ; sinon, le titre de la recette.
+      - name: seoDescription
+        label: Description pour Google
+        widget: text
+        required: false
+        maxlength: 170
+        i18n: true
+        hint: Facultatif. Une ou deux phrases de 160 caractères environ ; sinon, le résumé.
 
   # ------------------------------------------------------------------- reviews
   # One file per review, not localised (each review carries its language). The
@@ -730,17 +878,17 @@ collections:
             fields:
               - { name: time, label: Moment, widget: string, i18n: true, required: [fr], hint: 'Par exemple « Le matin ».' }
               - { name: text, label: Une phrase, widget: string, i18n: true, required: [fr] }
-              - name: product
-                label: Produit
+              - name: recipe
+                label: Recette
                 widget: relation
-                collection: products
+                collection: recipes
                 value_field: '{{slug}}'
-                display_fields: ['{{name}} ({{weightGrams}} g)']
-                search_fields: [name]
+                display_fields: [title]
+                search_fields: [title]
                 i18n: duplicate
                 filters:
                   - { field: hidden, values: [true], exclude: true }
-                hint: Le lien mène à la recette imprimée sur ce produit.
+                hint: La recette ouverte par le lien de ce moment, par exemple « Smoothie au moringa ».
           - { name: commitmentTitle, label: Titre des engagements, widget: string, i18n: true, required: [fr] }
           - { name: commitmentBody, label: Texte des engagements, widget: text, i18n: true, required: [fr] }
           - { name: seoTitle, label: Titre pour Google, widget: string, i18n: true, required: [fr] }

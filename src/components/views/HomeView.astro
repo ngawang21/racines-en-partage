@@ -8,8 +8,16 @@
 import medallion from '../../assets/brand/medallion.webp';
 import type { Locale } from '../../consts';
 import Base from '../../layouts/Base.astro';
-import { loadLocale, loadPage, loadProducts, loadReviews, loadSettings } from '../../i18n/locale';
+import {
+  loadLocale,
+  loadPage,
+  loadProducts,
+  loadRecipes,
+  loadReviews,
+  loadSettings,
+} from '../../i18n/locale';
 import { routePath } from '../../i18n/routing';
+import { detailAsset } from '../../images';
 import Commitment from '../Commitment.astro';
 import Hero from '../Hero.astro';
 import ProductGrid from '../ProductGrid.astro';
@@ -23,16 +31,19 @@ interface Props {
   locale: Locale;
 }
 const { locale } = Astro.props;
-const [t, home, products, settings, reviews] = await Promise.all([
+const [t, home, products, settings, reviews, recipes] = await Promise.all([
   loadLocale(locale),
   loadPage(locale, 'home'),
   loadProducts(locale),
   loadSettings(),
   loadReviews(),
+  loadRecipes(locale),
 ]);
 // Up to five: the grid shows as many as fill whole rows (see the styles).
 const featured = products.filter((p) => p.featured).slice(0, 5);
 const bySlug = new Map(products.map((p) => [p.slug, p]));
+const recipeBySlug = new Map(recipes.map((r) => [r.slug, r]));
+const recipesHref = routePath('recipes', locale);
 const shopHref = routePath('shop', locale);
 const aboutHref = routePath('about', locale);
 ---
@@ -74,15 +85,19 @@ const aboutHref = routePath('about', locale);
   <RitualBand
     title={home.ritualTitle}
     moments={home.ritual.map((m) => {
-      const product = bySlug.get(m.product);
+      // A recipe deleted or hidden since: the moment links to the recipes page.
+      const recipe = recipeBySlug.get(m.recipe);
+      const product = recipe && bySlug.get(recipe.product);
       return {
         time: m.time,
         text: m.text,
-        productName: product?.name ?? m.product,
-        href: product ? `${routePath('product', locale, product.slug)}#recipe` : shopHref,
+        title: recipe?.title ?? t.recipes.viewAll,
+        href: recipe ? routePath('recipe', locale, recipe.slug) : recipesHref,
+        productName: product?.name,
+        detail: product?.images[0] ? detailAsset(product.images[0]) : undefined,
       };
     })}
-    link={{ href: routePath('recipes', locale), label: t.recipes.viewAll }}
+    link={{ href: recipesHref, label: t.recipes.viewAll }}
   />
 
   <Commitment

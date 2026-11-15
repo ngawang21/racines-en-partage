@@ -32,8 +32,10 @@ interface Props {
   noindex?: boolean;
   /** Social image; defaults to the hero photo. */
   image?: { src: ImageMetadata; alt: string };
-  /** Extra graph input: breadcrumbs, product, listed items, FAQ. */
-  graph?: Partial<Pick<GraphInput, 'kind' | 'breadcrumbs' | 'product' | 'items' | 'faq'>>;
+  /** Extra graph input: breadcrumbs, product, recipe, listed items, FAQ. */
+  graph?: Partial<
+    Pick<GraphInput, 'kind' | 'breadcrumbs' | 'product' | 'recipe' | 'items' | 'faq'>
+  >;
   /** "checkout": a tunnel, the header keeps only the brand and a way back to
    *  the cart, the footer only the legal links and the contact. */
   chrome?: 'full' | 'checkout';
@@ -78,6 +80,8 @@ const KIND: Partial<Record<RouteKey, PageKind>> = {
   category: 'category',
   product: 'product',
   faq: 'faq',
+  recipes: 'recipes',
+  recipe: 'recipe',
 };
 const store: StoreInfo = {
   name: settings.brand.name,
@@ -125,6 +129,7 @@ const analyticsToken = settings.analytics.cloudflareToken.trim();
         store,
         breadcrumbs: graph.breadcrumbs ?? defaultCrumbs,
         product: graph.product,
+        recipe: graph.recipe,
         items: graph.items,
         faq: graph.faq,
       }}

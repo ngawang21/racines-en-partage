@@ -1,6 +1,7 @@
 ---
-// Loads gallery.ts. A separate component so the script is bundled (and kept
-// external for the CSP) only on pages whose gallery has several photos.
+// Loads gallery.ts (thumbnails and the larger view). A separate component so
+// the script is bundled once and kept external for the CSP; Astro dedupes it
+// on a page with several galleries.
 ---
 
 <script>

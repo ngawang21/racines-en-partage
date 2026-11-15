@@ -4,11 +4,13 @@ import { formatFamilies } from '../../src/content/formats';
 import {
   bareName,
   buildIndex,
+  buildRecipeIndex,
   groupRows,
   nearPrefix,
   normalise,
   search,
   searchGroups,
+  searchRecipes,
 } from '../../src/search/match';
 
 const product = (
@@ -196,5 +198,41 @@ describe('searchGroups (one row per product, as in the grids)', () => {
     expect(bareName('Poudre de moringa 100\u00a0g')).toBe('Poudre de moringa');
     expect(bareName('Tiger nut powder 1.5\u00a0kg')).toBe('Tiger nut powder');
     expect(bareName('Poudre de cacao')).toBe('Poudre de cacao');
+  });
+});
+
+describe('searchRecipes (listed under the products, at most three)', () => {
+  const recipes = buildRecipeIndex([
+    { slug: 'infusion-de-bissap', title: 'Infusion de bissap', product: 'Fleurs d’hibiscus' },
+    { slug: 'jus-de-bissap', title: 'Jus de bissap', product: 'Fleurs d’hibiscus' },
+    { slug: 'smoothie-au-moringa', title: 'Smoothie au moringa', product: 'Poudre de moringa' },
+    { slug: 'chocolat-chaud', title: 'Chocolat chaud maison', product: 'Poudre de cacao' },
+    { slug: 'gateau-cacao', title: 'Gâteau au chocolat', product: 'Poudre de cacao' },
+    { slug: 'brownie', title: 'Brownie fondant', product: 'Poudre de cacao' },
+    { slug: 'tsampa', title: 'Tsampa à la tibétaine', product: 'Poudre d’orge grillée' },
+  ]);
+  const slugs = (q: string, limit?: number) => searchRecipes(recipes, q, limit).map((r) => r.slug);
+
+  it('finds a recipe by a word of its title, ignoring case and accents', () => {
+    expect(slugs('smoothie')).toEqual(['smoothie-au-moringa']);
+    expect(slugs('TIBETAINE')).toEqual(['tsampa']);
+    expect(slugs('gateau')).toEqual(['gateau-cacao']);
+  });
+  it('finds the recipes of a product by its name, the title weighing more', () => {
+    expect(slugs('hibiscus')).toEqual(['infusion-de-bissap', 'jus-de-bissap']);
+    // "chocolat" is in two titles: they come before the third cacao recipe.
+    expect(slugs('chocolat')).toEqual(['chocolat-chaud', 'gateau-cacao']);
+    expect(slugs('cacao')).toEqual(['chocolat-chaud', 'gateau-cacao', 'brownie']);
+  });
+  it('forgives one typo per word when nothing matches exactly', () => {
+    expect(slugs('moringua')).toEqual(['smoothie-au-moringa']);
+    expect(slugs('chocolta')).toEqual(['chocolat-chaud', 'gateau-cacao']);
+  });
+  it('needs every word, lists three at most, nothing for an empty query', () => {
+    expect(slugs('jus bissap')).toEqual(['jus-de-bissap']);
+    expect(slugs('poudre')).toHaveLength(3);
+    expect(slugs('cacao', 1)).toHaveLength(1);
+    expect(slugs('')).toEqual([]);
+    expect(slugs('zzzz')).toEqual([]);
   });
 });

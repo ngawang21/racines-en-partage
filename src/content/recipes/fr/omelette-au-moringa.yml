@@ -1,0 +1,30 @@
+# Recette de la maison (source: house), écrite pour le site à partir de sources publiques ; à valider par la propriétaire (docs/client/recettes-a-valider.md).
+order: 9
+product: poudre-de-moringa-100g
+source: house
+prepMinutes: 10
+cookMinutes: 10
+title: 'Omelette au moringa, oignon et tomate'
+summary: 'Des œufs battus avec une cuillère de poudre de moringa, sur un fond d’oignon et de tomate : une omelette d’un vert tendre, au goût légèrement herbacé.'
+yield: '2 personnes'
+ingredients:
+  - '4 œufs'
+  - '1 cuillère à café de poudre de moringa'
+  - '1 oignon'
+  - '1 tomate'
+  - '1 petit piment frais (facultatif)'
+  - '1 cuillère à soupe d’huile'
+  - 'Sel et poivre'
+steps:
+  - 'Émincez finement l’oignon. Coupez la tomate en petits dés après avoir retiré les graines.'
+  - 'Faites chauffer l’huile dans une poêle et faites revenir l’oignon 3 à 4 minutes à feu moyen, jusqu’à ce qu’il soit tendre.'
+  - 'Ajoutez la tomate, et le piment émincé si vous l’aimez, et laissez cuire 2 minutes.'
+  - 'Battez les œufs avec la poudre de moringa, du sel et du poivre, jusqu’à ce qu’il ne reste aucun grumeau.'
+  - 'Versez les œufs dans la poêle et laissez prendre 3 à 4 minutes à feu moyen, en ramenant les bords vers le centre.'
+  - 'Pliez l’omelette en deux et servez aussitôt.'
+tips:
+  - 'Si vous découvrez le moringa, commencez par une demi-cuillère : son goût herbacé, entre épinard et thé vert, se remarque vite.'
+  - 'Le même geste dans une sauce tomate, une soupe ou des légumes sautés : ajoutez la poudre en fin de cuisson et mélangez bien.'
+  - 'Servez avec du pain ou un riz blanc.'
+seoTitle: 'Omelette au moringa, oignon et tomate'
+seoDescription: 'Une omelette à la poudre de moringa du Niger, avec oignon, tomate et un peu de piment : une recette salée simple, prête en vingt minutes.'

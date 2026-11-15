@@ -14,6 +14,7 @@ import {
   PAGE_SCHEMAS,
   PRODUCT_IMAGE_PATH,
   REASSURANCE_ICONS,
+  RECIPE_SOURCES,
   SHIPPING_METHODS,
   STOCK,
   categorySharedSchema,
@@ -22,6 +23,9 @@ import {
   productSchema,
   productSharedSchema,
   productTranslatedSchema,
+  recipeEntrySchema,
+  recipeSharedSchema,
+  recipeTranslatedSchema,
   reviewSchema,
   settingsSchema,
   type PageKey,
@@ -111,6 +115,7 @@ const optionValues = (f: Field) =>
   (f.options ?? []).map((o) => (typeof o === 'string' ? o : o.value));
 
 const products = collection('products');
+const recipes = collection('recipes');
 const reviews = collection('reviews');
 const categories = collection('categories');
 const pages = collection('pages');
@@ -309,6 +314,7 @@ describe('CMS config: global options', () => {
   it('lists the content collections, a divider, then the legal texts', () => {
     expect(config.collections.map((c) => ('name' in c ? c.name : '---'))).toEqual([
       'products',
+      'recipes',
       'reviews',
       'categories',
       'pages',
@@ -560,6 +566,111 @@ describe('CMS config: products', () => {
   });
 });
 
+describe('CMS config: recipes', () => {
+  const fields = recipes.fields!;
+
+  it('has exactly the fields of the recipe schema, at every level', () => {
+    const shape = { ...recipeSharedSchema.shape, ...recipeTranslatedSchema.shape };
+    expect(compare(fields, shape, '', [], [orderKey(recipes)!])).toEqual([]);
+  });
+
+  it('keeps shared fields French only and translates exactly the others', () => {
+    const top = Object.fromEntries(fields.map((f) => [f.name, f.i18n]));
+    const shared = Object.keys(top).filter((k) => top[k] === false);
+    const translated = Object.keys(top).filter((k) => top[k] === true);
+    expect([...shared, orderKey(recipes)].sort()).toEqual(
+      Object.keys(recipeSharedSchema.shape).sort(),
+    );
+    expect(translated.sort()).toEqual(Object.keys(recipeTranslatedSchema.shape).sort());
+    for (const [path, f] of walk(fields)) {
+      if (f.i18n !== true) continue;
+      for (const child of [...(f.fields ?? []), ...(f.field ? [f.field] : [])])
+        expect(child.i18n, `${path}.${child.name}`).toBe(true);
+    }
+  });
+
+  it('never requires a translated field in English (the build falls back to French)', () => {
+    expect(requiredInEnglish(fields)).toEqual([]);
+  });
+
+  it('gives every visible field a French label and a one-line hint', () => {
+    for (const [path, f] of visibleFields(fields)) {
+      expect(f.label, path).toBeTruthy();
+      expect(typeof f.hint === 'string' && f.hint.length > 10, `${path} hint`).toBe(true);
+    }
+  });
+
+  it('offers the two sources as a select, in words the owner uses', () => {
+    const source = fieldAt(fields, 'source');
+    expect(source.widget).toBe('select');
+    expect(optionValues(source)).toEqual([...RECIPE_SOURCES]);
+    expect(source.options).toEqual([
+      { label: 'Étiquette du sachet', value: 'label' },
+      { label: 'Recette de la maison', value: 'house' },
+    ]);
+  });
+
+  it('links the recipe to a shown product by file name', () => {
+    expect(fieldAt(fields, 'product')).toMatchObject({
+      widget: 'relation',
+      collection: products.name,
+      value_field: '{{slug}}',
+      i18n: false,
+    });
+    expect(fieldAt(fields, 'product').multiple).toBeUndefined();
+    expect(fieldAt(fields, 'product').filters).toEqual([
+      { field: 'hidden', values: [true], exclude: true },
+    ]);
+  });
+
+  it('stores recipe photos under src/assets, where the build resolves them', () => {
+    const image = fieldAt(fields, 'image');
+    expect(image.media_folder).toBe('/src/assets/recipes');
+    expect(image.public_folder).toBe('/src/assets/recipes');
+    expect(
+      recipeSharedSchema.shape.image.safeParse(`${image.public_folder}/jus-de-bissap-x7k2.webp`)
+        .success,
+    ).toBe(true);
+  });
+
+  it('fills a new recipe with defaults the schema accepts', () => {
+    const defaults = Object.fromEntries(
+      fields.filter((f) => f.default !== undefined).map((f) => [f.name, f.default]),
+    );
+    expect(defaults).toMatchObject({ source: 'house', hidden: false });
+    const typed = {
+      title: 'Jus de bissap',
+      product: 'fleurs-d-hibiscus-bissap-100g',
+      summary: 'Une phrase.',
+      yield: '1 litre',
+      ingredients: ['1 litre d’eau'],
+      steps: ['Infusez.'],
+    };
+    expect(recipeEntrySchema.safeParse({ ...defaults, ...typed }).success).toBe(true);
+  });
+
+  it('names new files the way the recipe files are named, and orders them with "Réorganiser"', () => {
+    expect(recipes.slug!.template).toBe('{{title}}');
+    const pattern = new RegExp(recipes.slug!.pattern![0]);
+    for (const slug of yamlFolder('recipes', 'fr').keys())
+      expect(pattern.test(slug), slug).toBe(true);
+    expect(recipes.reorder).toBe(true);
+    expect(orderKey(recipes)).toBe('order');
+    for (const f of recipes.view_filters!) expect(fieldAt(fields, f.field), f.label).toBeDefined();
+  });
+
+  it('reads and writes src/content/recipes/{fr,en}/*.yml', () => {
+    expect(recipes).toMatchObject({
+      folder: 'src/content/recipes',
+      format: 'yml',
+      extension: 'yml',
+      i18n: true,
+    });
+    for (const locale of config.i18n.locales)
+      expect(readdirSync(join(ROOT, recipes.folder!, locale)).length, locale).toBeGreaterThan(0);
+  });
+});
+
 describe('CMS config: categories', () => {
   const fields = categories.fields!;
   it('has exactly the fields of the category schema, shared ones French only', () => {
@@ -623,15 +734,23 @@ describe('CMS config: pages', () => {
       expect(requiredInEnglish(fields, `${key}.`), key).toEqual([]);
     }
   });
-  it('offers the icon enum and links the recipes to products', () => {
+  it('offers the icon enum and links each ritual moment to a recipe', () => {
     const home = fileOf(pages, 'home').fields;
     expect(optionValues(fieldAt(home, 'reassurance.icon'))).toEqual([...REASSURANCE_ICONS]);
     expect(fieldAt(home, 'ritual')).toMatchObject({ widget: 'list', min: 3, max: 3 });
-    expect(fieldAt(home, 'ritual.product')).toMatchObject({
+    expect(fieldAt(home, 'ritual.recipe')).toMatchObject({
       widget: 'relation',
-      collection: 'products',
+      collection: recipes.name,
       value_field: '{{slug}}',
+      i18n: 'duplicate',
     });
+    expect(fieldAt(home, 'ritual.recipe').filters).toEqual([
+      { field: 'hidden', values: [true], exclude: true },
+    ]);
+    const slugs = [...yamlFolder('recipes', 'fr').keys()];
+    for (const locale of config.i18n.locales)
+      for (const m of (readYaml(join(CONTENT, `pages/${locale}/home.yml`)) as any).ritual)
+        expect(slugs, `${locale} ${m.recipe}`).toContain(m.recipe);
     const about = fileOf(pages, 'about').fields;
     const image = fieldAt(about, 'sections.image');
     for (const s of (readYaml(join(CONTENT, 'pages/fr/about.yml')) as any).sections)

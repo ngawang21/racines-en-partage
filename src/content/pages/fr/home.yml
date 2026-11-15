@@ -46,13 +46,13 @@ ritualTitle: Un rituel, trois moments
 ritual:
   - time: Le matin
     text: Une cuillère de moringa dans le smoothie.
-    product: poudre-de-moringa-100g
+    recipe: smoothie-au-moringa
   - time: L’après-midi
     text: Un bissap glacé, infusé la veille.
-    product: fleurs-d-hibiscus-bissap-100g
+    recipe: jus-de-bissap
   - time: Le soir
     text: Un chocolat chaud au cacao de Côte d’Ivoire.
-    product: poudre-de-cacao-100g
+    recipe: chocolat-chaud-maison
 commitmentTitle: Nos engagements
 # The three commitments (origin, short lists, a serving idea) are the list
 # next to this text (locales, shop.commitments): the text tells who the ESAT

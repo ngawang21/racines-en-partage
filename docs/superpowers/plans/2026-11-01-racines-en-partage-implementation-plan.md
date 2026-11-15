@@ -455,3 +455,16 @@ a separate entry in `worker/` deployed with the static assets by one
   after the menu closes; scroll cue on the chip row; `src/content/formats.ts`
   shared by build and client. Gates: unit 321, worker 395, build 49
   (1 skipped), e2e 194 (2 skipped).
+- 2026-11-15, iteration 4 (spec `2026-11-15-iteration-4-recipes-photos-design.md`):
+  the owner's Facebook page linked (footer icon, contact card, phone menu,
+  `sameAs`); recipes are their own collection with a page each
+  (`/recettes/<slug>/`, `Recipe` structured data), fifteen recipes, five from
+  the labels and ten written from public sources for the owner to validate
+  (`docs/client/recettes-a-valider.md`), searchable, linked from the product
+  accordion and the home ritual band; ten new FAQ answers; photographs
+  re-exported from the owner's 2000 x 3000 originals at 1600 x 2400
+  (`pnpm photos`), a contents close-up per product cut through the pouch
+  window (`src/assets/products/detail/`), a larger view on the product page
+  capped at 1200 px (no label close-up while the labels carry claims the
+  site omits), `imageNote` on the 200 g baobab. Gates: unit 356, worker 395,
+  build 54 (1 skipped), e2e 204 (2 skipped).

@@ -6,21 +6,26 @@ import { DEFAULT_LOCALE, HOST, LOCALES, type Locale } from '../consts';
 import { localeSchema, type LocaleContent } from '../content/locale-schema';
 import {
   compareProducts,
+  compareRecipes,
   dropDanglingRelated,
   mergeCategory,
   mergePage,
   mergeProduct,
+  mergeRecipe,
   publishedProducts,
+  publishedRecipes,
   publishedReviews,
   reviewsFor,
 } from '../content/merge';
 import {
   validateCatalog,
+  validateRecipes,
   type Category,
   type LegalKey,
   type PageContent,
   type PageKey,
   type Product,
+  type RecipeEntry,
   type Review,
   type Settings,
 } from '../content/schemas';
@@ -136,6 +141,48 @@ export async function loadProducts(locale: Locale): Promise<Product[]> {
 export async function loadProduct(locale: Locale, slug: string): Promise<Product> {
   const found = (await loadProducts(locale)).find((p) => p.slug === slug);
   if (!found) throw new Error(`unknown product "${slug}"`);
+  return found;
+}
+
+/** Recipes left out because their product is gone, already reported. */
+const warnedDroppedRecipes = new Set<string>();
+
+/**
+ * Every recipe the site shows in the locale, sorted by the CMS `order`, then
+ * title. Shared fields come from the French file. A `hidden` recipe is left
+ * out; so is a recipe whose product is deleted or hidden, with one build
+ * warning, so removing a product never fails the build. A missing photo file
+ * fails it, naming the recipe.
+ */
+export async function loadRecipes(locale: Locale): Promise<RecipeEntry[]> {
+  const [entries, products] = await Promise.all([
+    getCollection('recipes'),
+    loadProducts(DEFAULT_LOCALE),
+  ]);
+  const files = byLocale(entries);
+  const merged = [...files.fr.entries()].map(([slug, fr]) =>
+    mergeRecipe(slug, fr, locale === DEFAULT_LOCALE ? undefined : (files[locale].get(slug) ?? {})),
+  );
+  const missingImages = validateRecipes({
+    recipes: merged,
+    // Product slugs are checked just below, with a warning instead of an error.
+    productSlugs: merged.map((r) => r.product),
+    assetExists: hasAsset,
+  });
+  if (missingImages.length > 0)
+    throw new Error(`Invalid recipes:\n- ${missingImages.join('\n- ')}`);
+  const { recipes, dropped } = publishedRecipes(merged, new Set(products.map((p) => p.slug)));
+  const unseen = dropped.filter((d) => !warnedDroppedRecipes.has(d));
+  if (unseen.length > 0) {
+    for (const d of unseen) warnedDroppedRecipes.add(d);
+    console.warn(`Ignoring recipes of a deleted or hidden product: ${unseen.join(', ')}`);
+  }
+  return typeset(locale, recipes.sort(compareRecipes(locale)));
+}
+
+export async function loadRecipe(locale: Locale, slug: string): Promise<RecipeEntry> {
+  const found = (await loadRecipes(locale)).find((r) => r.slug === slug);
+  if (!found) throw new Error(`unknown recipe "${slug}"`);
   return found;
 }
 

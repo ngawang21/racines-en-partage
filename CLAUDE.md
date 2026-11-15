@@ -12,7 +12,9 @@ repository `ngawang21/racines-en-partage`, work on `main`.
 
 Source of truth: `docs/superpowers/specs/2026-11-01-racines-en-partage-shop-design.md`
 (v1) and `docs/superpowers/specs/2026-11-08-iteration-3-features-design.md`
-(reviews, newsletter, forms, order lookup, search, recipes, unit prices).
+(reviews, newsletter, forms, order lookup, search, recipes, unit prices) and
+`docs/superpowers/specs/2026-11-15-iteration-4-recipes-photos-design.md`
+(recipes with their own pages, photographs, FAQ).
 Build order, file ownership and the contracts between parallel workers:
 `docs/superpowers/plans/2026-11-01-racines-en-partage-implementation-plan.md`
 and `docs/superpowers/plans/2026-11-08-iteration-3-implementation-plan.md`.
@@ -30,6 +32,9 @@ costs and accounts: `docs/launch-runbook.md` (details in `docs/deployment.md`).
 `pnpm og` (regenerate the Open Graph images after a product change),
 `pnpm brand <master.png>` (logo, medallion and icons from the owner's master
 logo, then `pnpm og`),
+`pnpm photos "<folder of the owner's originals>"` (re-exports every
+product, duo and trio photograph and the contents close-ups, see
+`src/assets/brand/README.md`),
 `pnpm card [medaillon|kraft|foret|review]` (business card PDF, PNGs and vCard,
 committed; `kraft` is published; `review` renders all three to `out/review/card/`),
 `pnpm launch-check` (fails while the SIRET, the prices, a legal TODO, the
@@ -41,34 +46,41 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
 
 - `src/consts.ts`: `SITE`, `LOCALES`, `DEFAULT_LOCALE`, `Locale`,
   `INTL_LOCALE`, `OG_LOCALE`, `HOST`.
-- `src/content/schemas.ts` (pure zod, no Astro import): product, category,
-  pages, legal frontmatter, settings, and `validateCatalog` (unique SKU and
-  slug, known category, related slugs, image files).
+- `src/content/schemas.ts` (pure zod, no Astro import): product, recipe,
+  category, pages, legal frontmatter, settings, `validateCatalog` (unique SKU
+  and slug, known category, related slugs, image files) and `validateRecipes`
+  (known product, photo file, unique slug).
 - `src/content/locale-schema.ts`: UI strings schema, namespaces `nav`,
   `footer`, `shop`, `product`, `cart`, `checkout`, `thanks`, `errors`,
-  `legal`, `a11y`. Fields are null tolerant; empty means "fall back to
+  `legal`, `reviews`, `recipes`, `search`, `forms`, `lookup`, `account`,
+  `card`, `a11y`. Fields are null tolerant; empty means "fall back to
   French".
-- `src/content/merge.ts` (pure): `mergeProduct`, `mergeCategory`,
+- `src/content/merge.ts` (pure): `mergeProduct`, `mergeRecipe`, `mergeCategory`,
   `mergePage`, `parseOrThrow`, `dropDanglingRelated`, `publishedProducts`
   (drops `hidden` products and links to them), `compareProducts` (category
-  order, then the CMS `order`, then name). Shared fields come from the
-  French file only; the English file may hold translated fields only, each
+  order, then the CMS `order`, then name), and for recipes `compareRecipes`,
+  `publishedRecipes` (drops hidden recipes and those of a deleted or hidden
+  product), `recipesFor` (a product's recipes, any format, label first),
+  `otherRecipes` (three others, same product first). Shared fields come from
+  the French file only; the English file may hold translated fields only, each
   may be empty.
 - `src/i18n/typography.ts` (pure): `frenchTypographyText`,
   `frenchTypographyHtml`, `frenchTypographyDeep`. The loaders apply them to
   French content and the e-mail templates to French e-mails, so the CMS
   files keep plain spaces.
-- `src/content/{products,categories,pages}/{fr,en}/*.yml`,
+- `src/content/{products,recipes,categories,pages}/{fr,en}/*.yml`,
   `src/content/legal/{fr,en}/{legal,terms,privacy}.md`,
   `src/content/settings/shop.yml` (singleton), `src/content/locales/{fr,en}.json`,
   `src/content/reviews/<product slug>--<order>.yml` (customer reviews, not
   localised, written by the Worker or the owner, shown when `published`).
-- `src/content.config.ts`: glob collections. Products, categories and pages
-  only assert "a YAML mapping" at the collection level (one collection holds
-  a complete French file and a partial English one); the strict schemas run
-  in the loaders.
+- `src/content.config.ts`: glob collections. Products, recipes, categories
+  and pages only assert "a YAML mapping" at the collection level (one
+  collection holds a complete French file and a partial English one); the
+  strict schemas run in the loaders.
 - `src/i18n/locale.ts` (build time, imports `astro:content`): `loadLocale`,
-  `loadSettings`, `loadProducts`, `loadProduct`, `loadCategories`,
+  `loadSettings`, `loadProducts`, `loadProduct`, `loadRecipes`, `loadRecipe`
+  (visible recipes, sorted, a recipe of a deleted or hidden product dropped
+  with one warning), `loadCategories`,
   `loadPage`, `loadLegal`, `loadReviews`, `reviewsFor`, `legalTokens`,
   `formatSiren`. Always read content through these, never with
   `getCollection` directly. `src/content/formats.ts` (pure, no zod, also
@@ -87,13 +99,17 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   `ROUTES`, `RouteKey`, `NOINDEX_ROUTES`, `isIndexable`, `routePath`,
   `routeUrl`, `alternatesFor`, `matchRoute`, `getLocaleFromUrl`,
   `noindexPathFragments`. The spec's `404` row is the key `notFound`.
+  `category`, `product` and `recipe` (`/recettes/[slug]/`,
+  `/en/recipes/[slug]/`) are the slug routes.
 - `src/i18n/format.ts` (pure): `formatPrice`, `toCents`, `formatWeight`,
   `formatUnitPrice` (price per kilo, a legal requirement for pre-packaged
-  food), `formatRating`, `formatPhone`, `phoneE164`, `formatDate`,
-  `localiseNutrition`.
+  food), `formatMinutes` (recipe times, "15 min", "12 h"), `formatRating`,
+  `formatPhone`, `phoneE164`, `formatDate`, `localiseNutrition`.
 - `src/search/match.ts` (pure): `buildIndex`, `search` over the embedded
-  client catalogue (name, category name, `keywords`); `src/scripts/search.ts`
-  drives `SearchDialog.astro` from the header.
+  client catalogue (name, category name, `keywords`), and `buildRecipeIndex`,
+  `searchRecipes` over the `#rep-recipes` list `SearchDialog.astro` embeds
+  (slug, title, product name); `src/scripts/search.ts` drives the dialog from
+  the header, recipes listed under the products (three at most).
 - `src/forms/`: `kit.ts` (validation, busy state, error mapping), `forms.ts`
   (contact, newsletter, stock alert, newsletter landing), `turnstile.ts`
   (loads Turnstile on first focus when `settings.forms.turnstileSiteKey` is
@@ -110,7 +126,9 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   `github.ts` (Contents API), `turnstile.ts`; `orders.ts` has
   `findOrderByNumber`. `worker/README.md` lists every route.
 - `src/images.ts`: `resolveAsset(path)` and `hasAsset(path)` over
-  `import.meta.glob('/src/assets/**/*.{webp,png,jpg,svg}')`.
+  `import.meta.glob('/src/assets/**/*.{webp,png,jpg,svg}')`, and
+  `detailAsset(productImage)` (the 2:1 contents close-up under
+  `src/assets/products/detail/`, undefined when missing).
 - `src/catalog/build.ts` (pure): `buildCatalog` (the Worker's
   `dist/catalog.json`), `buildClientCatalog` (the cart catalogue of one
   locale), `productLabel`, `serializeForScript`, types `WorkerCatalog`,
@@ -119,14 +137,25 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   `getWorkerCatalog(now)`. `src/pages/catalog.json.ts` is the static
   endpoint that writes `dist/catalog.json`.
 - `src/seo/graph.ts` (pure): `buildGraph`, `productGraphInput`,
-  `robotsContent`, `serializeGraph`. `Seo.astro` only wires props.
+  `recipeGraphInput` (the `Recipe` of a recipe page), `isoDuration`,
+  `robotsContent`, `serializeGraph`. `Seo.astro` only wires props; the
+  recipes page is an `ItemList` of the recipe pages.
 - `src/layouts/Base.astro`: fonts, Seo, skip link, announcement bar, shop
   closed notice, Header, main, Footer, then `CartDrawer` and `CartScripts`.
 - `src/components/`: `Header`, `Footer`, `Seo`, `LanguagePill`, `Icon`,
   `Picture` (presets `card`, `hero`, `gallery`, `thumb`), `Ornament`
   (hairline with the hibiscus glyph), and the wave 2B placeholders
   `CartDrawer` and `CartScripts`.
-- `src/pages/`: thin routes; stubs until wave 2A and 2B fill them.
+- `src/pages/`: thin routes over `src/components/views/*View.astro`.
+- Recipes: `RecipesView` (`/recettes/`, every recipe as a `RecipeCards`
+  card), `RecipeView` (one recipe: facts row, ingredients, numbered steps,
+  tips, the product card, three other recipes),
+  `src/components/recipes.ts` (build time: `recipePicture`, the recipe photo
+  else the contents close-up else none; `totalTime`; `recipeImageUrls`).
+  `ProductView` shows the product's first recipe in the "Petite recette"
+  accordion (`id="recipe"`) and `imageNote` under the gallery; the home
+  `RitualBand` links `ritual[].recipe`. Content and CMS: `docs/content.md`,
+  section 9.
 - Business card: `docs/branding/card/card.html` (three variants, `data-variant`)
   rendered by `scripts/business-card.mjs` to `docs/branding/card/` and
   `public/carte/`, plus `public/racines-en-partage.vcf`; `CardView.astro` is the
@@ -216,7 +245,7 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   placeholders) and while a `TODO` remains in a legal text (publication
   director, mediator).
 - `.prettierignore` excludes the owner-edited content folders
-  (`src/content/{products,categories,pages,legal,reviews,settings}`): Sveltia
+  (`src/content/{products,recipes,categories,pages,legal,reviews,settings}`): Sveltia
   writes its own YAML style and a CMS save must never fail `pnpm check`. The
   unit tests still parse every file; format them by hand when you edit them.
 - Feature switches the owner controls (`settings.newsletter.enabled`,
@@ -265,6 +294,10 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   `LD_LIBRARY_PATH=$HOME/.local/lib` for Chromium (libasound):
   `playwright.config.ts` adds it to the browser and server environment when
   the folder exists. `/api/*` is route-mocked per test.
+  The browser cache `~/.cache/ms-playwright` is shared by every project on
+  the machine: another project's `playwright install` can collect this
+  project's Chromium revision (it happened on 2026-11-15). If the browser
+  fails to launch, run `pnpm exec playwright install chromium` here.
 - Cart client: `src/cart/ui.ts` (every page, about 7 KB gzipped) reads
   `#rep-catalog` and `#rep-strings`; `page-cart`, `page-checkout`,
   `page-thanks` and `relay-widget` are dynamic chunks. Strings with

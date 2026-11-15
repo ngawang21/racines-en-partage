@@ -173,8 +173,81 @@ describe('product page', () => {
         );
         expect(d.querySelector('.footnote')?.text.length ?? 0).toBeGreaterThan(40);
         expect(d.querySelectorAll('[data-gallery-slide]').length).toBeGreaterThanOrEqual(1);
-        if (p.recipe) expect(d.querySelector('#recipe'), p.slug).not.toBeNull();
+        // Every product has a recipe (any of its formats): the accordion, its anchor and link.
+        const recipe = d.querySelector('#recipe');
+        expect(recipe, p.slug).not.toBeNull();
+        const link = recipe!.closest('details')?.querySelector('a.recipe-open');
+        expect(link?.getAttribute('href'), p.slug).toMatch(
+          l === 'fr' ? /^\/recettes\/[a-z0-9-]+\/$/ : /^\/en\/recipes\/[a-z0-9-]+\/$/,
+        );
       }
+  });
+  it('the 200 g baobab says its photo shows the 100 g pouch, and only it', () => {
+    for (const l of LOCALES)
+      for (const p of products) {
+        const note = doc(routePath('product', l, p.slug)).querySelector('.image-note');
+        expect(note !== null, p.slug).toBe(p.slug === 'poudre-de-baobab-200g');
+      }
+    expect(
+      doc(routePath('product', 'fr', 'poudre-de-baobab-200g')).querySelector('.image-note')?.text,
+    ).toContain('100\u202fg');
+  });
+});
+
+describe('recipes', () => {
+  const recipes = [...yamlFolder('recipes', 'fr')]
+    .map(([slug, raw]) => ({ ...(raw as Record<string, any>), slug }) as Record<string, any>)
+    .filter((r) => !r.hidden);
+  it('every recipe page carries one Recipe with its name, an image, ingredients and steps', () => {
+    for (const l of LOCALES)
+      for (const r of recipes) {
+        const path = routePath('recipe', l, r.slug);
+        const node = graph(path).find((n) => n['@type'] === 'Recipe');
+        expect(node?.name, path).toBeTruthy();
+        expect(node?.image?.[0], path).toMatch(new RegExp(`^${SITE}/_astro/.+\\.webp$`));
+        expect(node?.recipeIngredient.length, path).toBeGreaterThan(0);
+        expect(node?.recipeInstructions.length, path).toBe(r.steps.length);
+        expect(node?.prepTime, path).toMatch(/^PT/);
+        expect(node?.inLanguage, path).toBe(l);
+        const d = doc(path);
+        expect(d.querySelectorAll('.steps li').length, path).toBe(r.steps.length);
+        expect(d.querySelectorAll('[data-add-to-cart]').length, path).toBeGreaterThanOrEqual(1);
+        expect(d.querySelector('.recipe-source')?.text, path).toMatch(
+          r.source === 'label' ? /étiquette|label/i : /maison|house/i,
+        );
+      }
+  });
+  it('the recipes page links every recipe and lists them as an ItemList', () => {
+    for (const l of LOCALES) {
+      const path = routePath('recipes', l);
+      const hrefs = doc(path)
+        .querySelectorAll('.recipes-grid a')
+        .map((a) => a.getAttribute('href'));
+      const list = graph(path).find((n) => n['@type'] === 'CollectionPage')?.mainEntity;
+      expect(list?.numberOfItems).toBe(recipes.length);
+      for (const r of recipes) {
+        expect(hrefs, r.slug).toContain(routePath('recipe', l, r.slug));
+      }
+      expect(graph(path).some((n) => n['@type'] === 'Recipe')).toBe(false);
+    }
+  });
+  it('the home ritual links three recipe pages', () => {
+    for (const l of LOCALES) {
+      const links = doc(routePath('home', l))
+        .querySelectorAll('.moment-link')
+        .map((a) => a.getAttribute('href') ?? '');
+      expect(links).toHaveLength(3);
+      for (const href of links) expect(href.startsWith(routePath('recipes', l)), href).toBe(true);
+    }
+  });
+  it('the search dialog embeds the recipes in a small JSON block', () => {
+    for (const l of LOCALES) {
+      const raw = doc(routePath('home', l)).querySelector('#rep-recipes')?.text ?? '';
+      const list = JSON.parse(raw) as Array<{ slug: string; title: string; product: string }>;
+      expect(list.map((r) => r.slug).sort()).toEqual(recipes.map((r) => r.slug).sort());
+      expect(Object.keys(list[0]!).sort()).toEqual(['product', 'slug', 'title']);
+      expect(raw.length).toBeLessThan(150 * recipes.length);
+    }
   });
 });
 

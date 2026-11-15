@@ -8,16 +8,21 @@ import {
   CATEGORY_TRANSLATED_KEYS,
   PAGE_SCHEMAS,
   PRODUCT_TRANSLATED_KEYS,
+  RECIPE_TRANSLATED_KEYS,
   categorySchema,
   categoryTranslatedSchema,
   categoryTranslationSchema,
   productSchema,
   productTranslatedSchema,
   productTranslationSchema,
+  recipeEntrySchema,
+  recipeTranslatedSchema,
+  recipeTranslationSchema,
   type Category,
   type PageContent,
   type PageKey,
   type Product,
+  type RecipeEntry,
   type Review,
 } from './schemas';
 
@@ -123,6 +128,85 @@ export function categoryProducts<T extends Pick<Product, 'featured' | 'category'
   category: string,
 ): T[] {
   return featuredFirst(products.filter((p) => p.category === category));
+}
+
+// ----------------------------------------------------------------- recipes
+
+/** French recipe, or the English one when `enRaw` is given (it may be partial). */
+export function mergeRecipe(slug: string, frRaw: unknown, enRaw?: unknown): RecipeEntry {
+  const fr = parseOrThrow(recipeEntrySchema, frRaw, `recipes/fr/${slug}.yml`);
+  if (enRaw === undefined) return { ...fr, slug };
+  const en = parseOrThrow(recipeTranslationSchema, enRaw ?? {}, `recipes/en/${slug}.yml`);
+  const merged = deepFallback(en as unknown, pick(fr, RECIPE_TRANSLATED_KEYS) as unknown);
+  const translated = parseOrThrow(
+    recipeTranslatedSchema,
+    merged,
+    `recipes/en/${slug}.yml (after French fallback)`,
+  );
+  return { ...fr, ...translated, slug };
+}
+
+/** Recipes page order: the CMS `order` (missing last), then the title. */
+export function compareRecipes(locale: string): (a: RecipeEntry, b: RecipeEntry) => number {
+  const position = (r: RecipeEntry) => r.order ?? Number.POSITIVE_INFINITY;
+  return (a, b) =>
+    (position(a) === position(b) ? 0 : position(a) < position(b) ? -1 : 1) ||
+    a.title.localeCompare(b.title, locale) ||
+    a.slug.localeCompare(b.slug);
+}
+
+/**
+ * The recipes the site shows: `hidden` ones are left out, and so is a recipe
+ * whose product the site does not show (deleted or hidden), reported in
+ * `dropped` ("recipe -> product") for a build warning. Order is kept.
+ */
+export function publishedRecipes(
+  recipes: readonly RecipeEntry[],
+  shownProducts: ReadonlySet<string>,
+): { recipes: RecipeEntry[]; dropped: string[] } {
+  const dropped: string[] = [];
+  const kept = recipes.filter((r) => {
+    if (r.hidden) return false;
+    if (shownProducts.has(r.product)) return true;
+    dropped.push(`${r.slug} -> ${r.product}`);
+    return false;
+  });
+  return { recipes: kept, dropped };
+}
+
+/**
+ * The recipes of a product, whatever format they name (`families`: slug to
+ * the slug of its family's lightest format, formatFamilies), label recipes
+ * first, then in the order given.
+ */
+export function recipesFor<T extends Pick<RecipeEntry, 'product' | 'source'>>(
+  productSlug: string,
+  recipes: readonly T[],
+  families: ReadonlyMap<string, string> = new Map(),
+): T[] {
+  const key = (slug: string) => families.get(slug) ?? slug;
+  const mine = recipes.filter((r) => key(r.product) === key(productSlug));
+  return [...mine.filter((r) => r.source === 'label'), ...mine.filter((r) => r.source !== 'label')];
+}
+
+/**
+ * "D'autres recettes" under a recipe: up to `limit` others, those of the same
+ * product first, then the ones that follow it in the recipes page order
+ * (wrapping round), so neighbouring pages suggest different recipes.
+ */
+export function otherRecipes<T extends Pick<RecipeEntry, 'slug' | 'product'>>(
+  recipe: T,
+  recipes: readonly T[],
+  families: ReadonlyMap<string, string> = new Map(),
+  limit = 3,
+): T[] {
+  const key = (slug: string) => families.get(slug) ?? slug;
+  const at = recipes.findIndex((r) => r.slug === recipe.slug);
+  const rotated = at < 0 ? [...recipes] : [...recipes.slice(at + 1), ...recipes.slice(0, at)];
+  const others = rotated.filter((r) => r.slug !== recipe.slug);
+  const same = others.filter((r) => key(r.product) === key(recipe.product));
+  const rest = others.filter((r) => key(r.product) !== key(recipe.product));
+  return [...same, ...rest].slice(0, Math.max(0, limit));
 }
 
 export function mergeCategory(slug: string, frRaw: unknown, enRaw?: unknown): Category {

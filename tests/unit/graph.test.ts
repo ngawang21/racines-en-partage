@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { join } from 'node:path';
-import { mergeProduct } from '../../src/content/merge';
+import { mergeProduct, mergeRecipe } from '../../src/content/merge';
 import { settingsSchema, type Review } from '../../src/content/schemas';
 import {
   MAX_REVIEW_NODES,
@@ -8,7 +8,9 @@ import {
   WEBSITE_ID,
   availability,
   buildGraph,
+  isoDuration,
   productGraphInput,
+  recipeGraphInput,
   robotsContent,
   schemaPrice,
   serializeGraph,
@@ -180,49 +182,172 @@ describe('seo graph', () => {
     expect(product?.review[1].inLanguage).toBe('en');
     expect(product?.review[1].name).toBeUndefined();
   });
-  it('adds one Recipe per recipe on the recipes page', () => {
-    const canonical = 'https://racinesenpartage.fr/recettes/';
+  it('describes a recipe page with one Recipe, the fields Google reads', () => {
+    const canonical = 'https://racinesenpartage.fr/recettes/infusion-de-bissap/';
     const input: GraphInput = {
       ...home,
-      kind: 'recipes',
+      kind: 'recipe',
       canonical,
-      recipes: [
-        {
-          name: 'Bissap glacé',
-          url: 'https://racinesenpartage.fr/produits/bissap/#recipe',
-          images: ['https://racinesenpartage.fr/_astro/b.webp'],
-          ingredients: ['20 g de fleurs', '1 l d’eau'],
-          steps: ['Infuser.', 'Filtrer.'],
-          yield: '1 litre',
-          productName: 'Fleurs d’hibiscus',
-        },
-        { name: 'Moringa', url: 'u', images: [], ingredients: [], steps: ['Mélanger.'] },
+      title: 'Infusion de bissap',
+      breadcrumbs: [
+        { name: 'Accueil', url: 'https://racinesenpartage.fr/' },
+        { name: 'Recettes', url: 'https://racinesenpartage.fr/recettes/' },
+        { name: 'Infusion de bissap', url: canonical },
       ],
+      recipe: {
+        name: 'Infusion de bissap',
+        description: 'Des fleurs, de l’eau et un quart d’heure.',
+        images: ['https://racinesenpartage.fr/_astro/b.webp'],
+        ingredients: ['1 litre d’eau', '2 cuillères de fleurs'],
+        steps: ['Faire bouillir.', 'Infuser.'],
+        prepMinutes: 5,
+        restMinutes: 15,
+        yield: '1 litre',
+        keywords: ['Fleurs d’hibiscus', 'bissap'],
+      },
     };
-    expect(types(input)).toEqual(['OnlineStore', 'WebSite', 'CollectionPage', 'Recipe', 'Recipe']);
-    const recipe = node(input, 'Recipe');
-    expect(recipe).toEqual({
+    expect(types(input)).toEqual(['OnlineStore', 'WebSite', 'WebPage', 'BreadcrumbList', 'Recipe']);
+    expect(node(input, 'WebPage')?.mainEntity).toEqual({ '@id': `${canonical}#recipe` });
+    expect(node(input, 'Recipe')).toEqual({
       '@type': 'Recipe',
-      '@id': `${canonical}#recipe-1`,
-      name: 'Bissap glacé',
-      url: 'https://racinesenpartage.fr/produits/bissap/#recipe',
+      '@id': `${canonical}#recipe`,
+      name: 'Infusion de bissap',
+      description: 'Des fleurs, de l’eau et un quart d’heure.',
+      url: canonical,
       image: ['https://racinesenpartage.fr/_astro/b.webp'],
-      description: 'Fleurs d’hibiscus',
       author: { '@id': STORE_ID },
+      publisher: { '@id': STORE_ID },
+      inLanguage: 'fr',
+      prepTime: 'PT5M',
+      totalTime: 'PT20M',
       recipeYield: '1 litre',
-      recipeIngredient: ['20 g de fleurs', '1 l d’eau'],
+      keywords: 'Fleurs d’hibiscus, bissap',
+      recipeIngredient: ['1 litre d’eau', '2 cuillères de fleurs'],
       recipeInstructions: [
-        { '@type': 'HowToStep', position: 1, text: 'Infuser.' },
-        { '@type': 'HowToStep', position: 2, text: 'Filtrer.' },
+        { '@type': 'HowToStep', position: 1, text: 'Faire bouillir.' },
+        { '@type': 'HowToStep', position: 2, text: 'Infuser.' },
+      ],
+      mainEntityOfPage: { '@id': canonical },
+    });
+    // Cooking time only when the recipe cooks.
+    const cooked = node(
+      { ...input, recipe: { ...input.recipe!, cookMinutes: 10, restMinutes: undefined } },
+      'Recipe',
+    );
+    expect(cooked?.cookTime).toBe('PT10M');
+    expect(cooked?.totalTime).toBe('PT15M');
+  });
+  it('builds a valid Recipe from every recipe file', () => {
+    // Google: name and image required; the rest recommended. schema.org: the
+    // properties of Recipe, HowTo and CreativeWork.
+    const ALLOWED = new Set([
+      '@type',
+      '@id',
+      'name',
+      'description',
+      'url',
+      'image',
+      'author',
+      'publisher',
+      'inLanguage',
+      'prepTime',
+      'cookTime',
+      'totalTime',
+      'recipeYield',
+      'keywords',
+      'recipeIngredient',
+      'recipeInstructions',
+      'mainEntityOfPage',
+    ]);
+    const fr = yamlFolder('recipes', 'fr');
+    const en = yamlFolder('recipes', 'en');
+    const products = yamlFolder('products', 'fr');
+    expect(fr.size).toBeGreaterThanOrEqual(5);
+    for (const [slug, raw] of fr) {
+      for (const locale of ['fr', 'en'] as const) {
+        const r = mergeRecipe(slug, raw, locale === 'fr' ? undefined : (en.get(slug) ?? {}));
+        const p = mergeProduct(r.product, products.get(r.product));
+        const canonical = `https://racinesenpartage.fr/recettes/${slug}/`;
+        const recipe = node(
+          {
+            ...home,
+            locale,
+            kind: 'recipe',
+            canonical,
+            recipe: recipeGraphInput(r, p, ['https://racinesenpartage.fr/_astro/x.webp']),
+          },
+          'Recipe',
+        )!;
+        for (const key of Object.keys(recipe))
+          expect(ALLOWED.has(key), `${slug} ${key}`).toBe(true);
+        expect(recipe.name, slug).toBeTruthy();
+        expect(recipe.image, slug).toHaveLength(1);
+        expect(recipe.description.length, slug).toBeGreaterThan(20);
+        expect(recipe.recipeIngredient.length, slug).toBeGreaterThan(0);
+        expect(recipe.recipeInstructions.length, slug).toBe(r.steps.length);
+        expect(recipe.prepTime, slug).toMatch(/^PT(\d+H)?(\d+M)?$/);
+        expect(recipe.totalTime, slug).toMatch(/^PT(\d+H)?(\d+M)?$/);
+        expect(recipe.keywords, slug).toContain(p.name);
+        expect(recipe.inLanguage).toBe(locale);
+      }
+    }
+  });
+  it('writes minutes as ISO 8601 durations', () => {
+    expect(isoDuration(5)).toBe('PT5M');
+    expect(isoDuration(60)).toBe('PT1H');
+    expect(isoDuration(90)).toBe('PT1H30M');
+    expect(isoDuration(720)).toBe('PT12H');
+    expect(() => isoDuration(1.5)).toThrow();
+  });
+  it('takes the SEO description when set and each keyword once', () => {
+    const r = mergeRecipe('x', {
+      product: 'poudre-de-moringa-100g',
+      source: 'house',
+      prepMinutes: 5,
+      title: 'T',
+      summary: 'Résumé.',
+      seoDescription: 'Pour Google.',
+      yield: '2 verres',
+      ingredients: ['a'],
+      steps: ['b'],
+    });
+    const g = recipeGraphInput(r, { name: 'Moringa', keywords: ['Moringa', 'foléré'] }, ['u']);
+    expect(g.description).toBe('Pour Google.');
+    expect(g.keywords).toEqual(['Moringa', 'foléré']);
+    expect(g.cookMinutes).toBeUndefined();
+  });
+  it('lists the recipes of the recipes page as an ItemList of links', () => {
+    const canonical = 'https://racinesenpartage.fr/recettes/';
+    const page = node(
+      {
+        ...home,
+        kind: 'recipes',
+        canonical,
+        items: [
+          { name: 'Infusion de bissap', url: `${canonical}infusion-de-bissap/` },
+          { name: 'Jus de bouye', url: `${canonical}jus-de-bouye/` },
+        ],
+      },
+      'CollectionPage',
+    );
+    expect(page?.mainEntity).toEqual({
+      '@type': 'ItemList',
+      numberOfItems: 2,
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Infusion de bissap',
+          url: `${canonical}infusion-de-bissap/`,
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Jus de bouye',
+          url: `${canonical}jus-de-bouye/`,
+        },
       ],
     });
-    const second = buildGraph(input)['@graph'][4] as Record<string, unknown>;
-    expect(second.recipeIngredient).toBeUndefined();
-    expect(second.image).toBeUndefined();
-    expect(node(input, 'CollectionPage')?.hasPart).toEqual([
-      { '@id': `${canonical}#recipe-1` },
-      { '@id': `${canonical}#recipe-2` },
-    ]);
   });
   it('turns the FAQ into questions', () => {
     const faq = node({ ...home, kind: 'faq', faq: [{ question: 'Q ?', answer: 'R.' }] }, 'FAQPage');

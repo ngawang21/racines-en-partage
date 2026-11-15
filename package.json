@@ -24,6 +24,7 @@
     "og": "node scripts/generate-og.mjs",
     "brand": "node scripts/brand-assets.mjs",
     "card": "node scripts/business-card.mjs",
+    "photos": "node scripts/photos.mjs",
     "deploy": "wrangler deploy"
   },
   "dependencies": {

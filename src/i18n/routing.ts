@@ -16,6 +16,7 @@ export type RouteKey =
   | 'terms'
   | 'privacy'
   | 'recipes'
+  | 'recipe'
   | 'lookup'
   | 'review'
   | 'newsletter'
@@ -25,8 +26,9 @@ export type RouteKey =
   | 'admin';
 
 /**
- * Path per route and locale. `category` and `product` carry a `[slug]` token
- * replaced by routePath. Product and category slugs are the same in both locales.
+ * Path per route and locale. `category`, `product` and `recipe` carry a
+ * `[slug]` token replaced by routePath. Product, category and recipe slugs are
+ * the same in both locales.
  */
 export const ROUTES: Record<RouteKey, Record<Locale, string>> = {
   home: { fr: '/', en: '/en/' },
@@ -43,6 +45,7 @@ export const ROUTES: Record<RouteKey, Record<Locale, string>> = {
   terms: { fr: '/cgv/', en: '/en/terms-of-sale/' },
   privacy: { fr: '/confidentialite/', en: '/en/privacy/' },
   recipes: { fr: '/recettes/', en: '/en/recipes/' },
+  recipe: { fr: '/recettes/[slug]/', en: '/en/recipes/[slug]/' },
   lookup: { fr: '/ma-commande/', en: '/en/my-order/' },
   review: { fr: '/avis/', en: '/en/review/' },
   newsletter: { fr: '/newsletter/', en: '/en/newsletter/' },
@@ -65,7 +68,7 @@ export const NOINDEX_ROUTES: readonly RouteKey[] = [
   'admin',
 ];
 
-const SLUG_ROUTES: readonly RouteKey[] = ['category', 'product'];
+const SLUG_ROUTES: readonly RouteKey[] = ['category', 'product', 'recipe'];
 
 export function isIndexable(key: RouteKey): boolean {
   return !NOINDEX_ROUTES.includes(key);

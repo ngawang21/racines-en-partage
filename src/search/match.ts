@@ -9,6 +9,9 @@
 // four letters or more ("hibicus", "moringua", "cacoa"). searchGroups then
 // folds the formats of one product (moringa 100 g and 200 g) into one row, as
 // the product grids do (src/content/formats.ts, zod-free for the client).
+// Recipes are searched the same way over their title and their product's
+// name (buildRecipeIndex, searchRecipes); the dialog lists them under the
+// products.
 import type { ClientCatalog, ClientProduct } from '../catalog/build';
 import { groupFormats } from '../content/formats';
 
@@ -83,16 +86,24 @@ export function nearPrefix(term: string, word: string): boolean {
   return Math.min(...prev) <= 1;
 }
 
+/** A field of an index entry: its words, its weight, and whether earlier words weigh more. */
+interface Field {
+  words: string[];
+  base: number;
+  byPosition: boolean;
+}
+
 /**
- * Weight of the best word a query term starts. A whole word beats a prefix, the
- * name beats the keywords, which beat the category; an earlier word in the
- * name beats a later one. 0 when the term starts no word. With `fuzzy`, a term
- * of FUZZY_MIN_LENGTH letters or more may be one edit away (nearPrefix).
+ * Weight of the best word a query term starts. A whole word beats a prefix, a
+ * heavier field beats a lighter one (the name beats the keywords, which beat
+ * the category); in a field weighed by position, an earlier word beats a
+ * later one. 0 when the term starts no word. With `fuzzy`, a term of
+ * FUZZY_MIN_LENGTH letters or more may be one edit away (nearPrefix).
  */
-function termScore(term: string, entry: IndexEntry, fuzzy = false): number {
+function termScore(term: string, fields: readonly Field[], fuzzy = false): number {
   let best = 0;
   const tolerant = fuzzy && term.length >= FUZZY_MIN_LENGTH;
-  const consider = (list: string[], base: number, byPosition: boolean) => {
+  for (const { words: list, base, byPosition } of fields) {
     list.forEach((word, i) => {
       const exact = word.startsWith(term);
       if (!exact && !(tolerant && nearPrefix(term, word))) return;
@@ -100,12 +111,15 @@ function termScore(term: string, entry: IndexEntry, fuzzy = false): number {
         base + (word === term ? 20 : 0) - (exact ? 0 : 10) - (byPosition ? Math.min(i, 9) : 0);
       if (score > best) best = score;
     });
-  };
-  consider(entry.name, 100, true);
-  consider(entry.keywords, 70, false);
-  consider(entry.category, 40, false);
+  }
   return best;
 }
+
+const productFields = (entry: IndexEntry): Field[] => [
+  { words: entry.name, base: 100, byPosition: true },
+  { words: entry.keywords, base: 70, byPosition: false },
+  { words: entry.category, base: 40, byPosition: false },
+];
 
 /**
  * The products matching `query`, best first (then catalogue order), at most
@@ -122,10 +136,19 @@ export function search(index: SearchIndex, query: string, limit = 8): ClientProd
 
 /** Every match of `query`, scored, best first: exact prefixes, else one typo forgiven. */
 function matches(index: SearchIndex, query: string): Array<{ entry: IndexEntry; score: number }> {
+  return matchAll(index, query, productFields);
+}
+
+/** Every entry matching all the query words, best first: exact prefixes, else one typo forgiven. */
+function matchAll<E extends { position: number }>(
+  index: readonly E[],
+  query: string,
+  fields: (entry: E) => Field[],
+): Array<{ entry: E; score: number }> {
   const terms = [...new Set(words(query))];
   if (terms.length === 0) return [];
-  const exact = rank(index, terms, false);
-  return exact.length > 0 ? exact : rank(index, terms, true);
+  const exact = rank(index, terms, fields, false);
+  return exact.length > 0 ? exact : rank(index, terms, fields, true);
 }
 
 /** One search row: the format it shows and adds, and every format of its family, lightest first. */
@@ -183,16 +206,18 @@ export function bareName(name: string): string {
   return name.replace(/\s+\d+(?:[.,]\d+)?\s*k?g$/u, '');
 }
 
-function rank(
-  index: SearchIndex,
+function rank<E extends { position: number }>(
+  index: readonly E[],
   terms: string[],
+  fields: (entry: E) => Field[],
   fuzzy: boolean,
-): Array<{ entry: IndexEntry; score: number }> {
-  const scored: Array<{ entry: IndexEntry; score: number }> = [];
+): Array<{ entry: E; score: number }> {
+  const scored: Array<{ entry: E; score: number }> = [];
   for (const entry of index) {
+    const list = fields(entry);
     let total = 0;
     for (const term of terms) {
-      const s = termScore(term, entry, fuzzy);
+      const s = termScore(term, list, fuzzy);
       if (s === 0) {
         total = 0;
         break;
@@ -202,4 +227,58 @@ function rank(
     if (total > 0) scored.push({ entry, score: total });
   }
   return scored.sort((a, b) => b.score - a.score || a.entry.position - b.entry.position);
+}
+
+// ----------------------------------------------------------------- recipes
+
+/**
+ * A recipe as the search dialog embeds it (#rep-recipes, kept small): the
+ * slug (the dialog builds the URL from its locale's pattern), the title and
+ * its product's name, in the page's locale.
+ */
+export interface ClientRecipe {
+  slug: string;
+  title: string;
+  product: string;
+}
+
+export interface RecipeIndexEntry {
+  recipe: ClientRecipe;
+  /** Recipes page position, the tie-breaker. */
+  position: number;
+  title: string[];
+  product: string[];
+}
+
+/** One entry per recipe, in the recipes page order. */
+export function buildRecipeIndex(recipes: readonly ClientRecipe[]): RecipeIndexEntry[] {
+  return recipes.map((recipe, position) => ({
+    recipe,
+    position,
+    title: words(recipe.title),
+    product: words(recipe.product),
+  }));
+}
+
+/** At most this many recipes under the products in the dialog. */
+export const RECIPE_LIMIT = 3;
+
+/**
+ * The recipes matching `query`, best first (then the recipes page order), at
+ * most `limit`: every word must start a word of the title or of the product
+ * name, the title weighing more; one typo per word is forgiven when nothing
+ * matches exactly, as for the products.
+ */
+export function searchRecipes(
+  index: readonly RecipeIndexEntry[],
+  query: string,
+  limit = RECIPE_LIMIT,
+): ClientRecipe[] {
+  if (limit <= 0) return [];
+  return matchAll(index, query, (e) => [
+    { words: e.title, base: 100, byPosition: true },
+    { words: e.product, base: 70, byPosition: false },
+  ])
+    .slice(0, limit)
+    .map((s) => s.entry.recipe);
 }

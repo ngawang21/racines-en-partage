@@ -1,40 +1,43 @@
-// Build-time list of the recipes printed on the labels (spec 2.8): the
-// recipes page renders it and Seo.astro turns it into `Recipe` JSON-LD.
+// Build-time helpers of the recipe pages, cards and the home ritual: which
+// picture a recipe shows, and the absolute image URLs of its `Recipe` node.
 import { getImage } from 'astro:assets';
 import { SITE, type Locale } from '../consts';
-import type { Product, Recipe } from '../content/schemas';
-import { loadProducts } from '../i18n/locale';
-import { routeUrl } from '../i18n/routing';
-import { resolveAsset } from '../images';
-import type { RecipeGraph } from '../seo/graph';
+import type { Product, RecipeEntry } from '../content/schemas';
+import { formatMinutes } from '../i18n/format';
+import { detailAsset, resolveAsset } from '../images';
 
-export interface RecipeEntry {
-  product: Product;
-  recipe: Recipe;
+/**
+ * The picture of a recipe: its own photo (the dish once made), else the
+ * close-up of its product's contents (a 2:1 strip cut through the pouch
+ * window) when that file exists, else none.
+ */
+export function recipePicture(
+  recipe: Pick<RecipeEntry, 'image'>,
+  product: Pick<Product, 'images'> | undefined,
+): { src: string; kind: 'photo' | 'detail' } | undefined {
+  if (recipe.image) return { src: recipe.image, kind: 'photo' };
+  const detail = product?.images[0] ? detailAsset(product.images[0]) : undefined;
+  return detail ? { src: detail, kind: 'detail' } : undefined;
 }
 
-/** Every shown product that carries a recipe, in catalogue order. */
-export async function loadRecipes(locale: Locale): Promise<RecipeEntry[]> {
-  return (await loadProducts(locale))
-    .filter((p): p is Product & { recipe: Recipe } => p.recipe !== undefined)
-    .map((product) => ({ product, recipe: product.recipe }));
-}
-
-/** The `Recipe` graph input of the recipes page, images as absolute 1200 px WebP URLs. */
-export async function recipeGraphInputs(locale: Locale): Promise<RecipeGraph[]> {
-  const entries = await loadRecipes(locale);
-  return Promise.all(
-    entries.map(async ({ product, recipe }) => {
-      const src = resolveAsset(product.images[0]!);
-      const image = await getImage({ src, width: Math.min(1200, src.width), format: 'webp' });
-      return {
-        name: recipe.title,
-        url: `${routeUrl('product', locale, product.slug)}#recipe`,
-        images: [new URL(image.src, SITE.url).href],
-        ingredients: recipe.ingredients ?? [],
-        steps: recipe.steps,
-        productName: product.name,
-      };
-    }),
+/** Preparation, cooking and rest together, as the cards print it ("20 min"). */
+export function totalTime(recipe: RecipeEntry, locale: Locale): string {
+  return formatMinutes(
+    recipe.prepMinutes + (recipe.cookMinutes ?? 0) + (recipe.restMinutes ?? 0),
+    locale,
   );
+}
+
+/**
+ * Absolute 1200 px WebP URL of the recipe photo, else of the product's main
+ * photo: Google requires an image on a Recipe, and the pouch is the truth
+ * until the owner photographs the dish.
+ */
+export async function recipeImageUrls(
+  recipe: Pick<RecipeEntry, 'image'>,
+  product: Pick<Product, 'images'>,
+): Promise<string[]> {
+  const src = resolveAsset(recipe.image ?? product.images[0]!);
+  const image = await getImage({ src, width: Math.min(1200, src.width), format: 'webp' });
+  return [new URL(image.src, SITE.url).href];
 }

@@ -29,6 +29,7 @@ describe('route table (spec section 3)', () => {
       terms: { fr: '/cgv/', en: '/en/terms-of-sale/' },
       privacy: { fr: '/confidentialite/', en: '/en/privacy/' },
       recipes: { fr: '/recettes/', en: '/en/recipes/' },
+      recipe: { fr: '/recettes/[slug]/', en: '/en/recipes/[slug]/' },
       lookup: { fr: '/ma-commande/', en: '/en/my-order/' },
       review: { fr: '/avis/', en: '/en/review/' },
       newsletter: { fr: '/newsletter/', en: '/en/newsletter/' },
@@ -93,7 +94,7 @@ describe('matchRoute', () => {
   it('finds the key, locale and slug of every path', () => {
     for (const key of Object.keys(ROUTES) as RouteKey[]) {
       for (const locale of ['fr', 'en'] as const) {
-        const slug = key === 'category' || key === 'product' ? 'some-slug-1' : undefined;
+        const slug = ['category', 'product', 'recipe'].includes(key) ? 'some-slug-1' : undefined;
         const found = matchRoute(routePath(key, locale, slug));
         expect(found?.key, `${key} ${locale}`).toBe(key);
         if (key !== 'notFound' && key !== 'admin') expect(found?.locale).toBe(locale);
@@ -104,6 +105,26 @@ describe('matchRoute', () => {
   it('returns null for an unknown path', () => {
     expect(matchRoute('/nope/')).toBeNull();
     expect(matchRoute('/produits/')).toBeNull();
+  });
+  it('tells the recipes page from a recipe page', () => {
+    expect(matchRoute('/recettes/')).toEqual({ key: 'recipes', locale: 'fr' });
+    expect(matchRoute('/en/recipes/')).toEqual({ key: 'recipes', locale: 'en' });
+    expect(matchRoute('/recettes/infusion-de-bissap/')).toEqual({
+      key: 'recipe',
+      locale: 'fr',
+      slug: 'infusion-de-bissap',
+    });
+    expect(matchRoute('/en/recipes/infusion-de-bissap/')).toEqual({
+      key: 'recipe',
+      locale: 'en',
+      slug: 'infusion-de-bissap',
+    });
+    expect(isIndexable('recipe')).toBe(true);
+    expect(alternatesFor('recipe', 'jus-de-bissap').map((a) => a.href)).toEqual([
+      'https://racinesenpartage.fr/recettes/jus-de-bissap/',
+      'https://racinesenpartage.fr/en/recipes/jus-de-bissap/',
+      'https://racinesenpartage.fr/recettes/jus-de-bissap/',
+    ]);
   });
 });
 

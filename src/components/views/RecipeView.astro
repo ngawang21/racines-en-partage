@@ -1,0 +1,436 @@
+---
+// One recipe, both locales (iteration 4, spec 2.3). The head says what it is:
+// the source ("Recette de l'étiquette" or "Recette de la maison"), the title,
+// the summary and a facts row (preparation, cooking, rest, quantity, each
+// only when set). One picture beside it from 900 px, above the body on
+// phones: the recipe photo, else the close-up of the product's contents as a
+// 2:1 band, else none (the head then reads as a text page head, like the
+// FAQ). Then the ingredients as a plain list beside the numbered steps (a
+// sequence) and the tips, the product of the recipe with its add button, and
+// up to three other recipes. Base adds the Recipe JSON-LD (recipeGraphInput).
+import { DEFAULT_LOCALE, type Locale } from '../../consts';
+import { formatFamilies, otherRecipes } from '../../content/merge';
+import Base from '../../layouts/Base.astro';
+import { formatMinutes } from '../../i18n/format';
+import { loadLocale, loadProducts, loadRecipe, loadRecipes, loadSettings } from '../../i18n/locale';
+import { routePath, routeUrl } from '../../i18n/routing';
+import { resolveAsset } from '../../images';
+import { recipeGraphInput } from '../../seo/graph';
+import Breadcrumbs from '../Breadcrumbs.astro';
+import Icon from '../Icon.astro';
+import Picture from '../Picture.astro';
+import ProductGrid from '../ProductGrid.astro';
+import RecipeCards from '../RecipeCards.astro';
+import SectionHead from '../SectionHead.astro';
+import { recipeImageUrls, recipePicture } from '../recipes';
+
+interface Props {
+  locale: Locale;
+  slug: string;
+}
+const { locale, slug } = Astro.props;
+const [t, recipe, recipes, products, productsFr, settings] = await Promise.all([
+  loadLocale(locale),
+  loadRecipe(locale, slug),
+  loadRecipes(locale),
+  loadProducts(locale),
+  loadProducts(DEFAULT_LOCALE),
+  loadSettings(),
+]);
+const bySlug = new Map(products.map((p) => [p.slug, p]));
+// loadRecipes keeps only the recipes whose product the site shows.
+const product = bySlug.get(recipe.product)!;
+const picture = recipePicture(recipe, product);
+const others = otherRecipes(recipe, recipes, formatFamilies(productsFr)).map((r) => ({
+  recipe: r,
+  product: bySlug.get(r.product),
+}));
+
+const facts = [
+  { label: t.recipes.prep, value: formatMinutes(recipe.prepMinutes, locale) },
+  ...(recipe.cookMinutes
+    ? [{ label: t.recipes.cook, value: formatMinutes(recipe.cookMinutes, locale) }]
+    : []),
+  ...(recipe.restMinutes
+    ? [{ label: t.recipes.rest, value: formatMinutes(recipe.restMinutes, locale) }]
+    : []),
+  { label: t.recipes.yield, value: recipe.yield },
+];
+const source = recipe.source === 'label' ? t.recipes.sourceLabel : t.recipes.sourceHouse;
+const recipesHref = routePath('recipes', locale);
+const productHref = routePath('product', locale, product.slug);
+// The first paragraph of the product description, beside its card.
+const productIntro = product.description.split(/\n\s*\n/)[0]!;
+const ogImage = resolveAsset(recipe.image ?? product.images[0]!);
+---
+
+<Base
+  {locale}
+  routeKey="recipe"
+  {slug}
+  title={recipe.seoTitle ?? recipe.title}
+  description={recipe.seoDescription ?? recipe.summary}
+  image={{ src: ogImage, alt: recipe.imageAlt ?? recipe.title }}
+  graph={{
+    breadcrumbs: [
+      { name: t.nav.home, url: routeUrl('home', locale) },
+      { name: t.recipes.title, url: routeUrl('recipes', locale) },
+      { name: recipe.title, url: routeUrl('recipe', locale, slug) },
+    ],
+    recipe: recipeGraphInput(recipe, product, await recipeImageUrls(recipe, product)),
+  }}
+>
+  <article class="container recipe-page" aria-labelledby="recipe-title">
+    <Breadcrumbs
+      label={t.a11y.breadcrumb}
+      class="recipe-crumbs"
+      items={[
+        { name: t.nav.home, href: routePath('home', locale) },
+        { name: t.recipes.title, href: recipesHref },
+        { name: recipe.title },
+      ]}
+    />
+
+    <header class:list={['recipe-head', { 'has-picture': picture }]}>
+      <div class="recipe-intro">
+        <p class="recipe-source">
+          <Icon name="flower" size={18} />
+          {source}
+        </p>
+        <h1 id="recipe-title">{recipe.title}</h1>
+        <p class="lead">{recipe.summary}</p>
+        <dl class="facts" aria-label={t.recipes.facts}>
+          {
+            facts.map((f) => (
+              <div class="fact">
+                <dt>{f.label}</dt>
+                <dd>{f.value}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+      {
+        picture && (
+          <figure class:list={['recipe-picture', `is-${picture.kind}`]}>
+            <Picture
+              src={picture.src}
+              alt={picture.kind === 'photo' ? (recipe.imageAlt ?? recipe.title) : ''}
+              preset="hero"
+              sizes="(min-width: 1440px) 560px, (min-width: 900px) 40vw, 100vw"
+              loading="eager"
+              fetchpriority="high"
+            />
+          </figure>
+        )
+      }
+    </header>
+
+    <div class="recipe-body">
+      <section class="ingredients" aria-labelledby="recipe-ingredients">
+        <h2 id="recipe-ingredients">{t.recipes.ingredients}</h2>
+        <ul role="list">{recipe.ingredients.map((i) => <li>{i}</li>)}</ul>
+      </section>
+
+      <div class="recipe-method">
+        <section aria-labelledby="recipe-steps">
+          <h2 id="recipe-steps">{t.recipes.steps}</h2>
+          <ol class="steps">{recipe.steps.map((s) => <li>{s}</li>)}</ol>
+        </section>
+        {
+          recipe.tips.length > 0 && (
+            <section class="tips" aria-labelledby="recipe-tips">
+              <h2 id="recipe-tips">{t.recipes.tips}</h2>
+              <ul role="list">
+                {recipe.tips.map((tip) => (
+                  <li>{tip}</li>
+                ))}
+              </ul>
+            </section>
+          )
+        }
+      </div>
+    </div>
+  </article>
+
+  <section class="recipe-product" aria-labelledby="recipe-product-title">
+    <div class="container product-layout">
+      <div class="product-copy">
+        <h2 id="recipe-product-title">{t.recipes.productTitle}</h2>
+        <p class="product-tagline">{product.tagline}</p>
+        <p class="product-text">{productIntro}</p>
+        <a class="link-arrow" href={productHref}>
+          {t.recipes.productLink}
+          <Icon name="chevron" />
+        </a>
+      </div>
+      <ProductGrid
+        products={[product]}
+        {locale}
+        {t}
+        shopOpen={settings.shop.open}
+        class="recipe-product-grid"
+      />
+    </div>
+  </section>
+
+  {
+    others.length > 0 && (
+      <section class="recipe-others" aria-labelledby="recipe-others-title">
+        <div class="container section">
+          <SectionHead
+            id="recipe-others-title"
+            title={t.recipes.others}
+            link={{ href: recipesHref, label: t.recipes.viewAll }}
+          />
+          <RecipeCards items={others} {locale} {t} layout="row" />
+        </div>
+      </section>
+    )
+  }
+</Base>
+
+<style>
+  .recipe-page {
+    padding-top: clamp(1.25rem, 1rem + 1vw, 2rem);
+    padding-bottom: clamp(3rem, 2rem + 4.5vw, 6rem);
+  }
+  .recipe-page :global(.recipe-crumbs) {
+    margin-bottom: var(--space-6);
+  }
+
+  /* Head: one column; from 900 px the picture takes the right 5/12, centred
+     on the text. Without a picture the text keeps its measure on the left
+     edge, as on the other inner pages. */
+  .recipe-head {
+    display: grid;
+    gap: var(--space-6);
+  }
+  @media (min-width: 900px) {
+    .recipe-head.has-picture {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      align-items: center;
+      gap: clamp(2.5rem, 0.5rem + 3.5vw, 4rem);
+    }
+  }
+  /* Without a picture the facts rule ends with the text, not at the far edge. */
+  .recipe-head:not(.has-picture) .recipe-intro {
+    max-width: 760px;
+  }
+  .recipe-source {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--kraft-ink);
+    font-size: var(--fs--1);
+    font-weight: 600;
+  }
+  .recipe-source :global(svg) {
+    flex: none;
+    color: var(--hibiscus);
+  }
+  h1 {
+    margin-top: var(--space-3);
+    max-width: 18ch;
+    font-size: var(--fs-6);
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+  .lead {
+    margin-top: var(--space-4);
+    max-width: 58ch;
+    text-wrap: pretty;
+  }
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4) var(--space-8);
+    margin: var(--space-8) 0 0;
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--line);
+  }
+  .fact {
+    display: grid;
+    gap: 2px;
+  }
+  .fact dt {
+    color: var(--ink-2);
+    font-size: var(--fs--1);
+    font-weight: 600;
+  }
+  .fact dd {
+    margin: 0;
+    color: var(--forest);
+    font-family: var(--font-display);
+    font-size: var(--fs-2);
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+  }
+  .recipe-picture {
+    margin: 0;
+    overflow: hidden;
+    aspect-ratio: 2 / 1;
+    border-radius: var(--radius-m);
+    background: var(--photo-ground);
+  }
+  /* A photo of the dish gets more height than the close-up strip. */
+  .recipe-picture.is-photo {
+    aspect-ratio: 3 / 2;
+  }
+  .recipe-picture :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  @media (max-width: 899px) {
+    .recipe-picture {
+      order: -1;
+    }
+  }
+
+  /* Body: the ingredients beside the method from 900 px (4/8, the list
+     stays in view while the steps scroll); stacked on phones. */
+  .recipe-body {
+    display: grid;
+    gap: var(--space-12);
+    margin-top: clamp(var(--space-12), 2rem + 3vw, var(--space-16));
+    padding-top: clamp(var(--space-8), 1.5rem + 2vw, var(--space-12));
+    border-top: 1px solid var(--kraft);
+  }
+  @media (min-width: 900px) {
+    .recipe-body {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+      gap: clamp(2.5rem, 0.5rem + 5vw, 6rem);
+      align-items: start;
+    }
+    .ingredients {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-6));
+    }
+  }
+  .recipe-body h2 {
+    font-size: var(--fs-3);
+  }
+  .ingredients ul,
+  .tips ul {
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ingredients li {
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--line);
+    font-size: var(--fs-1);
+    line-height: 1.45;
+  }
+  .ingredients li:first-child {
+    border-top: 1px solid var(--line);
+  }
+  .steps {
+    margin: var(--space-6) 0 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+    max-width: 62ch;
+  }
+  .steps li {
+    position: relative;
+    padding-left: 3.25rem;
+    font-size: var(--fs-1);
+    line-height: 1.6;
+    counter-increment: step;
+  }
+  .steps li + li {
+    margin-top: var(--space-6);
+  }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: -0.1em;
+    width: 2.25rem;
+    color: var(--kraft-ink);
+    font-family: var(--font-display);
+    font-size: var(--fs-3);
+    font-weight: 500;
+    line-height: 1.1;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .tips {
+    margin-top: var(--space-12);
+    padding: var(--space-6) clamp(var(--space-6), 1rem + 1.2vw, var(--space-8));
+    max-width: calc(62ch + 2 * var(--space-8));
+    border-radius: var(--radius-m);
+    background: var(--paper);
+  }
+  .tips h2 {
+    font-size: var(--fs-2);
+  }
+  .tips li {
+    position: relative;
+    padding-left: 18px;
+    line-height: 1.55;
+  }
+  .tips li + li {
+    margin-top: var(--space-3);
+  }
+  .tips li::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 0.62em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+  }
+
+  /* The product: a single card beside its tagline and a link to its page. */
+  .recipe-product {
+    border-top: 1px solid var(--kraft);
+    background: var(--paper);
+  }
+  .product-layout {
+    display: grid;
+    gap: var(--space-8);
+    padding-block: clamp(3rem, 2rem + 4.5vw, 6rem);
+  }
+  @media (min-width: 720px) {
+    .product-layout {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
+      align-items: center;
+      gap: clamp(2.5rem, 0.5rem + 5vw, 6rem);
+    }
+  }
+  .product-copy h2 {
+    font-size: var(--fs-5);
+  }
+  .product-tagline {
+    margin-top: var(--space-4);
+    max-width: 40ch;
+    color: var(--ink-2);
+    font-family: var(--font-display);
+    font-size: var(--fs-2);
+    font-style: italic;
+    line-height: 1.4;
+  }
+  .product-text {
+    margin-top: var(--space-4);
+    max-width: 60ch;
+    color: var(--ink);
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+  .product-copy :global(.link-arrow) {
+    margin-top: var(--space-4);
+  }
+  .product-layout :global(.product-grid.recipe-product-grid) {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    max-width: 300px;
+  }
+  .recipe-others {
+    border-top: 1px solid var(--kraft);
+  }
+</style>

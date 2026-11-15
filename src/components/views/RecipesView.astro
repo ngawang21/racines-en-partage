@@ -1,25 +1,26 @@
 ---
-// Recipes page, both locales (spec 2.8): every recipe printed on a label, as
-// a card linking to the product's recipe, then the newsletter band. Seo.astro
-// adds one schema.org Recipe per card (graph kind "recipes").
+// Recipes page, both locales: every recipe as a card linking to its own page
+// (RecipeCards), then the newsletter band. The structured data lists the
+// recipe pages (an ItemList of links); each recipe page carries its Recipe.
 import type { Locale } from '../../consts';
 import Base from '../../layouts/Base.astro';
-import { loadLocale, loadSettings } from '../../i18n/locale';
+import { loadLocale, loadProducts, loadRecipes, loadSettings } from '../../i18n/locale';
 import { routePath, routeUrl } from '../../i18n/routing';
 import Breadcrumbs from '../Breadcrumbs.astro';
 import RecipeCards from '../RecipeCards.astro';
 import NewsletterSignup from '../forms/NewsletterSignup.astro';
-import { loadRecipes } from '../recipes';
 
 interface Props {
   locale: Locale;
 }
 const { locale } = Astro.props;
-const [t, settings, recipes] = await Promise.all([
+const [t, settings, recipes, products] = await Promise.all([
   loadLocale(locale),
   loadSettings(),
   loadRecipes(locale),
+  loadProducts(locale),
 ]);
+const bySlug = new Map(products.map((p) => [p.slug, p]));
 ---
 
 <Base
@@ -33,6 +34,7 @@ const [t, settings, recipes] = await Promise.all([
       { name: t.nav.home, url: routeUrl('home', locale) },
       { name: t.recipes.title, url: routeUrl('recipes', locale) },
     ],
+    items: recipes.map((r) => ({ name: r.title, url: routeUrl('recipe', locale, r.slug) })),
   }}
 >
   <div class="container page-head">
@@ -40,7 +42,6 @@ const [t, settings, recipes] = await Promise.all([
       label={t.a11y.breadcrumb}
       items={[{ name: t.nav.home, href: routePath('home', locale) }, { name: t.recipes.title }]}
     />
-    <p class="eyebrow">{t.shop.recipesKicker}</p>
     <h1>{t.recipes.title}</h1>
     <p class="lead">{t.recipes.intro}</p>
   </div>
@@ -50,11 +51,12 @@ const [t, settings, recipes] = await Promise.all([
     {
       recipes.length > 0 ? (
         <RecipeCards
-          products={recipes.map((r) => r.product)}
+          items={recipes.map((recipe) => ({ recipe, product: bySlug.get(recipe.product) }))}
           {locale}
           {t}
           layout="grid"
           headingLevel="h3"
+          eager={3}
         />
       ) : (
         <p class="empty">{t.recipes.empty}</p>
@@ -66,9 +68,6 @@ const [t, settings, recipes] = await Promise.all([
 </Base>
 
 <style>
-  .page-head .eyebrow + h1 {
-    margin-top: var(--space-3);
-  }
   .recipes-page {
     padding-bottom: clamp(3rem, 2rem + 4.5vw, 6rem);
   }

@@ -3,14 +3,16 @@
 // checkout with pickup selected and the FAQ, in both locales and at both
 // viewports. Serious and critical violations fail the test; every violation is
 // attached to the report, and A11Y_VERBOSE=1 prints them. The iteration 3
-// pages (contact form, order lookup, review, newsletter landing) must have no
-// violation at all.
+// pages (contact form, order lookup, review, newsletter landing) and the
+// iteration 4 recipe pages (the list and a recipe) must have no violation at
+// all.
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { PATHS, blockThirdParties, json, orderFixture, readCatalog, type Locale } from './helpers';
 
 const HOME = { fr: '/', en: '/en/' } as const;
 const FAQ = { fr: '/faq/', en: '/en/faq/' } as const;
+const RECIPES = { fr: '/recettes/', en: '/en/recipes/' } as const;
 const PICKUP = { fr: /Retrait/, en: /pickup in Arnouville/i } as const;
 const FAILING = new Set(['serious', 'critical']);
 
@@ -145,6 +147,15 @@ for (const locale of ['fr', 'en'] as const satisfies readonly Locale[]) {
         .getAttribute('href');
       await page.goto(href!);
       await audit(page, testInfo, `product-${locale}`);
+    });
+
+    test('recipes page and a recipe page', async ({ page }, testInfo) => {
+      await page.goto(RECIPES[locale]);
+      await audit(page, testInfo, `recipes-${locale}`, ANY);
+      const href = await page.locator('.recipes-grid .recipe-title a').first().getAttribute('href');
+      await page.goto(href!);
+      await expect(page.locator('ol.steps li').first()).toBeVisible();
+      await audit(page, testInfo, `recipe-${locale}`, ANY);
     });
 
     test('faq', async ({ page }, testInfo) => {

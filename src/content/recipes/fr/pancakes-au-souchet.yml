@@ -1,0 +1,33 @@
+# Recette de la maison (source: house), écrite pour le site à partir de sources publiques ; à valider par la propriétaire (docs/client/recettes-a-valider.md).
+order: 10
+product: poudre-de-souchet-100g
+source: house
+prepMinutes: 10
+cookMinutes: 20
+restMinutes: 15
+title: 'Pancakes au souchet'
+summary: 'Une part de poudre de souchet dans la pâte : des pancakes moelleux, au goût doux de noisette et d’amande.'
+yield: '12 pancakes environ'
+ingredients:
+  - '120 g de farine de blé'
+  - '80 g de poudre de souchet'
+  - '2 cuillères à café de levure chimique'
+  - '1 cuillère à soupe de sucre'
+  - '1 pincée de sel'
+  - '2 œufs'
+  - '25 cl de lait, ou de lait végétal'
+  - '30 g de beurre fondu, et un peu pour la poêle'
+steps:
+  - 'Dans un saladier, mélangez la farine, la poudre de souchet, la levure, le sucre et le sel.'
+  - 'Dans un bol, battez les œufs avec le lait et le beurre fondu.'
+  - 'Versez le mélange liquide sur les poudres et fouettez juste assez pour obtenir une pâte lisse et épaisse.'
+  - 'Laissez reposer 15 minutes : la poudre de souchet boit une partie du lait.'
+  - 'Faites chauffer une poêle légèrement beurrée à feu moyen et versez une petite louche de pâte par pancake.'
+  - 'Retournez-les quand de petites bulles apparaissent à la surface, après 1 à 2 minutes, et laissez dorer 1 minute de l’autre côté.'
+  - 'Servez chaud, avec du miel, du sirop d’érable ou des fruits.'
+tips:
+  - 'Pâte trop épaisse après le repos ? Ajoutez une ou deux cuillères de lait.'
+  - 'Pour un goût de souchet plus marqué, passez à 100 g de poudre de souchet et 100 g de farine.'
+  - 'Ils se gardent un jour, emballés, et se réchauffent quelques secondes à la poêle.'
+seoTitle: 'Pancakes à la poudre de souchet'
+seoDescription: 'Des pancakes moelleux à la poudre de souchet du Niger, l’amande de terre, au goût doux de noisette. Recette pour 12 pancakes, prête en 45 minutes.'

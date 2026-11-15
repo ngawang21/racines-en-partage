@@ -9,15 +9,22 @@
 // formats of one product share a row (searchGroups, the dialog's
 // data-families): the name without its weight, a chip per format, "dès" before
 // the lightest format's price, and the add button of the format shown.
+// Recipes matching the query follow the products (at most RECIPE_LIMIT), as
+// plain links, from the small #rep-recipes list SearchDialog embeds.
 import type { ClientCatalog } from '../catalog/build';
 import { getContext } from '../cart/context';
 import type { Locale } from '../consts';
 import { formatPrice, formatUnitPrice, formatWeight } from '../i18n/format';
 import {
+  RECIPE_LIMIT,
   bareName,
   buildIndex,
+  buildRecipeIndex,
   groupRows,
   searchGroups,
+  searchRecipes,
+  type ClientRecipe,
+  type RecipeIndexEntry,
   type SearchGroup,
   type SearchIndex,
 } from '../search/match';
@@ -38,6 +45,18 @@ function readCatalog(): ClientCatalog | null {
   }
 }
 
+/** The recipes embedded by SearchDialog; none when the list is missing or unreadable. */
+function readRecipes(): ClientRecipe[] {
+  const el = document.getElementById('rep-recipes');
+  if (!el?.textContent) return [];
+  try {
+    const list = JSON.parse(el.textContent) as unknown;
+    return Array.isArray(list) ? (list as ClientRecipe[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 function initSearch(): void {
   const dialog = document.querySelector<HTMLDialogElement>('dialog[data-search]');
   const openers = [...document.querySelectorAll<HTMLButtonElement>('[data-search-open]')];
@@ -50,6 +69,9 @@ function initSearch(): void {
   const label = q<HTMLElement>('[data-search-label]');
   const hint = q<HTMLElement>('#search-hint');
   const row = q<HTMLTemplateElement>('template[data-search-row]');
+  const recipeBlock = q<HTMLElement>('[data-search-recipes]');
+  const recipeList = q<HTMLUListElement>('[data-search-recipe-list]');
+  const recipeRow = q<HTMLTemplateElement>('template[data-search-recipe-row]');
   const locale = (dialog.dataset.locale ?? 'fr') as Locale;
   const strings = dialog.dataset;
   const families = new Map<string, string>(
@@ -65,13 +87,27 @@ function initSearch(): void {
   let catalog: ClientCatalog | null = null;
   let index: SearchIndex = [];
   let shown: SearchGroup[] = [];
+  let recipeIndex: RecipeIndexEntry[] | null = null;
+  let shownRecipes: ClientRecipe[] = [];
+  const recipeUrl = (slug: string) => (strings.recipePath ?? '').replace('%s', () => slug);
   let opener: HTMLElement | null = null;
   let statusTimer = 0;
 
   const ensureIndex = () => {
+    recipeIndex ??= buildRecipeIndex(readRecipes());
     if (catalog) return;
     catalog = readCatalog();
     index = catalog ? buildIndex(catalog) : [];
+  };
+
+  const renderRecipe = (recipe: ClientRecipe): HTMLLIElement => {
+    const li = (recipeRow.content.firstElementChild as HTMLLIElement).cloneNode(
+      true,
+    ) as HTMLLIElement;
+    li.querySelector<HTMLAnchorElement>('.sr-recipe')!.href = recipeUrl(recipe.slug);
+    li.querySelector('.sr-recipe-title')!.textContent = recipe.title;
+    li.querySelector('.sr-recipe-product')!.textContent = recipe.product;
+    return li;
   };
 
   const renderRow = ({ shown: p, formats }: SearchGroup): HTMLLIElement => {
@@ -134,6 +170,10 @@ function initSearch(): void {
     ensureIndex();
     const query = input.value.trim();
     const products = catalog ? Object.values(catalog.products) : [];
+    // Every recipe match is counted; the list shows the first RECIPE_LIMIT.
+    const recipeMatches =
+      query === '' ? [] : searchRecipes(recipeIndex ?? [], query, Number.POSITIVE_INFINITY);
+    shownRecipes = recipeMatches.slice(0, RECIPE_LIMIT);
     if (query === '') {
       shown = groupRows(
         products.filter((p) => p.featured),
@@ -150,17 +190,23 @@ function initSearch(): void {
       shown = matches.slice(0, LIMIT);
       hint.hidden = true;
       label.hidden = true;
+      const count = (n: number, one = '', many = '') => {
+        const singular = locale === 'fr' ? n <= 1 : n === 1;
+        return (singular ? one : many).replace('%n', () => String(n));
+      };
       const total = matches.length;
-      const one = locale === 'fr' ? total <= 1 : total === 1;
+      const recipes = recipeMatches.length;
+      const parts = [
+        ...(total > 0 ? [count(total, strings.resultsOne, strings.resultsMany)] : []),
+        ...(recipes > 0 ? [count(recipes, strings.recipesOne, strings.recipesMany)] : []),
+      ];
       announce(
-        total === 0
-          ? (strings.empty ?? '').replace('%q', () => query)
-          : ((one ? strings.resultsOne : strings.resultsMany) ?? '').replace('%n', () =>
-              String(total),
-            ),
+        parts.length === 0 ? (strings.empty ?? '').replace('%q', () => query) : parts.join(', '),
       );
     }
     list.replaceChildren(...shown.map(renderRow));
+    recipeList.replaceChildren(...shownRecipes.map(renderRecipe));
+    recipeBlock.hidden = shownRecipes.length === 0;
   };
 
   const open = (from: HTMLElement) => {
@@ -200,8 +246,9 @@ function initSearch(): void {
   });
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    const first = shown[0];
-    if (input.value.trim() !== '' && first) window.location.assign(first.shown.url);
+    if (input.value.trim() === '') return;
+    const first = shown[0]?.shown.url ?? (shownRecipes[0] && recipeUrl(shownRecipes[0].slug));
+    if (first) window.location.assign(first);
   });
   // Leaving the page by a result link: closed again when restored from the bfcache.
   window.addEventListener('pageshow', (event) => {

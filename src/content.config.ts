@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { localeSchema } from './content/locale-schema';
 import { legalFrontmatterSchema, reviewSchema, settingsSchema } from './content/schemas';
 
-// Products, categories and pages hold a complete French file and a possibly
+// Products, categories, pages and recipes hold a complete French file and a possibly
 // partial English one in the same collection, so their collection schema only
 // asserts "a YAML mapping". The strict schemas of src/content/schemas.ts are
 // applied by src/i18n/locale.ts, which knows the locale of each file and
@@ -23,6 +23,13 @@ const categories = defineCollection({
 
 const pages = defineCollection({
   loader: glob({ pattern: '{fr,en}/*.yml', base: './src/content/pages' }),
+  schema: yamlMapping,
+});
+
+// One file per recipe, the French one complete, the English one translated
+// fields only (src/content/recipes/{fr,en}/<slug>.yml).
+const recipes = defineCollection({
+  loader: glob({ pattern: '{fr,en}/*.yml', base: './src/content/recipes' }),
   schema: yamlMapping,
 });
 
@@ -47,4 +54,13 @@ const locales = defineCollection({
   schema: localeSchema,
 });
 
-export const collections = { products, categories, pages, legal, reviews, settings, locales };
+export const collections = {
+  products,
+  categories,
+  pages,
+  recipes,
+  legal,
+  reviews,
+  settings,
+  locales,
+};

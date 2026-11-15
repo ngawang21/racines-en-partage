@@ -1,0 +1,32 @@
+# Recette de la maison (source: house), écrite pour le site à partir de sources publiques ; à valider par la propriétaire (docs/client/recettes-a-valider.md).
+order: 11
+product: poudre-de-cacao-100g
+source: house
+prepMinutes: 15
+cookMinutes: 35
+title: 'Gâteau au yaourt et au cacao'
+summary: 'Le gâteau au yaourt de l’enfance, avec une part de cacao pur dans la farine : une mie tendre et sombre, au goût franc de chocolat.'
+yield: '1 gâteau de 22 cm, 8 parts'
+ingredients:
+  - '1 yaourt nature (125 g)'
+  - '150 g de sucre'
+  - '3 œufs'
+  - '60 ml d’huile neutre (un demi-pot de yaourt)'
+  - '160 g de farine'
+  - '40 g de poudre de cacao'
+  - '1 sachet de levure chimique (11 g)'
+  - '1 pincée de sel'
+steps:
+  - 'Préchauffez le four à 180 °C et beurrez un moule rond de 22 cm.'
+  - 'Videz le yaourt dans un saladier et gardez le pot. Ajoutez le sucre et les œufs, et fouettez jusqu’à ce que le mélange soit mousseux.'
+  - 'Incorporez l’huile.'
+  - 'Tamisez ensemble la farine, la poudre de cacao, la levure et le sel au-dessus du saladier, puis mélangez juste assez pour obtenir une pâte lisse.'
+  - 'Versez dans le moule et enfournez pour 30 à 35 minutes.'
+  - 'Vérifiez la cuisson avec la lame d’un couteau : elle doit ressortir sèche, ou presque.'
+  - 'Laissez tiédir 10 minutes avant de démouler.'
+tips:
+  - 'Sans balance, mesurez avec le pot vide : 2 pots de sucre, 2 pots et demi de farine, un demi-pot de cacao, un demi-pot d’huile, 3 œufs et la levure. Cette version est un peu plus sucrée.'
+  - 'Le cacao assèche vite la pâte : ne prolongez pas la cuisson, un cœur encore un peu humide est bon signe.'
+  - 'Servez-le nature, ou voilé de cacao au moment de servir.'
+seoTitle: 'Gâteau au yaourt et au cacao pur'
+seoDescription: 'Le gâteau au yaourt, avec de la poudre de cacao pur de Côte d’Ivoire : une mie tendre au goût franc de chocolat. 8 parts, 50 minutes.'

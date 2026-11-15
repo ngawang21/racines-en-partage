@@ -1,0 +1,32 @@
+# Recette de la maison (source: house), écrite pour le site à partir de sources publiques ; à valider par la propriétaire (docs/client/recettes-a-valider.md).
+order: 12
+product: grues-de-cacao-100g
+source: house
+prepMinutes: 10
+cookMinutes: 25
+restMinutes: 30
+title: 'Granola aux grués de cacao'
+summary: 'Des flocons d’avoine dorés au miel, des noisettes, et des grués de cacao pour une amertume croquante : un granola à parsemer sur un yaourt ou à manger avec du lait.'
+yield: '1 grand bocal, environ 500 g'
+ingredients:
+  - '250 g de flocons d’avoine'
+  - '60 g de noisettes ou d’amandes, grossièrement concassées'
+  - '40 g de graines de courge ou de tournesol'
+  - '40 g de grués de cacao'
+  - '1 pincée de sel'
+  - '80 g de miel'
+  - '50 ml d’huile de tournesol'
+steps:
+  - 'Préchauffez le four à 160 °C et couvrez une plaque de papier cuisson.'
+  - 'Dans un saladier, mélangez les flocons d’avoine, les noisettes, les graines, les grués de cacao et le sel.'
+  - 'Faites tiédir le miel et l’huile dans une petite casserole, juste pour les rendre fluides.'
+  - 'Versez-les sur le mélange sec et remuez jusqu’à ce que tous les flocons soient enrobés.'
+  - 'Étalez sur la plaque en une couche régulière et enfournez pour 25 minutes, en remuant à mi-cuisson.'
+  - 'Quand le granola est doré, laissez-le refroidir complètement sur la plaque : il durcit en refroidissant.'
+  - 'Cassez-le en morceaux et versez-le dans un bocal hermétique.'
+tips:
+  - 'Pour des grués encore plus croquants, gardez-en une poignée et ajoutez-la après la cuisson.'
+  - 'Ajoutez des fruits secs (raisins, abricots, mangue) une fois le granola refroidi.'
+  - 'Il se garde 2 à 3 semaines dans un bocal bien fermé, au sec.'
+seoTitle: 'Granola maison aux grués de cacao'
+seoDescription: 'Un granola maison aux flocons d’avoine, au miel, aux noisettes et aux grués de cacao de Côte d’Ivoire. Doré et croquant, 25 minutes au four.'

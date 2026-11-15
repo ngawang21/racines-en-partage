@@ -1,0 +1,29 @@
+# Recette de la maison (source: house), écrite pour le site à partir de sources publiques ; à valider par la propriétaire (docs/client/recettes-a-valider.md).
+order: 7
+product: poudre-de-baobab-100g
+source: house
+prepMinutes: 10
+restMinutes: 60
+title: 'Jus de bouye'
+summary: 'Le bouye, la boisson au baobab du Sénégal : la poudre délayée dans l’eau, adoucie de lait et de vanille, servie très fraîche. Épais, acidulé et velouté.'
+yield: '1,2 litre environ, soit 6 verres'
+ingredients:
+  - '100 g de poudre de baobab (un sachet de 100 g)'
+  - '1 litre d’eau froide'
+  - '60 à 80 g de sucre, selon votre goût'
+  - '1 sachet de sucre vanillé (7,5 g)'
+  - '20 cl de lait concentré non sucré, ou de lait entier'
+  - 'Quelques gouttes d’eau de fleur d’oranger (facultatif)'
+steps:
+  - 'Versez la poudre de baobab dans un saladier et délayez-la avec un verre d’eau en fouettant, pour éviter les grumeaux.'
+  - 'Ajoutez le reste de l’eau peu à peu, sans cesser de fouetter.'
+  - 'Laissez reposer 1 heure au réfrigérateur.'
+  - 'Passez au tamis fin pour une boisson bien lisse.'
+  - 'Ajoutez le sucre, le sucre vanillé et le lait, puis mélangez jusqu’à ce que le sucre soit fondu.'
+  - 'Parfumez de quelques gouttes de fleur d’oranger si vous le souhaitez, et servez très frais.'
+tips:
+  - 'La pulpe se dépose au fond : remuez ou secouez la bouteille avant de servir.'
+  - 'Trop épais ? Allongez-le avec un peu d’eau froide et goûtez de nouveau. Avec du lait concentré sucré, réduisez ou supprimez le sucre.'
+  - 'Il se garde 3 jours au réfrigérateur, en bouteille fermée.'
+seoTitle: 'Jus de bouye, la boisson au baobab du Sénégal'
+seoDescription: 'Le bouye, boisson sénégalaise à la poudre de baobab, au lait et à la vanille. Dix minutes de préparation, une heure au frais, à servir très frais.'

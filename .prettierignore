@@ -13,6 +13,7 @@ playwright-report/
 src/content/products/
 src/content/categories/
 src/content/pages/
+src/content/recipes/
 src/content/legal/
 src/content/reviews/
 src/content/settings/

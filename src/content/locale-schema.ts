@@ -74,7 +74,6 @@ export const localeSchema = z.object({
     landsTo: text,
     recipeCta: text,
     otherCategories: text,
-    recipesKicker: text,
     howTitle: text,
     howKicker: text,
     steps: ns({
@@ -109,6 +108,10 @@ export const localeSchema = z.object({
     recipe: text,
     recipeIngredients: text,
     recipeSteps: text,
+    /** Link from the recipe accordion to the recipe page. */
+    recipeOpen: text,
+    /** The product's other recipes, under the first one. */
+    recipeMore: text,
     nutrition: text,
     nutritionPer: text,
     energy: text,
@@ -129,6 +132,10 @@ export const localeSchema = z.object({
     packagedBy: text,
     gallery: text,
     imageOf: text,
+    enlarge: text,
+    closePhoto: text,
+    previousPhoto: text,
+    nextPhoto: text,
     galleryDuo: text,
     unitPrice: text,
     formats: text,
@@ -302,22 +309,32 @@ export const localeSchema = z.object({
     bandKicker: text,
     seeAll: text,
   }),
-  /** Recipes page (owner: storefront features). */
+  /** Recipes page, recipe pages and recipe cards (owner: recipes feature). */
   recipes: ns({
     metaTitle: text,
     metaDescription: text,
     title: text,
     intro: text,
-    stepsOne: text,
-    stepsMany: text,
-    ingredientsOne: text,
-    ingredientsMany: text,
-    /** Label over the three lines of a recipe card: its first ingredients, or its first steps. */
-    linesIngredients: text,
-    linesSteps: text,
-    with: text,
     empty: text,
     viewAll: text,
+    /** The mention of a recipe printed on the pouch, and of one written for the site. */
+    sourceLabel: text,
+    sourceHouse: text,
+    /** Facts row of a recipe page: preparation, cooking, rest (soaking, infusing, chilling), yield. */
+    prep: text,
+    cook: text,
+    rest: text,
+    yield: text,
+    /** Card time, for screen readers. */
+    totalTime: text,
+    /** Accessible name of the facts row. */
+    facts: text,
+    ingredients: text,
+    steps: text,
+    tips: text,
+    productTitle: text,
+    productLink: text,
+    others: text,
   }),
   /** Header search dialog (owner: storefront features). */
   search: ns({
@@ -332,6 +349,10 @@ export const localeSchema = z.object({
     resultsOne: text,
     resultsMany: text,
     viewAll: text,
+    /** Heading of the recipe results, under the products. */
+    recipes: text,
+    recipesOne: text,
+    recipesMany: text,
   }),
   /** Contact, newsletter and stock-alert forms (owner: forms and cart). */
   forms: ns({

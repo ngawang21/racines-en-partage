@@ -60,6 +60,22 @@ export function formatWeight(grams: number, locale: Locale): string {
 }
 
 /**
+ * A recipe time: "15 min", "12 h", then "1 h 30" in French and "1 h 30 min"
+ * in English, with a no-break space before each unit (narrow in French).
+ */
+export function formatMinutes(minutes: number, locale: Locale): string {
+  if (!Number.isInteger(minutes) || minutes < 0)
+    throw new Error(`formatMinutes expects whole minutes, got ${minutes}`);
+  const sp = locale === 'fr' ? NNBSP : NBSP;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m}${sp}min`;
+  if (m === 0) return `${h}${sp}h`;
+  const mm = String(m).padStart(2, '0');
+  return locale === 'fr' ? `${h}${sp}h${sp}${mm}` : `${h}${sp}h${sp}${mm}${sp}min`;
+}
+
+/**
  * Glues a trailing weight to its number for display ("Fleurs d’hibiscus
  * 100 g" never breaks before "g"). Product labels keep plain spaces for
  * Stripe and the e-mails; the cart views pass them through this.

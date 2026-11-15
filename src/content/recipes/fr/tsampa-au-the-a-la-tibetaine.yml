@@ -1,0 +1,25 @@
+# Recette de la maison (source: house), écrite pour le site à partir de sources publiques ; à valider par la propriétaire (docs/client/recettes-a-valider.md).
+order: 13
+product: poudre-d-orge-grillee-100g
+source: house
+prepMinutes: 10
+title: 'Tsampa au thé, à la tibétaine'
+summary: 'Le geste le plus simple de la cuisine tibétaine : la tsampa versée dans un bol de thé au beurre salé, pétrie du bout des doigts en petites boules au goût toasté.'
+yield: '1 bol'
+ingredients:
+  - '250 ml de thé noir corsé, bien chaud'
+  - '10 g de beurre'
+  - '1 pincée de sel'
+  - '4 cuillères à soupe de poudre d’orge grillée (environ 30 g)'
+steps:
+  - 'Préparez un thé noir corsé. Ajoutez le beurre et le sel, et fouettez jusqu’à ce que le beurre soit fondu et le thé un peu mousseux.'
+  - 'Versez un fond de thé dans un bol, puis la tsampa par-dessus.'
+  - 'Buvez une gorgée, puis mélangez la tsampa et le thé du bout d’un doigt, en pressant la poudre contre la paroi du bol.'
+  - 'Quand le mélange épaissit, continuez avec toute la main jusqu’à obtenir une pâte souple qui ne colle plus aux doigts.'
+  - 'Façonnez des boules de la taille d’une noix et dégustez-les avec le reste du thé.'
+tips:
+  - 'Pâte trop collante ? Ajoutez une pincée de tsampa. Trop sèche ? Une cuillère de thé.'
+  - 'Au Tibet, le thé au beurre se baratte longuement, et l’on ajoute parfois du sucre ou un peu de fromage sec à la tsampa.'
+  - 'Plus fluide, à la cuillère : versez la tsampa dans le bol de thé et remuez pour obtenir une bouillie épaisse.'
+seoTitle: 'Tsampa au thé au beurre, à la tibétaine'
+seoDescription: 'Comment manger la tsampa comme au Tibet : la poudre d’orge grillée mélangée à un thé au beurre salé et pétrie en petites boules. Dix minutes, un bol.'
