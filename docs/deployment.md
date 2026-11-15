@@ -25,20 +25,20 @@ handover: `docs/handover.md`.
 
 ## Progress
 
-| Section                       | Who        | Status on 2026-11-15                        |
-| ----------------------------- | ---------- | ------------------------------------------- |
-| 1. GitHub and CI              | Dev        | Done                                        |
-| 2. Cloudflare, Workers Builds | Dev        | Done                                        |
-| 3. Secrets                    | Dev        | Start now: `ORDER_EMAIL_TO`, `FORMS_SECRET` |
-| 4. Domain and DNS             | Dev        | 4.1 done; **next: 4.2 and 4.3**             |
-| 5. Custom domain, www         | Dev        | After 4.5                                   |
-| 6. Resend                     | Dev        | After 4.5 (account can be opened now)       |
-| 7. Email Routing              | Dev, Marie | After 4.5                                   |
-| 8. Stripe                     | Marie, Dev | To do                                       |
-| 9. Mondial Relay              | Marie, Dev | To do                                       |
-| 10. Sveltia CMS               | Dev        | To do                                       |
-| 12. Go-live                   | Dev, Marie | Last                                        |
-| 13 to 18. Forms, reviews, KV  | Dev        | With section 3                              |
+| Section                       | Who        | Status on 2026-11-15                              |
+| ----------------------------- | ---------- | ------------------------------------------------- |
+| 1. GitHub and CI              | Dev        | Done                                              |
+| 2. Cloudflare, Workers Builds | Dev        | Done                                              |
+| 3. Secrets                    | Dev        | Start now: `ORDER_EMAIL_TO`, `FORMS_SECRET`       |
+| 4. Domain and DNS             | Dev        | 4.1 done (confirm the e-mail); **next: 4.2, 4.3** |
+| 5. Custom domain, www         | Dev        | After 4.5                                         |
+| 6. Resend                     | Dev        | After 4.5 (account can be opened now)             |
+| 7. Email Routing              | Dev, Marie | After 4.5                                         |
+| 8. Stripe                     | Marie, Dev | To do                                             |
+| 9. Mondial Relay              | Marie, Dev | To do                                             |
+| 10. Sveltia CMS               | Dev        | To do                                             |
+| 12. Go-live                   | Dev, Marie | Last                                              |
+| 13 to 18. Forms, reviews, KV  | Dev        | With section 3                                    |
 
 ## 1. GitHub repository and CI
 
@@ -243,24 +243,53 @@ Zimbra Starter mailbox (unused). The domain still uses OVHcloud's servers
    SMS to her number, delete the developer's device (**...** >
    **Supprimer**), regenerate the backup codes.
 3. Administrator, technical and billing contacts all stay on this account.
-4. Automatic renewal, once Marie's card is under **Moyens de paiement**:
-   **Mes offres & services** > **...** on the domain row > **Configurer le
-   renouvellement** > **Automatique** > **Validez et payez**.
+4. Renewal: the domain page already shows **Renewal: Automatic · Every
+   year** (first renewal November 2029). It only works with a saved payment
+   method: Marie's card under **Payment methods** (**Moyens de paiement**),
+   added at the Stripe session.
+5. **To do:** the domain page shows "Contact correction: the following email
+   address is waiting for your confirmation: racinesenpartage@gmail.com".
+   Open the Gmail inbox, find the OVHcloud e-mail (search "OVHcloud",
+   check Spam) and click its confirmation link. No e-mail? On the domain
+   page, click **Relaunch operation**. An unconfirmed owner address can get
+   the domain suspended, so do it before 4.4.
 
 ### 4.2 Turn DNSSEC off at OVHcloud
 
-OVHcloud applies a nameserver change only once DNSSEC is off, and a DS
-record left at the registry breaks the domain for validating resolvers.
+**Why:** OVHcloud changes the nameservers (4.4) only once DNSSEC is off, and
+a DS record left at the registry would make the site unreachable for many
+visitors after the switch. **Time:** 2 minutes, then up to 24 hours of
+waiting. **State on 2026-11-15:** on (DS key tag 57304).
 
-1. **Web Cloud** > **Noms de domaine** > `racinesenpartage.fr` > tab
-   **Informations générales** > box **Sécurité** > turn **Délégation
-   sécurisée - DNSSEC** off > confirm. It takes up to 24 hours.
-2. **Check:** this prints nothing. Then wait one more hour (the registry
-   caches the DS for 3,600 seconds).
+1. `ovh.com/manager` > sign in > **Web Cloud** > **Domains & DNS** >
+   `racinesenpartage.fr` > tab **Overview**.
+2. Find the card **DNS configuration**. It lists the two DNS servers, then a
+   line **DNSSEC**: "You are protected against DNS spoofing attempts.",
+   status **Enabled**.
+3. Click that DNSSEC line (or the switch or **...** next to it) and choose
+   to disable it. A window opens: confirm.
+   - Not on that card? Same page, **Resource Map** > the **DNSSEC
+     (Anti-spoofing)** item.
+   - Older layout (French): **Noms de domaine** > `racinesenpartage.fr` >
+     **Informations générales** > box **Sécurité** > switch above
+     **Délégation sécurisée - DNSSEC**.
+4. Change nothing else on that page. Do not buy **Anycast DNS** (Cloudflare
+   replaces OVHcloud's DNS) and leave the **DNS Zone** tab alone.
 
-   ```sh
-   dig +short DS racinesenpartage.fr
-   ```
+**Check, right away:** the DNSSEC line shows **Disabled**, or a pending
+operation.
+
+**Check, then every few hours:** this prints nothing (today it prints
+`57304 8 2 7909...`).
+
+```sh
+dig +short DS racinesenpartage.fr
+```
+
+Without a terminal: `dnssec-analyzer.verisignlabs.com/racinesenpartage.fr`
+shows no DS record for `racinesenpartage.fr`. Once it is empty, wait **one
+more hour** (the `.fr` registry caches the record 3,600 seconds), then go
+to 4.4. Meanwhile, do 4.3.
 
 ### 4.3 Add the zone in Cloudflare
 
@@ -286,16 +315,18 @@ active within 28 days is deleted.
 
 Only after 4.2's check passes.
 
-1. **Web Cloud** > **Noms de domaine** > `racinesenpartage.fr` > tab
-   **Serveurs DNS** > **Modifier les serveurs DNS** (right of the table, or
-   below it on a narrow screen).
-2. **Option 2 : Utiliser mes propres DNS (ou ceux d'un autre fournisseur
-   DNS)**.
-3. **Serveur DNS**: first Cloudflare nameserver, **IP associée** empty >
-   **+** > second nameserver. Remove `dns103.ovh.net` and `ns103.ovh.net`
-   if still listed.
-4. **Appliquer la configuration** > check the summary > **Appliquer**.
-   Progress: **Opérations en cours**.
+1. **Web Cloud** > **Domains & DNS** > `racinesenpartage.fr` > tab
+   **Overview** > card **DNS configuration** ("Configuration: OVHcloud
+   default (internal)") > its edit action (**Modify** or **...**;
+   unverified, the new layout is not in OVHcloud's guides yet). Older
+   layout: tab **Serveurs DNS** > **Modifier les serveurs DNS**.
+2. Choose to use your own DNS servers: **Option 2 : Utiliser mes propres
+   DNS (ou ceux d'un autre fournisseur DNS)** in the French layout.
+3. First DNS server: the first Cloudflare nameserver, associated IP empty >
+   **+** > the second one. Remove `dns103.ovh.net` and `ns103.ovh.net` if
+   still listed.
+4. Apply (**Appliquer la configuration** > check the summary >
+   **Appliquer**). Progress shows under the pending operations.
 
 ### 4.5 Activation
 
