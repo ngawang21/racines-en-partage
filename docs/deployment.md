@@ -1,490 +1,722 @@
-# Deployment, domain, payments, e-mail
+# Deployment guide
 
-The shop is one Cloudflare Worker. `pnpm build` produces `dist/` (static
-pages, images, `catalog.json`); `npx wrangler deploy` uploads `dist/` as
-static assets together with the Worker script in `worker/`, which answers
-`/api/*` (checkout, order pages, Stripe webhook, forms, reviews) and runs
-the daily review invitations. Workers Builds runs both commands on every
-push to `main`. There is no database: Stripe holds the orders,
-`catalog.json` holds prices and stock, the repository holds the content and
-the reviews, Resend holds the newsletter contacts.
+The shop is one Cloudflare Worker. `pnpm build` writes `dist/` (pages,
+images, `catalog.json`); `npx wrangler deploy` uploads it as static assets
+with the Worker in `worker/`, which answers `/api/*` (checkout, orders,
+Stripe webhook, forms, reviews) and runs the daily review invitations.
+Workers Builds runs both on every push to `main`. No database: Stripe holds
+the orders, `catalog.json` the prices and stock, the repository the content
+and reviews, Resend the newsletter contacts.
 
-The ordered checklist with who does what is `docs/launch-runbook.md`; this
-file is the detailed reference it points to. Everything below is done once,
-in web interfaces, in the order given. Values
-marked "to verify" were not confirmed on 2026-11-01; check them on the
-provider's page before relying on them.
+`docs/launch-runbook.md` is the ordered checklist (who does what, quoted as
+"D3", "D8.2"); this file is the step-by-step reference. Ownership and
+handover: `docs/handover.md`.
 
-Who owns what, and what changes at handover, is in `docs/handover.md`.
+## How to read this guide
+
+- `A > B > C` is a click path; **bold** is the exact label on screen.
+- **Who:** Dev is the developer, Marie the owner (needed in person).
+- **Check:** how to know the step worked. Do not move on until it passes.
+- Labels were checked against each provider's documentation on 2026-11-15.
+  "(unverified)" marks a label the docs did not show: trust the screen.
+- Cloudflare moves menus often. If a path differs, type the page name
+  (for example "Email Routing") in the dashboard search bar at the top.
+- Every password, key and backup code goes into the Bitwarden vault.
+
+## Progress
+
+| Section                       | Who        | Status on 2026-11-15                        |
+| ----------------------------- | ---------- | ------------------------------------------- |
+| 1. GitHub and CI              | Dev        | Done                                        |
+| 2. Cloudflare, Workers Builds | Dev        | Done                                        |
+| 3. Secrets                    | Dev        | Start now: `ORDER_EMAIL_TO`, `FORMS_SECRET` |
+| 4. Domain and DNS             | Dev        | 4.1 done; **next: 4.2 and 4.3**             |
+| 5. Custom domain, www         | Dev        | After 4.5                                   |
+| 6. Resend                     | Dev        | After 4.5 (account can be opened now)       |
+| 7. Email Routing              | Dev, Marie | After 4.5                                   |
+| 8. Stripe                     | Marie, Dev | To do                                       |
+| 9. Mondial Relay              | Marie, Dev | To do                                       |
+| 10. Sveltia CMS               | Dev        | To do                                       |
+| 12. Go-live                   | Dev, Marie | Last                                        |
+| 13 to 18. Forms, reviews, KV  | Dev        | With section 3                              |
 
 ## 1. GitHub repository and CI
 
-1. Create the private repository `ngawang21/racines-en-partage` (no README,
-   no licence: the repository already has its files).
-2. Push:
+**Who:** Dev. **Status:** done.
 
-   ```bash
-   git remote add origin git@github.com:ngawang21/racines-en-partage.git
-   git push -u origin main
-   ```
+The private repository `ngawang21/racines-en-partage` holds `main`; Workers
+Builds is connected to it (section 2). It moves to Marie's GitHub account
+`racinesenpartage` at handover.
 
-3. Actions tab: the `ci` workflow must pass (install, `pnpm check`,
-   `pnpm test`, `pnpm build`, `pnpm test:build`, `pnpm e2e`).
-4. Settings, Branches: no protection rule is needed while one developer works
-   on `main`. The CMS also commits to `main`.
+1. Repository > **Actions**: the `ci` workflow passes (install,
+   `pnpm check`, `pnpm test`, `pnpm build`, `pnpm test:build`, `pnpm e2e`).
+2. No branch protection while one developer works on `main` (the CMS also
+   commits to `main`).
 
-At handover the repository moves to Marie's GitHub account
-`racinesenpartage` (see `docs/handover.md`, section 2).
+At handover (`docs/handover.md`, section 2):
+
+1. GitHub: repository > **Settings** > **General** > **Danger Zone** >
+   **Transfer** > **Specify an organization or username**: `racinesenpartage`
+   > type the repository name > **I understand, transfer this repository**.
+2. Cloudflare documents nothing about transfers, so reconnect the build:
+   install the Cloudflare GitHub app on `racinesenpartage`
+   (`github.com/settings/installations` > **Cloudflare Workers and Pages** >
+   **Configure** > **Only select repositories**), then Worker >
+   **Settings** > **Builds** > **Disconnect**, and connect again with the
+   form of section 2.2. Push a commit and check that the build runs.
+3. Change `GITHUB_REPO` in `wrangler.jsonc` (section 16) and `backend.repo`
+   in `public/admin/config.yml`.
 
 ## 2. Cloudflare account and Workers Builds
 
-The Cloudflare account is opened in Marie's name from day one, because it
-holds the domain zone, the Worker and the secrets.
+**Who:** Dev, on the business Gmail; handed over to Marie at the end
+(`docs/launch-runbook.md`, section 0). **Status:** done.
 
-1. With Marie: create a free Cloudflare account with
-   `racinesenpartage@gmail.com`. She sets the password and two-factor
-   authentication on her phone.
-2. She invites the developer: Manage account, Members, Invite, role
-   Administrator (exact role names to verify in the dashboard).
-3. Developer, in that account: Workers & Pages, Create, Import a repository,
-   authorise the Cloudflare GitHub app on `ngawang21` and choose
-   `racines-en-partage`.
-4. Build settings:
-   - Project (Worker) name: `racines-en-partage` (must match `name` in
-     `wrangler.jsonc`)
-   - Build command: `pnpm build`
-   - Deploy command: `npx wrangler deploy`
-   - Root directory: `/`
-   - Node version: taken from `.nvmrc` (22)
-   - Build variable: `PUBLIC_MONDIAL_RELAY_BRAND` = `BDTEST` for now (see
-     section 9)
-5. Deploy. The first deployment answers on
-   `racines-en-partage.<account>.workers.dev`. Open it on a phone and check
-   the home page, `/boutique/`, a product page and `/api/health`.
-6. Settings, Builds: enable preview builds for branches other than `main` if
-   needed.
+### 2.1 Account
 
-Free plan: 100,000 Worker requests per day. Only `/api/*` runs the Worker
-first (`run_worker_first`); whether static asset requests count against that
-limit is to verify on the Cloudflare pricing page. A small shop is far below
-it either way.
+1. `dash.cloudflare.com/sign-up`: `racinesenpartage@gmail.com`, a Bitwarden
+   password, verification link in Gmail, plan **Free**. Do not add the
+   domain here (section 4).
 
-Cloudflare Web Analytics is cookieless and optional: Analytics & Logs, Web
-Analytics, add the site. It needs no cookie banner.
+   Created with "Continue with Google"? There is no Cloudflare password, and
+   two-factor needs one: log out, `dash.cloudflare.com/login` > **Forgot
+   your password?** > the address > follow the e-mail (up to 20 minutes).
+   Sign in with e-mail and password from then on.
+
+2. Two-factor: profile menu (top right) > **My Profile** > **Authentication**
+   > **Add** next to **Mobile App Authentication**. Save the setup key and
+   > the backup codes in Bitwarden.
+3. Account name: **Configurations** > **Account Name** > **Change Name** >
+   `Racines en Partage` (unverified).
+4. **Workers & Pages** > **Change** next to **Your subdomain** >
+   `racinesenpartage`. Test address:
+   `https://racines-en-partage.racinesenpartage.workers.dev`.
+5. Optional developer seat: **Members** > **Invite members** > the
+   developer's own Cloudflare e-mail > scope **All resources** (entire
+   account) > role **Administrator** (not "Super Administrator") > **Invite**.
+   The invitee turns two-factor on before accepting.
+
+### 2.2 Connect the repository
+
+1. **Workers & Pages** > **Create application** > **GitHub**. On GitHub, app
+   "Cloudflare Workers and Pages": account `ngawang21` > **Only select
+   repositories** > `racines-en-partage` > **Install & Authorize**. Repository
+   missing from Cloudflare's list? `github.com/settings/installations` >
+   **Configure** > **Repository access**.
+2. Fill the form:
+
+   | Field                            | Value                                   | Why                                                       |
+   | -------------------------------- | --------------------------------------- | --------------------------------------------------------- |
+   | Project (Worker) name            | `racines-en-partage`                    | Must equal `name` in `wrangler.jsonc`, or the build fails |
+   | Build command                    | `pnpm build`                            | Writes `dist/`                                            |
+   | Deploy command                   | `npx wrangler deploy` (default)         | Uses the wrangler of `package.json`                       |
+   | Preview (non-production) command | default                                 | Preview builds are turned off in step 4                   |
+   | Root directory                   | empty or `/`                            |                                                           |
+   | Production branch                | `main`                                  |                                                           |
+   | API token                        | created automatically                   |                                                           |
+   | Build variables                  | `PUBLIC_MONDIAL_RELAY_BRAND` = `BDTEST` | Read by Astro at build time; Marie's code later (9.1)     |
+
+   Leave `NODE_VERSION` and `PNPM_VERSION` unset: the image reads `.nvmrc`
+   (22) and `packageManager` (`pnpm@9.15.4`). Runtime secrets go in
+   section 3, not here.
+
+3. **Save and Deploy**.
+4. Worker > **Settings** > **Build** > **Branch control**: untick **Enable
+   Preview Builds**. Leave **Build watch paths** at `*`.
+
+**Check:** the build log shows the pnpm install, `65 page(s) built` and the
+`workers.dev` URL. On a phone: home, `/boutique/`, a product page,
+`/api/health` (`{"ok":true,...}`). Checkout and forms answer errors until
+sections 3, 6 and 8 are done; the relay map works with `BDTEST`.
+
+Build history: Worker > **Deployments** > **View build history**. To
+rebuild without a change, push a commit (a retry button on a build may also
+exist; unverified).
+
+### 2.3 Free plan
+
+| Limit                | Free plan                                         | The shop                                                                                                                                                                       |
+| -------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Worker requests      | 100,000 a day                                     | Only `/api/*` runs the Worker (`run_worker_first`); static assets are free and not counted. Over the limit `/api/*` answers 429.                                               |
+| CPU time per request | 10 ms (waiting on Stripe, Resend, GitHub is free) | Not measured yet: during 8.2, read the CPU time of the webhook, checkout and cron calls in Worker > **Observability**. Over it: error 1102, then Workers Paid (5 USD a month). |
+| Builds               | 3,000 min a month, one at a time, 20 min max      | One build takes about 3 minutes                                                                                                                                                |
+| Cron triggers        | 5 per account                                     | 1                                                                                                                                                                              |
+
+Web Analytics (cookieless, no banner) once the zone is active: **Web
+Analytics** > **Add a site** > hostname `racinesenpartage.fr` > **Done** >
+**Manage site** > **Enable with JS Snippet installation**. Never the
+automatic injection: the site loads the beacon itself under its CSP. Copy
+the token from the snippet into the CMS settings,
+`analytics.cloudflareToken`.
 
 ## 3. Secrets and variables
 
-Set in Workers & Pages, `racines-en-partage`, Settings, Variables and
-Secrets. Saving a secret deploys a new version of the Worker.
+**Who:** Dev. **Where:** **Workers & Pages** > `racines-en-partage` >
+**Settings** > **Variables and Secrets** > **Add** > type **Secret** > name
+and value > **Deploy**. Each deploy makes a new Worker version.
 
-| Name                          | Kind             | Value                                                                                                   | Comes from |
-| ----------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------- | ---------- |
-| `STRIPE_SECRET_KEY`           | secret           | `sk_test_...` first, then `sk_live_...`                                                                 | Section 8  |
-| `STRIPE_WEBHOOK_SECRET`       | secret           | `whsec_...` of the endpoint in the same mode as the key                                                 | Section 8  |
-| `RESEND_API_KEY`              | secret, optional | `re_...`                                                                                                | Section 6  |
-| `ORDER_EMAIL_TO`              | secret           | `racinesenpartage@gmail.com`                                                                            | Marie      |
-| `SITE_URL`                    | variable         | `https://racinesenpartage.fr`                                                                           | Fixed      |
-| `ORDER_EMAIL_FROM`            | variable         | `Racines en Partage <commandes@racinesenpartage.fr>` (display name and address, as in `wrangler.jsonc`) | Section 6  |
-| `PUBLIC_MONDIAL_RELAY_BRAND`  | build variable   | `BDTEST`, then Marie's client code                                                                      | Section 9  |
-| `FORMS_SECRET`                | secret           | 32 random bytes, base64 (`openssl rand -base64 32`)                                                     | Section 13 |
-| `TURNSTILE_SECRET_KEY`        | secret           | Secret key of the Turnstile widget; without it the contact and newsletter forms answer 404              | Section 14 |
-| `RESEND_AUDIENCE_ID`          | secret, optional | Id of the newsletter audience in Resend                                                                 | Section 15 |
-| `GITHUB_TOKEN`                | secret           | Fine-grained token, contents read and write on this repository only                                     | Section 16 |
-| `GITHUB_REPO`                 | variable         | `ngawang21/racines-en-partage` (in `wrangler.jsonc`)                                                    | Section 16 |
-| `FORMS_DAILY_LIMIT`           | variable         | `60` e-mails a day from the forms (in `wrangler.jsonc`)                                                 | Section 18 |
-| `FORMS_KV`                    | KV binding       | Namespace of the daily form budget (in `wrangler.jsonc`)                                                | Section 18 |
-| `FORMS_ALLOW_WITHOUT_CAPTCHA` | `.dev.vars` only | `true` skips Turnstile locally; never in the dashboard or `wrangler.jsonc`                              | Section 14 |
+Set them as their source becomes ready:
+
+| When              | Names                                                                 |
+| ----------------- | --------------------------------------------------------------------- |
+| Now               | `ORDER_EMAIL_TO`, `FORMS_SECRET` (section 13)                         |
+| With section 16   | `GITHUB_TOKEN`                                                        |
+| After section 6   | `RESEND_API_KEY`                                                      |
+| After section 8.2 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (test), live ones in 8.3 |
+| After section 14  | `TURNSTILE_SECRET_KEY`, only once the CMS site key is saved           |
+| After section 15  | `RESEND_AUDIENCE_ID`                                                  |
+
+| Name                          | Kind             | Value                                                                        | Section |
+| ----------------------------- | ---------------- | ---------------------------------------------------------------------------- | ------- |
+| `STRIPE_SECRET_KEY`           | secret           | `sk_test_...` (sandbox) first, then `sk_live_...`                            | 8       |
+| `STRIPE_WEBHOOK_SECRET`       | secret           | `whsec_...` of the destination in the same mode as the key                   | 8       |
+| `RESEND_API_KEY`              | secret           | `re_...`, **Full access** (the newsletter adds contacts)                     | 6       |
+| `ORDER_EMAIL_TO`              | secret           | `racinesenpartage@gmail.com`                                                 | Marie   |
+| `FORMS_SECRET`                | secret           | `openssl rand -base64 32`                                                    | 13      |
+| `TURNSTILE_SECRET_KEY`        | secret           | Turnstile secret key; without it the contact and newsletter forms answer 404 | 14      |
+| `RESEND_AUDIENCE_ID`          | secret, optional | Id of the newsletter segment in Resend                                       | 15      |
+| `GITHUB_TOKEN`                | secret           | Fine-grained token, Contents read and write on this repository only          | 16      |
+| `SITE_URL`                    | variable         | `https://racinesenpartage.fr` (in `wrangler.jsonc`)                          | Fixed   |
+| `ORDER_EMAIL_FROM`            | variable         | `Racines en Partage <commandes@racinesenpartage.fr>` (in `wrangler.jsonc`)   | 6       |
+| `GITHUB_REPO`                 | variable         | `ngawang21/racines-en-partage` (in `wrangler.jsonc`)                         | 16      |
+| `FORMS_DAILY_LIMIT`           | variable         | `60` (in `wrangler.jsonc`)                                                   | 18      |
+| `FORMS_KV`                    | KV binding       | Daily form budget namespace (in `wrangler.jsonc`)                            | 18      |
+| `PUBLIC_MONDIAL_RELAY_BRAND`  | build variable   | `BDTEST`, then Marie's client code                                           | 9       |
+| `FORMS_ALLOW_WITHOUT_CAPTCHA` | `.dev.vars` only | `true` skips Turnstile locally; never in the dashboard or `wrangler.jsonc`   | 14      |
+
+**Check:** **Variables and Secrets** lists each name; secrets show no value.
 
 Notes:
 
-1. `SITE_URL`, `ORDER_EMAIL_FROM`, `GITHUB_REPO` and `FORMS_DAILY_LIMIT`
-   are also declared under `vars` in `wrangler.jsonc`. On each deploy, Wrangler applies the values from the
-   file, so change them in the file, not only in the dashboard (to verify
-   against the final `wrangler.jsonc`; secrets are never in the file).
-2. `PUBLIC_MONDIAL_RELAY_BRAND` is read by Astro at build time. It goes in
-   Settings, Builds, Variables and secrets, not in the runtime variables. A
-   change needs a new build (Deployments, Retry, or any push).
-3. Without `RESEND_API_KEY`, the webhook logs the order summary and still
-   answers 200. Marie then relies on Stripe's own receipt and dashboard.
-4. Customer e-mails carry the reply-to `racinesenpartage@gmail.com`, so a
-   customer who answers reaches Marie's inbox.
-5. Local development: copy `.dev.vars.example` to `.dev.vars` (git ignored),
-   fill test values, run `pnpm dev:worker`.
-6. Rate limiting needs no dashboard step: the three bindings
-   `CHECKOUT_LIMITER` (10 requests per minute and IP on `POST /api/checkout`),
-   `ORDERS_LIMITER` (30 per minute on `GET /api/orders/:id` and
-   `POST /api/orders/lookup`) and `FORMS_LIMITER` (10 per minute on the
-   contact, newsletter and review endpoints) are declared under `ratelimits`
-   in `wrangler.jsonc` and created on deploy. They are
-   free. Over the limit the API answers `429 RATE_LIMITED` with
-   `Retry-After: 60` (`worker/README.md`, Rate limiting). The alternative,
-   if the bindings are ever unavailable, is a Cloudflare WAF rate limiting
-   rule (Security, WAF, Rate limiting rules) on the same paths; without
-   either, the Worker simply does not limit.
+1. Variables declared in `wrangler.jsonc` (`SITE_URL`, `ORDER_EMAIL_FROM`,
+   `GITHUB_REPO`, `FORMS_DAILY_LIMIT`) are reapplied from the file on every
+   deploy: change them in the file, never only in the dashboard. Secrets
+   are never in the file.
+2. `PUBLIC_MONDIAL_RELAY_BRAND` is a build variable: Worker > **Settings** >
+   **Build** > **Build variables and secrets**. A change needs a new build
+   (push a commit).
+3. Without `RESEND_API_KEY` the webhook logs the order summary and still
+   answers 200; Marie then relies on Stripe's receipt and dashboard.
+4. Customer e-mails carry the reply-to `racinesenpartage@gmail.com`.
+5. Local development: copy `.dev.vars.example` to `.dev.vars` (git
+   ignored), fill test values, `pnpm dev:worker`.
+6. Rate limiting needs no dashboard step: `CHECKOUT_LIMITER` (10 a minute
+   per IP on `POST /api/checkout`), `ORDERS_LIMITER` (30 a minute on
+   `GET /api/orders/:id` and `POST /api/orders/lookup`) and `FORMS_LIMITER`
+   (10 a minute on contact, newsletter and review endpoints) are declared
+   under `ratelimits` in `wrangler.jsonc`, created on deploy, free. Over the
+   limit: `429 RATE_LIMITED`, `Retry-After: 60` (`worker/README.md`). If the
+   bindings were ever unavailable, the fallback is a zone rule: **Security
+   rules** > **Create rule** > **Rate limiting rules** on the same paths.
 7. A feature whose secret is missing answers `404 FEATURE_DISABLED` and logs
-   `config.missing` with the name: the newsletter without `FORMS_SECRET`,
+   `config.missing` with the name: newsletter without `FORMS_SECRET`,
    `RESEND_API_KEY` or `RESEND_AUDIENCE_ID`; reviews without `FORMS_SECRET`
-   or `GITHUB_TOKEN`; the contact form without `ORDER_EMAIL_TO` or
-   `RESEND_API_KEY`; the contact and newsletter forms without
-   `TURNSTILE_SECRET_KEY` (section 14). The owner's
-   switches in the CMS settings act too, after the rebuild that her save
-   triggers: `newsletter.enabled` false hides the signup blocks and turns
-   the newsletter endpoints off; `reviews.enabled` false hides the reviews,
-   turns `POST /api/reviews` off and stops the invitations
-   (`catalog.json`, `features`).
+   or `GITHUB_TOKEN`; contact form without `ORDER_EMAIL_TO` or
+   `RESEND_API_KEY`; contact and newsletter forms without
+   `TURNSTILE_SECRET_KEY`. Marie's CMS switches act too, after the rebuild
+   her save triggers: `newsletter.enabled` false hides the signup blocks and
+   turns the newsletter endpoints off; `reviews.enabled` false hides the
+   reviews, turns `POST /api/reviews` off and stops the invitations.
 
 ## 4. Domain at OVHcloud, DNS at Cloudflare
 
-`racinesenpartage.fr` was available on 2026-11-01, as were
-`racines-en-partage.fr` and `racines-en-partage.com`. Registration costs
-about 7 to 10 EUR per year.
+**Who:** Dev (Marie paid). **Order:** 4.2 and 4.3 now, 4.4 once the DS
+record is gone, then wait for 4.5. Sections 3 and 6 can go on meanwhile.
 
-1. With Marie: create her OVHcloud customer account (her e-mail, her
-   business as the account holder).
-2. Order `racinesenpartage.fr` from her account. Registrant: her business
-   (name, SIREN, address). Technical contact: the developer. Turn on
-   automatic renewal with her payment method.
-3. Optional, her choice: also register `racines-en-partage.fr` and
-   `racines-en-partage.com` and redirect them to the main domain (each about
-   the same yearly price; to verify at order time).
-4. Cloudflare, Add a domain, `racinesenpartage.fr`, Free plan. Cloudflare
-   shows two nameservers.
-5. OVHcloud control panel, Web Cloud, Domain names, `racinesenpartage.fr`,
-   tab "DNS servers", Modify: replace both OVHcloud nameservers with the two
-   Cloudflare ones.
-6. DNSSEC, optional: enable it on Cloudflare (DNS, Settings) and paste the DS
-   record in the OVHcloud "DNSSEC" tab. If OVHcloud refuses it, leave it off;
-   the site works without it.
-7. Wait for Cloudflare's e-mail saying the zone is active (usually one hour,
-   up to 24 hours).
+State on 2026-11-15: `racinesenpartage.fr` is registered at OVHcloud on
+Marie's account (type Entreprise), 3 years for 18.70 EUR TTC, renewal in
+November 2029 at 7.79 EUR HT a year. Included options kept: DNSSEC and a
+Zimbra Starter mailbox (unused). The domain still uses OVHcloud's servers
+(`dns103.ovh.net`, `ns103.ovh.net`) with parking records, and DNSSEC is on
+(DS key tag 57304, algorithm 8).
+
+### 4.1 OVHcloud account (done)
+
+1. Type **Entreprise**; legal name and SIRET from the SIRENE register, kept
+   as is. Under the VAT exemption (art. 293 B du CGI), tick "My business is
+   not registered for VAT": the VAT number OVHcloud shows is only computed
+   from the SIREN. In doubt, check it on `ec.europa.eu/taxation_customs/vies`.
+2. Two-factor: name (top right) > **Mon compte** > **Sécurité** > **Activer
+   la double authentification** > **Application Mobile** > **Suivant** >
+   **Afficher le secret** (copy it into Bitwarden) > scan > enter a code.
+   Save the 10 backup codes in Bitwarden. At handover: add Marie's app and
+   SMS to her number, delete the developer's device (**...** >
+   **Supprimer**), regenerate the backup codes.
+3. Administrator, technical and billing contacts all stay on this account.
+4. Automatic renewal, once Marie's card is under **Moyens de paiement**:
+   **Mes offres & services** > **...** on the domain row > **Configurer le
+   renouvellement** > **Automatique** > **Validez et payez**.
+
+### 4.2 Turn DNSSEC off at OVHcloud
+
+OVHcloud applies a nameserver change only once DNSSEC is off, and a DS
+record left at the registry breaks the domain for validating resolvers.
+
+1. **Web Cloud** > **Noms de domaine** > `racinesenpartage.fr` > tab
+   **Informations générales** > box **Sécurité** > turn **Délégation
+   sécurisée - DNSSEC** off > confirm. It takes up to 24 hours.
+2. **Check:** this prints nothing. Then wait one more hour (the registry
+   caches the DS for 3,600 seconds).
+
+   ```sh
+   dig +short DS racinesenpartage.fr
+   ```
+
+### 4.3 Add the zone in Cloudflare
+
+Can be done at once; the zone simply waits in "pending".
+
+1. **Domains** > **Onboard a domain** > `racinesenpartage.fr` (no `www`).
+2. DNS records: choose to **enter them manually** and add **none**. A quick
+   scan would import OVHcloud's parking records (A `213.186.33.5` on the
+   apex and `www`, MX `mx1`/`mx2`/`mx3.mail.ovh.net`, TXT
+   `v=spf1 include:mx.ovh.com -all`, TXT `1|www.racinesenpartage.fr`). They
+   block the Worker custom domain (section 5) and Email Routing, which
+   refuses to start while foreign MX records exist (error 2008). If the scan
+   ran anyway: **DNS** > **Records** > delete every imported record.
+3. AI crawler options, if shown: do not block AI crawlers, do not let
+   Cloudflare manage `robots.txt` (the site serves its own).
+4. Plan **Free** > **Continue**. Copy the two nameservers
+   (`<name>.ns.cloudflare.com`) exactly. Skip the SSL/TLS suggestions.
+
+**Check:** the zone shows **Pending Nameserver Update**. A Free zone not
+active within 28 days is deleted.
+
+### 4.4 Switch the nameservers at OVHcloud
+
+Only after 4.2's check passes.
+
+1. **Web Cloud** > **Noms de domaine** > `racinesenpartage.fr` > tab
+   **Serveurs DNS** > **Modifier les serveurs DNS** (right of the table, or
+   below it on a narrow screen).
+2. **Option 2 : Utiliser mes propres DNS (ou ceux d'un autre fournisseur
+   DNS)**.
+3. **Serveur DNS**: first Cloudflare nameserver, **IP associée** empty >
+   **+** > second nameserver. Remove `dns103.ovh.net` and `ns103.ovh.net`
+   if still listed.
+4. **Appliquer la configuration** > check the summary > **Appliquer**.
+   Progress: **Opérations en cours**.
+
+### 4.5 Activation
+
+1. Cloudflare rechecks by itself; the zone **Overview** has a button to
+   check now. Usually active within 1 to 2 hours, at most 24; Cloudflare
+   e-mails the Gmail inbox.
+2. **Check:** the zone shows **Active**, and:
+
+   ```sh
+   dig +short NS racinesenpartage.fr   # only the two Cloudflare nameservers
+   dig +short DS racinesenpartage.fr   # nothing
+   dig +trace racinesenpartage.fr NS +noall +authority +nodnssec | tail -3
+   ```
+
+   Stuck in Pending: a mistyped nameserver, an OVHcloud server left in the
+   list, or a DS record still published.
+
+### 4.6 DNSSEC through Cloudflare (optional, once active)
+
+1. Cloudflare: **DNS** > **Settings** > card **DNSSEC** > **Enable DNSSEC**.
+   The dialog shows the values (later: **DS record** on the same card).
+2. OVHcloud: **Noms de domaine** > `racinesenpartage.fr` > tab **DS
+   Records** (shown only with external nameservers) > **Ajouter**:
+
+   | OVHcloud field                   | Value from Cloudflare                      |
+   | -------------------------------- | ------------------------------------------ |
+   | Key Tag                          | Key Tag                                    |
+   | Flag                             | Flags, `257`                               |
+   | Algorithme                       | Algorithm, `13` (ECDSA P-256 with SHA-256) |
+   | Clé publique (encodée en base64) | **Public Key**, not the Digest             |
+
+3. **Valider**. If OVHcloud refuses it, leave DNSSEC off; the site works
+   without it.
+
+**Check:** `dig +short DS racinesenpartage.fr` shows the new key tag with
+algorithm 13.
+
+### 4.7 Optional extra domains
+
+`racines-en-partage.fr` and `racines-en-partage.com` were free on
+2026-11-01. Marie may register them later (about 10 EUR a year each) and
+point them at the main domain with a redirect rule (section 5, step 3).
 
 ## 5. Custom domain and www redirect
 
-1. Worker `racines-en-partage`, Settings, Domains & Routes, Add, Custom
-   domain: `racinesenpartage.fr`. Repeat for `www.racinesenpartage.fr`.
-2. Rules, Redirect rules: redirect `www.racinesenpartage.fr/*` to
-   `https://racinesenpartage.fr/${1}`, status 301, preserve the query string.
-   Keep one host only: the Stripe success and cancel URLs, the webhook and
-   the canonical URLs all use the apex.
-3. Check `https://racinesenpartage.fr/` (padlock),
-   `https://www.racinesenpartage.fr/boutique/` (redirects to the apex) and
-   `https://racinesenpartage.fr/sitemap-index.xml`.
-4. Once the custom domain serves the shop and the go-live order has passed
-   (section 12), close the `workers.dev` address: until then the whole shop,
-   `/api/*` included, also answers on
-   `racines-en-partage.<account>.workers.dev`, the Worker accepts that host
-   as an origin and sends Stripe customers back to it. Before closing it,
-   check that both Stripe webhook endpoints (test and live) use
-   `https://racinesenpartage.fr/api/webhooks/stripe` and that the Turnstile
-   widget no longer lists the `workers.dev` host. Then add to
+**Who:** Dev. **Needs:** zone Active (4.5). 10 minutes.
+
+1. Apex: **Workers & Pages** > `racines-en-partage` > **Settings** >
+   **Domains & Routes** > **Add** > **Custom Domain** >
+   `racinesenpartage.fr` > **Add Custom Domain**. Cloudflare creates the DNS
+   record and the certificate; the name must have no CNAME, A or AAAA
+   record of its own.
+2. `www` placeholder record, so the redirect has something to answer on:
+   **DNS** > **Records** > **Add record** > Type **A**, Name `www`, IPv4
+   `192.0.2.1` (a reserved address, never reached), Proxy status
+   **Proxied** > **Save**. `www` is not attached to the Worker.
+3. Redirect: **Rules** > **Overview** > **Create rule** > **Redirect Rule**
+   (the template "Redirect from WWW to root" fills the same fields):
+   - Rule name: `www to apex`
+   - When incoming requests match: **Wildcard pattern**, Request URL
+     `https://www.racinesenpartage.fr/*`
+   - Then: Target URL `https://racinesenpartage.fr/${1}`, Status code
+     **301**, **Preserve query string** on
+   - **Deploy**
+4. **SSL/TLS** > **Edge Certificates** > **Always Use HTTPS**: on
+   (sends `http://` to `https://` before the redirect rule).
+
+Only the apex is used: the Stripe return URLs, the webhook and the
+canonical URLs all point to it.
+
+**Check:** `https://racinesenpartage.fr/` shows the padlock;
+`https://www.racinesenpartage.fr/boutique/?a=1` lands on
+`https://racinesenpartage.fr/boutique/?a=1`;
+`https://racinesenpartage.fr/sitemap-index.xml` and `/api/health` answer.
+
+5. Later, after the go-live order (section 12, step 17): close the
+   `workers.dev` address. Until then the whole shop, `/api/*` included,
+   also answers on `racines-en-partage.racinesenpartage.workers.dev`, the
+   Worker accepts it as an origin and sends Stripe customers back to it.
+   Before closing it, check that both Stripe webhook destinations (sandbox
+   and live) use `https://racinesenpartage.fr/api/webhooks/stripe` and that
+   the Turnstile widget no longer lists the `workers.dev` host. Then add to
    `wrangler.jsonc`, next to `"main"`:
 
    ```jsonc
    "workers_dev": false,
-   // Keep the per-version preview URLs for branch tests (verify they stay on).
+   // Keep the per-version preview URLs ("Version URLs" in the dashboard).
    "preview_urls": true,
    ```
 
-   Commit and push (a toggle in the dashboard would be undone by the next
-   deploy, which applies `wrangler.jsonc`). Check:
-   `curl -sI https://racines-en-partage.<account>.workers.dev/api/health`
-   no longer answers 200, and `https://racinesenpartage.fr/api/health` still
-   does. Do not set it earlier: phase C of `docs/launch-runbook.md` tests on
-   that address before the domain exists.
+   Commit and push (the dashboard toggle would be undone by the next
+   deploy). **Check:**
+   `curl -sI https://racines-en-partage.racinesenpartage.workers.dev/api/health`
+   no longer answers 200; `https://racinesenpartage.fr/api/health` still
+   does. Not earlier: phase C of `docs/launch-runbook.md` tests on that
+   address before the domain exists.
 
 ## 6. Resend: sending domain
 
-Free tier: 3,000 e-mails per month, 100 per day. Each paid order sends two
-e-mails (Marie and the customer), so the daily ceiling is about 50 orders.
+**Who:** Dev. **Needs:** zone Active (4.5) for the DNS records; the account
+can be opened before. Free plan: 100 e-mails a day, 3,000 a month, 1,000
+newsletter contacts. Each order sends two e-mails (Marie and the customer),
+so about 50 orders a day.
 
-1. Create a Resend account with `racinesenpartage@gmail.com` (Marie owns
-   it; team access for the developer to verify on the free plan).
-2. Domains, Add domain: `racinesenpartage.fr` (choose an EU region if
-   offered; to verify).
-3. Resend lists the DNS records to create (DKIM, SPF, and usually an MX for
-   the bounce subdomain). In Cloudflare, DNS, Records, add each one exactly
-   as shown. TXT and MX records are never proxied.
-4. Add a DMARC record if Resend does not provide one: TXT on `_dmarc` with
-   `v=DMARC1; p=none;` to start.
-5. Only one SPF record may exist per name. If Resend's SPF lands on the apex
-   and collides with Email Routing's (section 7), merge them into one
-   `v=spf1 ... ~all` record.
-6. Back in Resend, Verify. Status must turn "Verified".
-7. API Keys, Create: permission "Sending access", domain
-   `racinesenpartage.fr`. Paste it into `RESEND_API_KEY` (section 3).
+1. `resend.com/signup` with `racinesenpartage@gmail.com` and a Bitwarden
+   password.
+2. **Domains** > **Add Domain** > `racinesenpartage.fr` > region
+   **eu-west-1 (Ireland)** > leave the Return-Path subdomain at `send` >
+   **Add**.
+3. DNS records, either way:
+   - **Sign in to Cloudflare** on the domain page (Domain Connect) and
+     approve; Resend writes the records itself.
+   - Or by hand, in Cloudflare **DNS** > **Records** > **Add record**, each
+     exactly as Resend shows it, names without the domain, Proxy status
+     **DNS only**: TXT `resend._domainkey` (DKIM), MX `send` and TXT `send`
+     (SPF `v=spf1 include:amazonses.com ~all`).
+4. DMARC (Gmail expects it): **Add record** > TXT, Name `_dmarc`, Content
+   `v=DMARC1; p=none;`.
+5. Resend > the domain > **Verify DNS Records**.
+6. **API Keys** > **Create API Key** > name `racines-en-partage worker` >
+   permission **Full access** (a "Sending access" key cannot add newsletter
+   contacts) > **Add**. Copy it into `RESEND_API_KEY` (section 3); it is
+   shown once.
 
-Sender: `commandes@racinesenpartage.fr`. Reply-to:
-`racinesenpartage@gmail.com`.
+**Check:** the domain shows **Verified** (usually within 15 minutes; after
+72 hours use **Restart verification**).
+
+Resend's SPF lives on `send.racinesenpartage.fr`, Email Routing's on the
+apex (section 7): they do not collide. Sender `commandes@racinesenpartage.fr`,
+reply-to `racinesenpartage@gmail.com`.
 
 ## 7. Cloudflare Email Routing for contact@
 
-Free. Lets the site show `contact@racinesenpartage.fr` while mail lands in
-Marie's Gmail.
+**Who:** Dev, Marie clicks one e-mail. **Needs:** zone Active, no OVHcloud
+MX left (4.3). Free. The site shows `contact@racinesenpartage.fr`, mail
+lands in Marie's Gmail.
 
-1. Cloudflare, `racinesenpartage.fr`, Email, Email Routing, Get started.
-2. Destination address: `racinesenpartage@gmail.com`. Marie clicks the
-   confirmation link she receives.
-3. Custom addresses: `contact@racinesenpartage.fr` to that destination. Add
-   `commandes@racinesenpartage.fr` too, so a customer who writes to the
-   sender address is not lost.
-4. Cloudflare adds its MX and SPF records. Check them against section 6,
-   step 5.
-5. Ask Marie to add `commandes@racinesenpartage.fr` to her Gmail contacts
-   after the first test order, and to mark it "Not spam" if needed.
+1. **Compute** > **Email Service** > **Email Routing** > **Onboard Domain**
+   > `racinesenpartage.fr`. Cloudflare adds and locks its records: MX
+   > `route1`, `route2`, `route3.mx.cloudflare.net`, TXT
+   > `v=spf1 include:_spf.mx.cloudflare.net ~all` on the apex, and a DKIM TXT
+   > `cf2024-1._domainkey`.
+2. **Destination Addresses** > `racinesenpartage@gmail.com`. Marie clicks
+   **Verify** in the e-mail she receives.
+3. **Routing Rules** > **Create routing rule** > `contact` @
+   `racinesenpartage.fr` > Action **Send to an email** > the Gmail address >
+   **Save**. Repeat for `commandes`, so a customer who answers the sender
+   address is not lost.
+4. After the first test order, Marie adds `commandes@racinesenpartage.fr` to
+   her Gmail contacts and marks it "Not spam" if needed.
+
+**Check:** a message from another mailbox to `contact@racinesenpartage.fr`
+reaches the Gmail inbox.
 
 ## 8. Stripe
 
 Pricing (France, standard): 1.5 % + 0.25 EUR per payment with an EEA card,
-no monthly fee. Some sources give 1.4 % for non-French EEA cards: to verify on
-stripe.com/fr/pricing.
+2.5 % + 0.25 EUR UK cards, 3.15 % + 0.25 EUR other cards (+2 % if currency
+conversion). No monthly fee. Stripe now calls test mode a **sandbox**.
 
 ### 8.1 Account (Marie)
 
-1. Marie creates the account at dashboard.stripe.com with her e-mail. Only
-   she can activate it: identity, business details (SIREN, legal form),
-   IBAN for payouts.
-2. Statement descriptor: `RACINES EN PARTAGE` (what customers see on their
-   bank statement).
-3. She invites the developer: Settings, Team, role Developer.
-4. Settings, Branding: medallion logo, brand colour `#163a1c`, accent
-   `#e03a3a`. This styles the hosted Checkout page.
-5. Settings, Payment methods: cards on; Apple Pay and Google Pay on.
-   Methods that confirm later (bank debits) work with the webhook
-   (`checkout.session.async_payment_succeeded`) but delay the order e-mail
-   until the funds clear. Keep cards and wallets only at launch.
-6. Settings, Customer emails: enable receipts for successful payments (and
-   for refunds). This is the fallback if Resend fails.
+**Who:** Marie in person, with the developer. 30 minutes.
 
-### 8.2 Test mode
+1. `dashboard.stripe.com/register` with her e-mail. Only she can activate
+   it: identity, business details (SIREN, micro-entreprise), IBAN for
+   payouts (any French IBAN, Hello bank included).
+2. Statement descriptor (5 to 22 characters): **Settings** > **Business** >
+   **Business details** > **Public details** (unverified) >
+   `RACINES EN PARTAGE`.
+3. Developer access: **Settings** > **Team** > **Add member** > developer's
+   e-mail > role **Developer** > **Send invites** (valid 10 days).
+4. **Settings** > **Business** > **Branding**: medallion logo, brand colour
+   `#163a1c`, accent `#e03a3a` (styles the Checkout page and receipts).
+5. **Settings** > **Payments** > **Payment methods** (unverified): cards,
+   Apple Pay, Google Pay on; keep bank debits off at launch (they delay the
+   order e-mail until funds clear).
+6. **Settings** > **Business** > **Customer emails** > **Payments**:
+   **Successful payments** and **Refunds** on. This is the fallback if
+   Resend fails. Sandbox payments send no automatic receipt.
 
-1. Switch the dashboard to test mode. Developers, API keys: copy the secret
-   key `sk_test_...` into `STRIPE_SECRET_KEY`.
-2. Developers, Webhooks (the menu may be called Workbench; to verify), Add
-   endpoint:
-   - URL: `https://racinesenpartage.fr/api/webhooks/stripe` (before the
-     domain is live, use the `workers.dev` URL and change it later)
-   - Events: `checkout.session.completed`,
-     `checkout.session.async_payment_succeeded` and
-     `checkout.session.async_payment_failed` (the last one only writes a
-     log line, `order.payment_failed`, should a bank debit ever be enabled)
-3. Reveal the signing secret `whsec_...` and paste it into
+**Check:** the dashboard home says payments are enabled (or lists what is
+still missing).
+
+### 8.2 Sandbox (test)
+
+**Who:** Dev. **Needs:** 8.1 step 3.
+
+1. Account picker (top left) > **Sandboxes** > open the sandbox (create one
+   if none).
+2. **Developers** > **API keys** > **Secret key** > reveal > copy
+   `sk_test_...` into `STRIPE_SECRET_KEY` (section 3).
+3. Webhook: **Developers** > **Workbench** > **Webhooks** > **Create an
+   event destination** (also labelled **Add destination**):
+   - **Your account** > payload **Snapshot** (keep the API version shown)
+   - events `checkout.session.completed`,
+     `checkout.session.async_payment_succeeded`,
+     `checkout.session.async_payment_failed` (the last only logs
+     `order.payment_failed`) > **Continue**
+   - **Webhook endpoint** > **Continue** > Endpoint URL
+     `https://racinesenpartage.fr/api/webhooks/stripe` (before the domain is
+     live, the `workers.dev` URL; change it later) > create
+4. On the destination page: **Reveal secret** > copy `whsec_...` into
    `STRIPE_WEBHOOK_SECRET`.
-4. Test checklist, on the deployed site:
-   1. Order two products with Point Relais, card `4242 4242 4242 4242`, any
-      future expiry date, any CVC.
-   2. The browser lands on `/merci/` with the order number and the relay
-      point. The cart is empty.
-   3. Stripe, Webhooks, the endpoint: the event shows HTTP 200.
-   4. Marie's Gmail receives the order e-mail (French) with lines, totals,
-      customer phone and the relay point block (name, address, ID).
-   5. The customer address receives its e-mail in the checkout language.
-   6. Repeat with "Livraison à domicile" (Stripe asks for the address) and
-      with "Retrait" (no address).
-   7. Repeat once in English from `/en/`.
-   8. Card `4000 0027 6000 3184` (strong authentication) passes after the
-      test challenge; card `4000 0000 0000 0002` is declined with a clear
-      message on Stripe's page.
-   9. "Back" on the Stripe page returns to `/panier/` with the cart intact.
-   10. Create a test promo code (section 8.4) and use it once.
-   11. Refund the first test payment from the dashboard.
-   12. Send-once markers. Every "send once" guard of the Worker (order
-       e-mails, review invitations, "already reviewed") is a metadata key
-       written on the completed Checkout Session; the tests use a fake
-       Stripe, so check it once for real. Take the session id `cs_test_...`
-       of the first test order (the `session_id` in the `/merci/` address).
-       Workbench (Developers), Logs (menu names to verify): the request
-       `POST /v1/checkout/sessions/cs_test_...` answers 200 and its response
-       `metadata` holds `"emails_sent": "true"` next to `delivery_method`.
-       The same from a terminal with the Stripe CLI:
-       `stripe checkout sessions retrieve cs_test_...`. Workers & Pages, the
-       Worker, Logs must show no `order.mark_failed` line for that session.
-       A 400 on that request, or an `order.mark_failed` line, means Stripe
-       refuses the update: stop, nothing is idempotent until it is solved.
-       The other markers are checked in section 12, step 16:
-       `review_invited` (the invitation run; a refusal logs
-       `review.mark_failed` and sends no invitation) and `reviewed_<SKU>`, for
-       example `reviewed_REP-MOR-100` (a submitted review; a refusal logs
-       `review.mark_failed`, harmless since the review file decides).
+5. Test on the deployed site:
+   1. Two products, Point Relais, card `4242 4242 4242 4242`, any future
+      date, any CVC.
+   2. `/merci/` shows the order number and the relay point; the cart is
+      empty.
+   3. Workbench > **Webhooks** > the destination > **Event deliveries**:
+      HTTP 200.
+   4. Marie's Gmail receives the French order e-mail: lines, totals, phone,
+      relay block (name, address, ID).
+   5. The customer receives its e-mail in the checkout language.
+   6. Repeat with "Livraison à domicile" (Stripe asks the address) and
+      "Retrait" (no address).
+   7. Once in English from `/en/`.
+   8. Card `4000 0027 6000 3184` passes after the test challenge; card
+      `4000 0000 0000 0002` is declined with a clear message.
+   9. "Back" on Stripe's page returns to `/panier/` with the cart intact.
+   10. A promo code (8.4) works once.
+   11. Refund the first payment (8.4).
+   12. Send-once markers (the tests use a fake Stripe, so check once for
+       real). Take `cs_test_...` from the `session_id` of the first
+       `/merci/` address. Workbench > **Logs** > filter
+       `/v1/checkout/sessions` > **Refresh logs**: the
+       `POST /v1/checkout/sessions/cs_test_...` request answers 200 and its
+       response `metadata` holds `"emails_sent": "true"`. Or with the Stripe
+       CLI: `stripe checkout sessions retrieve cs_test_...`. Worker >
+       **Observability**: no `order.mark_failed` line for that session. A
+       400 or a `order.mark_failed` line means Stripe refuses the update:
+       stop, nothing is idempotent until solved. `review_invited` and
+       `reviewed_<SKU>` are checked in section 12, step 16.
+6. CPU time: Worker > **Observability** > an invocation of the webhook,
+   checkout and cron: CPU under 10 ms (section 2.3).
+
+**Check:** every item above passes.
 
 ### 8.3 Live mode
 
-1. Account activated by Marie (Stripe shows "payments enabled").
-2. Live mode, Developers, API keys: copy `sk_live_...` into
-   `STRIPE_SECRET_KEY`.
-3. Create the live webhook endpoint with the same URL and the same three
-   events; paste its own `whsec_...` into `STRIPE_WEBHOOK_SECRET`. Test and
-   live endpoints have different secrets.
-4. Place one real order with a small product, check section 8.2, step 4, items 2
-   to 5, then refund it from the dashboard.
+**Needs:** account activated by Marie.
 
-### 8.4 Day to day (Marie, from the dashboard or the Stripe app)
+1. Leave the sandbox (account picker > the live account).
+2. **Developers** > **API keys** > **Create secret key** (code by e-mail or
+   SMS) > name `racines-en-partage worker` > copy `sk_live_...` into
+   `STRIPE_SECRET_KEY` and Bitwarden: it is shown only once.
+3. Same webhook destination as 8.2 step 3 in live mode; its own `whsec_...`
+   into `STRIPE_WEBHOOK_SECRET` (sandbox and live secrets differ).
+4. One real order of a small product: check 8.2 step 5, items 2 to 5, then
+   refund it.
 
-- Orders: Payments. Each payment links to the Checkout session with the
+A restricted key (`rk_live_...`) is Stripe's recommended hardening; the
+Worker needs Checkout Sessions read and write (create, list, update
+metadata). Test it in the sandbox before switching (unverified).
+
+### 8.4 Day to day (Marie, dashboard or Stripe app)
+
+- Orders: **Payments**; each payment links to its Checkout Session and
   delivery metadata.
-- Promo codes: Product catalogue, Coupons, create a coupon, then a customer
-  facing code. The checkout accepts codes (`allow_promotion_codes`). Free
-  shipping is decided on the basket before the code: a 50 EUR basket with a
-  10 % code still ships free. Codes never reduce the shipping fee itself.
-- Refunds: open the payment, Refund, full or partial.
+- Promo codes: **Products** > **Coupons** > **+ New** > percentage or
+  amount > **Use customer-facing promotion codes** > the code (options:
+  first order only, minimum amount, expiry, uses) > **Create coupon**. Free
+  shipping is decided on the basket before the code; codes never reduce the
+  shipping fee.
+- Refunds: **Payments** > **...** on the payment > **Refund payment** >
+  amount and reason > **Refund**. Stripe keeps its fee.
 
 ## 9. Mondial Relay
 
 ### 9.1 Offre Start (Marie)
 
-"Offre Start" for professionals: no commitment of volume or duration, no
-subscription or management fee, prepaid account opened online, up to 5,000
-parcels per year. Price from about 3.09 EUR HT per parcel according to the
-official page; other pages say 2.76 EUR: to verify at sign-up.
+**Who:** Marie, with her business details; Dev for step 3.
 
-1. Marie opens the Offre Start account online with her business details and
-   tops up the prepaid balance.
-2. The account gives a client code ("code enseigne").
-3. Developer: set the build variable `PUBLIC_MONDIAL_RELAY_BRAND` to that
-   code (section 3, note 2) and rebuild. `BDTEST` is a public example code
-   for development only; never go live with it.
-4. On `/commande/`, choose Point Relais, enter a postcode: the map must list
-   relay points. If it shows no result with her code, ask Mondial Relay
-   support whether the code needs activating for the Parcel Shop Picker
-   widget (to verify).
+"Offre Start" for professionals: no volume or duration commitment, no
+subscription. Price per parcel, prepaid balance and yearly cap: read them in
+the Offre Start CGV at sign-up (the official pages could not be fetched on
+2026-11-15; third-party figures are not reliable).
+
+1. Marie opens the Offre Start account on `mondialrelay.fr` (espace
+   professionnel) and tops up if asked.
+2. She sends the developer her **code client**: the widget's `Brand`
+   parameter.
+3. Dev: Worker > **Settings** > **Build** > **Build variables and secrets** >
+   `PUBLIC_MONDIAL_RELAY_BRAND` = her code > push a commit to rebuild.
+   `BDTEST` is the public test code (the widget shows a warning with it);
+   never go live with it.
+
+**Check:** `/commande/` > Point Relais > postcode: the map lists relay
+points with no test warning. No result with her code: ask Mondial Relay
+support to activate it for the Parcel Shop Picker widget.
 
 ### 9.2 Labels
 
 The site records the chosen relay point; it does not buy labels. For each
-order, Marie creates the label in her Mondial Relay pro space from the order
-e-mail: recipient name, phone (Mondial Relay notifies by SMS), relay point
-ID, parcel weight. Home delivery labels (Colissimo) are bought separately
-from La Poste (prices to verify).
+order Marie creates the label in her Mondial Relay pro space from the order
+e-mail: recipient name, phone (Mondial Relay texts the customer), relay
+point ID, weight. Home delivery labels (Colissimo) come from La Poste.
 
-Alternative without a direct contract: Sendcloud (free plan) or Boxtal (pay
-per label). The site stays compatible because it only records the relay
-point. The widget still needs a valid brand code; how to obtain one without
-a Mondial Relay account is to verify.
+Without a direct contract, Sendcloud (free plan) or Boxtal (per label) also
+work: the site only records the relay point. The widget still needs a valid
+`Brand` code.
 
 ## 10. Sveltia CMS and its Authenticator
 
-The CMS is the static page `/admin/` (`public/admin/index.html` and
+**Who:** Dev. 20 minutes. The CMS is `/admin/` (`public/admin/index.html`,
 `public/admin/config.yml`). It signs in to GitHub through a small Worker,
-the Sveltia CMS Authenticator, deployed in Marie's Cloudflare account.
+the Sveltia CMS Authenticator, in Marie's Cloudflare account.
 
-1. Deploy https://github.com/sveltia/sveltia-cms-auth (Deploy to Cloudflare
-   button, or clone and `npx wrangler deploy`). Note the Worker URL, for
-   example `https://sveltia-cms-auth.<account>.workers.dev`.
-2. GitHub, Settings, Developer settings, OAuth Apps, New OAuth App. Create
-   it under Marie's account `racinesenpartage` if it already exists,
-   otherwise under the developer's and transfer it at handover:
-   - Application name: `Racines en Partage CMS`
-   - Homepage URL: any, use `https://racinesenpartage.fr`
-   - Authorization callback URL: `<worker url>/callback`
-3. Generate a client secret.
-4. Authenticator Worker, Settings, Variables and Secrets:
-   - `GITHUB_CLIENT_ID`: the client ID
-   - `GITHUB_CLIENT_SECRET`: the secret, type Encrypt
-   - `ALLOWED_DOMAINS`: `racinesenpartage.fr` (to test the CMS from the
-     `workers.dev` host before the domain is live, add that host; list
-     syntax to verify in the Authenticator README)
-5. In the repository, `public/admin/config.yml`, set
-   `backend.base_url: <worker url>`. In `public/_headers`, `/admin/*`
-   block, replace `https://*.workers.dev` in `connect-src` and `frame-src`
-   with that exact Authenticator origin (a comment in the file marks it):
-   any `workers.dev` Worker is allowed until then. Update the table in
-   `docs/content.md`, section 7. Commit and push.
-6. Open `https://racinesenpartage.fr/admin/`, "Sign in with GitHub".
-   Editors need a GitHub account with write access to the repository. The
-   interface follows the browser language (French available).
-7. Alternative sign-in: a GitHub personal access token with read and write
-   access to the repository contents (scope to verify).
+1. `github.com/sveltia/sveltia-cms-auth` > **Deploy to Cloudflare Workers**
+   (or clone and `pnpm exec wrangler deploy`). Note the URL, for example
+   `https://sveltia-cms-auth.racinesenpartage.workers.dev`.
+2. GitHub > **Settings** > **Developer settings** > **OAuth Apps** > **New
+   OAuth App** (or **Register a new application**). Under `racinesenpartage`
+   if that account exists, else under `ngawang21` and transfer it at
+   handover:
+   - Application name `Racines en Partage CMS`
+   - Homepage URL `https://racinesenpartage.fr`
+   - Authorization callback URL `<authenticator url>/callback`
+   - **Register application** > **Generate a new client secret**.
+3. Authenticator Worker > **Settings** > **Variables and Secrets**:
+   - `GITHUB_CLIENT_ID` (Text): the client ID
+   - `GITHUB_CLIENT_SECRET` (Secret): the secret
+   - `ALLOWED_DOMAINS` (Text): `racinesenpartage.fr` while testing add
+     `, racines-en-partage.racinesenpartage.workers.dev` (comma separated,
+     no port; `*.x` does not match `x` itself)
+   - **Deploy**
+4. Repository: `public/admin/config.yml` > `backend.base_url:` the
+   authenticator URL (no `/callback`). `public/_headers`, `/admin/*` block:
+   replace `https://*.workers.dev` in `connect-src` and `frame-src` with that
+   exact origin (a comment marks it). Update `docs/content.md`, section 7.
+   Commit and push.
+5. Open `https://racinesenpartage.fr/admin/` > **Sign In with GitHub**.
+   Editors need write access to the repository. The interface follows the
+   browser language.
 
-Each save in the CMS is a commit on `main`, which triggers a build and a
-deploy: the change is live after about 2 minutes.
+**Check:** a test edit saved in the CMS appears as a commit on `main`, and
+on the site after the build (about 2 minutes).
+
+Fallback without the Authenticator: **Sign In with Token** on the login
+screen, with a fine-grained token (section 16 steps, permission **Contents:
+Read and write**).
+
+At handover: OAuth app > **Transfer ownership** > `racinesenpartage` >
+**Transfer this application**; Marie accepts under **OAuth Apps** >
+**Pending transfer requests** > **Complete transfer**.
 
 ## 11. CSP
 
-`public/_headers` is the only place the Content-Security-Policy is set
-(Cloudflare applies it to the static assets; `astro preview` and
-`wrangler dev` ignore it). Three policies exist:
+Reference, no dashboard step. `public/_headers` is the only place the
+Content-Security-Policy is set (Cloudflare applies it to the static assets;
+`astro preview` and `wrangler dev` ignore it). Three policies:
 
-- **Global** (`/*`, every page): `default-src 'self'`, `script-src 'self'`,
+- **Global** (`/*`): `default-src 'self'`, `script-src 'self'`,
   `style-src 'self' 'unsafe-inline'` (Astro scoped styles),
   `img-src 'self' data:`, `font-src 'self'`, `connect-src 'self'`,
   `base-uri 'self'`, `form-action 'none'`, `frame-ancestors 'self'`. No
-  inline script runs anywhere: the JSON-LD and the `application/json` data
-  blocks are not executed, and a build test fails if any other inline script
-  appears.
+  inline script runs: JSON-LD and `application/json` blocks are not
+  executed, and a build test fails on any other inline script.
 - **Checkout** (`/commande/*` and `/en/checkout/*`, two identical blocks):
-  the global policy plus the Mondial Relay Parcel Shop Picker, which loads
-  only when the customer picks the relay method.
-- **Admin** (`/admin/*`): the Sveltia CMS policy (below).
+  global plus the Mondial Relay Parcel Shop Picker, loaded only when the
+  customer picks the relay method.
+- **Admin** (`/admin/*`): the Sveltia CMS policy (11.3).
 
 Each route block starts with `! Content-Security-Policy`, which detaches the
-global header before the route's own is added. Without it Cloudflare sends
-both headers and the browser enforces the stricter of the two, so the widget
-or the CMS would be blocked.
+global header first. Without it Cloudflare sends both headers and the
+browser enforces the stricter one, blocking the widget or the CMS.
 
 ### 11.1 Checkout hosts
 
-jQuery 2.2.4 and Leaflet 1.9.4 (script, stylesheet and the `images/` folder
-the stylesheet references) are copies served from `public/vendor/`, on the
-shop's own origin; `public/vendor/README.md` lists their source URLs and
-sha384 hashes. Only the Mondial Relay plugin is loaded from a third party.
-Hosts captured with `scripts/relay-capture.mjs` (widget 4.0.11, 2026-11-01),
-one line per host and directive:
+jQuery 2.2.4 and Leaflet 1.9.4 (script, stylesheet, `images/`) are copies in
+`public/vendor/` on the shop's origin; `public/vendor/README.md` lists their
+sources and sha384 hashes. Only the Mondial Relay plugin comes from a third
+party. Hosts captured with `scripts/relay-capture.mjs` (widget 4.0.11,
+2026-11-01):
 
-| Host                                                                               | Directives                                          | What                                                                  |
-| ---------------------------------------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------- |
-| `widget.mondialrelay.com`                                                          | `script-src`, `style-src`, `img-src`, `connect-src` | plugin and its versioned script, styles, marker images, JSONP results |
-| `www.mondialrelay.com`                                                             | `img-src`                                           | one image loaded by the widget                                        |
-| `a.tile.openstreetmap.org`, `b.tile.openstreetmap.org`, `c.tile.openstreetmap.org` | `img-src`                                           | map tiles                                                             |
+| Host                                                                               | Directives                                          | What                                                     |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------- |
+| `widget.mondialrelay.com`                                                          | `script-src`, `style-src`, `img-src`, `connect-src` | plugin, versioned script, styles, markers, JSONP results |
+| `www.mondialrelay.com`                                                             | `img-src`                                           | one image                                                |
+| `a.tile.openstreetmap.org`, `b.tile.openstreetmap.org`, `c.tile.openstreetmap.org` | `img-src`                                           | map tiles                                                |
 
-No font host: the widget is mounted with `CSS: '0'`, so its theme stylesheet,
-which `@import`s Montserrat from Google Fonts (a request carrying the
-visitor's IP to Google), never loads; `src/styles/relay-widget.css` styles the
-widget instead and loads with it.
+No font host: the widget is mounted with `CSS: '0'`, so its theme stylesheet
+(which `@import`s Montserrat from Google Fonts) never loads;
+`src/styles/relay-widget.css` styles it instead.
 
-The same list is the `REMOTE_HOSTS` constant of `src/cart/relay-widget.ts`;
-`tests/build/headers.test.ts` fails when the two checkout blocks of
-`_headers` allow a host that constant does not name, or miss one it names.
+The same list is `REMOTE_HOSTS` in `src/cart/relay-widget.ts`;
+`tests/build/headers.test.ts` fails when the checkout blocks and that
+constant differ.
 
-Every other directive is the global one. The checkout policy has neither
-`'unsafe-eval'` nor `'unsafe-inline'` in `script-src`, and no CDN host,
-although the widget was written for all three:
+The checkout policy has neither `'unsafe-eval'` nor `'unsafe-inline'` in
+`script-src`, and no CDN host, although the widget expects all three:
 
-- The widget's init appends Leaflet from `unpkg.com` (unversioned) even when
-  Leaflet is already loaded, unless a `<script>` or `<link>` in `<head>`
-  already carries that exact URL. `preemptWidgetLeaflet` adds two inert
-  elements with those URLs (a script of a non-JavaScript type, a link of an
-  unknown `rel`), which the browser neither fetches nor runs; the vendored
-  Leaflet is the one in use.
-- The widget appends server-sent HTML that holds one inline script, which
-  jQuery would run through `eval`. `src/cart/relay-widget.ts`
-  (`neutraliseGlobalEval`) replaces `jQuery.globalEval` with a function that
-  never evaluates and reproduces the two effects of that script natively
-  (the `MondialRelayLanguage` labels and the click handler that returns from
-  the list to the map on phones).
-- The widget's list items carry inline `onclick` attributes, which the CSP
-  would block. `disarmInlineHandlers` moves them to `data-rep-onclick` as
-  they appear and replays them from one delegated listener through
-  `parseInlineHandler` (`src/cart/relay.ts`), which accepts only the known
-  shapes `MR_jQuery('#id').trigger('Event', n)` and
+- The widget's init appends Leaflet from `unpkg.com` unless a `<script>` or
+  `<link>` in `<head>` already carries that exact URL.
+  `preemptWidgetLeaflet` adds two inert elements with those URLs (a script
+  of a non-JavaScript type, a link of an unknown `rel`), never fetched; the
+  vendored Leaflet is used.
+- The widget appends server-sent HTML holding one inline script, which
+  jQuery would run through `eval`. `neutraliseGlobalEval`
+  (`src/cart/relay-widget.ts`) replaces `jQuery.globalEval` with a function
+  that never evaluates and reproduces that script's two effects natively
+  (the `MondialRelayLanguage` labels and the phone list-to-map handler).
+- The list items carry inline `onclick` attributes. `disarmInlineHandlers`
+  moves them to `data-rep-onclick` and replays them from one delegated
+  listener through `parseInlineHandler` (`src/cart/relay.ts`), which accepts
+  only `MR_jQuery('#id').trigger('Event', n)` and
   `MR_jQuery(this).parent().find('.x').toggleClass('y')`.
 
 ### 11.2 Capture script
 
-`scripts/relay-capture.mjs` serves `dist/` with the headers of
-`dist/_headers` applied the way Cloudflare applies them (`astro preview` and
-`wrangler dev` ignore that file; the matching code is
-`scripts/lib/headers.mjs`, shared with the build test), then drives the
-Chromium of `@playwright/test`:
+`scripts/relay-capture.mjs` serves `dist/` with `dist/_headers` applied as
+Cloudflare does (matching code in `scripts/lib/headers.mjs`, shared with the
+build test) and drives the Chromium of `@playwright/test`:
 
-- **checkout**: adds the first product on `/boutique/`, opens `/commande/`,
-  picks "Point Relais", searches the postcode (default `95400`), clicks a
-  result and checks that a point with an ID of the form `FR-123456` lands in
-  the cart;
-- **admin**: opens `/admin/` and waits for the "Sign In with GitHub" button.
+- **checkout**: adds the first product, opens `/commande/`, picks "Point
+  Relais", searches the postcode (default `95400`), clicks a result, checks
+  that a point `FR-123456` lands in the cart;
+- **admin**: opens `/admin/` and waits for "Sign In with GitHub".
 
-Each run records every CSP violation (`securitypolicyviolation` events and
-"Refused to" console lines) and every third-party host requested, prints one
-JSON report per target and exits non-zero unless every step worked with zero
-violation.
+It records every CSP violation and third-party host, prints one JSON report
+per target and exits non-zero unless every step worked with zero violation.
 
 ```sh
 pnpm build
@@ -493,53 +725,44 @@ node scripts/relay-capture.mjs checkout --postcode 75011
 node scripts/relay-capture.mjs admin --headed     # watch the browser
 ```
 
-It needs the network and the Chromium of `@playwright/test`
-(`pnpm exec playwright install chromium` once; on the development machine
-`~/.local/lib` is added to `LD_LIBRARY_PATH` automatically). Last run
-(2026-11-01): checkout, 7 results for 95400, point `FR-036408` selected,
-zero violation, no request to `unpkg.com` or `ajax.googleapis.com`; admin,
-sign-in screen reached, zero violation.
+Needs the network and Playwright's Chromium
+(`pnpm exec playwright install chromium` once; `~/.local/lib` is added to `LD_LIBRARY_PATH` on the
+development machine). Last run (2026-11-01): 7 results for 95400, point
+`FR-036408` selected, zero violation, no request to `unpkg.com` or
+`ajax.googleapis.com`; admin sign-in reached, zero violation.
 
-When Mondial Relay changes the widget (symptoms: "Refused to load" or
-"Refused to execute" errors in the browser console on `/commande/`, a map
-that never appears, or list items that no longer select a point), run the
-script, then:
+When Mondial Relay changes the widget ("Refused to load/execute" in the
+console on `/commande/`, no map, or list items that no longer select a
+point), run the script, then:
 
-1. A new host shows up as a violation and in `hosts`: add it to
-   `REMOTE_HOSTS`, to both checkout blocks of `public/_headers` and to the
-   table above.
-2. A new inline handler shows up as a list item that no longer selects a
-   point: read its `data-rep-onclick` value (`--headed`, devtools), extend
-   `parseInlineHandler` and its unit tests in
-   `tests/unit/cart-relay-api.test.ts`. A changed inline script shows up as
-   a `globalEval` call whose code is neither of the two known effects:
-   reproduce it in `neutraliseGlobalEval`. A new library URL appended by the
-   widget's init shows up as a blocked `unpkg.com` (or other CDN) request:
-   vendor the file under `public/vendor/` and add the URL to
-   `preemptWidgetLeaflet`, rather than allowing the CDN.
-3. Run `pnpm test`, `pnpm test:build` and `pnpm e2e`, deploy, and check the
-   map on the live site with the browser console open.
+1. A new host: add it to `REMOTE_HOSTS`, both checkout blocks of
+   `public/_headers` and the table above.
+2. A new inline handler (an item no longer selects): read its
+   `data-rep-onclick` (`--headed`, devtools), extend `parseInlineHandler`
+   and `tests/unit/cart-relay-api.test.ts`. A changed inline script (a
+   `globalEval` call that is neither known effect): reproduce it in
+   `neutraliseGlobalEval`. A new library URL (a blocked CDN request): vendor
+   it under `public/vendor/` and add it to `preemptWidgetLeaflet`.
+3. `pnpm test`, `pnpm test:build`, `pnpm e2e`, deploy, check the live map
+   with the console open.
 
 ### 11.3 Admin
 
-`/admin/*` replaces the global policy with the Sveltia one: `script-src`
-adds `'wasm-unsafe-eval'` and the whole `https://unpkg.com` host, on purpose
-(after sign-in Sveltia imports helper packages, image encoders and date
-locales, from other unpkg paths; `docs/content.md`, section 7). Only the main
-bundle is pinned, by version and Subresource Integrity in
-`public/admin/index.html`; the helpers are not. Because the admin shares the
-shop origin, Sveltia's GitHub token sits in the same `localStorage` as the
-shop pages, so the strict shop CSP is what protects it. `connect-src` adds the GitHub API,
-`github.com`, `www.githubstatus.com`, `*.workers.dev` (the Authenticator),
-`unpkg.com` and the optional AI helpers of the CMS; `img-src` adds `blob:`
-and the GitHub user content hosts; `font-src` adds `cdn.jsdelivr.net`;
-`frame-src` adds `*.workers.dev`; `worker-src` allows `blob:`. The same
-block sets `X-Robots-Tag: noindex`. `*.workers.dev` is to be narrowed to the
-Authenticator host once it is known (section 10, step 5).
+`/admin/*` replaces the global policy: `script-src` adds
+`'wasm-unsafe-eval'` and the whole `https://unpkg.com` host on purpose
+(after sign-in Sveltia imports helpers, image encoders and date locales
+from other unpkg paths; `docs/content.md`, section 7). Only the main bundle
+is pinned (version and Subresource Integrity in `public/admin/index.html`).
+The admin shares the shop origin, so Sveltia's GitHub token sits in the same
+`localStorage`; the strict shop CSP protects it. `connect-src` adds the
+GitHub API, `github.com`, `www.githubstatus.com`, `*.workers.dev` (the
+Authenticator), `unpkg.com` and the CMS's optional AI helpers; `img-src`
+adds `blob:` and GitHub user content; `font-src` adds `cdn.jsdelivr.net`;
+`frame-src` adds `*.workers.dev`; `worker-src` allows `blob:`. The block
+also sets `X-Robots-Tag: noindex`. Narrow `*.workers.dev` to the
+Authenticator host in section 10, step 4.
 
 ### 11.4 After the first deploy
-
-Check that each route carries its own policy:
 
 ```sh
 curl -sI https://racinesenpartage.fr/commande/ | grep -i content-security-policy
@@ -547,288 +770,266 @@ curl -sI https://racinesenpartage.fr/admin/ | grep -i content-security-policy
 curl -sI https://racinesenpartage.fr/ | grep -i content-security-policy
 ```
 
-- `/commande/` must print the checkout policy (with
-  `widget.mondialrelay.com`), and only one `content-security-policy` line.
-- `/admin/` must print the admin policy (with `api.github.com`), and only
-  one line.
-- `/` must print the strict policy (`script-src 'self'` and nothing else in
-  that directive).
-
-Repeat with `/en/checkout/`. Two lines on one route mean a missing
-`! Content-Security-Policy` in its block.
+**Check:** `/commande/` prints the checkout policy (with
+`widget.mondialrelay.com`), `/admin/` the admin policy (with
+`api.github.com`), `/` the strict one (`script-src 'self'` only), each on
+exactly one line. Repeat with `/en/checkout/`. Two lines on a route mean a
+missing `! Content-Security-Policy` in its block.
 
 ## 12. Go-live checklist
 
-1. `pnpm launch-check` passes: SIRET filled and valid,
-   `launch.pricesConfirmed: true`, no `TODO` left in the legal texts, the CMS
-   `forms.turnstileSiteKey` filled, `PUBLIC_MONDIAL_RELAY_BRAND` set to
-   Marie's code (not `BDTEST`) in the local `.env` (same value as the Workers
-   Builds variable; the script says "relay brand unknown" without a `.env`),
-   and the `FORMS_KV` binding uncommented in `wrangler.jsonc`.
-2. Legal pages read through with Marie: mentions légales, CGV (mediator
-   named), confidentialité. See `docs/legal-notes.md`.
-3. Test orders in test mode pass (section 8.2), for all three delivery
-   methods, FR and EN.
-4. Webhook deliveries show 200 in Stripe for every test order.
-5. Both e-mails received for every test order; none in junk.
-6. A relay label created in Marie's Mondial Relay space from a test order
-   e-mail: every field needed is in the e-mail. Stop before paying if the
-   parcel is not shipped.
-7. Live keys and live webhook in place (section 8.3); one real order paid
-   and refunded.
+**Who:** Dev, Marie for steps 2, 6, 7 and 12. Run top to bottom.
+
+1. `pnpm launch-check` passes: SIRET valid, `launch.pricesConfirmed: true`,
+   no `TODO` in the legal texts, CMS `forms.turnstileSiteKey` filled,
+   `PUBLIC_MONDIAL_RELAY_BRAND` set to Marie's code in the local `.env`
+   (same as the build variable), `FORMS_KV` uncommented in `wrangler.jsonc`.
+2. Legal pages read with Marie: mentions légales, CGV (mediator named),
+   confidentialité (`docs/legal-notes.md`).
+3. Sandbox orders pass (8.2) for all three delivery methods, FR and EN.
+4. Every webhook delivery shows 200.
+5. Both e-mails received for every order; none in junk.
+6. A relay label prepared in Marie's Mondial Relay space from a test order
+   e-mail: every field is there. Stop before paying.
+7. Live keys and live webhook in place (8.3); one real order paid and
+   refunded.
 8. `PUBLIC_MONDIAL_RELAY_BRAND` is Marie's code, not `BDTEST`.
-9. `curl -sI https://racinesenpartage.fr/ | grep -i content-security-policy`
-   prints the strict policy (see section 11.4 for every route); the checkout
-   map loads without console errors.
-10. Google Search Console, Add property, Domain: `racinesenpartage.fr`;
-    verification by a TXT record in Cloudflare DNS.
-11. Submit the sitemap `https://racinesenpartage.fr/sitemap-index.xml`, then
-    URL inspection and "Request indexing" for `/`, `/boutique/`, `/en/` and
-    the four featured product pages.
-12. Google Business Profile (business.google.com) for the shop address,
-    9 Rue du Marché, 95400 Arnouville: pickup is offered there by
-    appointment. If Marie prefers not to publish the address, create a
-    service-area profile instead. Website `https://racinesenpartage.fr`,
-    phone 07 75 68 91 08, logo and product photos. Verification takes a few
-    days.
-13. Bing Webmaster Tools: "Import from Google Search Console".
-14. Instagram: bio link set to `https://racinesenpartage.fr`, and the
-    Instagram URL filled in the CMS settings (`brand.instagram`).
-15. Forms: a contact message and a stock alert reach Marie's Gmail with
-    the customer as reply-to; a newsletter signup sends the confirmation,
-    its link opens `/newsletter/?t=...`, and the button adds the contact
-    to the Resend audience; `/ma-commande/` finds a test order by number
-    and e-mail; `FORMS_KV` is bound (sections 13 to 18).
-16. Reviews: run the cron locally (section 17) against a test order placed
-    7 to 10 days earlier (the run lists sessions created between 10 and 7
-    days before it, so a fresh order is not listed: keep the first test
-    order of section 8.2 for this). The run logs `review.invites` with
-    `invited: 1`; the session's metadata then holds `review_invited: "true"`
-    (no `review.mark_failed` line); a second run reports `skipped: 1` and
-    sends nothing. Open the invitation link, submit a review, check
+9. CSP checks of 11.4 pass; the checkout map loads without console errors.
+10. Google Search Console (`search.google.com/search-console`) > **Add
+    property** > **Domain** > `racinesenpartage.fr`. If Cloudflare is
+    offered as provider, **Start verification** and sign in; otherwise copy
+    the TXT `google-site-verification=...` into Cloudflare **DNS** >
+    **Records** > **Add record** > TXT, Name `@` > back in Search Console
+    **Verify**. Keep the record.
+11. Search Console > **Sitemaps** > `sitemap-index.xml` > **Submit**; then
+    **URL inspection** > **Request indexing** for `/`, `/boutique/`, `/en/`
+    and the four featured product pages.
+12. Google Business Profile (`business.google.com`, with Marie): 9 Rue du
+    Marché, 95400 Arnouville (pickup by appointment), or service area only
+    with the address hidden if she prefers. Website
+    `https://racinesenpartage.fr`, phone 07 75 68 91 08, logo, product
+    photos. Verification: Google chooses (video, phone, e-mail or postcard);
+    allow up to 5 business days.
+13. Bing Webmaster Tools (`bing.com/webmasters`) > **Import** from Google
+    Search Console > sign in to Google > pick the site > **Import**.
+14. Instagram bio link `https://racinesenpartage.fr`; CMS settings
+    `brand.instagram` filled.
+15. Forms: a contact message and a stock alert reach Marie's Gmail with the
+    customer as reply-to; a newsletter signup sends the confirmation, its
+    link opens `/newsletter/?t=...`, the button adds the contact in Resend
+    (**Audience** > **Contacts**); `/ma-commande/` finds a test order by
+    number and e-mail; `FORMS_KV` is bound (sections 13 to 18).
+16. Reviews: run the cron locally (section 17) against a sandbox order
+    placed 7 to 10 days earlier (keep the first order of 8.2 for this). The
+    run logs `review.invites` with `invited: 1`; the session's metadata
+    holds `review_invited: "true"` (no `review.mark_failed`); a second run
+    reports `skipped: 1`. Open the invitation, submit a review, check
     `reviewed_<SKU>` on the session and the new file in
-    `src/content/reviews/` on GitHub, and publish it from the CMS.
-17. After the go-live order: `workers_dev` set to false (section 5, step 4).
+    `src/content/reviews/` on GitHub, publish it from the CMS.
+17. After the go-live order: `workers_dev` false (section 5, step 5).
 18. Commit, push, check the deployment and the CI run.
 
 ## 13. Forms secret
 
-`FORMS_SECRET` signs the links of the review invitation and of the
-newsletter confirmation (HMAC-SHA256). Generate it once:
+**Who:** Dev. 2 minutes, now.
 
-```bash
-openssl rand -base64 32
-```
+`FORMS_SECRET` signs the review invitation links, the newsletter
+confirmation links, the customer sign-in links and the session cookie
+(HMAC-SHA256).
 
-Paste the output into the secret `FORMS_SECRET` (section 3) and nowhere
-else. Changing it invalidates every invitation and confirmation link already
-sent; do it only if the value leaked.
+1. `openssl rand -base64 32`
+2. Paste the output into the secret `FORMS_SECRET` (section 3) and nowhere
+   else.
+
+Changing it voids every link already sent and signs every customer out: do
+it only if the value leaked.
 
 ## 14. Cloudflare Turnstile
 
-Turnstile protects the contact, stock-alert and newsletter forms against
-bots. Free, no cookie banner needed.
+**Who:** Dev. 5 minutes. Protects the contact, stock-alert and newsletter
+forms. Free, no cookie banner.
 
-1. Cloudflare dashboard, Turnstile, Add widget.
-2. Widget name: `racines-en-partage`. Hostnames: `racinesenpartage.fr`
-   (add the `*.workers.dev` host too while testing on it).
-3. Widget mode: Managed (Cloudflare shows a checkbox only when it doubts).
-   Pre-clearance: No.
-4. Create. Cloudflare shows a site key and a secret key.
-5. The site key is public: paste it in the CMS settings, field
-   `forms.turnstileSiteKey` (the Turnstile site key). Saving rebuilds the
-   site with the widget.
-6. The secret key goes into the Worker secret `TURNSTILE_SECRET_KEY`
-   (section 3). Never in the CMS or the repository.
+1. **Turnstile** > **Add widget**:
+   - Widget name `racines-en-partage`
+   - **Hostname management**: `racinesenpartage.fr` (add
+     `racines-en-partage.racinesenpartage.workers.dev` while testing there)
+   - **Widget mode**: **Managed**
+   - **Pre-clearance support**: No
+   - **Create**
+2. Copy the **site key** into the CMS settings, `forms.turnstileSiteKey`,
+   and save (the site rebuilds with the widget).
+3. After that rebuild, copy the **secret key** into the Worker secret
+   `TURNSTILE_SECRET_KEY` (section 3). Never in the CMS or the repository.
 
-Without the secret the contact, stock-alert and newsletter forms answer
-`404 FEATURE_DISABLED` and log `config.missing` (`TURNSTILE_SECRET_KEY`), so
-bots cannot spend the Resend quota through an unprotected form. Locally,
-`FORMS_ALLOW_WITHOUT_CAPTCHA=true` in `.dev.vars` skips the check; never set
-it in the dashboard or in `wrangler.jsonc`. With the secret, a missing or refused token answers
-`400 CAPTCHA_FAILED`, and so does a Turnstile outage (the check fails
-closed; the customer retries). Both are set or both are empty: an empty
-site key in the CMS while `TURNSTILE_SECRET_KEY` is set makes every
-contact, stock-alert and newsletter form fail with `400 CAPTCHA_FAILED`,
-because the pages render no widget and send no token. Set the secret after
-the site key is saved and the site rebuilt; remove the site key only after
-deleting the secret.
+**Check:** the contact form shows the Turnstile box and a test message
+arrives.
 
-## 15. Resend audience (newsletter)
+Both keys are set or both are empty. Secret set but no site key: every
+form fails with `400 CAPTCHA_FAILED` (no widget, no token). Site key but no
+secret: the forms answer `404 FEATURE_DISABLED` (`config.missing`). So set
+the secret after the site key, and remove the site key only after deleting
+the secret. A Turnstile outage fails closed (`400 CAPTCHA_FAILED`; the
+customer retries). Locally, `FORMS_ALLOW_WITHOUT_CAPTCHA=true` in
+`.dev.vars` skips the check.
 
-The newsletter is double opt-in: the form sends a confirmation e-mail whose
-link opens `/newsletter/?t=<token>` (EN `/en/newsletter/?t=`); the contact
-is created in Resend only when the person clicks "Confirmer mon
-inscription" on that page, which posts the token to
-`POST /api/newsletter/confirm`. A mail scanner that opens the link
-subscribes nobody.
+## 15. Resend newsletter list
 
-1. Resend, Audiences (also called Contacts in newer dashboards; to verify),
-   Create audience: `Newsletter Racines en Partage`.
-2. Copy its id (a UUID) into the secret `RESEND_AUDIENCE_ID` (section 3).
-   The API key of section 6 must also allow contacts: "Full access", or a
-   key restricted to sending cannot add contacts (to verify on the key
-   page; create a second key if needed and use it as `RESEND_API_KEY`).
-3. Optional welcome code: Marie creates a promotion code in Stripe
-   (Products, Coupons, then a promotion code such as `BIENVENUE10`), then
-   types exactly the same code in the CMS settings
-   (`newsletter.welcomeCode`) and saves. After the rebuild the confirmation
-   e-mail prints it. A code that does not exist in Stripe is refused at
-   checkout, so create it first.
-4. Campaigns are written in Resend Broadcasts to that audience; Resend adds
-   the unsubscribe link (owner guide).
+**Who:** Dev. **Needs:** section 6, with a **Full access** key.
 
-Without `RESEND_AUDIENCE_ID`, or with `newsletter.enabled` off in the CMS,
-the newsletter endpoints answer `404 FEATURE_DISABLED`. On the page, an
-expired (after 48 hours) or altered link shows the "invalid link" message;
-Resend unavailable shows a retry message (clicking again later works).
+Resend replaced Audiences with **Segments** (global contacts) in November 2025. The old audience endpoints still work but "will be removed in the
+future" (no date). The Worker still calls
+`POST /audiences/{id}/contacts` (`worker/email/resend.ts`): moving it to
+`POST /contacts` with `segments` is a pending code change. Until then the
+signup test in section 12, step 15 must pass with the id below.
+
+Double opt-in: the form sends a confirmation e-mail whose link opens
+`/newsletter/?t=<token>` (EN `/en/newsletter/?t=`); the contact is created
+only when the person clicks "Confirmer mon inscription" there, so a mail
+scanner subscribes nobody.
+
+1. Resend > **Audience** > **Segments** > create the segment
+   `Newsletter Racines en Partage`. Copy its id (a UUID) into
+   `RESEND_AUDIENCE_ID` (section 3).
+2. Optional welcome code: Marie creates a promotion code in Stripe (8.4),
+   for example `BIENVENUE10`, then types exactly the same code in the CMS
+   settings (`newsletter.welcomeCode`). The confirmation e-mail prints it
+   after the rebuild. Create it in Stripe first: an unknown code is refused
+   at checkout.
+3. Campaigns: **Broadcasts** > **Create broadcast** > segment
+   `Newsletter Racines en Partage`. Add the editor's unsubscribe footer, or
+   a link to `{{{RESEND_UNSUBSCRIBE_URL}}}`: Resend does not add it on its
+   own.
+
+Without `RESEND_AUDIENCE_ID`, or with `newsletter.enabled` off, the
+newsletter endpoints answer `404 FEATURE_DISABLED`. An expired (48 hours)
+or altered link shows "invalid link"; Resend down shows a retry message.
 
 ## 16. GitHub token for reviews
 
-`POST /api/reviews` commits each review as a file in `src/content/reviews/`
-with `published: false`; Marie publishes it from the CMS.
+**Who:** Dev. 5 minutes. `POST /api/reviews` commits each review to
+`src/content/reviews/` with `published: false`; Marie publishes it in the
+CMS.
 
-The token can write any file of the repository, and every push to `main`
-deploys the site: whoever holds it can change the shop. Store it only as
-the Worker secret `GITHUB_TOKEN` (never in `.dev.vars` on a shared machine,
-a chat or a ticket), rotate it every year, and revoke it at once if it may
-have leaked. The Worker itself only writes new files under
-`src/content/reviews/`. Narrowing the access later is possible with a
-GitHub App installed on this repository only, or with a separate reviews
-repository that the build reads.
+The token can write any file, and every push to `main` deploys: whoever
+holds it can change the shop. Only as the Worker secret `GITHUB_TOKEN`
+(never in a chat, a ticket or `.dev.vars` on a shared machine), rotated
+yearly, revoked at once if leaked.
 
-1. GitHub, signed in as `ngawang21`: Settings, Developer settings, Personal
-   access tokens, Fine-grained tokens, Generate new token.
-2. Name: `racines-en-partage reviews`. Resource owner: `ngawang21`.
-   Expiration: one year (custom date).
-3. Repository access: Only select repositories, `racines-en-partage`.
-4. Permissions, Repository permissions: Contents, Read and write. Nothing
-   else (Metadata read-only is added automatically).
-5. Generate, copy the token into the secret `GITHUB_TOKEN` (section 3).
-6. Put a calendar reminder two weeks before the expiry date: generate a new
-   token the same way, replace the secret, delete the old token.
-7. `GITHUB_REPO` is `ngawang21/racines-en-partage` in `wrangler.jsonc`.
-   After the transfer to Marie's account (`docs/handover.md`), change it to
-   the new owner and create the token from her account.
+1. GitHub as `ngawang21` > profile picture > **Settings** > **Developer
+   settings** > **Personal access tokens** > **Fine-grained tokens** >
+   **Generate new token**.
+2. Token name `racines-en-partage reviews` > **Expiration** custom, one year
+   > Resource owner `ngawang21` > **Repository access** **Only select
+   > repositories** > `racines-en-partage`.
+3. **Permissions** > Repository permissions > **Contents**: **Read and
+   write**. Nothing else (Metadata read-only comes with it).
+4. **Generate token** > copy into `GITHUB_TOKEN` (section 3).
+5. Calendar reminder two weeks before expiry: new token the same way,
+   replace the secret, delete the old one.
 
-An expired or revoked token makes review submissions fail with
-`502 INTERNAL_ERROR` and the log line `review.github_failed` with status
-401; nothing is lost on the customer's side except that submission, and
-the invitation link keeps working once the token is replaced.
+After the transfer to `racinesenpartage`, set `GITHUB_REPO` to
+`racinesenpartage/racines-en-partage` and create the token from her
+account.
+
+An expired or revoked token makes submissions fail with
+`502 INTERNAL_ERROR` and `review.github_failed` status 401; the invitation
+link works again once the token is replaced.
 
 ## 17. Review invitations (cron trigger)
 
-`wrangler.jsonc` declares `"triggers": { "crons": ["0 9 * * *"] }`: every
-day at 09:00 UTC (10:00 in winter, 11:00 in summer in Paris) the Worker
-lists the Checkout Sessions created between 10 and 7 days earlier (a
-session missed by a failed run is retried on the next two days;
-`review_invited` prevents a second invitation), sets
-`metadata.review_invited = 'true'` on the session and then sends one
-invitation per paid order with a customer e-mail. The mark comes first and
-fails closed: when Stripe refuses it, the log shows `review.mark_failed`
-with the session id and no invitation goes out. A transient e-mail failure
-removes the mark again, so the next run retries. The run needs
-`STRIPE_SECRET_KEY`, `RESEND_API_KEY` and `FORMS_SECRET`; without
-`RESEND_API_KEY` or `FORMS_SECRET` it logs `config.missing` and sends
-nothing.
+No dashboard step: `wrangler.jsonc` declares `"crons": ["0 9 * * *"]`, every
+day at 09:00 UTC (10:00 Paris in winter, 11:00 in summer). The run lists the
+Checkout Sessions created 10 to 7 days earlier, marks each with
+`metadata.review_invited = 'true'`, then sends one invitation per paid order
+with an e-mail. The mark comes first and fails closed (`review.mark_failed`,
+no invitation); a transient e-mail failure removes it again so the next run
+retries. Needs `STRIPE_SECRET_KEY`, `RESEND_API_KEY`, `FORMS_SECRET`
+(otherwise `config.missing`, nothing sent).
 
-- Check a run: Workers & Pages, the Worker, Settings, Trigger events lists
-  the cron; Logs shows `review.invites` with the counts `listed`,
-  `invited`, `skipped` and `failed`.
-- Test without waiting: `pnpm exec wrangler dev --test-scheduled`, then
-  `curl "http://localhost:8787/__scheduled?cron=0+9+*+*+*"` (with test
-  keys in `.dev.vars`). The run uses the current time, so it only lists test
-  orders placed 7 to 10 days earlier.
-- Disable the invitations: Marie turns `reviews.enabled` off in the CMS
-  settings; after the rebuild the run logs `review.invites_off` and sends
-  nothing, and the review page answers `404 FEATURE_DISABLED`. To stop the
-  run itself, remove the `triggers` block from `wrangler.jsonc` and deploy
-  (deleting the trigger in the dashboard lasts only until the next deploy).
+- Schedule: Worker > **Settings** > **Triggers** > **Cron Triggers**.
+- Past runs: Worker > **Settings** > **Trigger Events** > **View events**.
+  Logs: Worker > **Observability**, `review.invites` with `listed`,
+  `invited`, `skipped`, `failed`.
+- Test now: `pnpm exec wrangler dev --test-scheduled`, then
+  `curl "http://localhost:8787/__scheduled?cron=0+9+*+*+*"` (sandbox keys in
+  `.dev.vars`; lists only orders 7 to 10 days old).
+- Stop: Marie turns `reviews.enabled` off (the run logs
+  `review.invites_off`). To stop the run itself, remove `triggers` from
+  `wrangler.jsonc` and deploy (a dashboard deletion lasts until the next
+  deploy).
 
 ## 18. Daily form budget (Workers KV)
 
-Resend's free plan sends 100 e-mails a day, and the order e-mails need
-them. Turnstile and the per-IP limit stop most abuse; the daily budget is
-the last ceiling: each e-mail sent by the contact, stock-alert or
-newsletter form increments a counter in KV (`forms:<UTC day>`, kept two
-days), and past `FORMS_DAILY_LIMIT` (60 in `wrangler.jsonc`) those forms
-answer `429 RATE_LIMITED` until midnight UTC, with the log line
-`forms.budget_exhausted`. Order e-mails and review invitations are never
-counted. KV counts approximately (a few extra e-mails may pass under
-load), which is enough for a ceiling.
+**Who:** Dev. 5 minutes. Resend's free plan sends 100 e-mails a day and the
+orders need them. Each e-mail from the contact, stock-alert or newsletter
+form increments a KV counter (`forms:<UTC day>`, kept two days); past
+`FORMS_DAILY_LIMIT` (60) those forms answer `429 RATE_LIMITED` until
+midnight UTC (`forms.budget_exhausted`). Order e-mails and invitations are
+never counted.
 
-1. Create the namespace, in the dashboard (Storage & Databases, KV, Create
-   a namespace, name `FORMS_KV`) or with
-   `pnpm exec wrangler kv namespace create FORMS_KV`. Copy its id.
-2. In `wrangler.jsonc`, uncomment the `kv_namespaces` line and paste the
-   id. Commit and push: the deploy binds it. A placeholder id would make
-   every deploy fail, which is why the line ships commented.
-3. Check: Workers & Pages, the Worker, Bindings lists `FORMS_KV`.
+1. Create the namespace: `pnpm exec wrangler kv namespace create FORMS_KV`
+   (or dashboard: **Storage & databases** > **Workers KV** > **Create
+   instance** > `FORMS_KV`). Copy the id.
+2. `wrangler.jsonc`: uncomment the `kv_namespaces` line, paste the id,
+   commit and push. (It ships commented because a placeholder id fails
+   every deploy. Do not add the binding in the dashboard: the next deploy
+   would remove it.)
 
-Without the binding no budget applies (tests, before this step). A KV
-error lets the form through and logs `forms.budget_unavailable`.
+**Check:** Worker > **Bindings** lists `FORMS_KV`.
+
+Without the binding no budget applies. A KV error lets the form through and
+logs `forms.budget_unavailable`.
 
 ## 19. Customer space ("Mon espace")
 
-`/mon-compte/` (EN `/en/account/`) lets customers see their past orders
-without a password. Nothing to set up beyond the forms: `FORMS_SECRET`
-signs the sign-in links and the session cookie, `RESEND_API_KEY` sends the
-link, Turnstile and the daily budget apply as for the other forms
-(sections 13, 14, 18).
+Nothing to set up. `/mon-compte/` (EN `/en/account/`) shows past orders
+without a password: `FORMS_SECRET` signs the sign-in link and the cookie,
+`RESEND_API_KEY` sends the link, Turnstile and the daily budget apply.
 
-- The e-mail "Votre lien de connexion" carries a link valid 15 minutes.
-- Opening it sets the cookie `rep_session` (`HttpOnly`, `Secure`,
-  `SameSite=Lax`, path `/api/account`, 30 days). It is strictly necessary,
-  so it needs no consent banner; the privacy policy names it.
-- The orders come from Stripe (the Checkout Sessions of that e-mail).
-  Nothing is stored by the shop.
-- To sign everybody out at once, change `FORMS_SECRET` (section 13); this
-  also voids pending review and newsletter links.
+- "Votre lien de connexion" is valid 15 minutes.
+- The cookie `rep_session` (`HttpOnly`, `Secure`, `SameSite=Lax`, path
+  `/api/account`, 30 days) is strictly necessary: no consent needed; the
+  privacy policy names it.
+- Orders come from Stripe; the shop stores nothing.
+- Sign everybody out: change `FORMS_SECRET` (also voids pending links).
 
 ## Troubleshooting
 
-- **Build fails on Cloudflare, passes locally.** Check the build command
-  (`pnpm build`), that `pnpm-lock.yaml` is committed, that `.nvmrc` says 22,
-  and read the build log for a content validation error (a CMS edit with a
-  missing image or an empty price fails the build on purpose). Fix the
-  content, push again. The previous version stays online meanwhile.
-- **A page returns 404.** The Worker serves `dist/404.html`
-  (`not_found_handling: "404-page"`). Check the trailing slash and the
-  route table in the spec. A product renamed in the CMS changes its URL.
+- **Build fails on Cloudflare, passes locally.** Build command `pnpm build`,
+  `pnpm-lock.yaml` committed, `.nvmrc` 22; read the build log
+  (**Deployments** > **View build history**) for a content error (a CMS
+  edit with a missing image or empty price fails on purpose). Fix, push. The
+  previous version stays online.
+- **A page returns 404.** The Worker serves `dist/404.html`. Check the
+  trailing slash; a product renamed in the CMS changes its URL.
 - **`/api/*` returns 404 or HTML.** `run_worker_first: ["/api/*"]` must be
-  in `wrangler.jsonc`, and the deployed Worker must be the one built from
-  this repository (Deployments tab).
-- **Webhook signature errors (400 `INVALID_SIGNATURE`).** When the Worker
-  logs show `config.missing` with `name: "STRIPE_WEBHOOK_SECRET"`, the
-  secret is not set at all. Otherwise the `STRIPE_WEBHOOK_SECRET` does not
-  belong to this endpoint or this mode (test and live differ), or it was
-  pasted with a space. Copy it again from the endpoint page. Then, in
-  Stripe, resend the failed events.
-- **Webhook 500 `EMAIL_FAILED`.** The owner e-mail could not be sent:
-  Worker logs `order.email_refused` (a Resend 4xx: domain not verified,
-  wrong `ORDER_EMAIL_TO` or sender) or `order.email_failed` (Resend down),
-  with `recipient: "owner"`. The customer e-mail waits for the owner's, so
-  nobody receives a confirmation twice. Stripe retries for up to three
-  days, then e-mails the account about the failing endpoint. Fix the cause,
-  then resend the event from the endpoint page.
-- **A customer sees "un prix a changé".** The Worker refused an order
-  because the page showed another price than `/catalog.json`
-  (`409 PRICE_CHANGED`): a tab opened before a price change, or the minute
-  after a deploy while the Worker's catalogue cache refreshes. Reloading the
-  page fixes it; nothing was charged.
-- **Webhook 200 but no e-mail.** Check `RESEND_API_KEY`, the domain status
-  in Resend (Verified), the Resend logs, the 100 per day limit, then
-  Gmail's spam folder. Workers & Pages, the Worker, Logs shows the order
-  summary when no key is set.
-- **E-mails land in junk.** DKIM, SPF and DMARC must all pass: open the
-  message in Gmail, "Show original", and read the SPF, DKIM and DMARC
-  lines.
+  in `wrangler.jsonc`, and the deployed Worker must come from this
+  repository (**Deployments**).
+- **Webhook 400 `INVALID_SIGNATURE`.** `config.missing` with
+  `STRIPE_WEBHOOK_SECRET` in **Observability**: the secret is not set.
+  Otherwise it belongs to another destination or mode, or has a space.
+  Copy it again (destination > **Click to reveal**), then **Event
+  deliveries** > **Resend** the failed events (up to 15 days).
+- **Webhook 500 `EMAIL_FAILED`.** The owner e-mail failed:
+  `order.email_refused` (Resend 4xx: domain not verified, wrong
+  `ORDER_EMAIL_TO` or sender) or `order.email_failed` (Resend down). The
+  customer e-mail waits for the owner's, so nobody gets two. Stripe retries
+  for three days. Fix, then resend the event.
+- **"Un prix a changé".** `409 PRICE_CHANGED`: the page showed another price
+  than `/catalog.json` (old tab, or the minute after a deploy). Reload;
+  nothing was charged.
+- **Webhook 200 but no e-mail.** `RESEND_API_KEY`, domain **Verified**,
+  Resend **Logs**, the 100 a day limit, Gmail spam. Without a key,
+  **Observability** shows the order summary.
+- **E-mails in junk.** Gmail > the message > **Show original**: SPF, DKIM
+  and DMARC must say PASS.
+- **Email Routing will not start (error 2008).** Foreign MX records remain:
+  delete OVHcloud's MX in **DNS** > **Records**.
 - **CMS login loop or "origin not allowed".** `ALLOWED_DOMAINS` does not
-  match the host in the address bar, the OAuth callback URL is not
-  `<worker url>/callback`, or `base_url` in `public/admin/config.yml`
-  points at another Worker. Also check that the GitHub account has write
-  access to the repository (after the transfer, to the new owner's).
-- **CMS save does not appear on the site.** Check the commit on GitHub,
-  then the build in Workers & Pages, Deployments.
-- **Redeploy without a change.** Workers & Pages, `racines-en-partage`,
-  Deployments, Retry.
+  match the address bar host, the callback is not
+  `<authenticator url>/callback`, or `base_url` points elsewhere. The
+  GitHub account needs write access to the repository.
+- **CMS save not on the site.** Commit on GitHub, then the build in
+  **Deployments** > **View build history**.
+- **Redeploy without a change.** Push an empty commit:
+  `git commit --allow-empty -m "chore: redeploy" && git push`.

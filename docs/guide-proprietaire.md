@@ -935,8 +935,10 @@ de ses menus peuvent changer légèrement.
 **Voir les inscrits à la newsletter**
 
 1. Connectez-vous sur **resend.com** (bouton **Log in**).
-2. Menu **Audiences**.
-3. Ouvrez la liste de la boutique, créée par votre développeur.
+2. Menu **Audience**, puis **Contacts** (le segment « Newsletter Racines
+   en Partage » regroupe les inscrits de la boutique, créé par votre
+   développeur).
+3. Filtrez sur ce segment si d’autres contacts apparaissent.
 4. Chaque ligne est une personne inscrite, avec son e-mail et sa date
    d’inscription. **Subscribed** veut dire inscrite ; **Unsubscribed**,
    désinscrite (elle ne recevra plus rien).
@@ -950,7 +952,8 @@ main : chacun doit s’être inscrit lui-même.
 1. Sur resend.com, menu **Broadcasts**.
 2. Cliquez sur **Create broadcast**.
 3. Gardez l’expéditeur proposé.
-4. Comme destinataires, choisissez la liste de la boutique.
+4. Comme destinataires, choisissez le segment « Newsletter Racines en
+   Partage ».
 5. Tapez l’objet, par exemple « Le bissap est de retour ».
 6. Écrivez la lettre. Terminez par le nom et l’adresse de la boutique :
    « Racines en Partage, 9 Rue du Marché, 95400 Arnouville ».
@@ -961,8 +964,10 @@ main : chacun doit s’être inscrit lui-même.
 9. Revenez dans Resend et cliquez sur **Send**, maintenant ou à la date
    choisie.
 
-Le lien de désinscription est ajouté par Resend en bas de chaque lettre :
-inutile de l’écrire. Une à deux lettres par mois suffisent. Mêmes règles
+Chaque lettre doit finir par le lien de désinscription : dans l’éditeur,
+ajoutez le pied de page de désinscription de Resend (« unsubscribe
+footer »), ou un lien dont l’adresse est `{{{RESEND_UNSUBSCRIBE_URL}}}`.
+Vérifiez dans l’essai que le lien est bien là avant d’envoyer. Une à deux lettres par mois suffisent. Mêmes règles
 que sur le site : aucune promesse de santé au-delà des mots de l’étiquette.
 Une partie des inscrits lit le site en anglais : quelques lignes en anglais
 à la fin sont les bienvenues, sans obligation.

@@ -42,13 +42,13 @@ page the day it is used.
 | Layer                     | Tool and plan                                      | Fixed cost                                                                      | Limits that matter at Marie's scale                                                                                                                    |
 | ------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Site                      | Astro 7 static build, French and English           | 0                                                                               | none                                                                                                                                                   |
-| Hosting, API, cron        | Cloudflare Workers, Free plan, static assets       | 0                                                                               | 100,000 Worker requests a day (only `/api/*` counts; static files are free and unlimited, verify)                                                      |
-| Builds and deploys        | Cloudflare Workers Builds, on every push           | 0                                                                               | 3,000 build minutes a month, one build at a time (verify); one build is 2 to 3 minutes                                                                 |
+| Hosting, API, cron        | Cloudflare Workers, Free plan, static assets       | 0                                                                               | 100,000 Worker requests a day (only `/api/*` counts; static files are free and unlimited)                                                              |
+| Builds and deploys        | Cloudflare Workers Builds, on every push           | 0                                                                               | 3,000 build minutes a month, one build at a time; one build is 2 to 3 minutes                                                                          |
 | Code, CI                  | GitHub Free, private repository, Actions           | 0                                                                               | 2,000 Actions minutes a month on private repositories; one CI run is 8 to 10 minutes                                                                   |
 | Content editing           | Sveltia CMS at `/admin/` plus its auth Worker      | 0                                                                               | none                                                                                                                                                   |
-| Payments                  | Stripe Checkout, standard pricing France           | 0 monthly                                                                       | 1.5 % + 0.25 EUR per EEA card payment; 2.5 % UK cards; 3.25 % other cards (verify)                                                                     |
+| Payments                  | Stripe Checkout, standard pricing France           | 0 monthly                                                                       | 1.5 % + 0.25 EUR per EEA card payment; 2.5 % UK cards; 3.15 % other cards (+2 % conversion)                                                            |
 | Order and form e-mails    | Resend, Free plan, domain `racinesenpartage.fr`    | 0                                                                               | 3,000 e-mails a month, 100 a day, one domain; about 50 orders a day at two e-mails each                                                                |
-| Newsletter                | Resend Audiences and Broadcasts, Free plan         | 0                                                                               | about 1,000 contacts on the free plan (verify); Pro is 20 USD a month                                                                                  |
+| Newsletter                | Resend Segments and Broadcasts, Free plan          | 0                                                                               | 1,000 contacts on the free plan; Pro is 20 USD a month                                                                                                 |
 | Anti-bot, analytics, mail | Cloudflare Turnstile, Web Analytics, Email Routing | 0                                                                               | none                                                                                                                                                   |
 | Form budget               | Cloudflare Workers KV, Free                        | 0                                                                               | 1,000 writes a day; the forms write one per e-mail                                                                                                     |
 | Domain                    | OVHcloud, `.fr`, DNS at Cloudflare                 | 4.99 EUR HT the first year, then 7.79 EUR HT a year (5.99 and 9.35 TTC, verify) | auto-renewal on                                                                                                                                        |
@@ -102,8 +102,10 @@ Each step: **who**, what, check. Commands run at the repository root.
 
 1. **Dev** Create the GitHub account `racinesenpartage` with the business
    Gmail; two-factor with the authenticator; recovery codes in the vault.
-2. **Dev** Signed in as `ngawang21`: repository Settings, Danger Zone,
-   Transfer ownership, to `racinesenpartage`. Accept the transfer as
+2. **Dev** Signed in as `ngawang21`: repository Settings, General, Danger
+   Zone, Transfer, to `racinesenpartage` (deferred to handover on
+   2026-11-09: Workers Builds is connected to `ngawang21`; D1 says how to
+   reconnect). Accept the transfer as
    `racinesenpartage`, keep it private, then Settings, Collaborators, add
    `ngawang21` with Write.
 3. **Dev** Update every reference to the old owner, commit, push:
@@ -122,20 +124,21 @@ Each step: **who**, what, check. Commands run at the repository root.
 ### Phase C. Cloudflare account, first deploy, secrets (developer, 1 to 2 hours)
 
 1. **Dev** Create the Cloudflare account with the business Gmail, Free plan,
-   two-factor on. Manage account, Members: invite the developer's own
+   two-factor on. Members, Invite members: invite the developer's own
    Cloudflare e-mail as Administrator so day-to-day work does not use the
    owner login. D2.
-2. **Dev** Workers & Pages, Create, Import a repository: authorise the
-   Cloudflare GitHub app on `racinesenpartage`, choose the repository.
+2. **Dev** Workers & Pages, Create application, GitHub: authorise the
+   Cloudflare GitHub app on the repository owner, choose the repository.
    Worker name `racines-en-partage`, build `pnpm build`, deploy
    `npx wrangler deploy`, root `/`, build variable
-   `PUBLIC_MONDIAL_RELAY_BRAND=BDTEST`. D2 step 4.
+   `PUBLIC_MONDIAL_RELAY_BRAND=BDTEST`. D2.2.
 3. **Dev** Deploy. Check on a phone: home, `/boutique/`, a product page,
    `/api/health` on `racines-en-partage.<account>.workers.dev`.
 4. **Dev** Turnstile: Add widget `racines-en-partage`, hostnames
-   `racinesenpartage.fr` and the `workers.dev` host, Managed mode. Site key
-   into the vault for phase H (it goes in the CMS settings), secret key
-   into the Worker secret `TURNSTILE_SECRET_KEY`. D14.
+   `racinesenpartage.fr` and the `workers.dev` host, Managed mode. Both
+   keys into the vault. The site key goes in the CMS settings in phase H,
+   and the secret into `TURNSTILE_SECRET_KEY` only after that save (a
+   secret without a site key makes every form fail). D14.
 5. **Dev** KV: `pnpm exec wrangler kv namespace create FORMS_KV` (after
    `pnpm exec wrangler login` on the owner account), paste the id into
    `wrangler.jsonc` and uncomment the `kv_namespaces` line, commit, push.
@@ -144,36 +147,37 @@ Each step: **who**, what, check. Commands run at the repository root.
    order:
    - `FORMS_SECRET`: `openssl rand -base64 32`. D13.
    - `ORDER_EMAIL_TO`: `racinesenpartage@gmail.com`.
-   - `TURNSTILE_SECRET_KEY`: from step 4.
+   - `TURNSTILE_SECRET_KEY`: phase H, step 3.
    - `GITHUB_TOKEN`: fine-grained token created **as `racinesenpartage`**,
      repository `racinesenpartage/racines-en-partage` only, Contents read
      and write, one year; expiry reminder in the vault's note. D16.
    - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`: phase F.
    - `RESEND_API_KEY`, `RESEND_AUDIENCE_ID`: phase E.
-7. **Dev** Web Analytics: Analytics & Logs, Web Analytics, Add a site
-   (hostname `racinesenpartage.fr`), copy the token into the vault for the
+7. **Dev** Web Analytics, Add a site (hostname `racinesenpartage.fr`) once
+   the zone is active, Manage site, Enable with JS Snippet installation
+   (D2.3), copy the token into the vault for the
    CMS field `analytics.cloudflareToken` (phase H).
 
 ### Phase D. Domain and DNS (developer, Marie for the payment, then wait up to 24 hours)
 
-1. **Dev** OVHcloud account with the business Gmail. Account holder and
-   registrant: Marie's business (name, SIREN, address). Technical contact:
-   the developer.
-2. **Marie** Payment method on the OVHcloud account (her card or SEPA
-   mandate), or the developer pays and re-invoices. Order
-   `racinesenpartage.fr` with automatic renewal. Price seen on 2026-11-08:
-   4.99 EUR HT the first year, 7.79 EUR HT a year after (verify). D4.
-3. **Dev** Cloudflare, Add a domain, `racinesenpartage.fr`, Free. Copy the
-   two nameservers into OVHcloud (Domain names, DNS servers, Modify). Wait
-   for Cloudflare's "zone active" e-mail.
-4. **Dev** Worker Settings, Domains & Routes: custom domains
-   `racinesenpartage.fr` and `www.racinesenpartage.fr`; Redirect rule
-   `www` to apex, 301. D5.
-5. **Dev** Email Routing: destination `racinesenpartage@gmail.com` (Marie
-   or the developer clicks the confirmation in the inbox), custom addresses
-   `contact@` and `commandes@`. D7.
-6. **Dev** DNSSEC on, DS record pasted at OVHcloud (skip if refused). D4
-   step 6.
+1. **Dev** OVHcloud account with the business Gmail, type Entreprise,
+   holder Marie's micro-entreprise (legal name and SIRET from SIRENE). All
+   contacts stay on this account. Done. D4.1.
+2. **Marie** Ordered `racinesenpartage.fr` for 3 years (18.70 EUR TTC,
+   renewal November 2029 at 7.79 EUR HT a year). Done. Her card goes under
+   Moyens de paiement with automatic renewal at the Stripe session (F2).
+3. **Dev** OVHcloud DNSSEC off and wait for the DS record to disappear
+   (D4.2); Cloudflare, Onboard a domain, records entered manually and none
+   added (D4.3); then the two Cloudflare nameservers into OVHcloud, Serveurs
+   DNS, Option 2 (D4.4). Wait for Cloudflare's "zone active" e-mail (D4.5).
+4. **Dev** Worker Settings, Domains & Routes: custom domain
+   `racinesenpartage.fr`; proxied placeholder A record `www` to
+   `192.0.2.1`; Redirect rule `www` to apex, 301; Always Use HTTPS. D5.
+5. **Dev** Email Routing, Onboard Domain; destination
+   `racinesenpartage@gmail.com` (Marie or the developer clicks Verify in
+   the inbox); routing rules `contact@` and `commandes@`. D7.
+6. **Dev** DNSSEC on through Cloudflare, DS record at OVHcloud with the
+   public key, not the digest (skip if refused). D4.6.
 7. Check:
 
    ```sh
@@ -188,17 +192,17 @@ Each step: **who**, what, check. Commands run at the repository root.
 ### Phase E. Resend (developer, 30 minutes plus DNS propagation)
 
 1. **Dev** Resend account on the business Gmail, two-factor on.
-2. **Dev** Domains, Add `racinesenpartage.fr` (EU region if offered). Create
-   each DNS record in Cloudflare exactly as shown, unproxied. Merge SPF
-   with Email Routing's if both land on the apex. Add `_dmarc` TXT
-   `v=DMARC1; p=none;`. Verify. D6.
+2. **Dev** Domains, Add Domain `racinesenpartage.fr`, region eu-west-1
+   (Ireland). Records through "Sign in to Cloudflare", or each by hand in
+   Cloudflare, DNS only (Resend's SPF is on `send`, no clash with Email
+   Routing). Add `_dmarc` TXT `v=DMARC1; p=none;`. Verify. D6.
 3. **Dev** API Keys: one key, Full access (it must also add contacts),
-   domain `racinesenpartage.fr`, into the Worker secret `RESEND_API_KEY`.
-4. **Dev** Audiences: create `Newsletter Racines en Partage`, id into
-   `RESEND_AUDIENCE_ID`. D15.
+   into the Worker secret `RESEND_API_KEY`.
+4. **Dev** Audience, Segments: create `Newsletter Racines en Partage`, id
+   into `RESEND_AUDIENCE_ID` (Resend renamed Audiences to Segments; D15).
 5. Check: a contact form message from the deployed site reaches the Gmail
    inbox with the customer as reply-to; a newsletter signup sends the
-   confirmation, its button adds the contact to the audience. Gmail, Show
+   confirmation, its button adds the contact to the segment. Gmail, Show
    original: SPF, DKIM and DMARC pass.
 
 ### Phase F. Stripe (developer starts, Marie activates, 1 hour together)
@@ -216,16 +220,16 @@ Each step: **who**, what, check. Commands run at the repository root.
    EEA card payment before paying out; fees are not returned on a refund
    (verify on stripe.com/fr/pricing).
 3. **Dev** Settings, Team: invite the developer as Developer.
-4. **Dev** Test mode: `sk_test_` into `STRIPE_SECRET_KEY`; webhook endpoint
-   `https://racinesenpartage.fr/api/webhooks/stripe` with the three
-   `checkout.session.*` events; `whsec_` into `STRIPE_WEBHOOK_SECRET`.
+4. **Dev** Sandbox: `sk_test_` into `STRIPE_SECRET_KEY`; Workbench, Webhooks,
+   event destination `https://racinesenpartage.fr/api/webhooks/stripe`
+   (Snapshot payload) with the three `checkout.session.*` events; `whsec_` into `STRIPE_WEBHOOK_SECRET`.
    D8.2.
-5. **Dev** Test checklist D8.2 step 4: three delivery methods, FR and EN,
+5. **Dev** Test checklist D8.2 step 5: three delivery methods, FR and EN,
    3-D Secure card, declined card, back button, promo code, refund. Both
    e-mails received each time, webhook 200. Note the date of the first test
    order: the review step K4 needs an order 7 to 10 days old.
 6. **Dev** Send-once markers, right after the first test order (D8.2 step
-   4, item 12). Every "send once" guard (order e-mails, review invitations,
+   5, item 12). Every "send once" guard (order e-mails, review invitations,
    "already reviewed") is a metadata key Stripe must accept on a completed
    Checkout Session. Workbench (Developers), Logs: the request
    `POST /v1/checkout/sessions/cs_test_...` of that order answers 200 and
@@ -246,7 +250,7 @@ Each step: **who**, what, check. Commands run at the repository root.
    no-subscription version. Per-label price from about 3 EUR HT (verify).
    D9.1.
 2. **Dev** Build variable `PUBLIC_MONDIAL_RELAY_BRAND` set to her client
-   code, Deployments, Retry. Check: `/commande/`, Point Relais, postcode
+   code, push a commit to rebuild. Check: `/commande/`, Point Relais, postcode
    95400 lists relay points.
 3. **Marie** Create one label from a test order e-mail (stop before
    paying). Every field needed is in the e-mail. D9.2.
@@ -318,7 +322,7 @@ Each step: **who**, what, check. Commands run at the repository root.
    and step 3 passed: both Stripe endpoints on `racinesenpartage.fr`, then
    `"workers_dev": false` (and `"preview_urls": true`) in `wrangler.jsonc`,
    commit, push. Check: the `workers.dev` `/api/health` no longer answers
-   200, `https://racinesenpartage.fr/api/health` does. D5 step 4.
+   200, `https://racinesenpartage.fr/api/health` does. D5 step 5.
 6. **Dev** Lighthouse mobile on the live home, shop, product and cart
    pages (target 95 on each category) and a real-phone walk of the
    purchase flow.
