@@ -2,6 +2,7 @@
 // (localStorage in the browser, a Map in tests) and the clock are injected;
 // the cross-tab `storage` event is forwarded by the client through
 // `syncFromStorage`.
+import { restoreLines } from './undo';
 
 export type ShippingMethodId = 'relay' | 'home' | 'pickup';
 
@@ -54,6 +55,11 @@ export interface CartStore {
   /** Sets the line quantity, clamped to 1..max; 0 or less removes the line. */
   setQuantity(sku: string, quantity: number): CartState;
   removeLine(sku: string): CartState;
+  /**
+   * Puts a removed line back at `index` (undo, src/cart/undo.ts), its quantity
+   * clamped; a product already in the cart keeps its line.
+   */
+  restoreLine(sku: string, quantity: number, index: number): CartState;
   setDelivery(delivery: Delivery | undefined): CartState;
   clear(): CartState;
   subscribe(listener: Listener): () => void;
@@ -222,6 +228,11 @@ export function createCartStore(options: StoreOptions = {}): CartStore {
     removeLine(sku) {
       if (!state.lines.some((l) => l.sku === sku)) return state;
       return withLines(state.lines.filter((l) => l.sku !== sku));
+    },
+    restoreLine(sku, quantity, index) {
+      const restored = clampQuantity(quantity, max);
+      if (!SKU_RE.test(sku) || restored < 1 || state.lines.some((l) => l.sku === sku)) return state;
+      return withLines(restoreLines(state.lines, { id: 0, sku, quantity: restored, index }));
     },
     setDelivery(delivery) {
       return commit({ lines: state.lines, delivery });

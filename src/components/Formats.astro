@@ -2,7 +2,9 @@
 // "Format" row of a product page (spec 2.5): one pill per format of the
 // family (same French name and category, see formatsOf), the current one
 // marked, each with its price per kilo so the saving reads at a glance.
-// Renders nothing for a product with a single format.
+// Renders nothing for a product with a single format. The links are
+// prefetched on hover like every internal link (the fragment does not change
+// the document fetched).
 import type { Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
 import type { Product } from '../content/schemas';
@@ -18,6 +20,11 @@ interface Props {
   t: LocaleContent;
 }
 const { current, formats, locale, t } = Astro.props;
+// The other format opens on its buy block (ProductView's id, with a
+// scroll-margin-top): a phone visitor keeps their place (review 17).
+const BUY_ANCHOR = { fr: '#achat', en: '#buy' } as const;
+const hrefOf = (p: Product) =>
+  routePath('product', locale, p.slug) + (p.slug === current.slug ? '' : BUY_ANCHOR[locale]);
 ---
 
 {
@@ -33,11 +40,7 @@ const { current, formats, locale, t } = Astro.props;
           const isCurrent = p.slug === current.slug;
           return (
             <li>
-              <a
-                class="pill"
-                href={routePath('product', locale, p.slug)}
-                aria-current={isCurrent ? 'page' : undefined}
-              >
+              <a class="pill" href={hrefOf(p)} aria-current={isCurrent ? 'page' : undefined}>
                 <span class="pill-main">
                   <span class="pill-weight">{weight}</span>
                   <span class="visually-hidden">, </span>

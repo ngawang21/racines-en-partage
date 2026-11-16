@@ -198,6 +198,23 @@ test('relay without a chosen point, then an out-of-stock answer from the API', a
     ),
   ).toBe(true);
   await expect(page.locator('[data-co-delivery-error]')).toBeHidden();
+  // The emphasis is on the relay block, not on a field.
+  const relaySearch = page.locator('[data-relay-search]');
+  await expect(relaySearch).toHaveClass(/is-invalid/);
+
+  // A postcode typed but no list shown (review 17): the focus goes to
+  // "Rechercher un Point Relais", which the message describes, never to the
+  // valid postcode (the red focus ring read as an error there).
+  await postcode.fill('95400');
+  await page.locator('[data-co-pay]').click();
+  const go = page.getByRole('button', { name: 'Rechercher un Point Relais' });
+  await expect(choose).toHaveText('Choisissez un Point Relais.');
+  await expect(go).toBeFocused();
+  await expect(go).toHaveAttribute('aria-describedby', 'rep-relay-error');
+  await expect(postcode).not.toBeFocused();
+  await expect(postcode).not.toHaveAttribute('aria-invalid', 'true');
+  await expect(relaySearch).toHaveClass(/is-invalid/);
+  expect(await relaySearch.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');
 
   // Home delivery, the API answers OUT_OF_STOCK: the line is flagged with a remove action.
   await page.locator('.method-card', { hasText: 'domicile' }).click();
@@ -211,8 +228,21 @@ test('relay without a chosen point, then an out-of-stock answer from the API', a
   await expect(page.locator('[data-co-error]')).toBeVisible();
   await expect(line).toHaveClass(/is-flagged/);
   await expect(page.locator('[data-co-pay]')).toBeEnabled();
+  await expect(relaySearch).not.toHaveClass(/is-invalid/);
+  await expect(page.getByRole('link', { name: 'Modifier le panier' })).toBeVisible();
   await line.locator('[data-line-remove]').click();
   await expect(page.locator('[data-checkout-empty]')).toBeVisible();
+  // Nothing left to edit (review 17): no "Modifier le panier" above the empty cart.
+  await expect(page.getByRole('link', { name: 'Modifier le panier' })).toBeHidden();
+});
+
+test('an empty checkout has no "Modifier le panier" link (review 17)', async ({ page }) => {
+  await page.goto(PATHS.en.checkout);
+  await expect(page.locator('[data-checkout-empty]')).toBeVisible();
+  await expect(page.locator('[data-checkout-edit]')).toBeHidden();
+  await page.goto(PATHS.fr.checkout);
+  await expect(page.locator('[data-checkout-empty]')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Modifier le panier' })).toBeHidden();
 });
 
 test('thanks page stays neutral without a session or when the order lookup fails', async ({

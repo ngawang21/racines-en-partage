@@ -65,6 +65,7 @@ export function initCheckout(ctx: CartContext): void {
   const q = <T extends HTMLElement>(sel: string) => root.querySelector<T>(sel);
 
   const content = q<HTMLElement>('[data-checkout-content]');
+  const editCart = q<HTMLElement>('[data-checkout-edit]');
   const empty = q<HTMLElement>('[data-checkout-empty]');
   const lines = q<HTMLUListElement>('[data-co-lines]')!;
   const methods = q<HTMLFieldSetElement>('[data-co-methods]')!;
@@ -171,6 +172,8 @@ export function initCheckout(ctx: CartContext): void {
     hasLines = cart.lines.length > 0;
     if (content) content.hidden = !hasLines;
     if (empty) empty.hidden = hasLines;
+    // Nothing to edit in an empty cart (review 17).
+    if (editCart) editCart.hidden = !hasLines;
     renderLines(lines, cart.lines, ctx, { variant: 'summary', flagged });
 
     subtotalEl.textContent = ctx.price(totals.subtotal);
@@ -360,14 +363,18 @@ export function initCheckout(ctx: CartContext): void {
    * "Choisissez un Point Relais." (review 14): never on the postcode, which is
    * valid. Under the results list when there is one, the focus then on its
    * first open point (described by the message); otherwise under the search
-   * row, the focus on the postcode. The paragraph is an alert, so the message
-   * is announced as it appears.
+   * row, the focus on the postcode when none was typed, else on "Rechercher un
+   * Point Relais" (review 17: the red focus ring on a valid postcode read as
+   * an error). The outline is on the relay block. The paragraph is an alert,
+   * so the message is announced as it appears.
    */
   const setChooseError = (show: boolean) => {
     if (!relay) return;
     const { choose } = relay;
     for (const point of relay.frame.querySelectorAll('[aria-describedby="rep-relay-error"]'))
       point.removeAttribute('aria-describedby');
+    relay.search.classList.toggle('is-invalid', show);
+    relay.go.removeAttribute('aria-describedby');
     if (!show) {
       choose.textContent = '';
       return;
@@ -384,6 +391,10 @@ export function initCheckout(ctx: CartContext): void {
       first.setAttribute('aria-describedby', choose.id);
       first.focus({ preventScroll: true });
       first.scrollIntoView({ block: 'center', behavior: smoothScroll() });
+    } else if (relay.postcode.value.trim() !== '') {
+      relay.go.setAttribute('aria-describedby', choose.id);
+      relay.go.focus({ preventScroll: true });
+      relay.fields.scrollIntoView({ block: 'center', behavior: smoothScroll() });
     } else {
       relay.postcode.focus({ preventScroll: true });
       relay.fields.scrollIntoView({ block: 'center', behavior: smoothScroll() });

@@ -71,7 +71,7 @@
       "shareText": "Your parcel arrives within a few days. All that is left is to make the cup."
     },
     "unitPrice": "Price per kilo",
-    "recipesLink": "Our recipes",
+    "recipesLink": "Recipe ideas for every pouch",
     "priceFrom": "from",
     "categoriesNav": "Shop categories",
     "commitments": {
@@ -119,7 +119,6 @@
       "gluten": "Gluten"
     },
     "related": "In the same spirit",
-    "disclaimer": "To be consumed as part of a varied, balanced diet and a healthy lifestyle. Keep out of the reach of young children.",
     "packagedBy": "Packed in France by ESAT Les Oliviers (Gennevilliers, 92)",
     "gallery": "Product photos",
     "imageOf": "Photo {n} of {total}",
@@ -127,6 +126,8 @@
     "closePhoto": "Close",
     "previousPhoto": "Previous photo",
     "nextPhoto": "Next photo",
+    "zoomIn": "Zoom in on the photo",
+    "zoomOut": "See the whole photo",
     "galleryDuo": "{name}, shown with another product from the range",
     "unitPrice": "Price per kilo",
     "formats": "Size",
@@ -178,7 +179,11 @@
     "shippingFromFree": "From {amount} to a pickup point, free from {threshold}",
     "shippingOffered": "Free",
     "maxNote": "Up to {max} per product. For more, {contact}.",
-    "maxNoteContact": "write to us"
+    "maxNoteContact": "write to us",
+    "undoRemoved": "{name} removed.",
+    "undo": "Undo",
+    "undoOf": "Undo removing {name}",
+    "restored": "{name} is back in your cart"
   },
   "checkout": {
     "title": "Your order",
@@ -485,6 +490,7 @@
     "breadcrumb": "Breadcrumb",
     "newTab": "(opens in a new tab)",
     "medallionAlt": "Racines en Partage medallion: a hibiscus flower and leaves",
+    "originsMapAlt": "Map of where our products come from: {lands}, each linked by a line to {home}, France.",
     "openSearch": "Open search",
     "account": "My account"
   }

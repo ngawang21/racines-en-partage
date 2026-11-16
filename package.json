@@ -25,6 +25,7 @@
     "brand": "node scripts/brand-assets.mjs",
     "card": "node scripts/business-card.mjs",
     "photos": "node scripts/photos.mjs",
+    "map": "node scripts/origins-map.mjs",
     "deploy": "wrangler deploy"
   },
   "dependencies": {
@@ -42,13 +43,16 @@
     "@cloudflare/workers-types": "^5.20261101.1",
     "@playwright/test": "1.62.1",
     "@types/qrcode": "^1.5.6",
+    "d3-geo": "^3.1.2",
     "node-html-parser": "^9.0.3",
     "prettier": "^3.9.6",
     "prettier-plugin-astro": "^0.14.1",
     "qrcode": "^1.5.4",
     "sharp": "^0.35.4",
+    "topojson-client": "^3.1.0",
     "typescript": "~5.9.0",
     "vitest": "^5.0.0",
+    "world-atlas": "^2.0.2",
     "wrangler": "^4.156",
     "yaml": "^2.9.0"
   }

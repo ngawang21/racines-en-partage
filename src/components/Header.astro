@@ -5,9 +5,12 @@
 // panel (56 px rows, contact line and language at the bottom) over a scrim
 // that closes it; it works without script, and header-menu.ts adds Escape,
 // close on navigation, bfcache, the panel's top edge and the header that
-// hides on scroll down on phones. The search button opens SearchDialog
-// (mounted right after the header). Primary links: four (spec 8.5), recipes
-// live in context and in the footer.
+// hides on scroll down on phones, and makes the page behind the open panel
+// inert. The search button opens SearchDialog (mounted right after the
+// header). Primary links: five (spec 8.5 allows four to five), recipes
+// between the shop and the story (review 17). The cart badge renders
+// `data-empty` (hidden by cart.css) so no "0" shows before the cart script
+// counts the lines.
 import { Image } from 'astro:assets';
 import medallion from '../assets/brand/medallion.webp';
 import { SITE, type Locale } from '../consts';
@@ -39,6 +42,11 @@ const active = (keys: RouteKey[]): 'page' | undefined =>
   keys.includes(routeKey) ? 'page' : undefined;
 const links = [
   { href: routePath('shop', locale), label: t.nav.shop, current: active(['shop', 'category']) },
+  {
+    href: routePath('recipes', locale),
+    label: t.nav.recipes,
+    current: active(['recipes', 'recipe']),
+  },
   { href: routePath('about', locale), label: t.nav.about, current: active(['about']) },
   { href: routePath('faq', locale), label: t.nav.faq, current: active(['faq']) },
   { href: routePath('contact', locale), label: t.nav.contact, current: active(['contact']) },
@@ -168,7 +176,7 @@ const links = [
             >
               <Icon name="cart" />
               <span class="visually-hidden">{t.a11y.openCart}</span>
-              <span class="cart-count" data-cart-count>
+              <span class="cart-count" data-cart-count data-empty>
                 0
               </span>
               <span class="visually-hidden">{t.a11y.cartCount}</span>
@@ -486,6 +494,8 @@ const links = [
   .mobile-nav > ul a:active {
     color: var(--forest);
   }
+  /* The current section: forest text, a gold bar on the panel's edge and a
+     gold chevron, so it reads at a glance (review 17). */
   .mobile-nav > ul a[aria-current] {
     color: var(--forest);
     font-weight: 600;
@@ -494,10 +504,13 @@ const links = [
     content: '';
     position: absolute;
     left: calc(var(--gutter) * -1);
-    width: 3px;
-    height: 24px;
+    width: 4px;
+    height: 32px;
     border-radius: 0 2px 2px 0;
     background: var(--gold);
+  }
+  .mobile-nav > ul a[aria-current]::after {
+    border-color: var(--gold);
   }
   /* Contact line and language at the bottom of the panel, by the thumb. */
   .mobile-foot {
@@ -549,6 +562,27 @@ const links = [
     }
     .tools :global(.desktop-pill) {
       display: inline-flex;
+    }
+  }
+  .desktop-nav a {
+    white-space: nowrap;
+  }
+  /* Five links, the language pill and three icons beside the full wordmark
+     from 1024 px: tighter gaps and a slightly smaller link size up to 1199 px
+     (at 1024 the default spacing wrapped "Notre histoire" and cut the
+     wordmark). */
+  @media (min-width: 1024px) and (max-width: 1199px) {
+    .desktop-nav {
+      margin-right: var(--space-3);
+    }
+    .desktop-nav ul {
+      gap: var(--space-4);
+    }
+    .desktop-nav a {
+      font-size: 0.9375rem;
+    }
+    .tools {
+      gap: 2px;
     }
   }
 </style>

@@ -7,13 +7,21 @@
 // The first photo is the LCP element of the page: eager, high priority.
 //
 // Larger view (iteration 4, spec 3): a button over the main photo opens a
-// modal <dialog> with the photo fitted to the viewport, up to its exported
-// size (1600 x 2400). Its pictures sit in <template>s, so nothing is fetched
-// before the dialog opens; gallery.ts clones the one it shows. On phones the
-// photo takes the whole width and the page's native pinch zoom still works.
+// modal <dialog> with the photo fitted to the viewport. Its pictures sit in
+// <template>s, so nothing is fetched before the dialog opens; gallery.ts
+// clones the one it shows. On phones the photo takes the whole width and the
+// page's native pinch zoom still works.
+//
+// Zoom (review 17): the fitted photo is often no larger than the one on the
+// page, so a click on it (Enter or Space once focused, double tap on touch,
+// or the "+" and "−" buttons) toggles a 2x view that pans with a drag, the
+// wheel or the arrow keys. The files stay capped at 1200 px wide on purpose
+// (the `zoom` preset of Picture.astro, src/assets/brand/README.md): the 2x
+// view is a CSS scale of the largest of them, never more than 2x.
 import type { ImageMetadata } from 'astro';
 import { interpolate } from '../i18n/fallback';
 import { resolveAsset } from '../images';
+import { loadLocale } from '../i18n/locale';
 import { getLocaleFromUrl } from '../i18n/routing';
 import GalleryScript from './GalleryScript.astro';
 import Icon from './Icon.astro';
@@ -31,6 +39,9 @@ interface Props {
   /** Accessible names of the larger view's previous and next buttons. */
   previousLabel?: string;
   nextLabel?: string;
+  /** Accessible names of the larger view's zoom buttons (default: the product strings). */
+  zoomInLabel?: string;
+  zoomOutLabel?: string;
 }
 
 // Defaults until the strings move to the locale files (product namespace).
@@ -48,7 +59,9 @@ const DEFAULTS = {
     next: 'Next photo',
   },
 } as const;
-const fallback = DEFAULTS[getLocaleFromUrl(Astro.url)] ?? DEFAULTS.fr;
+const locale = getLocaleFromUrl(Astro.url);
+const fallback = DEFAULTS[locale] ?? DEFAULTS.fr;
+const { product: strings } = await loadLocale(locale);
 
 const {
   images,
@@ -58,6 +71,8 @@ const {
   closeLabel = fallback.close,
   previousLabel = fallback.previous,
   nextLabel = fallback.next,
+  zoomInLabel = strings.zoomIn,
+  zoomOutLabel = strings.zoomOut,
 } = Astro.props;
 const many = images.length > 1;
 
@@ -140,6 +155,24 @@ const zoomSizes = images.map((img) => {
         </template>
       ))
     }
+    <button
+      type="button"
+      class="lightbox-btn lightbox-zoom-out"
+      data-gallery-zoom="out"
+      aria-disabled="true"
+    >
+      <Icon name="minus" />
+      <span class="visually-hidden">{zoomOutLabel}</span>
+    </button>
+    <button
+      type="button"
+      class="lightbox-btn lightbox-zoom-in"
+      data-gallery-zoom="in"
+      aria-disabled="false"
+    >
+      <Icon name="plus" />
+      <span class="visually-hidden">{zoomInLabel}</span>
+    </button>
     <button type="button" class="lightbox-btn lightbox-close" data-gallery-close>
       <Icon name="close" />
       <span class="visually-hidden">{closeLabel}</span>
@@ -360,12 +393,14 @@ const zoomSizes = images.map((img) => {
       opacity: 0;
     }
   }
+  /* Clips the 2x view: the dialog never scrolls, so nothing moves around it. */
   .lightbox-stage {
     display: grid;
     place-items: center;
     width: 100%;
     height: 100%;
     min-height: 0;
+    overflow: hidden;
   }
   /* gallery.ts adds one frame per photo shown, stacked in the same cell. */
   .lightbox-stage :global(.lightbox-frame) {
@@ -397,7 +432,34 @@ const zoomSizes = images.map((img) => {
     max-height: 100vh;
     max-height: 100dvh;
     object-fit: contain;
+    cursor: zoom-in;
+    /* Native pinch stays; no double-tap page zoom, so a double tap toggles ours. */
+    touch-action: manipulation;
+    transform-origin: 50% 50%;
+    transition: transform var(--dur-base) var(--ease-out-strong);
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  /* The 2x view (gallery.ts sets the transform): a drag pans, a click returns
+     to the whole photo. One finger pans, two still pinch. No will-change: the
+     browser then re-rasterises the scaled photo sharp once it settles. */
+  .lightbox.is-zoomed .lightbox-stage :global(img) {
     cursor: zoom-out;
+    touch-action: pinch-zoom;
+  }
+  .lightbox.is-dragging .lightbox-stage :global(img) {
+    cursor: grabbing;
+    transition: none;
+  }
+  .lightbox-stage :global(img:focus-visible) {
+    outline: 2px solid var(--cream);
+    outline-offset: -4px;
+    box-shadow: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lightbox-stage :global(img) {
+      transition: none;
+    }
   }
   /* Wide screens: a margin of dark around the photo, clear of the arrows. */
   @media (min-width: 900px) {
@@ -432,6 +494,24 @@ const zoomSizes = images.map((img) => {
   .lightbox-close {
     top: max(var(--space-3), env(safe-area-inset-top));
     right: max(var(--space-3), env(safe-area-inset-right));
+  }
+  /* "−" and "+" in the top left corner, clear of the close button. */
+  .lightbox-zoom-out,
+  .lightbox-zoom-in {
+    top: max(var(--space-3), env(safe-area-inset-top));
+  }
+  .lightbox-zoom-out {
+    left: max(var(--space-3), env(safe-area-inset-left));
+  }
+  .lightbox-zoom-in {
+    left: calc(max(var(--space-3), env(safe-area-inset-left)) + 44px + var(--space-2));
+  }
+  .lightbox-btn[aria-disabled='true'] {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .lightbox-btn[aria-disabled='true']:active {
+    transform: none;
   }
   .lightbox-prev,
   .lightbox-next {

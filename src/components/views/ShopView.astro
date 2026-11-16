@@ -61,10 +61,6 @@ const sorts = [
     <h1>{t.shop.title}</h1>
     <div class="shop-lead">
       <p class="lead">{t.shop.intro}</p>
-      <a class="link-arrow head-link" href={routePath('recipes', locale)}>
-        {t.shop.recipesLink}
-        <Icon name="chevron" />
-      </a>
     </div>
   </div>
 
@@ -125,6 +121,12 @@ const sorts = [
       balance
     />
     <p class="empty" data-empty hidden>{t.shop.empty}</p>
+    <p class="shop-recipes">
+      <a class="link-arrow" href={routePath('recipes', locale)}>
+        {t.shop.recipesLink}
+        <Icon name="chevron" />
+      </a>
+    </p>
   </section>
 </Base>
 
@@ -135,7 +137,7 @@ const sorts = [
 <style>
   /* Compact head: at 1440 x 900 the grid starts near y = 300, so the first
      row's names, prices and add buttons sit above the fold (H1 at 40 px; from
-     1200 px the lead and the recipes link share its line; the chips, count
+     1200 px the lead shares its line; the chips, count
      and sort on one line). */
   .shop-head {
     padding-block: var(--space-4) 20px;
@@ -181,11 +183,6 @@ const sorts = [
     .shop-head .lead {
       max-width: none;
     }
-  }
-  .head-link {
-    flex: none;
-    font-size: 0.9375rem;
-    font-weight: 500;
   }
   .shop {
     padding-bottom: clamp(3rem, 2rem + 4.5vw, 6rem);
@@ -276,6 +273,15 @@ const sorts = [
   }
   .shop :global(.product-grid) {
     margin-top: 20px;
+  }
+  /* After the grid, one quiet line: the recipes are a way to use a pouch,
+     not a third action next to the filters (review 17). */
+  .shop-recipes {
+    margin-top: clamp(var(--space-8), 2rem + 2vw, var(--space-16));
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--line);
+    font-size: 0.9375rem;
+    font-weight: 500;
   }
   .empty {
     padding-block: var(--space-12);

@@ -2,8 +2,8 @@
 // "Un rituel, trois moments": the brand's word made concrete. Three times of
 // the day, one sentence each, a link to the recipe and the name of its
 // product. A type moment on cream between the reviews and the engagements;
-// above the time, the close-up of the product's contents when it exists (a
-// 2:1 strip, decorative: the link names the recipe), nothing otherwise.
+// above the time, the pouch's window (HomeView picks it, else the contents
+// close-up; 2:1, decorative: the link names the recipe), nothing otherwise.
 import Icon from './Icon.astro';
 import Picture from './Picture.astro';
 
@@ -16,7 +16,7 @@ interface Props {
     title: string;
     href: string;
     productName?: string;
-    /** `/src/assets/products/detail/<file>`, when the strip exists. */
+    /** A 2:1 picture path (the pouch window or the contents close-up). */
     detail?: string;
   }>;
   link: { href: string; label: string };
@@ -120,6 +120,7 @@ const { title, moments, link } = Astro.props;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: 50% 0;
   }
   .moment-time {
     color: var(--hibiscus-deep);

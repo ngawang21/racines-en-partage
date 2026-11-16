@@ -947,6 +947,14 @@ collections:
         fields:
           - { name: title, label: Titre, widget: string, i18n: true, required: [fr] }
           - { name: lead, label: Introduction, widget: text, i18n: true, required: [fr] }
+          - name: groupTitles
+            label: Titres des groupes
+            widget: object
+            i18n: true
+            hint: Les deux titres qui séparent les questions sur la page, dans cet ordre.
+            fields:
+              - { name: products, label: Groupe « Nos produits », widget: string, i18n: true, required: [fr] }
+              - { name: orders, label: Groupe « Commande et livraison », widget: string, i18n: true, required: [fr] }
           - name: items
             label: Questions
             label_singular: question
@@ -960,7 +968,25 @@ collections:
               de livraison cités ici ne suivent pas les Réglages : corrigez-les à la main.
             fields:
               - { name: question, label: Question, widget: string, i18n: true, required: [fr] }
-              - { name: answer, label: Réponse, widget: text, i18n: true, required: [fr] }
+              - name: group
+                label: Groupe
+                widget: select
+                required: false
+                default: orders
+                i18n: duplicate
+                options:
+                  - { label: Nos produits, value: products }
+                  - { label: Commande et livraison, value: orders }
+                hint: Le titre sous lequel la question s'affiche ; sans choix, « Commande et livraison ».
+              - name: answer
+                label: Réponse
+                widget: text
+                i18n: true
+                required: [fr]
+                hint: >-
+                  Pour un lien vers une page du site, écrivez le texte entre crochets puis l'adresse
+                  entre parenthèses, sans espace : [page Recettes](/recettes/). Seules les adresses
+                  du site (qui commencent par /) deviennent des liens.
           - { name: seoTitle, label: Titre pour Google, widget: string, i18n: true, required: [fr] }
           - { name: seoDescription, label: Description pour Google, widget: text, i18n: true, required: [fr] }
 

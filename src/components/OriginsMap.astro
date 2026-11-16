@@ -1,0 +1,163 @@
+---
+// The origins map of the "Deux terres" band: Europe, Africa and India drawn
+// from Natural Earth by scripts/origins-map.mjs (a static SVG, no script on
+// the page), with the lands of the home page (`storyLands`) set over it in
+// HTML: a gold dot and the name on each origin, the hibiscus dot on
+// Arnouville. The names keep a readable size at every width (they grow with
+// the map, within bounds) and sit on the side the script chose for each
+// place, so none meets another. One image for assistive technology: its
+// text alternative names the six lands and Arnouville; the dots and names are
+// hidden from it. Static: the site allows one entrance (the hero) and no
+// motion on scroll.
+import mapUrl from '../assets/brand/origins-map.svg?url';
+import map from '../assets/brand/origins-map.json';
+import { INTL_LOCALE, type Locale } from '../consts';
+import { interpolate } from '../i18n/fallback';
+
+interface Props {
+  lands: { from: string[]; to: string };
+  locale: Locale;
+  /** `a11y.originsMapAlt`, with `{lands}` and `{home}`. */
+  alt: string;
+  class?: string;
+}
+const { lands, locale, alt, class: className } = Astro.props;
+
+// A land is found by its name in either language (an English page whose
+// lands fell back to French still finds them). A land the map does not know
+// is left out of the drawing, never invented; the unit test keeps the two
+// lists equal.
+type Point = (typeof map.origins)[number] | typeof map.home;
+const find = (name: string, points: Point[]) =>
+  points.find((p) => Object.values(p.names).includes(name));
+const places = [
+  ...lands.from.map((name) => ({ name, point: find(name, map.origins), home: false })),
+  { name: lands.to, point: find(lands.to, [map.home]), home: true },
+].flatMap(({ name, point, home }) =>
+  point ? [{ name, home, x: point.x, y: point.y, label: point.label }] : [],
+);
+const list = new Intl.ListFormat(INTL_LOCALE[locale], { type: 'conjunction' }).format(lands.from);
+const pct = (v: number, of: number) => `${Math.round((v / of) * 10000) / 100}%`;
+---
+
+<div class:list={['origins-map', className]}>
+  <img
+    src={mapUrl}
+    alt={interpolate(alt, { lands: list, home: lands.to })}
+    width={map.width}
+    height={map.height}
+    loading="lazy"
+    decoding="async"
+  />
+  <div class="places" aria-hidden="true">
+    {
+      places.map((p) => (
+        <span
+          class:list={['place', `at-${p.label}`, { home: p.home }]}
+          style={`left: ${pct(p.x, map.width)}; top: ${pct(p.y, map.height)}`}
+        >
+          <span class="dot" />
+          <span class="name">{p.name}</span>
+        </span>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .origins-map {
+    position: relative;
+    container-type: inline-size;
+  }
+  /* The coastlines fade out before the frame's edges: an illustration set on
+     the band, not a cropped chart. (The dots and names are not masked.) */
+  .origins-map img {
+    display: block;
+    width: 100%;
+    height: auto;
+    mask-image:
+      linear-gradient(to right, transparent, #000 5%, #000 95%, transparent),
+      linear-gradient(to bottom, transparent, #000 9%, #000 88%, transparent);
+    mask-composite: intersect;
+  }
+  .places {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  /* A zero-size anchor on the place; the dot centred on it, the name beside. */
+  .place {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+  .dot {
+    position: absolute;
+    left: -4px;
+    top: -4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 0 2px var(--forest);
+  }
+  .home .dot {
+    left: -6px;
+    top: -6px;
+    width: 12px;
+    height: 12px;
+    background: var(--hibiscus);
+    box-shadow:
+      0 0 0 2px var(--forest),
+      0 0 0 3px var(--cream);
+  }
+  /* 12.5 px on a phone, 17 px from a 700 px map; a forest halo keeps the
+     letters clear of the coastlines and the routes. */
+  .name {
+    position: absolute;
+    color: var(--cream);
+    font-family: var(--font-display);
+    font-size: clamp(0.75rem, 0.5rem + 1.29cqi, 1.0625rem);
+    line-height: 1;
+    white-space: nowrap;
+    text-shadow:
+      0 0 2px var(--forest),
+      0 0 4px var(--forest),
+      0 0 8px var(--forest);
+  }
+  .home .name {
+    font-weight: 600;
+  }
+  .at-e .name {
+    left: 0.75em;
+    transform: translateY(-55%);
+  }
+  .at-w .name {
+    right: 0.75em;
+    transform: translateY(-55%);
+  }
+  .at-n .name {
+    bottom: 0.7em;
+    transform: translateX(-50%);
+  }
+  .at-s .name {
+    top: 0.7em;
+    transform: translateX(-50%);
+  }
+  .at-ne .name {
+    left: 0.45em;
+    bottom: 0.45em;
+  }
+  .at-nw .name {
+    right: 0.45em;
+    bottom: 0.45em;
+  }
+  .at-se .name {
+    left: 0.45em;
+    top: 0.45em;
+  }
+  .at-sw .name {
+    right: 0.45em;
+    top: 0.45em;
+  }
+</style>

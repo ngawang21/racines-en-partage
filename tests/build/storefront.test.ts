@@ -164,14 +164,22 @@ describe('add-to-cart contract', () => {
 });
 
 describe('product page', () => {
-  it('shows the nutrition table only when verified, and the disclaimer always', () => {
+  it('shows the nutrition table only when verified, and no food-supplement footnote', () => {
     for (const l of LOCALES)
       for (const p of products) {
         const d = doc(routePath('product', l, p.slug));
         expect(d.querySelectorAll('table.nutrition').length, p.slug).toBe(
           p.nutritionVerified ? 1 : 0,
         );
-        expect(d.querySelector('.footnote')?.text.length ?? 0).toBeGreaterThan(40);
+        // The supplement formula ("À consommer dans le cadre d'une alimentation
+        // variée...") is not on the labels: it returns only if the owner says
+        // the products are declared as food supplements (presentation, item 14).
+        expect(d.querySelector('.footnote'), p.slug).toBeNull();
+        expect(d.text, p.slug).not.toMatch(/alimentation variée|varied, balanced diet/);
+        // The format links land on the name, price and formats: #achat / #buy.
+        const info = d.querySelector(l === 'fr' ? '#achat' : '#buy');
+        expect(info?.querySelector('h1'), p.slug).toBeTruthy();
+        expect(info?.querySelector('.product-price'), p.slug).toBeTruthy();
         expect(d.querySelectorAll('[data-gallery-slide]').length).toBeGreaterThanOrEqual(1);
         // Every product has a recipe (any of its formats): the accordion, its anchor and link.
         const recipe = d.querySelector('#recipe');

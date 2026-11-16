@@ -1,14 +1,18 @@
 ---
 // "Notre histoire", both locales (spec 5.4): the title and lead beside the
 // painted medallion in a gold-ringed circle (no wordmark: the header already
-// carries it), the story in sections (alternating photo and text, no
-// numbering: they are not a sequence), then the slogan and a way to the shop.
+// carries it), the story in sections (picture and text, the picture side
+// alternating, no numbering: they are not a sequence), then the slogan and a
+// way to the shop. Every section has its picture (review 17: no half-empty
+// row): a photograph shows in a 5:4 frame, a 2:1 picture (a pouch window) as
+// a band of its own shape. A section without a picture keeps its measure.
 import medallion from '../../assets/brand/medallion.webp';
 import type { Locale } from '../../consts';
 import Base from '../../layouts/Base.astro';
 import { loadLocale, loadPage, loadSettings } from '../../i18n/locale';
 import { pickLabel } from '../../i18n/fallback';
 import { routePath } from '../../i18n/routing';
+import { resolveAsset } from '../../images';
 import Breadcrumbs from '../Breadcrumbs.astro';
 import Ornament from '../Ornament.astro';
 import Picture from '../Picture.astro';
@@ -23,6 +27,14 @@ const [t, page, home, settings] = await Promise.all([
   loadPage(locale, 'home'),
   loadSettings(),
 ]);
+// "band" for a wide picture (2:1 and wider), "photo" otherwise; the picture
+// side alternates over the sections that have one.
+let shown = 0;
+const sections = page.sections.map((s) => {
+  if (!s.image) return { ...s, shape: undefined, flip: false };
+  const { width, height } = resolveAsset(s.image);
+  return { ...s, shape: width / height >= 1.8 ? 'band' : 'photo', flip: shown++ % 2 === 1 };
+});
 ---
 
 <Base {locale} routeKey="about" title={page.seoTitle} description={page.seoDescription}>
@@ -52,10 +64,10 @@ const [t, page, home, settings] = await Promise.all([
 
   <div class="container sections">
     {
-      page.sections.map((s, i) => (
-        <section class:list={['story', { 'has-image': s.image, flip: i % 4 === 2 }]}>
+      sections.map((s) => (
+        <section class:list={['story', { 'has-image': s.image, flip: s.flip }]}>
           {s.image && (
-            <div class="story-media">
+            <div class:list={['story-media', `is-${s.shape}`]}>
               <Picture
                 src={s.image}
                 alt={s.imageAlt ?? ''}
@@ -136,13 +148,17 @@ const [t, page, home, settings] = await Promise.all([
     gap: var(--space-8);
     align-items: center;
   }
-  .story:not(.has-image) .story-copy {
-    max-width: 680px;
+  .story-body {
+    max-width: 62ch;
   }
+  /* The picture takes the narrower column, on the left, then on the right. */
   @media (min-width: 900px) {
     .story.has-image {
       grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
       gap: var(--space-16);
+    }
+    .story.flip {
+      grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
     }
     .story.flip .story-media {
       order: 2;
@@ -150,26 +166,35 @@ const [t, page, home, settings] = await Promise.all([
   }
   .story-media {
     overflow: hidden;
-    aspect-ratio: 4 / 3;
     border: 1px solid var(--kraft);
     border-radius: var(--radius-l);
     background: var(--paper);
   }
-  .story.has-image:not(.flip) .story-media {
-    aspect-ratio: 3 / 2;
-  }
-  .story.flip .story-media {
-    aspect-ratio: 5 / 4;
-  }
-  /* The duo photo is a 2:3 portrait with the pouches in its middle half. */
-  .story.flip .story-media :global(img) {
-    object-position: 50% 48%;
+  .story-media :global(picture) {
+    display: block;
+    height: 100%;
   }
   .story-media :global(img) {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 50% 55%;
+  }
+  /* The duo photographs are 2:3 portraits with the pouches in their middle
+     half. */
+  .story-media.is-photo {
+    aspect-ratio: 5 / 4;
+  }
+  .story-media.is-photo :global(img) {
+    object-position: 50% 48%;
+  }
+  /* A pouch window keeps its own 2:1 shape, the label's ribbon on top. */
+  .story-media.is-band {
+    aspect-ratio: 2 / 1;
+    border-radius: var(--radius-m);
+  }
+  .story-media.is-band :global(img) {
+    object-position: 50% 0;
   }
   h2 {
     font-size: var(--fs-4);

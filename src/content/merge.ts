@@ -6,6 +6,7 @@ import { deepFallback } from '../i18n/fallback';
 import { formatFamilies, groupFormats } from './formats';
 import {
   CATEGORY_TRANSLATED_KEYS,
+  FAQ_GROUPS,
   PAGE_SCHEMAS,
   PRODUCT_TRANSLATED_KEYS,
   RECIPE_TRANSLATED_KEYS,
@@ -19,6 +20,7 @@ import {
   recipeTranslatedSchema,
   recipeTranslationSchema,
   type Category,
+  type FaqGroup,
   type PageContent,
   type PageKey,
   type Product,
@@ -207,6 +209,19 @@ export function otherRecipes<T extends Pick<RecipeEntry, 'slug' | 'product'>>(
   const same = others.filter((r) => key(r.product) === key(recipe.product));
   const rest = others.filter((r) => key(r.product) !== key(recipe.product));
   return [...same, ...rest].slice(0, Math.max(0, limit));
+}
+
+/**
+ * The FAQ in its headed groups (FAQ_GROUPS order), each item in file order;
+ * an item without a group joins "orders"; an empty group is left out.
+ */
+export function faqGroups<T extends { group?: FaqGroup }>(
+  items: readonly T[],
+): Array<{ group: FaqGroup; items: T[] }> {
+  return FAQ_GROUPS.map((group) => ({
+    group,
+    items: items.filter((i) => (i.group ?? 'orders') === group),
+  })).filter((g) => g.items.length > 0);
 }
 
 export function mergeCategory(slug: string, frRaw: unknown, enRaw?: unknown): Category {

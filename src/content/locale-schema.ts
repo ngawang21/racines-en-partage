@@ -128,7 +128,6 @@ export const localeSchema = z.object({
     freeFrom: text,
     freeFromLabels: ns({ additifs: text, conservateurs: text, colorants: text, gluten: text }),
     related: text,
-    disclaimer: text,
     packagedBy: text,
     gallery: text,
     imageOf: text,
@@ -136,6 +135,9 @@ export const localeSchema = z.object({
     closePhoto: text,
     previousPhoto: text,
     nextPhoto: text,
+    /** The larger view's "+" and "−" buttons (2x zoom and back to the whole photo). */
+    zoomIn: text,
+    zoomOut: text,
     galleryDuo: text,
     unitPrice: text,
     formats: text,
@@ -186,6 +188,11 @@ export const localeSchema = z.object({
     shippingOffered: text,
     maxNote: text,
     maxNoteContact: text,
+    /** The row that replaces a removed line for a few seconds: "{name} retiré." then "Annuler". */
+    undoRemoved: text,
+    undo: text,
+    undoOf: text,
+    restored: text,
   }),
   checkout: ns({
     title: text,
@@ -506,6 +513,8 @@ export const localeSchema = z.object({
     breadcrumb: text,
     newTab: text,
     medallionAlt: text,
+    /** The home origins map: `{lands}` (the six countries, listed) and `{home}`. */
+    originsMapAlt: text,
     openSearch: text,
     account: text,
   }),

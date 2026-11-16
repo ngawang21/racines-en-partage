@@ -17,16 +17,22 @@ sections:
       Le psyllium d’Inde et l’orge grillée d’Allemagne les complètent. Nous
       voulons rendre ces produits faciles à trouver ici, avec leur origine
       écrite noir sur blanc.
-    image: /src/assets/brand/hero-trio.webp
+    # Two pouches, two lands: hibiscus from Cameroon, psyllium from India
+    # (the home hero trio is the home page's picture).
+    image: /src/assets/brand/duo-hibiscus-psyllium.webp
     imageAlt: >-
-      Trois sachets kraft Racines en Partage posés sur des feuilles de
-      palmier
+      Un sachet de fleurs d’hibiscus et un sachet de psyllium posés sur des
+      feuilles de palmier
   - title: Un rituel
     body: >-
       Une infusion de bissap partagée l’après-midi, un lait de souchet préparé la
       veille, une cuillère de moringa dans le smoothie du matin. Chaque sachet
       porte une idée d’utilisation et, souvent, une petite recette tirée de nos
       habitudes.
+    # A 2:1 picture shows as a band beside the text: here the pouch window,
+    # the label’s ribbon over the contents (src/assets/brand/window/).
+    image: /src/assets/brand/window/souchet-tubercules-200.webp
+    imageAlt: La fenêtre d’un sachet de tubercules de souchet, sous le bord de l’étiquette
   - title: Un partenariat avec l’ESAT Les Oliviers
     body: >-
       Nos produits sont conditionnés en France par l’ESAT Les Oliviers, à
@@ -40,3 +46,5 @@ sections:
       Tous nos produits sont 100 % végétaux, sans additif ni conservateur. Un
       seul ingrédient par sachet, pas de colorant. Ce qui est écrit sur
       l’étiquette est ce que vous trouvez dans le sachet.
+    image: /src/assets/brand/window/cacao-grues-100.webp
+    imageAlt: La fenêtre d’un sachet de grués de cacao, sous le bord de l’étiquette

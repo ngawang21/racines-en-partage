@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 import { z } from 'zod';
 import {
+  FAQ_GROUPS,
   FREE_FROM,
   LEGAL_KEYS,
   PAGE_SCHEMAS,
@@ -733,6 +734,18 @@ describe('CMS config: pages', () => {
         expect(f.i18n === true || f.i18n === 'duplicate', path).toBe(true);
       expect(requiredInEnglish(fields, `${key}.`), key).toEqual([]);
     }
+  });
+  it('offers the FAQ groups as an optional select shared by both languages, and explains links', () => {
+    const faq = fileOf(pages, 'faq').fields;
+    const group = fieldAt(faq, 'items.group');
+    expect(group).toMatchObject({ widget: 'select', i18n: 'duplicate', required: false });
+    expect(optionValues(group)).toEqual([...FAQ_GROUPS]);
+    expect(group.options).toEqual([
+      { label: 'Nos produits', value: 'products' },
+      { label: 'Commande et livraison', value: 'orders' },
+    ]);
+    expect(fieldAt(faq, 'groupTitles').fields!.map((f) => f.name)).toEqual([...FAQ_GROUPS]);
+    expect(String(fieldAt(faq, 'items.answer').hint)).toContain('[page Recettes](/recettes/)');
   });
   it('offers the icon enum and links each ritual moment to a recipe', () => {
     const home = fileOf(pages, 'home').fields;

@@ -371,6 +371,42 @@ html.has-drawer {
   font-size: var(--fs-1);
   text-align: right;
 }
+/* A removed line folds to one short row with "Annuler" (review 17, lines.ts). */
+.cart-line.cart-undo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-3);
+  padding-block: var(--space-2);
+  color: var(--ink-2);
+  font-size: var(--fs--1);
+}
+.cart-line.cart-undo:first-child {
+  padding-top: 0;
+}
+.cart-undo-text {
+  min-width: 0;
+}
+.cart-undo-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-1);
+  border: 0;
+  background: none;
+  color: var(--forest);
+  font-size: var(--fs--1);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-underline-offset: 3px;
+  touch-action: manipulation;
+}
+@media (hover: hover) {
+  .cart-undo-btn:hover {
+    text-decoration-color: currentColor;
+  }
+}
 .cart-line.is-flagged .cart-line-media {
   opacity: 0.55;
 }
@@ -1296,6 +1332,13 @@ html.has-drawer {
 /* "Choisissez un Point Relais." under the list (or the search row). */
 .relay-error:empty {
   display: none;
+}
+/* "Payer" before a point is chosen: the emphasis is on the relay block, not
+   on the postcode, which is valid (review 17). An outline, so nothing moves. */
+.relay-search.is-invalid {
+  border-radius: var(--radius-s);
+  outline: 2px solid var(--hibiscus-deep);
+  outline-offset: var(--space-3);
 }
 .field {
   display: grid;

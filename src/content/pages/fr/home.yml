@@ -19,12 +19,13 @@ hero:
 reassurance:
   - icon: leaf
     text: 100 % végétal, sans additif ni conservateur
-  - icon: pin
+  - icon: flower
     text: Conditionné en France par l’ESAT Les Oliviers
   - icon: truck
     text: Livraison en Point Relais, offerte dès 49 €
-  - icon: lock
-    text: Paiement sécurisé
+  # Specific and true (review 17): the payment line stays with the cart.
+  - icon: pin
+    text: Retrait gratuit à Arnouville
 featuredTitle: Nos incontournables
 storyTitle: Deux terres
 # Owner to validate (Marie’s own words welcome). Keep storyLands.from in line

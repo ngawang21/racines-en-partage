@@ -8,12 +8,15 @@ import { routePath, type RouteKey } from '../i18n/routing';
 import { readJson } from './dom';
 import { STORAGE_KEY, createCartStore, type CartStore } from './store';
 import type { ClientStrings, PageStrings } from './strings';
+import { createUndo, type UndoController } from './undo';
 
 export interface CartContext {
   locale: Locale;
   catalog: ClientCatalog;
   t: ClientStrings;
   store: CartStore;
+  /** Undo of the last removed line (drawer and cart page). */
+  undo: UndoController;
   shopOpen: boolean;
   price(cents: number): string;
   fmt(text: string, vars: Record<string, string | number>): string;
@@ -48,6 +51,11 @@ export function getContext(): CartContext | null {
     storage: localStorageOrNull(),
     maxQuantity: catalog.maxQuantityPerLine,
   });
+  // First subscriber of the store: a cart change ends the undo offer before
+  // any view renders it. The row stays while it holds the focus.
+  const undo = createUndo(store, {
+    canExpire: () => !document.activeElement?.closest('[data-undo-row]'),
+  });
   window.addEventListener('storage', (e) => {
     if (e.storageArea === null || e.key === null || e.key === STORAGE_KEY)
       store.syncFromStorage(e.key);
@@ -80,6 +88,7 @@ export function getContext(): CartContext | null {
     catalog,
     t,
     store,
+    undo,
     shopOpen: catalog.shopOpen && document.body.dataset.shopOpen !== 'false',
     price: (cents) => formatPrice(cents, locale),
     fmt: interpolate,

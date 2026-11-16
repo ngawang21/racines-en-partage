@@ -7,15 +7,20 @@
 // with rounded corners on all four sides. The H1 is sized on its own column
 // (container query units) so it keeps to three lines at 1440 px and wider.
 // Under 960 px: the photo comes first (4:3, inside the gutter), then the copy.
-// The photo is the LCP element: eager, fetchpriority high. The 3:2 photo is
-// cropped to 4:3, so the rendered image is 1.125 times the frame width:
-// `sizes` accounts for it.
+// The photo is the LCP element: eager, fetchpriority high. On phones it is
+// capped near 2x density (review 17): with no 640 candidate and `sizes` at
+// 66vw under 600 px, a 390 px phone takes the 780 px file at DPR 2 and at
+// DPR 3 alike (2.2x for a 350 px frame) instead of 1280. Tablets and desktops
+// keep the full set.
 // Entrance: the copy rises in a short stagger, the photo settles from a
 // slight zoom (transform only, so the LCP image is never transparent). All of
 // it is off under prefers-reduced-motion.
+import { Picture } from 'astro:assets';
 import heroTrio from '../assets/brand/hero-trio.webp';
 import type { HomePage } from '../content/schemas';
-import Picture from './Picture.astro';
+
+/** The hero's candidates: from 780 px (a phone at 2x), up to the photo's 2400. */
+const HERO_WIDTHS = [780, 960, 1280, 1600, 2000, 2400].filter((w) => w <= heroTrio.width);
 
 interface Props {
   hero: HomePage['hero'];
@@ -40,9 +45,11 @@ const { hero, primaryHref, secondaryHref } = Astro.props;
         <Picture
           src={heroTrio}
           alt={hero.imageAlt}
-          preset="hero"
-          sizes="(min-width: 1552px) 820px, (min-width: 960px) 55vw, 100vw"
+          widths={HERO_WIDTHS}
+          sizes="(min-width: 1552px) 820px, (min-width: 960px) 55vw, (min-width: 600px) 100vw, 66vw"
+          formats={['avif', 'webp']}
           loading="eager"
+          decoding="async"
           fetchpriority="high"
         />
       </div>

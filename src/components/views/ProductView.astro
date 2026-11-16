@@ -116,6 +116,10 @@ const related = relatedProducts(product, all, families);
 const [recipe, ...moreRecipes] = recipesFor(product.slug, recipes, families);
 
 const paragraphs = product.description.split(/\n\s*\n/).filter(Boolean);
+// The format links (100 g, 200 g) end with this anchor so that on a phone
+// the other format's page opens on its name, price and formats, under the
+// header, instead of on the photo (scroll-margin-top below).
+const buyAnchor = locale === 'fr' ? 'achat' : 'buy';
 const shopHref = routePath('shop', locale);
 ---
 
@@ -172,7 +176,7 @@ const shopHref = routePath('shop', locale);
         {product.imageNote && <p class="image-note">{product.imageNote}</p>}
       </div>
 
-      <div class="product-info">
+      <div class="product-info" id={buyAnchor}>
         <h1>{product.name}</h1>
         <p class="tagline">{product.tagline}</p>
 
@@ -400,10 +404,6 @@ const shopHref = routePath('shop', locale);
     )
   }
 
-  <aside class="container footnote">
-    <p>{t.product.disclaimer}</p>
-  </aside>
-
   <StickyBuy {product} {locale} {t} {shopOpen} />
 </Base>
 
@@ -430,6 +430,15 @@ const shopHref = routePath('shop', locale);
     .product-media {
       position: sticky;
       top: calc(var(--header-h) + var(--space-6));
+    }
+  }
+  /* "#achat" / "#buy" lands with the name under the sticky header on phones,
+     where the photo comes first (the root's scroll-padding-top, global.css,
+     clears the header). From 900 px the name already sits beside the photo
+     at the top: a margin taller than the screen keeps the page at its top. */
+  @media (min-width: 900px) {
+    .product-info {
+      scroll-margin-top: 100vh;
     }
   }
   /* No kicker above the name: the breadcrumb already names the category. */
@@ -571,6 +580,11 @@ const shopHref = routePath('shop', locale);
     font-size: var(--fs-1);
     line-height: 1.65;
   }
+  /* The column is about 50 characters wide at 1440: the text may run a little
+     wider, to the standard's floor of 55 and up to 62. */
+  .description p {
+    max-width: 62ch;
+  }
   .description p + p {
     margin-top: var(--space-4);
   }
@@ -676,14 +690,6 @@ const shopHref = routePath('shop', locale);
     .related :global(.product-grid.related-grid > li:nth-child(n + 4)) {
       display: none;
     }
-  }
-  .footnote {
-    padding-block: var(--space-8) 0;
-  }
-  .footnote p {
-    max-width: 72ch;
-    color: var(--ink-2);
-    font-size: var(--fs--1);
   }
   /* Phones: name, price and the add button within the first 844 px under a
      square photo. The weight and origin tags move under the add button

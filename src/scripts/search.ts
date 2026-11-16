@@ -4,7 +4,11 @@
 // the dialog's <template>. The add buttons follow the cart contract, so the
 // cart script handles them. Escape and a backdrop click close the dialog
 // (native cancel plus a click on the dialog box itself); focus returns to the
-// button that opened it. Enter opens the first result. The catalogue is the
+// button that opened it. Enter in the field opens the first result;
+// ArrowDown and ArrowUp move focus from the field through the result links
+// (product names, then recipes) and back up to the field, and Enter opens the
+// focused link natively (roving focus over links that stay in the tab order).
+// The catalogue is the
 // one the cart context already parsed (getContext memoises it per page). The
 // formats of one product share a row (searchGroups, the dialog's
 // data-families): the name without its weight, a chip per format, "dès" before
@@ -237,6 +241,30 @@ function initSearch(): void {
     if (event.target === dialog) dialog.close();
   });
   q<HTMLButtonElement>('[data-search-close]').addEventListener('click', () => dialog.close());
+  // Arrow keys: the field, then each result link in order.
+  dialog.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    const links = [
+      ...dialog.querySelectorAll<HTMLAnchorElement>(
+        '[data-search-results] .sr-name, [data-search-recipe-list] .sr-recipe',
+      ),
+    ];
+    const active = document.activeElement;
+    const at = links.indexOf(active as HTMLAnchorElement);
+    const down = event.key === 'ArrowDown';
+    if (active === input) {
+      if (!down || links.length === 0) return;
+      event.preventDefault();
+      links[0]!.focus();
+      return;
+    }
+    if (at < 0) return;
+    event.preventDefault();
+    const next = at + (down ? 1 : -1);
+    if (next < 0) input.focus();
+    else links[Math.min(next, links.length - 1)]!.focus();
+  });
   input.addEventListener('input', render);
   // Escape in a filled search field only clears it in Chromium: close instead.
   input.addEventListener('keydown', (event) => {

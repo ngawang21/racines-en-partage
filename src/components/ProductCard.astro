@@ -369,22 +369,23 @@ const square = pouchCrop(p.images[0]!, 1, undefined, CARD_POUCH_SQUARE);
       background: var(--cream);
     }
   }
-  /* Two columns on phones: weight or chips, then the country, each on a
-     line of the same height. (A container query would need containment on
-     the card, which turns its subgrid off.) */
+  /* Two columns on phones: the format chips take the card's width, so the
+     country goes under them, on a line of the same height. A single format
+     keeps "100 g · Cameroun" on one line, as on desktop (review 17). (A
+     container query would need containment on the card, which turns its
+     subgrid off.) */
   @media (max-width: 719px) {
-    .card-meta {
+    .card-meta:has(> .card-formats) {
       flex-direction: column;
       align-items: flex-start;
       gap: 2px;
     }
-    .card-meta > .card-weight,
     .card-meta > .card-formats {
       display: flex;
       align-items: center;
       min-height: 28px;
     }
-    .card-meta > [aria-hidden] {
+    .card-meta:has(> .card-formats) > [aria-hidden] {
       display: none;
     }
     .card-meta .card-origin {

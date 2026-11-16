@@ -25,6 +25,8 @@ export function initCartPage(ctx: CartContext): void {
   const bar = q<HTMLElement>('[data-cart-bar]');
   const barSubtotal = q<HTMLElement>('[data-cart-bar-subtotal]');
   const barCheckout = q<HTMLAnchorElement>('[data-cart-bar-checkout]');
+  const summary = q<HTMLElement>('.cart-layout-summary');
+  const more = q<HTMLElement>('.cart-layout-more');
   const heading = root.querySelector<HTMLElement>('h1');
   if (!list) return;
 
@@ -33,10 +35,15 @@ export function initCartPage(ctx: CartContext): void {
       if (link.getAttribute('aria-disabled') === 'true') event.preventDefault();
     });
 
-  bindLineEvents(list, ctx, () => {
-    if (heading && !heading.hasAttribute('tabindex')) heading.tabIndex = -1;
-    return heading;
-  });
+  bindLineEvents(
+    list,
+    ctx,
+    () => {
+      if (heading && !heading.hasAttribute('tabindex')) heading.tabIndex = -1;
+      return heading;
+    },
+    { undo: true },
+  );
 
   // The phone bar shows while the summary's button is below the viewport
   // (not yet reached); once the visitor has scrolled past it, the bar stays
@@ -58,7 +65,10 @@ export function initCartPage(ctx: CartContext): void {
   const render = (cart: CartState) => {
     const totals = computeTotals(cart, ctx.catalog);
     hasLines = cart.lines.length > 0;
-    if (content) content.hidden = !hasLines;
+    // The last line just removed: its undo row stays, above the empty message.
+    if (content) content.hidden = !hasLines && !ctx.undo.pending;
+    if (summary) summary.hidden = !hasLines;
+    if (more) more.hidden = !hasLines;
     if (empty) empty.hidden = hasLines;
     renderLines(list, cart.lines, ctx, { variant: 'page' });
     if (count) count.textContent = hasLines ? ctx.itemsLabel(totals.itemCount) : '';
@@ -85,4 +95,5 @@ export function initCartPage(ctx: CartContext): void {
   };
   render(ctx.store.getCart());
   ctx.store.subscribe(render);
+  ctx.undo.onExpire(() => render(ctx.store.getCart()));
 }

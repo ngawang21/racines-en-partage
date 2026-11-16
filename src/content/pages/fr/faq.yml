@@ -1,109 +1,29 @@
 seoTitle: Questions fréquentes
 seoDescription: >-
-  Livraison en Point Relais Mondial Relay, retrait à Arnouville, délais, paiement,
-  retours, conservation, origines, goûts et recettes : nos réponses à vos questions.
+  Origines, allergènes, conservation, livraison en Point Relais Mondial Relay, retrait à
+  Arnouville, délais, paiement et retours : nos réponses à vos questions.
 title: Questions fréquentes
 lead: Tout ce qu’il faut savoir avant de commander. Une autre question ? Écrivez-nous.
+groupTitles:
+  products: Nos produits
+  orders: Commande et livraison
 items:
-  - question: Quels sont les délais de livraison ?
-    answer: >-
-      Nous préparons votre colis sous 2 jours ouvrés. Comptez ensuite 3 à 5 jours
-      ouvrés en Point Relais Mondial Relay et 2 à 4 jours ouvrés en livraison à
-      domicile avec Colissimo.
-  - question: Comment fonctionne la livraison en Point Relais ?
-    answer: >-
-      Au moment de commander, choisissez un Point Relais Mondial Relay sur la
-      carte, près de chez vous ou de votre travail. Vous recevez un SMS et un
-      e-mail dès que le colis est arrivé ; il vous attend alors plusieurs jours.
-      Pensez à vous munir d’une pièce d’identité. Nous livrons les Points Relais
-      en France, en Belgique et au Luxembourg.
-  - question: La livraison est-elle offerte ?
-    answer: >-
-      Oui, dès 49 € d’achat, quel que soit le mode de livraison. En dessous, la
-      livraison en Point Relais coûte 4,90 € et la livraison à domicile 6,90 €.
-  - question: Puis-je retirer ma commande sur place ?
-    answer: >-
-      Oui, le retrait est gratuit au 9 Rue du Marché, 95400 Arnouville,
-      France, sur rendez-vous. Choisissez « Retrait gratuit à Arnouville » au moment de
-      commander : nous vous contactons dès que votre commande est prête.
-  - question: Quels moyens de paiement acceptez-vous ?
-    answer: >-
-      Le paiement passe par Stripe, une plateforme sécurisée : carte bancaire
-      (CB, Visa, Mastercard) et, selon votre appareil, Apple Pay ou Google Pay.
-      Nous ne voyons jamais vos données bancaires.
-  - question: Comment retrouver ma commande ?
-    answer: >-
-      Le plus simple : ouvrez « Mon espace » (/mon-compte/) et saisissez
-      l’adresse e-mail utilisée pour commander. Vous recevez un lien de
-      connexion par e-mail, sans mot de passe, et toutes vos commandes
-      s’affichent. Vous pouvez aussi utiliser la page « Suivre ma commande »
-      (/ma-commande/) avec le numéro de commande indiqué dans l’e-mail de
-      confirmation et votre adresse e-mail.
-  - question: Faut-il créer un compte ?
-    answer: >-
-      Non. Vous commandez en invité ; pour retrouver vos commandes, demandez un
-      lien de connexion dans Mon espace.
-  - question: Puis-je retourner un produit ?
-    answer: >-
-      Nos produits sont des denrées alimentaires : une fois le sachet ouvert, ils
-      ne peuvent pas être repris, pour des raisons d’hygiène (article L221-28 du
-      code de la consommation). Pour un sachet fermé, vous disposez de 14 jours
-      après la réception pour nous signaler votre rétractation, puis de 14 jours
-      pour nous le renvoyer. Si votre colis arrive abîmé, envoyez-nous une
-      photo : nous remplaçons ou remboursons les produits concernés.
-  - question: Comment conserver les produits ?
-    answer: >-
-      Dans un endroit sec, à l’abri de la chaleur et de l’humidité, et en
-      refermant bien le sachet après chaque utilisation. La date de durabilité
-      minimale est indiquée sur chaque sachet.
   - question: D’où viennent vos produits ?
+    group: products
     answer: >-
       L’origine est indiquée sur chaque fiche produit : moringa et souchet du
       Niger, baobab du Sénégal, hibiscus du Cameroun, cacao de Côte d’Ivoire,
       psyllium d’Inde, orge grillée d’Allemagne. Tous nos produits sont 100 %
       végétaux, sans additif ni conservateur. Tous les sachets sont conditionnés en France par l’ESAT
       Les Oliviers, à Gennevilliers.
-  - question: Puis-je donner mon avis sur un produit ?
-    answer: >-
-      Avec plaisir ! Environ une semaine après votre commande, vous recevez un
-      e-mail qui vous invite à donner votre avis sur chaque produit commandé.
-      Nous lisons chaque avis avant sa mise en ligne ; les avis marqués
-      « Achat vérifié » viennent d’une commande passée sur le site.
-  - question: Puis-je recevoir vos nouveautés ?
-    answer: >-
-      Oui, inscrivez-vous à notre lettre d’information en bas de chaque page.
-      Vous recevez un e-mail de confirmation : votre inscription est validée
-      quand vous cliquez sur le lien qu’il contient. Chaque message comporte un
-      lien de désinscription.
-  - question: Vendez-vous aux professionnels ?
-    answer: >-
-      Épiceries, restaurants, CSE : écrivez-nous à racinesenpartage@gmail.com
-      ou appelez le 07 75 68 91 08, nous vous répondrons avec plaisir.
-  - question: Quel goût ont vos produits ?
-    answer: >-
-      L’hibiscus donne une boisson rouge rubis, acidulée et fruitée. Le baobab
-      est acidulé et légèrement sucré, avec des notes de citron et de poire. Le
-      moringa a un goût herbacé, entre épinard et thé vert. Le souchet est doux,
-      entre noisette et amande. La poudre de cacao est intense et non sucrée ;
-      les grués de cacao sont croquants, d’une amertume franche. L’orge grillée
-      a un goût toasté, proche du café d’orge. Le psyllium, lui, n’a presque pas
-      de goût : au contact de l’eau, il forme un gel doux.
   - question: 'Je découvre un produit : par où commencer ?'
+    group: products
     answer: >-
-      Par la recette imprimée sur le sachet, quand il y en a une : l’infusion de
-      bissap, la boisson fraîche au baobab, le smoothie au moringa, l’horchata
-      de souchet ou le chocolat chaud. Commencez par une petite quantité, une
-      cuillère à café de poudre par exemple, puis ajustez selon vos envies. Pour
-      l’orge grillée, la tsampa, le plus simple est de la mélanger à un bol de
-      lait chaud ou à un yaourt.
-  - question: 'Bissap, foléré, zobo, karkadé : est-ce la même chose ?'
-    answer: >-
-      Oui. Ce sont les noms, selon les pays, de la boisson faite avec les
-      calices séchés de l’Hibiscus sabdariffa : bissap au Sénégal et en Côte
-      d’Ivoire, foléré au Cameroun, dah en Guinée, wonjo en Gambie, zobo au
-      Nigeria, karkadé en Égypte et au Soudan. Nos fleurs viennent du Cameroun.
-      Ce n’est pas l’hibiscus d’ornement des jardins, qui est une autre espèce.
+      Par la recette imprimée sur le sachet, quand il y en a une, avec une
+      petite quantité, une cuillère à café de poudre par exemple, puis ajustez
+      selon vos envies. Toutes nos idées sont sur la [page Recettes](/recettes/).
   - question: 'Tubercules ou poudre de souchet : quelle différence ?'
+    group: products
     answer: >-
       C’est la même plante, le souchet (Cyperus esculentus) du Niger, aussi
       appelé tchongon, amande de terre ou chufa. Les tubercules sont entiers et
@@ -112,30 +32,15 @@ items:
       ce sont les tubercules broyés : elle s’ajoute sans trempage à un porridge,
       à une pâte à pancakes ou à une boisson.
   - question: 'Poudre de cacao ou grués de cacao : quelle différence ?'
+    group: products
     answer: >-
       Les deux sont 100 % cacao de Côte d’Ivoire. La poudre est obtenue après
       extraction du beurre de cacao : non sucrée, elle se délaie dans le lait
       chaud et parfume les gâteaux et les desserts. Les grués sont des éclats de
       fèves décortiquées : ils ne fondent pas, ils croquent, et se parsèment sur
       un yaourt, un porridge, un granola ou une pâte à cookies.
-  - question: Qu’est-ce que la tsampa, et pourquoi vient-elle d’Allemagne ?
-    answer: >-
-      La tsampa est une farine d’orge grillée puis moulue, l’aliment de base de
-      la cuisine tibétaine. Au Tibet, on la mélange à un bol de thé au beurre et
-      on la pétrit du bout des doigts en petites boules. L’orge étant déjà
-      grillée, elle se mange sans cuisson. La nôtre est la Sonam’Tsampa,
-      fabriquée en Allemagne d’après la recette de Sonam Dölma, une Tibétaine
-      qui la préparait d’abord avec sa mère pour leur propre table. L’orge
-      contient du gluten.
-  - question: Comment conserver un sachet une fois ouvert ?
-    answer: >-
-      Refermez-le bien après chaque utilisation, ou versez son contenu dans un
-      bocal hermétique, et gardez-le au sec, à l’abri de la chaleur et de la
-      lumière. Servez-vous avec une cuillère bien sèche : les poudres craignent
-      l’humidité et forment alors des grumeaux. Les boissons que vous préparez
-      se gardent au réfrigérateur, en bouteille fermée : deux jours pour
-      l’horchata, trois jours pour le bissap et le bouye.
   - question: Vos produits contiennent-ils des allergènes ?
+    group: products
     answer: >-
       L’orge grillée contient du gluten : elle est déconseillée aux personnes
       atteintes de la maladie cœliaque. Le souchet est un petit tubercule, et
@@ -144,18 +49,60 @@ items:
       chaque sachet. Tous nos sachets sont conditionnés par l’ESAT Les
       Oliviers, à Gennevilliers : en cas d’allergie ou de doute, écrivez-nous
       avant de commander.
-  - question: Comment utiliser le psyllium en cuisine ?
+  - question: Comment conserver les produits ?
+    group: products
     answer: >-
-      Au contact de l’eau, les téguments de psyllium gonflent et forment un gel
-      au goût neutre. En cuisine, ce gel sert de liant, par exemple dans une
-      pâte à pains plats au sarrasin, qui se tient mal sans lui. Comme
-      l’indique le sachet, le psyllium se consomme toujours avec une quantité
-      suffisante d’eau.
-  - question: Où trouver vos recettes ?
+      Au sec, à l’abri de la chaleur et de la lumière, dans le sachet bien
+      refermé après chaque utilisation ou dans un bocal hermétique. Servez-vous
+      avec une cuillère bien sèche : les poudres craignent l’humidité et
+      forment alors des grumeaux. La date de durabilité minimale est indiquée
+      sur chaque sachet.
+  - question: Quels sont les délais de livraison ?
+    group: orders
     answer: >-
-      Sur la page Recettes (/recettes/) : chaque produit a au moins une
-      recette, avec ses ingrédients, ses étapes et ses temps. Les « recettes de
-      l’étiquette » sont celles imprimées sur nos sachets ; les « recettes de la
-      maison » ont été écrites pour le site, à partir de préparations connues
-      comme le bissap, le bouye ou la tsampa. Chaque fiche produit présente
-      aussi sa recette.
+      Nous préparons votre colis sous 2 jours ouvrés. Comptez ensuite 3 à 5 jours
+      ouvrés en Point Relais Mondial Relay et 2 à 4 jours ouvrés en livraison à
+      domicile avec Colissimo.
+  - question: Comment fonctionne la livraison en Point Relais ?
+    group: orders
+    answer: >-
+      Au moment de commander, choisissez un Point Relais Mondial Relay sur la
+      carte, près de chez vous ou de votre travail. Vous recevez un SMS et un
+      e-mail dès que le colis est arrivé ; il vous attend alors plusieurs jours.
+      Pensez à vous munir d’une pièce d’identité. Nous livrons les Points Relais
+      en France, en Belgique et au Luxembourg.
+  - question: La livraison est-elle offerte ?
+    group: orders
+    answer: >-
+      Oui, dès 49 € d’achat, quel que soit le mode de livraison. En dessous, la
+      livraison en Point Relais coûte 4,90 € et la livraison à domicile 6,90 €.
+  - question: Puis-je retirer ma commande sur place ?
+    group: orders
+    answer: >-
+      Oui, le retrait est gratuit au 9 Rue du Marché, 95400 Arnouville,
+      France, sur rendez-vous. Choisissez « Retrait gratuit à Arnouville » au moment de
+      commander : nous vous contactons dès que votre commande est prête.
+  - question: Quels moyens de paiement acceptez-vous ?
+    group: orders
+    answer: >-
+      Le paiement passe par Stripe, une plateforme sécurisée : carte bancaire
+      (CB, Visa, Mastercard) et, selon votre appareil, Apple Pay ou Google Pay.
+      Nous ne voyons jamais vos données bancaires.
+  - question: Comment retrouver ma commande ?
+    group: orders
+    answer: >-
+      Sans créer de compte : ouvrez [Mon espace](/mon-compte/) et saisissez
+      l’adresse e-mail utilisée pour commander. Vous recevez un lien de
+      connexion par e-mail, sans mot de passe, et toutes vos commandes
+      s’affichent. Vous pouvez aussi utiliser la page [Suivre ma commande](/ma-commande/)
+      avec le numéro de commande indiqué dans l’e-mail de
+      confirmation et votre adresse e-mail.
+  - question: Puis-je retourner un produit ?
+    group: orders
+    answer: >-
+      Nos produits sont des denrées alimentaires : une fois le sachet ouvert, ils
+      ne peuvent pas être repris, pour des raisons d’hygiène (article L221-28 du
+      code de la consommation). Pour un sachet fermé, vous disposez de 14 jours
+      après la réception pour nous signaler votre rétractation, puis de 14 jours
+      pour nous le renvoyer. Si votre colis arrive abîmé, envoyez-nous une
+      photo : nous remplaçons ou remboursons les produits concernés.

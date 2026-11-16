@@ -6,6 +6,7 @@ import type { CartContext } from './context';
 import { formatUnitPrice, nowrapWeight } from '../i18n/format';
 import { h, icon } from './dom';
 import type { CartLine } from './store';
+import { undoRowIndex, type RemovedLine } from './undo';
 
 /** "89,00 €/kg" (spec iteration 3, 2.4), or '' when the weight is unknown. */
 export function unitPriceText(product: ClientProduct, ctx: CartContext): string {
@@ -29,6 +30,13 @@ export function capNote(ctx: CartContext): Array<Node | string> {
     .map((part) =>
       part === '{contact}' ? h('a', { href: ctx.path('contact') }, t.maxNoteContact) : part,
     );
+}
+
+/** The same note as plain text, for the live region. */
+export function capNoteText(ctx: CartContext): string {
+  return capNote(ctx)
+    .map((part) => (typeof part === 'string' ? part : (part.textContent ?? '')))
+    .join('');
 }
 
 export type LineVariant = 'drawer' | 'page' | 'summary';
@@ -198,7 +206,39 @@ function updateLine(li: HTMLLIElement, line: CartLine, ctx: CartContext, opts: L
   if (total.textContent !== totalText) total.textContent = totalText;
 }
 
-/** Renders the cart lines into `list`, reusing the <li> of each SKU. */
+/** Where the focus goes when it would be lost with a row: set by bindLineEvents. */
+const fallbacks = new WeakMap<HTMLElement, () => HTMLElement | null>();
+
+/** "Poudre de baobab 100 g retiré. Annuler" (review 17), in place of the removed line. */
+function buildUndoRow(removed: RemovedLine, ctx: CartContext): HTMLLIElement {
+  const t = ctx.t.cart;
+  const name = ctx.catalog.products[removed.sku]?.name ?? removed.sku;
+  return h(
+    'li',
+    { class: 'cart-line cart-undo', 'data-undo-row': removed.id },
+    h(
+      'p',
+      { class: 'cart-undo-text' },
+      ctx.fmt(t.undoRemoved || t.removed, { name: nowrapWeight(name) }),
+    ),
+    h(
+      'button',
+      {
+        type: 'button',
+        class: 'cart-undo-btn',
+        'data-line-undo': true,
+        'aria-label': t.undoOf ? ctx.fmt(t.undoOf, { name }) : null,
+      },
+      t.undo,
+    ),
+  );
+}
+
+/**
+ * Renders the cart lines into `list`, reusing the <li> of each SKU. The
+ * drawer and the cart page also show the undo row of a line just removed, at
+ * its place.
+ */
 export function renderLines(
   list: HTMLElement,
   lines: readonly CartLine[],
@@ -210,28 +250,90 @@ export function renderLines(
     existing.set(li.dataset.sku!, li);
   const wanted = new Set(lines.map((l) => l.sku));
   for (const [sku, li] of existing) if (!wanted.has(sku)) li.remove();
-  lines.forEach((line, index) => {
-    let li = existing.get(line.sku);
-    if (!li) li = buildLine(line, ctx, opts.variant);
+
+  const removed = opts.variant === 'summary' ? null : ctx.undo.pending;
+  let row = list.querySelector<HTMLLIElement>(':scope > li[data-undo-row]');
+  let lostFocusAt = -1;
+  if (row && row.dataset.undoRow !== String(removed?.id)) {
+    if (row.contains(document.activeElement)) lostFocusAt = [...list.children].indexOf(row);
+    row.remove();
+    row = null;
+  }
+  if (removed && !row) row = buildUndoRow(removed, ctx);
+
+  const items: HTMLLIElement[] = lines.map((line) => {
+    const li = existing.get(line.sku) ?? buildLine(line, ctx, opts.variant);
     updateLine(li, line, ctx, opts);
+    return li;
+  });
+  if (removed && row) items.splice(undoRowIndex(removed, items.length), 0, row);
+  items.forEach((li, index) => {
     // Move only when out of place: moving a focused node would blur it.
     if (list.children[index] !== li) list.insertBefore(li, list.children[index] ?? null);
   });
+
+  // The row had the focus and went with a change of the cart: the line now
+  // at its place takes it, else the one before, else the list's fallback.
+  if (lostFocusAt >= 0) {
+    const near = (items[lostFocusAt] ?? items[lostFocusAt - 1])?.querySelector<HTMLElement>(
+      '.cart-line-name[href], [data-line-remove], [data-line-undo]',
+    );
+    (near ?? fallbacks.get(list)?.())?.focus();
+  }
+}
+
+export interface BindOptions {
+  /** Offer "Annuler" after a removal (drawer and cart page). */
+  undo?: boolean;
 }
 
 /**
- * One delegated listener per list for steppers, typed quantities and remove.
- * `fallbackFocus` receives the focus when the last line goes.
+ * One delegated listener per list for steppers, typed quantities, remove and
+ * undo. `fallbackFocus` receives the focus when the last line goes.
  */
 export function bindLineEvents(
   list: HTMLElement,
   ctx: CartContext,
   fallbackFocus: () => HTMLElement | null,
+  options: BindOptions = {},
 ): void {
+  fallbacks.set(list, fallbackFocus);
   const skuOf = (el: Element) => el.closest<HTMLElement>('li[data-sku]')?.dataset.sku ?? null;
   const quantityOf = (sku: string) =>
     ctx.store.getCart().lines.find((l) => l.sku === sku)?.quantity ?? 0;
   const nameOf = (sku: string) => ctx.catalog.products[sku]?.name ?? sku;
+  const undoButton = () => list.querySelector<HTMLElement>(':scope > li[data-undo-row] button');
+  const focusLost = () =>
+    !document.activeElement ||
+    document.activeElement === document.body ||
+    !document.activeElement.isConnected;
+
+  /**
+   * Removes the line of `sku`. With undo, the row takes its place and, when
+   * the removal came from the keyboard, the focus ("Annuler"); otherwise the
+   * focus goes to the neighbouring line, as before.
+   */
+  const removeLine = (li: HTMLLIElement, sku: string, how: 'keyboard' | 'pointer' | 'blur') => {
+    const neighbour = (li.nextElementSibling ?? li.previousElementSibling) as HTMLElement | null;
+    const name = nameOf(sku);
+    if (options.undo) ctx.undo.remove(sku);
+    else ctx.store.removeLine(sku);
+    const undo = options.undo ? undoButton() : null;
+    const toNeighbour = () =>
+      (
+        (neighbour?.isConnected &&
+          neighbour.querySelector<HTMLElement>('.cart-line-name[href], [data-line-remove]')) ||
+        fallbackFocus()
+      )?.focus();
+    if (undo && how === 'keyboard') undo.focus();
+    else if (how === 'pointer') toNeighbour();
+    // A typed 0 committed on leaving the field: only a focus left nowhere is moved.
+    else if (focusLost()) {
+      if (undo) undo.focus();
+      else toNeighbour();
+    }
+    ctx.announce(ctx.fmt(ctx.t.cart.removed, { name }));
+  };
 
   list.addEventListener('click', (event) => {
     const target = event.target as Element;
@@ -248,20 +350,29 @@ export function bindLineEvents(
     if (remove) {
       const sku = skuOf(remove);
       if (!sku) return;
-      const li = remove.closest('li')!;
-      const neighbour = (li.nextElementSibling ?? li.previousElementSibling) as HTMLElement | null;
-      const name = nameOf(sku);
-      ctx.store.removeLine(sku);
-      const focus =
-        (neighbour?.isConnected &&
-          neighbour.querySelector<HTMLElement>('.cart-line-name[href], [data-line-remove]')) ||
-        fallbackFocus();
-      focus?.focus();
-      ctx.announce(ctx.fmt(ctx.t.cart.removed, { name }));
+      // detail 0: Enter or Space on the button, not a pointer.
+      removeLine(remove.closest('li')!, sku, event.detail === 0 ? 'keyboard' : 'pointer');
+      return;
+    }
+    const undo = target.closest<HTMLButtonElement>('[data-line-undo]');
+    if (undo) {
+      const restored = ctx.undo.undo();
+      if (!restored) return;
+      const li = list.querySelector<HTMLLIElement>(
+        `:scope > li[data-sku="${CSS.escape(restored.sku)}"]`,
+      );
+      // Back on the line's stepper: the field from the keyboard, its first
+      // button from a pointer (no on-screen keyboard popping up on a phone).
+      li?.querySelector<HTMLElement>(
+        event.detail === 0 ? '[data-line-qty]' : '[data-line-step]',
+      )?.focus();
+      ctx.announce(
+        ctx.fmt(ctx.t.cart.restored || ctx.t.cart.updated, { name: nameOf(restored.sku) }),
+      );
     }
   });
 
-  const commitInput = (input: HTMLInputElement) => {
+  const commitInput = (input: HTMLInputElement, how: 'keyboard' | 'blur') => {
     const sku = skuOf(input);
     if (!sku) return;
     const value = Number.parseInt(input.value, 10);
@@ -270,22 +381,34 @@ export function bindLineEvents(
       return;
     }
     if (value <= 0) {
-      input.closest('li')?.querySelector<HTMLButtonElement>('[data-line-remove]')?.click();
+      const li = input.closest('li');
+      if (!li) return;
+      if (how === 'keyboard') removeLine(li, sku, 'keyboard');
+      else removeLineAfterBlur(li, sku);
       return;
     }
     ctx.store.setQuantity(sku, value);
     input.value = String(quantityOf(sku));
     ctx.announce(ctx.t.cart.updated);
   };
+  /** A typed 0 committed on leaving the field (Tab or a click elsewhere). */
+  const removeLineAfterBlur = (li: HTMLLIElement, sku: string) => {
+    removeLine(li, sku, 'blur');
+    // Tab out of the field heads for the line's own + button, gone with it:
+    // once the browser has moved the focus, a focus left nowhere goes to "Annuler".
+    window.setTimeout(() => {
+      if (focusLost()) undoButton()?.focus();
+    }, 0);
+  };
   list.addEventListener('change', (event) => {
     const input = (event.target as Element).closest<HTMLInputElement>('[data-line-qty]');
-    if (input) commitInput(input);
+    if (input) commitInput(input, 'blur');
   });
   list.addEventListener('keydown', (event) => {
     const input = (event.target as Element).closest<HTMLInputElement>('[data-line-qty]');
     if (input && event.key === 'Enter') {
       event.preventDefault();
-      commitInput(input);
+      commitInput(input, 'keyboard');
     }
   });
 }

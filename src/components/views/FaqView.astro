@@ -1,8 +1,14 @@
 ---
-// FAQ, both locales (spec 5.4): a list of <details> at most 760 px wide, the
-// FAQPage graph from Base, and the contact column for anything else, sticky
-// right beside the list from 960 px (a plain column under a hairline, not a card).
+// FAQ, both locales (spec 5.4): the questions in headed groups (products,
+// then ordering and delivery: faqGroups; an empty group has no heading), each a list of
+// <details> at most 760 px wide, the FAQPage graph from Base (flat, in page
+// order, answers as plain text), and the contact column for anything else,
+// sticky right beside the list from 960 px (a plain column under a hairline,
+// not a card). Answers may link inside the site with `[texte](/chemin/)`
+// (inline-links.ts): the parts render as text and <a>, escaped by Astro.
 import type { Locale } from '../../consts';
+import { inlineLinksText, parseInlineLinks } from '../../content/inline-links';
+import { faqGroups } from '../../content/merge';
 import Base from '../../layouts/Base.astro';
 import { formatPhone, phoneE164 } from '../../i18n/format';
 import { loadLocale, loadPage, loadSettings } from '../../i18n/locale';
@@ -21,6 +27,10 @@ const [t, page, settings] = await Promise.all([
   loadSettings(),
 ]);
 const { brand } = settings;
+const groups = faqGroups(page.items);
+const faq = groups.flatMap((g) =>
+  g.items.map((i) => ({ question: i.question, answer: inlineLinksText(i.answer) })),
+);
 ---
 
 <Base
@@ -28,7 +38,7 @@ const { brand } = settings;
   routeKey="faq"
   title={page.seoTitle}
   description={page.seoDescription}
-  graph={{ faq: page.items }}
+  graph={{ faq }}
 >
   <div class="container faq">
     <div class="page-head">
@@ -43,10 +53,23 @@ const { brand } = settings;
     <div class="faq-layout">
       <div class="faq-list">
         {
-          page.items.map((item, i) => (
-            <Accordion title={item.question} level="h2" open={i === 0}>
-              <p class="answer">{item.answer}</p>
-            </Accordion>
+          groups.map(({ group, items }, g) => (
+            <section class="faq-group" aria-labelledby={`faq-${group}`}>
+              <h2 id={`faq-${group}`} class="faq-group-title">
+                {page.groupTitles[group]}
+              </h2>
+              <div class="faq-items">
+                {items.map((item, i) => (
+                  <Accordion title={item.question} level="h3" open={g === 0 && i === 0}>
+                    <p class="answer">
+                      {parseInlineLinks(item.answer).map((part) =>
+                        part.href ? <a href={part.href}>{part.text}</a> : part.text,
+                      )}
+                    </p>
+                  </Accordion>
+                ))}
+              </div>
+            </section>
           ))
         }
       </div>
@@ -93,7 +116,14 @@ const { brand } = settings;
       top: calc(var(--header-h) + var(--space-6));
     }
   }
-  .faq-list {
+  .faq-group + .faq-group {
+    margin-top: clamp(var(--space-12), 2rem + 2vw, var(--space-16));
+  }
+  .faq-group-title {
+    margin-bottom: var(--space-4);
+    font-size: var(--fs-3);
+  }
+  .faq-items {
     border-top: 1px solid var(--line);
   }
   .answer {
@@ -101,6 +131,18 @@ const { brand } = settings;
     max-width: 56ch;
     color: var(--ink-2);
     line-height: 1.7;
+  }
+  .answer a {
+    color: var(--forest);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: var(--kraft-deep);
+    text-underline-offset: 3px;
+  }
+  @media (hover: hover) {
+    .answer a:hover {
+      text-decoration-color: currentColor;
+    }
   }
   .ask {
     padding-top: var(--space-6);

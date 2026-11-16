@@ -71,7 +71,7 @@
       "shareText": "Votre colis arrive en quelques jours. Il ne reste qu’à préparer la tasse."
     },
     "unitPrice": "Prix au kilo",
-    "recipesLink": "Nos recettes",
+    "recipesLink": "Des idées de recettes pour chaque sachet",
     "priceFrom": "dès",
     "categoriesNav": "Catégories de la boutique",
     "commitments": {
@@ -119,7 +119,6 @@
       "gluten": "Gluten"
     },
     "related": "Dans le même esprit",
-    "disclaimer": "À consommer dans le cadre d’une alimentation variée et équilibrée et d’un mode de vie sain. Tenir hors de portée des jeunes enfants.",
     "packagedBy": "Conditionné en France par l’ESAT Les Oliviers (Gennevilliers, 92)",
     "gallery": "Photos du produit",
     "imageOf": "Photo {n} sur {total}",
@@ -127,6 +126,8 @@
     "closePhoto": "Fermer",
     "previousPhoto": "Photo précédente",
     "nextPhoto": "Photo suivante",
+    "zoomIn": "Zoomer sur la photo",
+    "zoomOut": "Voir la photo entière",
     "galleryDuo": "{name}, photo d’ensemble avec un autre produit de la gamme",
     "unitPrice": "Prix au kilo",
     "formats": "Format",
@@ -178,7 +179,11 @@
     "shippingFromFree": "Dès {amount} en Point Relais, offerte dès {threshold}",
     "shippingOffered": "Offerte",
     "maxNote": "{max} sachets maximum par produit. Pour plus, {contact}.",
-    "maxNoteContact": "écrivez‑nous"
+    "maxNoteContact": "écrivez‑nous",
+    "undoRemoved": "{name} retiré.",
+    "undo": "Annuler",
+    "undoOf": "Annuler le retrait de {name}",
+    "restored": "{name} remis dans le panier"
   },
   "checkout": {
     "title": "Votre commande",
@@ -485,6 +490,7 @@
     "breadcrumb": "Fil d’Ariane",
     "newTab": "(s’ouvre dans un nouvel onglet)",
     "medallionAlt": "Médaillon Racines en Partage : une fleur d’hibiscus et des feuilles",
+    "originsMapAlt": "Carte des origines de nos produits : {lands}, chacun relié par une ligne à {home}, en France.",
     "openSearch": "Ouvrir la recherche",
     "account": "Mon espace"
   }

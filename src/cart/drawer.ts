@@ -119,9 +119,9 @@ export function createDrawer(ctx: CartContext): Drawer | null {
     window.setTimeout(finishClose, CLOSE_FALLBACK_MS);
   });
 
-  if (list) bindLineEvents(list, ctx, () => title);
+  if (list) bindLineEvents(list, ctx, () => title, { undo: true });
 
-  return {
+  const drawer: Drawer = {
     open(from) {
       if (dialog.open) {
         title?.focus();
@@ -149,7 +149,8 @@ export function createDrawer(ctx: CartContext): Drawer | null {
       if (empty) empty.hidden = hasLines;
       if (foot) foot.hidden = !hasLines;
       if (list) {
-        list.hidden = !hasLines;
+        // The undo row of the last line stays above the empty message.
+        list.hidden = !hasLines && !ctx.undo.pending;
         renderLines(list, cart.lines, ctx, { variant: 'drawer' });
       }
       if (count) count.textContent = hasLines ? ctx.itemsLabel(totals.itemCount) : '';
@@ -165,4 +166,7 @@ export function createDrawer(ctx: CartContext): Drawer | null {
       renderFeatured(featured, cart, ctx);
     },
   };
+  // The undo row leaves on its own after a few seconds.
+  ctx.undo.onExpire(() => drawer.render(ctx.store.getCart()));
+  return drawer;
 }

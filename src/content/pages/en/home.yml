@@ -18,12 +18,12 @@ hero:
 reassurance:
   - icon: leaf
     text: 100% plant-based, no additives or preservatives
-  - icon: pin
+  - icon: flower
     text: Packed in France by ESAT Les Oliviers
   - icon: truck
     text: Pickup point delivery, free from €49
-  - icon: lock
-    text: Secure payment
+  - icon: pin
+    text: Free pickup in Arnouville
 featuredTitle: Our essentials
 storyTitle: Two lands
 storyBody: >-

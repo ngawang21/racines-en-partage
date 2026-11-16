@@ -7,7 +7,7 @@ import { getContext, type CartContext } from './context';
 import { createDrawer, type Drawer } from './drawer';
 import { itemCount, type CartState } from './store';
 import { addOutcome } from './add-outcome';
-import { capNote } from './lines';
+import { capNote, capNoteText } from './lines';
 import { carryQueryToLanguageLinks, takeUrlToken } from './url-token';
 
 /** The forms src/forms/forms.ts enhances (the lookup and review pages load their own). */
@@ -73,8 +73,13 @@ function clampInput(input: HTMLInputElement, max: number): number {
   const next = Number.isFinite(value) ? Math.min(max, Math.max(1, value)) : 1;
   input.value = String(next);
   syncStepButtons(input, max);
+  // Typed above the maximum (12 becomes 10): say why, not only after an add (review 17).
+  if (Number.isFinite(value) && value > max) onClamped?.(input);
   return next;
 }
+
+/** Set by init: announces the maximum line when a typed quantity was brought down. */
+let onClamped: ((input: HTMLInputElement) => void) | null = null;
 
 /** The stepper around a quantity input: `[data-qty]`, `[data-qty-stepper]` or the parent. */
 const scopeOf = (el: Element) => el.closest('[data-qty], [data-qty-stepper]') ?? el.parentElement;
@@ -187,6 +192,7 @@ function init(): void {
       btn.disabled = true;
 
   syncCapNote = capNoteSync(ctx);
+  onClamped = () => ctx.announce(capNoteText(ctx));
   const qtyInputs = [...document.querySelectorAll<HTMLInputElement>('input[data-qty-for]')];
   for (const input of qtyInputs) {
     input.max = String(store.maxQuantity);
@@ -265,12 +271,15 @@ function init(): void {
     }
   });
 
-  document.addEventListener('change', (event) => {
-    const input = (event.target as Element | null)?.closest<HTMLInputElement>(
-      'input[data-qty-for]',
-    );
-    if (input) clampInput(input, store.maxQuantity);
-  });
+  // On change and on leaving the field: the value shown is always one the
+  // add button will use, and a clamp shows and announces the maximum line.
+  for (const type of ['change', 'focusout'] as const)
+    document.addEventListener(type, (event) => {
+      const input = (event.target as Element | null)?.closest<HTMLInputElement>(
+        'input[data-qty-for]',
+      );
+      if (input && !input.disabled) clampInput(input, store.maxQuantity);
+    });
 
   for (const toggle of document.querySelectorAll('[data-cart-toggle]')) {
     toggle.setAttribute('aria-haspopup', 'dialog');

@@ -7,7 +7,11 @@
 // shows it open. The scrim beside the panel is the summary's ::before, so a
 // tap outside the panel toggles it closed natively. The panel and the scrim
 // start at the header's bottom edge, published here as --menu-top (the
-// announcement bar may still be on screen above the header).
+// announcement bar may still be on screen above the header). While the menu
+// is open everything behind the panel is inert (every body child except the
+// header and the dialogs), so Tab moves between the panel and the header's
+// own controls and never reaches the page under the scrim (review 17). The
+// `toggle` event covers every way the menu opens or closes.
 //
 // Tucked header (phones and small tablets, below 1024 px; spec 8.2): scrolling down slides the header out of
 // view, scrolling up brings it back, so the small screen is for the product.
@@ -41,6 +45,7 @@ function initHeaderMenu(): void {
     placePanel();
   });
   window.addEventListener('resize', () => menu.open && placePanel());
+  menu.addEventListener('toggle', () => setBehindInert(header, menu.open));
   document.addEventListener('keydown', (event) => {
     // A modal dialog (cart drawer, search) owns Escape while it is open.
     if (event.key === 'Escape' && menu.open && !document.querySelector('dialog[open]')) {
@@ -59,6 +64,16 @@ function initHeaderMenu(): void {
   });
 
   initTuck(header, menu);
+}
+
+/** Make the page behind the open menu inert, or live again. */
+function setBehindInert(header: HTMLElement, inert: boolean): void {
+  for (const el of document.body.children) {
+    if (el === header || el instanceof HTMLDialogElement) continue;
+    if (!(el instanceof HTMLElement) || ['SCRIPT', 'TEMPLATE', 'STYLE'].includes(el.tagName))
+      continue;
+    el.inert = inert;
+  }
 }
 
 function initTuck(header: HTMLElement, menu: HTMLDetailsElement): void {

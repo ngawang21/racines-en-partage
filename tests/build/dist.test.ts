@@ -279,6 +279,55 @@ describe('contracts for wave 2', () => {
   });
 });
 
+describe('header and FAQ (review 17)', () => {
+  it('the primary navigation lists the recipes between the shop and the story, current on recipe pages', () => {
+    for (const p of PAGES.filter((q) => q.key !== 'checkout')) {
+      const d = doc(p.file);
+      for (const nav of ['.desktop-nav', '.mobile-nav']) {
+        const links = d.querySelectorAll(`${nav} > ul a`);
+        const hrefs = links.map((a) => a.getAttribute('href'));
+        expect(hrefs.slice(0, 3), `${p.file} ${nav}`).toEqual([
+          routePath('shop', p.locale),
+          routePath('recipes', p.locale),
+          routePath('about', p.locale),
+        ]);
+        const current = links.filter((a) => a.getAttribute('aria-current') === 'page');
+        if (p.key === 'recipes' || p.key === 'recipe')
+          expect(
+            current.map((a) => a.getAttribute('href')),
+            p.file,
+          ).toEqual([routePath('recipes', p.locale)]);
+      }
+    }
+  });
+  it('the cart badge is rendered empty, so no "0" shows before the cart script runs', () => {
+    for (const p of PAGES.filter((q) => q.key !== 'checkout')) {
+      const badge = doc(p.file).querySelector('.site-header [data-cart-count]');
+      expect(badge?.hasAttribute('data-empty'), p.file).toBe(true);
+    }
+  });
+  it('the FAQ shows headed groups, links instead of printed paths, and plain text in its JSON-LD', () => {
+    for (const locale of LOCALES) {
+      const file = fileOf(routePath('faq', locale));
+      const d = doc(file);
+      const headings = d.querySelectorAll('.faq-group > h2').map((h) => h.text.trim());
+      expect(headings, locale).toEqual(
+        locale === 'fr'
+          ? ['Nos produits', 'Commande et livraison']
+          : ['Our products', 'Ordering and delivery'],
+      );
+      const links = d.querySelectorAll('.faq-list .answer a').map((a) => a.getAttribute('href'));
+      expect(links, locale).toContain(routePath('recipes', locale));
+      expect(links, locale).toContain(routePath('account', locale));
+      expect(d.querySelector('.faq-list')!.text, locale).not.toMatch(/\]\(\//);
+      const answers = ldGraph(file)
+        .find((n) => n['@type'] === 'FAQPage')!
+        .mainEntity.map((q: { acceptedAnswer: { text: string } }) => q.acceptedAnswer.text);
+      for (const a of answers) expect(a, locale).not.toMatch(/\[|\]\(/);
+    }
+  });
+});
+
 describe('catalog.json (spec 6.2)', () => {
   const catalog = () => JSON.parse(read('catalog.json'));
   it('is valid and carries the settings in cents', () => {

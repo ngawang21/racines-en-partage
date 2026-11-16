@@ -5,7 +5,6 @@
 // and the FAQ already tell ordering and delivery (HowItWorks.astro stays for
 // now). The shop's filter chips replace the category tiles (eleven products
 // do not need them).
-import medallion from '../../assets/brand/medallion.webp';
 import type { Locale } from '../../consts';
 import Base from '../../layouts/Base.astro';
 import {
@@ -17,7 +16,7 @@ import {
   loadSettings,
 } from '../../i18n/locale';
 import { routePath } from '../../i18n/routing';
-import { detailAsset } from '../../images';
+import { detailAsset, hasAsset } from '../../images';
 import Commitment from '../Commitment.astro';
 import Hero from '../Hero.astro';
 import ProductGrid from '../ProductGrid.astro';
@@ -46,6 +45,14 @@ const recipeBySlug = new Map(recipes.map((r) => [r.slug, r]));
 const recipesHref = routePath('recipes', locale);
 const shopHref = routePath('shop', locale);
 const aboutHref = routePath('about', locale);
+// The ritual's pictures: the pouch's window (the label's kente ribbon, the
+// contents behind the film, the kraft below: a thing, not a swatch, review
+// 17) cut from the product photo under src/assets/brand/window/, else the
+// contents close-up.
+const ritualPicture = (productImage: string) => {
+  const crop = productImage.replace('/src/assets/products/', '/src/assets/brand/window/');
+  return hasAsset(crop) ? crop : detailAsset(productImage);
+};
 ---
 
 <Base {locale} routeKey="home" title={home.seoTitle} description={home.seoDescription}>
@@ -74,8 +81,8 @@ const aboutHref = routePath('about', locale);
     lands={home.storyLands}
     fromLabel={t.shop.landsFrom}
     toLabel={t.shop.landsTo}
-    image={medallion}
-    imageAlt={t.a11y.medallionAlt}
+    {locale}
+    mapAlt={t.a11y.originsMapAlt}
     link={{ href: aboutHref, label: home.hero.cta.secondary }}
     note={home.ownerNote}
   />
@@ -94,7 +101,7 @@ const aboutHref = routePath('about', locale);
         title: recipe?.title ?? t.recipes.viewAll,
         href: recipe ? routePath('recipe', locale, recipe.slug) : recipesHref,
         productName: product?.name,
-        detail: product?.images[0] ? detailAsset(product.images[0]) : undefined,
+        detail: product?.images[0] ? ritualPicture(product.images[0]) : undefined,
       };
     })}
     link={{ href: recipesHref, label: t.recipes.viewAll }}

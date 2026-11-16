@@ -367,3 +367,37 @@ test('phone cart lines: "Retirer" on the stepper row, a line about 200 px tall',
     expect(remove.x).toBeGreaterThan(stepper.x + stepper.width);
   }
 });
+
+test('typing 12 then Tab shows and announces the maximum under the stepper (review 17)', async ({
+  page,
+}) => {
+  // The review's steps: an empty cart, the moringa page, 12 typed, Tab.
+  await page.goto(PRODUCT);
+  const { maxQuantityPerLine: max } = await readCatalog(page);
+  const note = `${max} sachets maximum par produit. Pour plus, écrivez‑nous.`;
+  const qty = page.locator(`input[data-qty-for="${SKU}"]`);
+  const pageNote = page.locator('.qty-cap');
+  const live = page.locator('[data-cart-live-page]');
+  await expect(live).toHaveAttribute('aria-live', 'polite');
+  await qty.fill(String(max + 2));
+  await qty.press('Tab');
+  await expect(qty).toHaveValue(String(max));
+  // Visible under the stepper, tied to the field, and said politely.
+  await expect(pageNote).toBeVisible();
+  await expect(pageNote).toHaveText(note);
+  const stepper = (await page.locator('[data-qty-stepper]').boundingBox())!;
+  expect((await pageNote.boundingBox())!.y).toBeGreaterThanOrEqual(stepper.y + stepper.height);
+  expect((await qty.getAttribute('aria-describedby')) ?? '').toContain(
+    (await pageNote.getAttribute('id'))!,
+  );
+  await expect(live).toHaveText(note);
+  // Nothing was added: the clamp alone speaks.
+  expect((await storedCart(page)).lines).toEqual([]);
+
+  // A value within the range says nothing new.
+  await expect(live).toHaveText(note);
+  await qty.fill('3');
+  await qty.press('Tab');
+  await expect(qty).toHaveValue('3');
+  await expect(pageNote).toBeHidden();
+});

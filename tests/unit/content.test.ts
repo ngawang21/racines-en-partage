@@ -523,6 +523,34 @@ describe('pages', () => {
       for (const land of from) expect(storyBody, `${locale} ${land}`).not.toContain(land);
     }
   });
+  it('the origins map has a point for every home land and no other, in both locales', () => {
+    // scripts/origins-map.mjs writes the points; OriginsMap.astro finds each
+    // land of `storyLands` by its name in the page's language.
+    const map = readJson(join(ROOT, 'src/assets/brand/origins-map.json')) as {
+      width: number;
+      height: number;
+      origins: Array<{ names: { fr: string; en: string }; x: number; y: number; label: string }>;
+      home: { names: { fr: string; en: string }; x: number; y: number; label: string };
+    };
+    for (const locale of ['fr', 'en'] as const) {
+      const { storyLands } = mergePage(
+        'home',
+        pages('fr').get('home'),
+        locale === 'fr' ? undefined : pages('en').get('home'),
+      );
+      expect(map.origins.map((o) => o.names[locale]).sort(), locale).toEqual(
+        [...storyLands.from].sort(),
+      );
+      expect(map.home.names[locale], locale).toBe(storyLands.to);
+    }
+    for (const p of [...map.origins, map.home]) {
+      expect(p.x, p.names.en).toBeGreaterThan(0);
+      expect(p.x, p.names.en).toBeLessThan(map.width);
+      expect(p.y, p.names.en).toBeGreaterThan(0);
+      expect(p.y, p.names.en).toBeLessThan(map.height);
+      expect(['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'], p.names.en).toContain(p.label);
+    }
+  });
   it('the home page names the ESAT once outside the trust strip, in the commitments', () => {
     for (const locale of ['fr', 'en'] as const) {
       const home = mergePage(
@@ -578,11 +606,12 @@ describe('pages', () => {
       ).reassurance;
     expect(items('fr')).toEqual([
       { icon: 'leaf', text: '100 % végétal, sans additif ni conservateur' },
-      { icon: 'pin', text: 'Conditionné en France par l’ESAT Les Oliviers' },
+      { icon: 'flower', text: 'Conditionné en France par l’ESAT Les Oliviers' },
       { icon: 'truck', text: 'Livraison en Point Relais, offerte dès 49 €' },
-      { icon: 'lock', text: 'Paiement sécurisé' },
+      { icon: 'pin', text: 'Retrait gratuit à Arnouville' },
     ]);
-    expect(items('en').map((i) => i.icon)).toEqual(['leaf', 'pin', 'truck', 'lock']);
+    expect(items('en').map((i) => i.icon)).toEqual(['leaf', 'flower', 'truck', 'pin']);
+    expect(items('en')[3]!.text).toBe('Free pickup in Arnouville');
     expect(items('en')[0]!.text).toMatch(/100% plant-based/);
   });
   it('the about page states the promise and the FAQ the new services', () => {
@@ -597,11 +626,7 @@ describe('pages', () => {
         locale === 'fr' ? undefined : pages(locale).get('faq'),
       );
     const questions = faq('fr').items.map((i) => i.question);
-    for (const q of [
-      'Comment retrouver ma commande ?',
-      'Puis-je donner mon avis sur un produit ?',
-      'Puis-je recevoir vos nouveautés ?',
-    ])
+    for (const q of ['Comment retrouver ma commande ?', 'Puis-je retourner un produit ?'])
       expect(questions).toContain(q);
     expect(JSON.stringify(faq('fr'))).toContain('/ma-commande/');
     expect(JSON.stringify(faq('en'))).toContain('/en/my-order/');
@@ -711,7 +736,7 @@ describe('ui strings', () => {
   });
   it('english is translated', () => {
     expect((en as any).nav.shop).not.toBe((fr as any).nav.shop);
-    expect((en as any).product.disclaimer).not.toBe((fr as any).product.disclaimer);
+    expect((en as any).product.addToCart).not.toBe((fr as any).product.addToCart);
   });
 });
 

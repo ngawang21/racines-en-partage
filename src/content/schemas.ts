@@ -261,11 +261,23 @@ export const aboutPageSchema = z.object({
 });
 export type AboutPage = z.infer<typeof aboutPageSchema>;
 
+/**
+ * The FAQ's headed groups, in page order: products first (what a new visitor
+ * asks), then ordering and delivery. An item without a group joins "orders".
+ */
+export const FAQ_GROUPS = ['products', 'orders'] as const;
+export type FaqGroup = (typeof FAQ_GROUPS)[number];
+
 export const faqPageSchema = z.object({
   ...seo,
   title: text,
   lead: text,
-  items: z.array(z.object({ question: text, answer: text })).min(1),
+  /** The heading of each group. */
+  groupTitles: z.object({ products: text, orders: text }),
+  /** Answers may hold internal links written `[texte](/chemin/)` (inline-links.ts). */
+  items: z
+    .array(z.object({ question: text, answer: text, group: z.enum(FAQ_GROUPS).optional() }))
+    .min(1),
 });
 export type FaqPage = z.infer<typeof faqPageSchema>;
 

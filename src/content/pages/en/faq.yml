@@ -1,108 +1,30 @@
 seoTitle: Frequently asked questions
 seoDescription: >-
-  Mondial Relay pickup point delivery, pickup in Arnouville, delivery times,
-  payment, returns, storage, origins, tastes and recipes: our answers to your
+  Origins, allergens, storage, Mondial Relay pickup point delivery, pickup in
+  Arnouville, delivery times, payment and returns: our answers to your
   questions.
 title: Frequently asked questions
 lead: Everything you need to know before ordering. Another question? Write to us.
+groupTitles:
+  products: Our products
+  orders: Ordering and delivery
 items:
-  - question: How long does delivery take?
-    answer: >-
-      We pack your parcel within 2 working days. Then allow 3 to 5 working days
-      to a Mondial Relay pickup point and 2 to 4 working days for home delivery
-      with Colissimo.
-  - question: How does pickup point delivery work?
-    answer: >-
-      When you order, choose a Mondial Relay pickup point on the map, near your
-      home or your work. You receive a text and an e-mail as soon as the parcel
-      arrives; it then waits for you for several days. Remember to bring photo ID.
-      We deliver to pickup points in France, Belgium and
-      Luxembourg.
-  - question: Is delivery free?
-    answer: >-
-      Yes, from €49, whatever the delivery method. Below that, pickup point
-      delivery costs €4.90 and home delivery €6.90.
-  - question: Can I collect my order in person?
-    answer: >-
-      Yes, pickup is free at 9 Rue du Marché, 95400 Arnouville, France, by
-      appointment.
-      Choose "Free pickup in Arnouville" when you order: we will contact you as
-      soon as your order is ready.
-  - question: Which payment methods do you accept?
-    answer: >-
-      Payments are handled by Stripe, a secure platform: debit or credit card (CB, Visa,
-      Mastercard) and, depending on your device, Apple Pay or Google Pay. We
-      never see your card details.
-  - question: How can I find my order?
-    answer: >-
-      The easiest way: open "My account" (/en/account/) and enter the e-mail
-      address you ordered with. You receive a sign-in link by e-mail, no
-      password needed, and all your orders are listed. You can also use the
-      "Track my order" page (/en/my-order/) with the order number shown in
-      your confirmation e-mail and your e-mail address.
-  - question: Do I need to create an account?
-    answer: >-
-      No. You order as a guest; to find your orders, ask for a sign-in link in
-      My account.
-  - question: Can I return a product?
-    answer: >-
-      Our products are food: once a pouch is opened it cannot be taken back, for
-      hygiene reasons (article L221-28 of the French Consumer Code). For an
-      unopened pouch, you have 14 days after delivery to tell us you are
-      withdrawing, then 14 days to send it back. If your parcel arrives damaged,
-      send us a photo and we will replace or refund the products concerned.
-  - question: How should I store the products?
-    answer: >-
-      In a dry place, away from heat and moisture, closing the pouch tightly after
-      each use. The best-before date is printed on every pouch.
   - question: Where do your products come from?
+    group: products
     answer: >-
       The origin is stated on every product page: moringa and tiger nut from
       Niger, baobab from Senegal, hibiscus from Cameroon, cacao from Côte
       d’Ivoire, psyllium from India, roasted barley from Germany. All our
       products are 100% plant-based, with no additive and no preservative. Every pouch is packed in France by ESAT Les
       Oliviers in Gennevilliers.
-  - question: Can I review a product?
-    answer: >-
-      With pleasure! About a week after your order, you receive an e-mail
-      inviting you to review each product you ordered. We read every review
-      before it goes online; reviews marked "Verified purchase" come from an
-      order placed on the site.
-  - question: Can I hear about your news?
-    answer: >-
-      Yes, sign up to our newsletter at the bottom of every page. You receive a
-      confirmation e-mail: your subscription is confirmed when you click the
-      link inside. Every message includes an unsubscribe link.
-  - question: Do you sell to businesses?
-    answer: >-
-      Grocers, restaurants, works councils: write to us at
-      racinesenpartage@gmail.com or call +33 7 75 68 91 08, we will be glad to
-      answer.
-  - question: What do your products taste like?
-    answer: >-
-      Hibiscus makes a ruby red drink, tangy and fruity. Baobab is tangy and
-      slightly sweet, with notes of lemon and pear. Moringa tastes grassy,
-      between spinach and green tea. Tiger nut is sweet and mild, between
-      hazelnut and almond. The cocoa powder is intense and unsweetened; the
-      cacao nibs are crunchy, with a clean bitterness. Roasted barley flour has
-      a toasted taste, close to barley coffee. Psyllium has almost no taste: in
-      contact with water, it forms a soft gel.
   - question: I am new to a product. Where should I start?
+    group: products
     answer: >-
-      With the recipe printed on the pouch, when there is one: the bissap
-      infusion, the chilled baobab drink, the moringa smoothie, the tiger nut
-      horchata or the hot chocolate. Start with a small amount, a teaspoon of
-      powder for instance, then adjust to taste. For roasted barley flour,
-      tsampa, the simplest way is to stir it into a bowl of hot milk or a
-      yoghurt.
-  - question: Bissap, foléré, zobo, karkadé... are they the same thing?
-    answer: >-
-      Yes. They are the names, from one country to the next, of the drink made
-      with the dried calyces of Hibiscus sabdariffa: bissap in Senegal and Côte
-      d’Ivoire, foléré in Cameroon, dah in Guinea, wonjo in the Gambia, zobo in
-      Nigeria, karkadé in Egypt and Sudan. Our flowers come from Cameroon. It is
-      not the ornamental garden hibiscus, which is another species.
+      With the recipe printed on the pouch, when there is one, and a small
+      amount, a teaspoon of powder for instance, then adjust to taste. All our
+      ideas are on the [Recipes page](/en/recipes/).
   - question: Whole tiger nuts or tiger nut powder, what is the difference?
+    group: products
     answer: >-
       It is the same plant, tiger nut (Cyperus esculentus) from Niger, also
       called tchongon, earth almond or chufa. The whole tiger nuts are dried:
@@ -111,28 +33,15 @@ items:
       tubers: it goes straight into a porridge, a pancake batter or a drink,
       with no soaking.
   - question: Cocoa powder or cacao nibs, what is the difference?
+    group: products
     answer: >-
       Both are 100% cacao from Côte d’Ivoire. The powder is made once the cocoa
       butter has been pressed out: unsweetened, it mixes into hot milk and
       flavours cakes and desserts. The nibs are pieces of shelled cacao beans:
       they do not melt, they crunch, and they are scattered over a yoghurt, a
       porridge, a granola or a cookie dough.
-  - question: What is tsampa, and why does it come from Germany?
-    answer: >-
-      Tsampa is barley that is roasted, then ground into flour: the staple food
-      of Tibetan cooking. In Tibet it is mixed into a bowl of butter tea and
-      kneaded with the fingertips into small balls. As the barley is already
-      roasted, it needs no cooking. Ours is Sonam’Tsampa, made in Germany from
-      the recipe of Sonam Dölma, a Tibetan woman who first made it with her
-      mother for their own table. Barley contains gluten.
-  - question: How should I store a pouch once opened?
-    answer: >-
-      Close it tightly after each use, or tip it into an airtight jar, and keep
-      it somewhere dry, away from heat and light. Use a dry spoon: powders do
-      not like moisture and turn lumpy. The drinks you make keep in the fridge
-      in a closed bottle: two days for horchata, three days for bissap and
-      bouye.
   - question: Do your products contain allergens?
+    group: products
     answer: >-
       Roasted barley contains gluten: it is not suitable for people with coeliac
       disease. Tiger nut is a small tuber, not a nut, despite its names of earth
@@ -140,16 +49,57 @@ items:
       and on every pouch. All our pouches are packed by ESAT Les Oliviers in
       Gennevilliers: if you have an allergy or any doubt, write to us before
       ordering.
-  - question: How do I use psyllium in cooking?
+  - question: How should I store the products?
+    group: products
     answer: >-
-      In contact with water, psyllium husk swells and forms a gel with a
-      neutral taste. In cooking, the gel works as a binder, for instance in a
-      buckwheat flatbread dough, which hardly holds together without it. As the
-      pouch says, psyllium is always taken with a sufficient amount of water.
-  - question: Where can I find your recipes?
+      Somewhere dry, away from heat and light, in the pouch closed tightly after
+      each use or in an airtight jar. Use a dry spoon: powders do not like
+      moisture and turn lumpy. The best-before date is printed on every pouch.
+  - question: How long does delivery take?
+    group: orders
     answer: >-
-      On the Recipes page (/en/recipes/): every product has at least one
-      recipe, with its ingredients, steps and times. Recipes "from the label"
-      are the ones printed on our pouches; "house recipes" were written for the site,
-      from well-known preparations such as bissap, bouye or tsampa. Every
-      product page also shows its recipe.
+      We pack your parcel within 2 working days. Then allow 3 to 5 working days
+      to a Mondial Relay pickup point and 2 to 4 working days for home delivery
+      with Colissimo.
+  - question: How does pickup point delivery work?
+    group: orders
+    answer: >-
+      When you order, choose a Mondial Relay pickup point on the map, near your
+      home or your work. You receive a text and an e-mail as soon as the parcel
+      arrives; it then waits for you for several days. Remember to bring photo ID.
+      We deliver to pickup points in France, Belgium and
+      Luxembourg.
+  - question: Is delivery free?
+    group: orders
+    answer: >-
+      Yes, from €49, whatever the delivery method. Below that, pickup point
+      delivery costs €4.90 and home delivery €6.90.
+  - question: Can I collect my order in person?
+    group: orders
+    answer: >-
+      Yes, pickup is free at 9 Rue du Marché, 95400 Arnouville, France, by
+      appointment.
+      Choose "Free pickup in Arnouville" when you order: we will contact you as
+      soon as your order is ready.
+  - question: Which payment methods do you accept?
+    group: orders
+    answer: >-
+      Payments are handled by Stripe, a secure platform: debit or credit card (CB, Visa,
+      Mastercard) and, depending on your device, Apple Pay or Google Pay. We
+      never see your card details.
+  - question: How can I find my order?
+    group: orders
+    answer: >-
+      No account needed: open [My account](/en/account/) and enter the e-mail
+      address you ordered with. You receive a sign-in link by e-mail, no
+      password needed, and all your orders are listed. You can also use the
+      [Track my order](/en/my-order/) page with the order number shown in
+      your confirmation e-mail and your e-mail address.
+  - question: Can I return a product?
+    group: orders
+    answer: >-
+      Our products are food: once a pouch is opened it cannot be taken back, for
+      hygiene reasons (article L221-28 of the French Consumer Code). For an
+      unopened pouch, you have 14 days after delivery to tell us you are
+      withdrawing, then 14 days to send it back. If your parcel arrives damaged,
+      send us a photo and we will replace or refund the products concerned.

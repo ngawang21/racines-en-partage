@@ -41,7 +41,7 @@ const roundPrice = (cents: number) => wholePrice(formatPrice(cents, locale));
 >
   <header class="rep-head">
     <h1 class="rep-title">{t.checkout.title}</h1>
-    <a class="text-link" href={routePath('cart', locale)}>
+    <a class="text-link" href={routePath('cart', locale)} data-checkout-edit>
       <Icon name="chevron" size={18} class="icon-flip" />
       {t.checkout.editCart}
     </a>
