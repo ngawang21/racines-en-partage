@@ -88,10 +88,10 @@ function layout(locale: Locale, title: string, preheader: string, body: string):
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.cream};">`,
     '<tr><td align="center" style="padding:24px 12px;">',
     `<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:${C.white};border:1px solid ${C.kraft};border-radius:8px;overflow:hidden;">`,
-    `<tr><td style="background:${C.forest};color:${C.cream};padding:20px 28px;font-family:${SERIF};font-size:22px;letter-spacing:0.5px;">${esc(SHOP.name)}</td></tr>`,
+    `<tr><td style="background:${C.forest};padding:18px 28px;"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="padding-right:12px;vertical-align:middle;"><img src="${SITE.url}/icons/icon-96.png" width="40" height="40" alt="" style="display:block;border:0;border-radius:20px;"></td><td style="vertical-align:middle;color:${C.cream};font-family:${SERIF};font-size:22px;letter-spacing:0.5px;">${esc(SHOP.name)}</td></tr></table></td></tr>`,
     `<tr><td style="height:4px;line-height:4px;font-size:0;background:${C.hibiscus};">&nbsp;</td></tr>`,
     `<tr><td style="padding:28px;font-size:15px;line-height:1.55;color:${C.forest};">${body}</td></tr>`,
-    `<tr><td style="background:${C.kraft};color:${C.forest};padding:16px 28px;font-size:12px;line-height:1.5;">${esc(SHOP.name)} · ${esc(SHOP.address.street)}, ${esc(SHOP.address.postcode)} ${esc(SHOP.address.city)} · <a href="mailto:${esc(SHOP.email)}" style="color:${C.forest};">${esc(SHOP.email)}</a></td></tr>`,
+    `<tr><td style="background:${C.kraft};color:${C.forest};padding:16px 28px;font-size:12px;line-height:1.5;">${esc(SHOP.name)} · ${esc(SHOP.address.street)}, ${esc(SHOP.address.postcode)} ${esc(SHOP.address.city)} · <a href="mailto:${esc(SHOP.email)}" style="color:${C.forest};">${esc(SHOP.email)}</a><br>SIRET ${esc(SHOP.siret)} · <a href="${SITE.url}${ROUTES.terms[locale]}" style="color:${C.forest};">${locale === 'fr' ? 'Conditions générales de vente' : 'Terms of sale'}</a></td></tr>`,
     '</table></td></tr></table></body></html>',
   ].join('\n');
 }
@@ -415,6 +415,11 @@ export function renderCustomerEmail(
   const t = CUSTOMER[locale];
   const c = summary.customer;
   const subject = t.subject(summary.number);
+  // The reference a customer quotes when writing or calling.
+  const reference =
+    locale === 'fr'
+      ? `Commande n° ${summary.number}, passée le ${formatDateTime(summary.createdAt, locale)}`
+      : `Order no. ${summary.number}, placed on ${formatDateTime(summary.createdAt, locale)}`;
   const totals = totalsRows(summary, locale, t.totals);
   const d = summary.delivery;
   const methodLabel = d ? t.method[d.method] : (summary.deliveryLabel ?? '');
@@ -435,13 +440,14 @@ export function renderCustomerEmail(
       heading(t.heading),
       paragraph(esc(t.greeting(c.name))),
       paragraph(esc(t.intro(summary.number))),
+      `<p style="margin:0 0 12px;padding:10px 14px;border:1px solid ${C.kraft};border-radius:6px;font-size:14px;">${esc(reference)}</p>`,
       subheading(t.items),
       linesTable(summary, locale, false),
       totalsTable(totals),
       subheading(`${t.delivery}${colon(locale)}${methodLabel}`),
       deliveryLines.length ? block(deliveryLines) : '',
       next ? subheading(t.next) + paragraph(esc(next)) : '',
-      paragraph(`${esc(t.lookup)}${link(lookup)}`),
+      button(lookup, locale === 'fr' ? 'Suivre ma commande' : 'Track my order'),
       subheading(t.contactTitle),
       paragraph(
         `${esc(t.contact.before)}<a href="mailto:${esc(SHOP.email)}" style="color:${C.forest};">${esc(SHOP.email)}</a>${esc(t.contact.between)}${esc(phone)}${esc(t.contact.after)}`,
@@ -455,6 +461,7 @@ export function renderCustomerEmail(
     '',
     t.greeting(c.name),
     t.intro(summary.number),
+    reference,
     '',
     t.items,
     ...textLines(summary, locale, false),

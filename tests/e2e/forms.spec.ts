@@ -248,7 +248,7 @@ test.describe('order lookup', () => {
       },
     };
     const calls = await mockApi(page, '/api/orders/lookup', 200, order);
-    await page.goto(LOOKUP.fr);
+    await page.goto(LOOKUP.fr, { waitUntil: 'networkidle' });
     await page.getByLabel('Numéro de commande').fill('x9y8 z7w6');
     await page.getByLabel(/Adresse e.mail/).fill('awa@exemple.fr');
     await page.getByRole('button', { name: 'Retrouver ma commande' }).click();
@@ -278,7 +278,7 @@ test.describe('order lookup', () => {
       200,
       orderFixture([{ name: 'Poudre de moringa 100 g', quantity: 1, unitAmount: 890 }]),
     );
-    await page.goto(LOOKUP.fr);
+    await page.goto(LOOKUP.fr, { waitUntil: 'networkidle' });
     await page.locator('#lookup-number').fill('X9Y8Z7W6');
     await page.locator('#lookup-email').fill('awa@exemple.fr');
     await page.locator('[data-lookup-form] [data-form-submit]').click();
@@ -304,7 +304,7 @@ test.describe('order lookup', () => {
     await mockApi(page, '/api/orders/lookup', 404, {
       error: { code: 'ORDER_NOT_FOUND', message: 'x' },
     });
-    await page.goto(LOOKUP.en);
+    await page.goto(LOOKUP.en, { waitUntil: 'networkidle' });
     await page.getByLabel('Order number').fill('ABCDEFGH');
     await page.getByLabel('E-mail address').fill('sam@example.com');
     await page.getByRole('button', { name: 'Find my order' }).click();

@@ -381,6 +381,7 @@ describe('shop facts', () => {
     expect(SHOP.name).toBe(settings.brand.name);
     expect(SHOP.email).toBe(settings.brand.email);
     expect(SHOP.phone).toBe(settings.brand.phone);
+    expect(SHOP.siret).toBe(settings.brand.siret);
     expect(SHOP.address).toEqual(settings.brand.address);
   });
 });

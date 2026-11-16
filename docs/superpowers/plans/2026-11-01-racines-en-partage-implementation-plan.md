@@ -468,3 +468,15 @@ a separate entry in `worker/` deployed with the static assets by one
   capped at 1200 px (no label close-up while the labels carry claims the
   site omits), `imageNote` on the 200 g baobab. Gates: unit 356, worker 395,
   build 54 (1 skipped), e2e 204 (2 skipped).
+- 2026-11-16, iteration 4 closing pass (no further review rounds, by the
+  owner's instruction): origins map generated from Natural Earth data in the
+  home story band, "Recettes" in the navigation, phone menu that keeps focus,
+  FAQ trimmed to thirteen questions in two groups, photo zoom with pan, undo
+  after removing a cart line, quantity limit shown on clamp, supplement style
+  footnote removed, reassurance strip ends on the free pickup. Customer
+  e-mails: brand medallion in the header, order reference line with the date,
+  a button to follow the order, SIRET and terms of sale in the footer. One
+  intermittent e2e test fixed (the lookup tests wait for the page to settle;
+  production blocks an early native submit through `form-action 'none'`).
+  Gates: unit 378, worker 396, build 57 (1 skipped), e2e 237 (3 skipped), run
+  twice over without a failure; crawl of 86 pages clean.

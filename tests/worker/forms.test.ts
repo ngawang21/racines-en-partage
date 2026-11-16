@@ -74,7 +74,9 @@ describe('POST /api/contact', () => {
     // Tags are stripped before the template escapes what is left.
     expect(m!.text).toContain('Bonjour  & merci');
     expect(m!.html).toContain('Bonjour  &amp; merci');
-    expect(m!.html).not.toContain('<img');
+    // The layout carries the brand image; the visitor's markup must stay escaped.
+    expect(m!.html).not.toContain('<img src=x');
+    expect(m!.html).not.toContain('onerror=alert(1)>');
   });
 
   it('stock alert: subject names the product (French) and the address', async () => {
