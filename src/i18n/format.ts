@@ -97,6 +97,16 @@ export function formatPhoneIntl(digits: string): string {
   return `+33 ${rest.replace(/(\d)(?=(\d{2})+$)/, '$1 ').replace(/(\d{2})(?=\d)/g, '$1 ')}`.trim();
 }
 
+/**
+ * The wa.me link of a WhatsApp number (international digits, no "+"), with an
+ * optional prefilled message. Empty when the number is empty.
+ */
+export function whatsappUrl(number: string, message = ''): string {
+  const digits = number.replace(/\D/g, '');
+  if (!digits) return '';
+  return `https://wa.me/${digits}${message ? `?text=${encodeURIComponent(message)}` : ''}`;
+}
+
 /** "0775689108" to "+33775689108" for tel: links and structured data. */
 export function phoneE164(raw: string): string {
   const digits = raw.replace(/\D/g, '');

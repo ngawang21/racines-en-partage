@@ -1,13 +1,14 @@
 ---
 // Order panel shared by the thanks page and the order lookup page: lines,
-// amounts, delivery (Point Relais, pickup address) and, on the thanks page,
+// amounts, delivery (Point Relais, hand delivery on WhatsApp) and, on the thanks page,
 // the next steps. Static shell, hidden until src/cart/order-view.ts fills it
 // from a public order.
 import Icon from '../../components/Icon.astro';
 import type { Locale } from '../../consts';
 import type { LocaleContent } from '../../content/locale-schema';
+import { whatsappUrl } from '../../i18n/format';
 import { loadSettings } from '../../i18n/locale';
-import { countryName } from '../address';
+import { displayPhone } from '../address';
 
 interface Props {
   locale: Locale;
@@ -20,7 +21,14 @@ interface Props {
   idPrefix?: string;
 }
 const { locale, t, next = true, emailNote = true, idPrefix = 'thanks' } = Astro.props;
-const { address } = (await loadSettings()).brand;
+const { brand } = await loadSettings();
+const shopPhone = displayPhone(brand.phone, locale);
+// The order number joins the message once order-view.ts knows it.
+const whatsapp = whatsappUrl(brand.whatsapp, t.checkout.whatsappMessage);
+const nextPickup = (whatsapp ? t.thanks.nextPickup : t.thanks.nextPickupNoWhatsapp).replace(
+  '{phone}',
+  shopPhone,
+);
 ---
 
 <div class="thanks-layout" data-thanks-order hidden>
@@ -60,13 +68,27 @@ const { address } = (await loadSettings()).brand;
           <p class="relay-address" data-thanks-relay-address></p>
         </div>
       </div>
-      <address class="pickup-address" data-thanks-pickup hidden>
-        {address.street}
-        <br />
-        {address.postcode}{' '}{address.city}
-        <br />
-        {countryName(address.country, locale)}
-      </address>
+      <div class="pickup-card thanks-pickup" data-thanks-pickup hidden>
+        <p class="method-note">{nextPickup}</p>
+        {
+          whatsapp && (
+            <p class="pickup-actions">
+              <a
+                class="btn btn-secondary pickup-whatsapp"
+                href={whatsapp}
+                rel="noopener"
+                target="_blank"
+                data-thanks-whatsapp
+                data-whatsapp={brand.whatsapp}
+              >
+                <Icon name="whatsapp" size={18} />
+                {t.checkout.whatsappCta}
+                <span class="visually-hidden">{t.a11y.newTab}</span>
+              </a>
+            </p>
+          )
+        }
+      </div>
     </section>
 
     <slot name="side" />
@@ -97,8 +119,8 @@ const { address } = (await loadSettings()).brand;
             </li>
             <li data-next="pickup" hidden>
               <>
-                <Icon name="phone" size={20} />
-                <span>{t.thanks.nextPickup}</span>
+                <Icon name={whatsapp ? 'whatsapp' : 'phone'} size={20} />
+                <span>{nextPickup}</span>
               </>
             </li>
           </ol>

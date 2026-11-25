@@ -80,7 +80,7 @@ test('an add cut short by the maximum says so (C4)', async ({ page }) => {
 
 test('a delivery error goes once the customer picks another method (C3)', async ({ page }) => {
   await seedCart(page, [{ sku: SKU, quantity: 2 }], PATHS.fr.checkout);
-  await page.locator('.method-card', { hasText: 'Retrait' }).click();
+  await page.locator('.method-card', { hasText: 'Remise en mains propres' }).click();
   await page.locator('[data-co-terms]').check();
   await page.route('**/api/checkout', (route) =>
     json(route, 409, { error: { code: 'SHIPPING_UNAVAILABLE', message: 'x' } }),
@@ -88,11 +88,15 @@ test('a delivery error goes once the customer picks another method (C3)', async 
   await page.locator('[data-co-pay]').click();
   const error = page.locator('[data-co-error]');
   await expect(error).toBeVisible();
-  await page.check('input[name="delivery-method"][value="home"]', { force: true });
+  // Two methods only (relay, hand delivery): home delivery is switched off.
+  await expect(page.locator('input[name="delivery-method"][value="home"]')).toHaveCount(0);
+  await page.check('input[name="delivery-method"][value="relay"]', { force: true });
   await expect(error).toBeHidden();
   await expect(error).toBeEmpty();
 
-  // Unchecking the terms also clears it.
+  // Unchecking the terms also clears it (back on the hand delivery: a relay
+  // order would first ask for a Point Relais).
+  await page.locator('.method-card', { hasText: 'Remise en mains propres' }).click();
   await page.locator('[data-co-pay]').click();
   await expect(error).toBeVisible();
   await page.locator('[data-co-terms]').uncheck();

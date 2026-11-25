@@ -19,6 +19,9 @@ interface Props {
 const { locale, t } = Astro.props;
 const settings = await loadSettings();
 const l = t.forms.landing;
+// Switched off, no signup band follows: the texts that point at it give way
+// to the "closed for now" sentence.
+const on = settings.newsletter.enabled;
 const { email } = settings.brand;
 const noscript = t.forms.noscript.split(/(\{email\})/);
 ---
@@ -28,7 +31,7 @@ const noscript = t.forms.noscript.split(/(\{email\})/);
     <header class="thanks-head">
       <span class="thanks-mark" aria-hidden="true"><Icon name="mail" size={28} /></span>
       <h1 class="rep-title">{l.title}</h1>
-      <p class="lead" data-landing-when="initial">{l.neutral}</p>
+      <p class="lead" data-landing-when="initial">{on ? l.neutral : l.disabled}</p>
     </header>
     <noscript>
       <p class="form-noscript nl-status-narrow">
@@ -56,7 +59,7 @@ const noscript = t.forms.noscript.split(/(\{email\})/);
     <div class="nl-status is-invalid" data-landing-when="invalid" hidden>
       <div>
         <h2 class="nl-status-title" tabindex="-1" data-landing-focus>{l.invalidTitle}</h2>
-        <p>{l.invalid}</p>
+        <p>{on ? l.invalid : l.disabled}</p>
       </div>
     </div>
     <div class="nl-status is-invalid" data-landing-when="disabled" hidden>

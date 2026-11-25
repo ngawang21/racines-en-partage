@@ -1,20 +1,22 @@
-# Recette de l’étiquette du sachet (source: label). Les textes viennent de l’étiquette.
+# Recette de la maison (source: house), dans la version de la propriétaire, validée le 2026-11-23 (docs/client/recettes-a-valider.md).
 order: 2
 product: poudre-de-baobab-100g
-source: label
-prepMinutes: 2
+source: house
+prepMinutes: 5
 title: 'Boisson fraîche au baobab'
-summary: 'La poudre de baobab délayée dans l’eau fraîche : une boisson acidulée, prête en deux minutes.'
+summary: 'La poudre de baobab délayée dans un lait de souchet ou d’amande, avec une purée de mangue : la boisson fraîche et acidulée de la maison, prête en cinq minutes.'
 yield: '1 grand verre'
 ingredients:
   - '1 à 2 cuillères à café de poudre de baobab'
-  - '250 ml d’eau fraîche'
+  - '250 ml de lait de souchet ou lait d’amande, selon votre goût'
+  - '2 cuillères à soupe de purée de mangue'
   - '1 cuillère à café de miel ou de sucre selon votre goût'
   - 'Quelques glaçons'
 steps:
-  - 'Mélangez la poudre de baobab avec un peu d’eau, puis ajoutez progressivement le reste de l’eau.'
-  - 'Sucrez selon votre goût et servez bien frais.'
+  - 'Mélangez la poudre de baobab avec un peu de lait, puis ajoutez progressivement le reste du lait.'
+  - 'Ajoutez la purée de mangue et mélangez bien.'
+  - 'Sucrez selon votre goût et servez bien frais, sur les glaçons.'
 tips:
-  - 'La pulpe se dépose au fond du verre : remuez avant de boire.'
-  - 'Un trait de jus de citron vert ou quelques feuilles de menthe relèvent son goût acidulé.'
-  - 'Pour la version sénégalaise, plus épaisse et adoucie de lait, voyez le jus de bouye.'
+  - 'La pulpe se dépose naturellement au fond du verre : pensez à remuer avant de boire.'
+  - 'Ajoutez un trait de jus de citron vert ou quelques feuilles de menthe pour relever son goût acidulé.'
+  - 'Pour la version sénégalaise, plus épaisse et adoucie au lait, essayez le jus de bouye.'

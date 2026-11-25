@@ -1,7 +1,7 @@
 ---
 title: Terms of sale
 description: Terms of sale of the Racines en Partage online shop, prices, orders, payment, delivery, withdrawal and guarantees.
-updated: '2026-11-01'
+updated: '2026-11-25'
 ---
 
 This English version is provided for convenience; the French version is the binding one.
@@ -28,21 +28,20 @@ Payment is due when ordering. It is processed by Stripe, a secure payment provid
 
 ## 6. Delivery
 
-Three delivery methods are offered:
+Two delivery methods are offered:
 
 - Mondial Relay pickup point, in France, Belgium and Luxembourg: 3 to 5 working days after dispatch;
-- home delivery by Colissimo, in France: 2 to 4 working days after dispatch;
-- free pickup at 9 Rue du Marché, 95400 Arnouville, by appointment.
+- hand delivery, free, on request, in France: the place and time are agreed with the seller on WhatsApp or by phone on {phone}.
 
 Orders are packed within 2 working days. The delivery times shown are those the seller commits to. If delivery is more than 7 days late, the customer may cancel the order under article L216-6 of the French Consumer Code.
 
 ## 7. Transfer of risk
 
-The risk of loss or damage passes to the customer when they take physical possession of the products, at the pickup point, at home or at collection.
+The risk of loss or damage passes to the customer when they take physical possession of the products, at the pickup point or at the hand delivery.
 
 ## 8. Right of withdrawal
 
-The customer has 14 days from receipt of the products to withdraw, without giving a reason, by informing the seller by e-mail at {email}. The products must be returned unopened within 14 days of that notice, at the customer's expense. The refund, including the initial delivery costs (at the cheapest standard rate), is made within 14 days of the day the seller is informed of the withdrawal; it may be deferred until the products are recovered. The customer may use the withdrawal form below or any other unambiguous statement.
+The customer has 14 days from receipt of the products to withdraw, without giving a reason, by informing the seller by e-mail at {email}. The products must be returned unopened within 14 days of that notice, at the customer's expense; the return address is sent by e-mail on request. The refund, including the initial delivery costs (at the cheapest standard rate), is made within 14 days of the day the seller is informed of the withdrawal; it may be deferred until the products are recovered. The customer may use the withdrawal form below or any other unambiguous statement.
 
 Under article L221-28 of the French Consumer Code, the right of withdrawal does not apply to goods unsealed by the customer after delivery that cannot be returned for hygiene or health protection reasons, nor to goods liable to deteriorate rapidly. An opened pouch therefore cannot be taken back.
 

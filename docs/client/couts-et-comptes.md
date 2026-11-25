@@ -36,12 +36,12 @@ domaine.
 | Anti-robots, statistiques, adresse contact@ | 0 €                                                                                                          | Cloudflare                       | Sans bandeau de cookies                                                                                                                                                                                                                     |
 | Paiement par carte                          | 1,5 % + 0,25 € par paiement (carte européenne) ; 2,5 % carte britannique ; 3,25 % autres cartes (à vérifier) | Stripe, retenu avant le virement | Pas d'abonnement. Exemple : 0,70 € sur une commande de 30 €, vous recevez 29,30 €. Les frais ne sont pas rendus en cas de remboursement                                                                                                     |
 | Étiquette Point Relais                      | À partir de 3 € HT environ par colis (à vérifier à l'ouverture)                                              | Mondial Relay, prépayé           | L'offre Start est annoncée sans abonnement ; relire les conditions le jour de l'ouverture                                                                                                                                                   |
-| Étiquette Colissimo (domicile)              | Selon le poids (à vérifier)                                                                                  | La Poste                         | Achetée sur laposte.fr quand une commande le demande                                                                                                                                                                                        |
 | Médiateur de la consommation                | Adhésion annuelle, variable selon le médiateur                                                               | Le médiateur                     | Obligatoire pour vendre à des particuliers                                                                                                                                                                                                  |
 | Compte bancaire                             | Vos frais actuels Hello bank!                                                                                | Hello bank!                      | Stripe verse sur n'importe quel IBAN français. Un compte pro dédié n'est obligatoire en micro-entreprise qu'au-delà de 10 000 € de chiffre d'affaires deux années de suite ; Hello Business coûte 10,90 € HT par mois si vous le choisissez |
 
-Les frais de port réglés par vos clients (4,90 € relais, 6,90 € domicile,
-offerts dès 49 €) couvrent tout ou partie des étiquettes.
+Les frais de port réglés par vos clients (4,90 € en point relais, offerts
+dès 49 €) couvrent tout ou partie des étiquettes. La remise en mains propres
+est gratuite.
 
 ## 3. Les comptes, qui les ouvre, au nom de qui
 

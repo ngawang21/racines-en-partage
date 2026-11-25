@@ -25,7 +25,7 @@ const store: GraphInput['store'] = {
   slogan: 'Deux terres. Un rituel. Un bien-être à partager.',
   email: 'racinesenpartage@gmail.com',
   telephone: '+33775689108',
-  address: { street: '9 Rue du Marché', postcode: '95400', city: 'Arnouville', country: 'FR' },
+  address: { region: "Val-d'Oise", country: 'FR' },
   logo: 'https://racinesenpartage.fr/icons/icon-512.png',
 };
 const home: GraphInput = {
@@ -51,17 +51,19 @@ describe('seo graph', () => {
     expect(types(home)).toEqual(['OnlineStore', 'WebSite', 'WebPage']);
     expect(buildGraph(home)['@context']).toBe('https://schema.org');
   });
-  it('describes the store with its address, phone and e-mail', () => {
+  it('describes the store with its region and country (no street), phone and e-mail', () => {
     const org = node(home, 'OnlineStore');
     expect(org?.['@id']).toBe(STORE_ID);
     expect(org?.telephone).toBe('+33775689108');
     expect(org?.address).toEqual({
       '@type': 'PostalAddress',
-      streetAddress: '9 Rue du Marché',
-      postalCode: '95400',
-      addressLocality: 'Arnouville',
+      addressRegion: "Val-d'Oise",
       addressCountry: 'FR',
     });
+    // The registered address is not a place to visit: it never reaches the graph.
+    expect(JSON.stringify(buildGraph(home))).not.toMatch(
+      /streetAddress|postalCode|addressLocality/,
+    );
     expect(org?.sameAs).toBeUndefined();
     expect(
       node({ ...home, store: { ...store, sameAs: ['https://instagram.com/x'] } }, 'OnlineStore')

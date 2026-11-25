@@ -7,13 +7,17 @@
 // summary when there are reviews, the price ("dès 6,00 €" when there are
 // several formats) with the shown format's price per kilo, the stock when it
 // is not plain "in stock", and the add button of the cart contract for the
-// shown format. The data-* attributes feed shop-filter.ts.
+// shown format. The data-* attributes feed shop-filter.ts. With several
+// formats, card-formats.ts turns the chips into toggles that show the chosen
+// format in place, from the data-* of each chip; without script a chip is
+// the link to its format's page.
 import type { Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
 import type { Product } from '../content/schemas';
 import { formatPrice, formatUnitPrice, formatWeight, toCents } from '../i18n/format';
 import { routePath } from '../i18n/routing';
 import AddToCart from './AddToCart.astro';
+import Icon from './Icon.astro';
 import Picture from './Picture.astro';
 import ReviewSummary from './ReviewSummary.astro';
 import { CARD_POUCH_SQUARE, STOCK_CLASS, originCountry, pouchCrop, stockLabel } from './storefront';
@@ -53,6 +57,10 @@ const href = routePath('product', locale, p.slug);
 const cents = toCents(p.price);
 const weight = formatWeight(p.weightGrams, locale);
 const several = formats.length > 1;
+const out = p.stock === 'out';
+// The plus keeps its place when a sold-out format hides it; a family that is
+// sold out in every format has no plus at all.
+const anyAvailable = formats.some((f) => f.stock !== 'out');
 const crop = pouchCrop(p.images[0]!);
 // The square frames of a three-column shop grid (global.css, --square).
 const square = pouchCrop(p.images[0]!, 1, undefined, CARD_POUCH_SQUARE);
@@ -84,8 +92,11 @@ const square = pouchCrop(p.images[0]!, 1, undefined, CARD_POUCH_SQUARE);
       fetchpriority={eager && index === 0 ? 'high' : undefined}
     />
     {
-      p.stock !== 'in_stock' && (
-        <span class:list={['badge', STOCK_CLASS[p.stock], 'card-badge']}>
+      (several || p.stock !== 'in_stock') && (
+        <span
+          class:list={['badge', STOCK_CLASS[p.stock], 'card-badge']}
+          hidden={p.stock === 'in_stock'}
+        >
           {stockLabel(p.stock, t)}
         </span>
       )
@@ -106,6 +117,14 @@ const square = pouchCrop(p.images[0]!, 1, undefined, CARD_POUCH_SQUARE);
                     class="card-format"
                     href={routePath('product', locale, f.slug)}
                     data-shown={f.slug === p.slug ? '' : undefined}
+                    data-sku={f.sku}
+                    data-name={f.name}
+                    data-price-label={formatPrice(toCents(f.price), locale)}
+                    data-unit={formatUnitPrice(toCents(f.price), f.weightGrams, locale)}
+                    data-weight-label={formatWeight(f.weightGrams, locale)}
+                    data-stock={f.stock}
+                    data-stock-label={stockLabel(f.stock, t)}
+                    data-stock-class={STOCK_CLASS[f.stock]}
                   >
                     {formatWeight(f.weightGrams, locale)}
                     <span class="visually-hidden">, {f.name}</span>
@@ -131,24 +150,57 @@ const square = pouchCrop(p.images[0]!, 1, undefined, CARD_POUCH_SQUARE);
           </span>{' '}
           <span class="card-unit">
             <span class="visually-hidden">{t.shop.unitPrice} </span>
-            {formatUnitPrice(cents, p.weightGrams, locale)}
-            {several && <span class="visually-hidden">, {weight}</span>}
+            <span data-card-unit>{formatUnitPrice(cents, p.weightGrams, locale)}</span>
+            {
+              several && (
+                <span class="visually-hidden" data-card-weight>
+                  , {weight}
+                </span>
+              )
+            }
           </span>
         </p>
-        <AddToCart
-          sku={p.sku}
-          stock={p.stock}
-          {shopOpen}
-          label={t.shop.add}
-          outLabel={t.product.stockOut}
-          srSuffix={`, ${p.name} ${weight}`}
-          icon
-          class="card-add"
-        />
+        {
+          several ? (
+            // The add button of the cart contract (AddToCart.astro), with both
+            // labels known so card-formats.ts can follow the chosen format.
+            <button
+              type="button"
+              class="btn btn-primary card-add"
+              data-add-to-cart
+              data-sku={p.sku}
+              data-stock={p.stock}
+              data-shop-closed={shopOpen ? undefined : ''}
+              disabled={out || !shopOpen}
+            >
+              {anyAvailable && <Icon name="plus" />}
+              <span class="card-add-label" data-add={t.shop.add} data-out={t.product.stockOut}>
+                {out ? t.product.stockOut : t.shop.add}
+              </span>
+              <span class="visually-hidden" data-card-sr>{`, ${p.name} ${weight}`}</span>
+            </button>
+          ) : (
+            <AddToCart
+              sku={p.sku}
+              stock={p.stock}
+              {shopOpen}
+              label={t.shop.add}
+              outLabel={t.product.stockOut}
+              srSuffix={`, ${p.name} ${weight}`}
+              icon
+              class="card-add"
+            />
+          )
+        }
       </div>
+      {several && <p class="visually-hidden" role="status" data-card-status />}
     </div>
   </div>
 </article>
+
+<script>
+  import '../scripts/card-formats';
+</script>
 
 <style>
   .card {
@@ -218,6 +270,9 @@ const square = pouchCrop(p.images[0]!, 1, undefined, CARD_POUCH_SQUARE);
     left: 10px;
     background: var(--cream);
     box-shadow: var(--shadow-soft);
+  }
+  .card-badge[hidden] {
+    display: none;
   }
   .card-body {
     display: flex;
@@ -330,11 +385,14 @@ const square = pouchCrop(p.images[0]!, 1, undefined, CARD_POUCH_SQUARE);
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* The script swaps role="list" for role="group", which drops the global
+     list reset: the markers are removed here for good. */
   .card-formats {
     display: flex;
     gap: 6px;
     margin: 0;
     padding: 0;
+    list-style: none;
   }
   .card-format {
     position: relative;
@@ -357,7 +415,9 @@ const square = pouchCrop(p.images[0]!, 1, undefined, CARD_POUCH_SQUARE);
       background-color var(--dur-fast) ease,
       transform var(--dur-press) var(--ease-out-strong);
   }
-  .card-format[data-shown] {
+  /* Without script the shown format has the forest edge; with it
+     (card-formats.ts) the chosen format is filled. */
+  .card-format[data-shown]:not([aria-pressed]) {
     border-color: var(--forest);
   }
   .card-format:active {
@@ -368,6 +428,19 @@ const square = pouchCrop(p.images[0]!, 1, undefined, CARD_POUCH_SQUARE);
       border-color: var(--forest);
       background: var(--cream);
     }
+  }
+  /* As a toggle the fill changes at once, with the text colour: a fade would
+     pass through forest text on a forest ground. */
+  .card-format[aria-pressed] {
+    transition:
+      border-color var(--dur-fast) ease,
+      transform var(--dur-press) var(--ease-out-strong);
+  }
+  .card-format[aria-pressed='true'],
+  .card-format[aria-pressed='true']:hover {
+    border-color: var(--forest);
+    background: var(--forest);
+    color: var(--cream);
   }
   /* Two columns on phones: the format chips take the card's width, so the
      country goes under them, on a line of the same height. A single format
@@ -426,8 +499,12 @@ const square = pouchCrop(p.images[0]!, 1, undefined, CARD_POUCH_SQUARE);
     font-size: 0.875rem;
     font-weight: 500;
   }
+  .card-from[hidden] {
+    display: none;
+  }
   .card-price {
     font-size: var(--fs-2);
+    font-variant-numeric: tabular-nums;
     line-height: 1.2;
   }
   /* A legal mention and a buying criterion: 13 px at least, 8.7:1 on cream. */
@@ -447,6 +524,28 @@ const square = pouchCrop(p.images[0]!, 1, undefined, CARD_POUCH_SQUARE);
   .card-foot :global(.card-add svg) {
     width: 18px;
     height: 18px;
+  }
+  /* The label keeps the width of the wider of "Ajouter" and "Épuisé" (two
+     empty-height copies stacked with it), and the plus keeps its place, so
+     the button never changes size when a format is chosen. */
+  .card-add-label {
+    display: inline-grid;
+    justify-items: center;
+  }
+  .card-add-label::before,
+  .card-add-label::after {
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+  }
+  .card-add-label::before {
+    content: attr(data-add);
+  }
+  .card-add-label::after {
+    content: attr(data-out);
+  }
+  .card-add[data-stock='out'] :global(svg) {
+    visibility: hidden;
   }
   @container (min-width: 230px) {
     .card-buy {

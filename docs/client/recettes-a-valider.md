@@ -2,30 +2,37 @@
 
 Bonjour Marie,
 
-Chaque produit a maintenant au moins une recette, avec sa propre page sur le
-site. Les cinq recettes de vos étiquettes gardent leurs ingrédients et leurs
-quantités ; j’y ai ajouté quelques conseils et fait trois retouches de forme :
-le smoothie et la boisson au baobab sont écrits comme les autres (« Mettez »,
-« Mixez », au lieu de « Mettre », « Mixer »), et le chocolat chaud délaye
-d’abord le cacao dans un peu de lait froid, pour éviter les grumeaux. Les dix
-« recettes de la maison » sont nouvelles : je les ai écrites à partir de
-recettes publiques, en comparant au moins deux sources pour chacune. Le site
-les présente comme « Recette de la maison », jamais comme votre recette de
-famille.
+Chaque produit a au moins une recette, avec sa propre page sur le site.
 
-Ce que je vous demande : lire chaque recette, corriger les quantités qui ne
-vous semblent pas justes, et me dire si vous préparez le plat autrement. Votre
-façon de faire passera toujours avant la mienne. Aucune recette ne parle de
-santé, de vitamines ou de bienfaits : seulement du goût, des gestes et de
-l’origine des plats, comme l’exige la réglementation.
+**Vos retours du 23 novembre 2026 sont intégrés.**
+
+- **Boisson fraîche au baobab** et **smoothie au moringa** : ce sont
+  maintenant vos recettes de la maison, validées par vous (lait de souchet ou
+  lait d’amande et purée de mangue pour la première ; kaki, lait de coco et
+  cannelle pour le second). Les quantités que vous n’aviez pas précisées sont
+  de moi : 2 cuillères à soupe de purée de mangue pour 250 ml de lait, un
+  kaki pour 200 ml de lait de coco. Corrigez-les si besoin.
+- **Jus de bissap**, **yaourt au baobab et au miel**, **chocolat chaud
+  maison** et **granola aux grués de cacao** : relus par vous, vos phrases
+  sont reprises telles quelles.
+
+Trois recettes gardent le texte de vos étiquettes (infusion de bissap,
+horchata, chocolat chaud), avec quelques conseils ajoutés. Les autres
+« recettes de la maison » ont été écrites à partir de recettes publiques, en
+comparant au moins deux sources pour chacune ; celles que vous n’avez pas
+encore relues restent à valider : jus de bouye, omelette au moringa, pancakes
+au souchet, gâteau au yaourt et au cacao, les deux tsampas, pains plats au
+psyllium. Votre façon de faire passera toujours avant la mienne. Aucune
+recette ne parle de santé, de vitamines ou de bienfaits : seulement du goût,
+des gestes et de l’origine des plats, comme l’exige la réglementation.
 
 ## Toutes les recettes
 
 | Recette                                | Produit                    | Source    |
 | -------------------------------------- | -------------------------- | --------- |
 | Infusion de bissap                     | Fleurs d’hibiscus (bissap) | étiquette |
-| Boisson fraîche au baobab              | Poudre de baobab           | étiquette |
-| Smoothie au moringa                    | Poudre de moringa          | étiquette |
+| Boisson fraîche au baobab              | Poudre de baobab           | maison    |
+| Smoothie au moringa                    | Poudre de moringa          | maison    |
 | Horchata de souchet (lait de souchet)  | Tubercules de souchet      | étiquette |
 | Chocolat chaud maison                  | Poudre de cacao            | étiquette |
 | Jus de bissap                          | Fleurs d’hibiscus (bissap) | maison    |
@@ -43,20 +50,18 @@ l’origine des plats, comme l’exige la réglementation.
 
 - **Infusion de bissap** : la version glacée, le renvoi vers le jus de
   bissap, et une remarque sur la couleur des calices qui tache.
-- **Boisson fraîche au baobab** : remuer avant de boire, un trait de citron
-  vert ou de menthe, le renvoi vers le jus de bouye.
-- **Smoothie au moringa** : commencer par une demi-cuillère, la banane ou la
-  mangue pour adoucir, le boire aussitôt pour garder sa couleur.
 - **Horchata de souchet** : à Valence, on la boit avec des fartons ; elle se
   garde deux jours au réfrigérateur ; une pincée de cannelle ou un zeste de
   citron. Sources : https://www.visitvalencia.com/en/what-to-do-valencia/gastronomy/where-to-drink/horchata
   et https://invitadoinvierno.com/horchata-chufa-casera
 - **Chocolat chaud maison** : délayer le cacao dans un peu de lait froid,
-  cannelle, vanille ou orange, sucrer en goûtant.
+  cannelle, vanille ou orange, sucrer en goûtant (relu le 23 novembre 2026).
 
 ## Les recettes de la maison
 
 ### Jus de bissap
+
+Relu par vous le 23 novembre 2026 (texte de présentation repris de vos mots).
 
 La boisson glacée du Sénégal et de toute l’Afrique de l’Ouest, plus corsée et
 plus sucrée que l’infusion de l’étiquette, servie aussi à la rupture du jeûne.
@@ -86,6 +91,8 @@ sucré, 60 à 80 g de sucre et du sucre vanillé. Le tamisage est-il utile avec
 votre poudre, qui est très fine ?
 
 ### Yaourt au baobab et au miel
+
+Relu par vous le 23 novembre 2026 (texte de présentation repris de vos mots).
 
 Pas un plat traditionnel : une façon simple d’utiliser la poudre, comme le
 dit votre étiquette (« yaourts et compotes »).
@@ -138,6 +145,8 @@ pris 40 g, avec 160 g de farine et 150 g de sucre (moins que les 2 pots de
 la recette d’école), 30 à 35 minutes à 180 °C.
 
 ### Granola aux grués de cacao
+
+Relu par vous le 23 novembre 2026 (les trois astuces sont les vôtres).
 
 Un granola au four, flocons d’avoine, miel et huile, avec les grués mélangés
 avant la cuisson comme dans les deux recettes consultées.

@@ -56,11 +56,21 @@ describe('settings', () => {
       freeShippingFrom: 49,
       maxQuantityPerLine: 10,
     });
+    expect(settings.brand.whatsapp).toBe('33775689108');
     expect(settings.shipping.map((s) => [s.id, s.price, s.countries])).toEqual([
       ['relay', 4.9, ['FR', 'BE', 'LU']],
       ['home', 6.9, ['FR']],
       ['pickup', 0, ['FR']],
     ]);
+    // Two ways to receive an order (client feedback of 2026-11-23): relay and
+    // hand delivery. Home delivery keeps its settings, switched off.
+    expect(settings.shipping.filter((s) => s.enabled).map((s) => s.id)).toEqual([
+      'relay',
+      'pickup',
+    ]);
+    // No carrier, town or street in a label: catalog.json is public.
+    expect(JSON.stringify(settings.shipping)).not.toMatch(/Colissimo|Arnouville|Rue du March/i);
+    expect(settings.newsletter.enabled).toBe(false);
     expect(settings.launch.pricesConfirmed).toBe(false);
     expect(settings.brand.siret).toBe('911 858 843 00020');
   });
@@ -260,7 +270,7 @@ describe('seed catalogue (spec appendix A, owner sheet of 2026-11-08)', () => {
       }
     }
   });
-  it('features moringa 100 g, baobab, souchet tubercules and hibiscus', () => {
+  it('features moringa 100 g, baobab, cacao powder and hibiscus', () => {
     expect(
       productsFr
         .filter((p) => p.featured)
@@ -269,8 +279,8 @@ describe('seed catalogue (spec appendix A, owner sheet of 2026-11-08)', () => {
     ).toEqual([
       'fleurs-d-hibiscus-bissap-100g',
       'poudre-de-baobab-100g',
+      'poudre-de-cacao-100g',
       'poudre-de-moringa-100g',
-      'tubercules-de-souchet-200g',
     ]);
   });
   it('hides the unverified nutrition tables', () => {
@@ -542,6 +552,8 @@ describe('pages', () => {
         [...storyLands.from].sort(),
       );
       expect(map.home.names[locale], locale).toBe(storyLands.to);
+      // The house is named by its country, never by its town.
+      expect(storyLands.to, locale).toBe('France');
     }
     for (const p of [...map.origins, map.home]) {
       expect(p.x, p.names.en).toBeGreaterThan(0);
@@ -572,11 +584,14 @@ describe('pages', () => {
         pages('fr').get('home'),
         locale === 'fr' ? undefined : pages('en').get('home'),
       ).hero.title;
-    expect(title('fr')).toContain('de\u00a0l’Ouest');
+    // The range is Africa and Asia (client feedback of 2026-11-23), not West Africa only.
+    expect(title('fr').replace(/\u00a0/g, ' ')).toBe(
+      'Des plantes d’Afrique et d’Asie, en sachet kraft.',
+    );
     expect(title('fr')).toContain('en\u00a0sachet');
-    // An indefinite headline: two of the products come from India and Germany (review 14).
-    expect(title('fr')).toMatch(/^Des plantes/);
-    expect(title('en')).toContain('West\u00a0African');
+    expect(title('en').replace(/\u00a0/g, ' ')).toBe(
+      'Plants from Africa and Asia, in kraft pouches.',
+    );
   });
   it('the home ritual points at three shown recipes of three different products', () => {
     const recipes = yamlFolder('recipes', 'fr');
@@ -607,17 +622,20 @@ describe('pages', () => {
     expect(items('fr')).toEqual([
       { icon: 'leaf', text: '100 % végétal, sans additif ni conservateur' },
       { icon: 'flower', text: 'Conditionné en France par l’ESAT Les Oliviers' },
-      { icon: 'truck', text: 'Livraison en Point Relais, offerte dès 49 €' },
-      { icon: 'pin', text: 'Retrait gratuit à Arnouville' },
+      { icon: 'truck', text: 'Livraison en point relais, offerte dès 49 €' },
+      { icon: 'pin', text: 'Remise en mains propres sur demande' },
     ]);
-    expect(items('en').map((i) => i.icon)).toEqual(['leaf', 'flower', 'truck', 'pin']);
-    expect(items('en')[3]!.text).toBe('Free pickup in Arnouville');
-    expect(items('en')[0]!.text).toMatch(/100% plant-based/);
+    expect(items('en')).toEqual([
+      { icon: 'leaf', text: '100% plant-based, no additives or preservatives' },
+      { icon: 'flower', text: 'Packed in France by ESAT Les Oliviers' },
+      { icon: 'truck', text: 'Pickup point delivery, free from €49' },
+      { icon: 'pin', text: 'Hand delivery on request' },
+    ]);
   });
   it('the about page states the promise and the FAQ the new services', () => {
     const about = mergePage('about', pages('fr').get('about'));
     expect(about.sections.map((s) => s.body).join(' ')).toContain(
-      'Tous nos produits sont 100 % végétaux, sans additif ni conservateur.',
+      'Nos produits sont 100 % végétaux et garantis sans additif, conservateur ou colorant. Avec un seul ingrédient par sachet, pas de surprise : ce qui est écrit sur l’étiquette est ce que vous trouvez à l’intérieur.',
     );
     const faq = (locale: string) =>
       mergePage(

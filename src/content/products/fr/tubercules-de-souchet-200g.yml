@@ -8,7 +8,7 @@ originCountryCode: NE
 images:
   - /src/assets/products/souchet-tubercules-200.webp
 stock: in_stock
-featured: true
+featured: false
 nutritionVerified: false # the label prints ranges (400 à 450 kcal), not a declaration
 nutrition:
   energy: 400 à 450 kcal

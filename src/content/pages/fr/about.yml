@@ -1,13 +1,14 @@
-# Owner to validate: the story is written from the brief and the labels.
+# Written from the brief and the labels, with Marie’s sentences (feedback of 2026-11-23).
 seoTitle: Notre histoire
 seoDescription: >-
-  Racines en Partage relie deux terres : l’Afrique de l’Ouest et la France.
-  Des produits simples, conditionnés par l’ESAT Les Oliviers à Gennevilliers.
+  Racines en Partage est née entre deux terres, entre zones tropicales et
+  tempérées : des plantes d’Afrique et d’Asie, conditionnées par l’ESAT Les
+  Oliviers à Gennevilliers.
 title: Notre histoire
 lead: >-
-  Racines en Partage est une petite maison d’Arnouville, dans le Val-d’Oise. Elle
+  Racines en Partage est une petite maison située dans le Val-d’Oise. Elle
   propose des poudres, des fleurs, des graines et du cacao que l’on retrouve sur
-  les tables d’Afrique de l’Ouest, en sachets kraft.
+  les tables d’Afrique et d’Asie, en sachets kraft.
 sections:
   - title: Deux terres
     body: >-
@@ -27,24 +28,24 @@ sections:
     body: >-
       Une infusion de bissap partagée l’après-midi, un lait de souchet préparé la
       veille, une cuillère de moringa dans le smoothie du matin. Chaque sachet
-      porte une idée d’utilisation et, souvent, une petite recette tirée de nos
-      habitudes.
+      vous guide : une idée d’utilisation et une petite recette maison issue de
+      notre quotidien.
     # A 2:1 picture shows as a band beside the text: here the pouch window,
     # the label’s ribbon over the contents (src/assets/brand/window/).
     image: /src/assets/brand/window/souchet-tubercules-200.webp
     imageAlt: La fenêtre d’un sachet de tubercules de souchet, sous le bord de l’étiquette
   - title: Un partenariat avec l’ESAT Les Oliviers
     body: >-
-      Nos produits sont conditionnés en France par l’ESAT Les Oliviers, à
-      Gennevilliers (92). Un ESAT est un établissement qui accompagne par le
-      travail des personnes en situation de handicap. Pesée, ensachage,
-      étiquetage : chaque sachet passe entre leurs mains.
+      L’ESAT Les Oliviers, à Gennevilliers, dans les Hauts-de-Seine, qui
+      soutient le travail des personnes en situation de handicap, nous
+      accompagne dans cette aventure. Ils réalisent la pesée, l’ensachage,
+      l’étiquetage : chaque sachet passe entre leurs mains.
     image: /src/assets/brand/duo-baobab-orge.webp
     imageAlt: Un sachet de poudre de baobab et un sachet de poudre d’orge grillée
   - title: Des ingrédients simples
     body: >-
-      Tous nos produits sont 100 % végétaux, sans additif ni conservateur. Un
-      seul ingrédient par sachet, pas de colorant. Ce qui est écrit sur
-      l’étiquette est ce que vous trouvez dans le sachet.
+      Nos produits sont 100 % végétaux et garantis sans additif, conservateur
+      ou colorant. Avec un seul ingrédient par sachet, pas de surprise : ce
+      qui est écrit sur l’étiquette est ce que vous trouvez à l’intérieur.
     image: /src/assets/brand/window/cacao-grues-100.webp
     imageAlt: La fenêtre d’un sachet de grués de cacao, sous le bord de l’étiquette

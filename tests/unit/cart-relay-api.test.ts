@@ -159,7 +159,7 @@ describe('widget inline handlers (replayed without eval)', () => {
 
 describe('displayCase', () => {
   it('title-cases upper-case widget labels and keeps mixed case', () => {
-    expect(displayCase('LOCKER 24/7 LIDL ARNOUVILLE')).toBe('Locker 24/7 Lidl Arnouville');
+    expect(displayCase('LOCKER 24/7 LIDL GONESSE')).toBe('Locker 24/7 Lidl Gonesse');
     expect(displayCase('95140 - GARGES LES GONESSE')).toBe('95140 - Garges Les Gonesse');
     expect(displayCase("L'ÉPICERIE DU COIN")).toBe("L'Épicerie Du Coin");
     expect(displayCase('Tabac du Marché')).toBe('Tabac du Marché');

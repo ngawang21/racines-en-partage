@@ -4,6 +4,7 @@ export const SHOP = {
   name: 'Racines en Partage',
   email: 'racinesenpartage@gmail.com',
   phone: '0775689108',
+  whatsapp: '33775689108',
   siret: '911 858 843 00020',
   address: { street: '9 Rue du Marché', postcode: '95400', city: 'Arnouville', country: 'FR' },
 } as const;

@@ -70,8 +70,7 @@ const nbsp = (s) => escapeHtml(s).replace(/ (à|un|une) /gi, ' $1 ');
 // ---- vCard (3.0, CRLF), from the settings ----
 async function writeVcard() {
   const esc = (s) => String(s).replace(/([\\,;])/g, '\\$1');
-  const a = brand.address;
-  const country = a.country === 'FR' ? 'France' : a.country;
+  // No ADR line: the registered address is not a place to visit.
   const lines = [
     'BEGIN:VCARD',
     'VERSION:3.0',
@@ -80,7 +79,6 @@ async function writeVcard() {
     `TEL;TYPE=CELL,VOICE:${phoneE164}`,
     `EMAIL;TYPE=INTERNET:${brand.email}`,
     `URL:${site}`,
-    `ADR;TYPE=WORK:;;${esc(a.street)};${esc(a.city)};;${esc(a.postcode)};${esc(country)}`,
     'END:VCARD',
   ];
   await writeFile(at('public/racines-en-partage.vcf'), lines.join('\r\n') + '\r\n');

@@ -1128,10 +1128,26 @@ html.has-drawer {
   display: grid;
   gap: var(--space-1);
 }
-.pickup-address {
-  font-style: normal;
-  font-weight: 600;
-  line-height: var(--lh-snug);
+.pickup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+.pickup-whatsapp {
+  min-height: 44px;
+  gap: var(--space-2);
+}
+.pickup-whatsapp svg {
+  flex: none;
+}
+.pickup-phone {
+  color: var(--ink-2);
+  font-variant-numeric: lining-nums;
+}
+.thanks-pickup .method-note {
+  font-size: inherit;
 }
 
 /* Terms and pay. */

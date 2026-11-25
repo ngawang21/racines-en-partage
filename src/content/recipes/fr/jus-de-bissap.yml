@@ -1,4 +1,4 @@
-# Recette de la maison (source: house), écrite pour le site à partir de sources publiques ; à valider par la propriétaire (docs/client/recettes-a-valider.md).
+# Recette de la maison (source: house), écrite pour le site à partir de sources publiques ; relue par la propriétaire le 2026-11-23 (docs/client/recettes-a-valider.md).
 order: 6
 product: fleurs-d-hibiscus-bissap-100g
 source: house
@@ -6,7 +6,7 @@ prepMinutes: 10
 cookMinutes: 10
 restMinutes: 120
 title: 'Jus de bissap'
-summary: 'La boisson rouge que l’on sert glacée au Sénégal, à table comme à la rupture du jeûne : des fleurs d’hibiscus infusées serré, sucrées, parfumées à la menthe et à la vanille.'
+summary: 'La célèbre boisson rouge que l’on sert glacée au Sénégal, à table comme à la rupture du jeûne : des fleurs d’hibiscus intensément infusées, délicatement sucrées et parfumées à la menthe et à la vanille.'
 yield: '1 litre, soit 5 à 6 verres'
 ingredients:
   - '50 g de fleurs d’hibiscus (la moitié du sachet)'

@@ -63,7 +63,12 @@ characters; `postcode` is 3 to 10 letters or digits. Anything else is
 `400 VALIDATION_ERROR`. Stripe's page shows only the method, the point's name
 and city (`custom_text.submit.message`); the full address stays in the
 session metadata, and the owner e-mail asks her to confirm the point by its ID
-in her Mondial Relay space before printing the label.
+in her Mondial Relay space before printing the label. For `pickup` (a hand
+delivery on request) the message gives no address: it asks the customer to
+write on WhatsApp (`SHOP.whatsapp`, mirrored from `brand.whatsapp`; the phone
+when empty), the customer e-mail carries the `wa.me` link with the order
+number, and the owner e-mail tells her to contact the customer on WhatsApp.
+`home` is switched off in the settings; its code and tests stay.
 The request must come from the same origin (Origin, else Referer: the
 `SITE_URL` host or the host serving the request; any localhost origin only
 when `SITE_URL` is itself a localhost URL, as in `.dev.vars`), with

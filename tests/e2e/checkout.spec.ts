@@ -1,6 +1,6 @@
 // Spec 8: add two products from the shop, change a quantity in the drawer,
 // open the cart page, go to checkout (Point Relais preselected with its price
-// in the total, review 11), pick pickup, accept the terms, pay with
+// in the total, review 11), pick the hand delivery, accept the terms, pay with
 // /api/checkout mocked, check the request body and the thanks page. Runs in
 // both locales; the "mobile" project repeats everything at 390 px.
 import { expect, test, type Page } from '@playwright/test';
@@ -18,9 +18,20 @@ import {
 } from './helpers';
 
 const COPY = {
-  fr: { pickup: /Retrait/, viewCart: 'Voir le panier', checkout: 'Commander', free: 'Offerte' },
+  fr: {
+    pickup: /Remise en mains propres/,
+    whatsapp: 'Écrire sur WhatsApp',
+    hello: 'Bonjour, je souhaite une remise en mains propres pour ma commande Racines en Partage',
+    phone: '07 75 68 91 08',
+    viewCart: 'Voir le panier',
+    checkout: 'Commander',
+    free: 'Offerte',
+  },
   en: {
-    pickup: /pickup in Arnouville/i,
+    pickup: /Hand delivery/i,
+    whatsapp: 'Message us on WhatsApp',
+    hello: 'Hello, I would like a hand delivery for my Racines en Partage order',
+    phone: '+33 7 75 68 91 08',
     viewCart: 'View basket',
     checkout: 'Checkout',
     free: 'Free',
@@ -92,10 +103,26 @@ for (const locale of ['fr', 'en'] as const satisfies readonly Locale[]) {
       await formatInPage(page, subtotal + relayCents, locale),
     );
 
-    // Then pickup, one tap away.
+    // Two ways to receive an order: no home delivery card.
+    await expect(page.locator('input[name="delivery-method"]')).toHaveCount(2);
+    await expect(page.locator('input[name="delivery-method"][value="home"]')).toHaveCount(0);
+
+    // Then the hand delivery, one tap away: no address, a WhatsApp button
+    // (new tab, prefilled message) and the phone number beside it.
     await page.locator('.method-card', { hasText: copy.pickup }).click();
-    await expect(page.locator('[data-method-detail="pickup"]')).toBeVisible();
-    await expect(page.locator('[data-method-detail="pickup"]')).toContainText('9 Rue du Marché');
+    const detail = page.locator('[data-method-detail="pickup"]');
+    await expect(detail).toBeVisible();
+    await expect(detail).not.toContainText(/Rue du Marché|Arnouville|95400/);
+    await expect(detail.locator('address')).toHaveCount(0);
+    const whatsapp = detail.getByRole('link', { name: copy.whatsapp });
+    await expect(whatsapp).toBeVisible();
+    await expect(whatsapp).toHaveAttribute('target', '_blank');
+    await expect(whatsapp).toHaveAttribute('rel', 'noopener');
+    const href = (await whatsapp.getAttribute('href'))!;
+    expect(href.startsWith('https://wa.me/33775689108?text=')).toBe(true);
+    expect(new URL(href).searchParams.get('text')).toBe(`${copy.hello}.`);
+    expect((await whatsapp.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await expect(detail).toContainText(copy.phone);
     await expect(page.locator('[data-co-shipping]')).toHaveText(copy.free);
 
     // The terms are required.
@@ -144,7 +171,19 @@ for (const locale of ['fr', 'en'] as const satisfies readonly Locale[]) {
     await expect(page.locator('[data-thanks-total]')).toHaveText(
       await formatInPage(page, subtotal, locale),
     );
-    await expect(page.locator('[data-thanks-pickup]')).toBeVisible();
+    // Hand delivery: the WhatsApp message now quotes the order number; no address.
+    const thanksPickup = page.locator('[data-thanks-pickup]');
+    await expect(thanksPickup).toBeVisible();
+    await expect(thanksPickup).not.toContainText(/Rue du Marché|Arnouville/);
+    await expect(thanksPickup).toContainText(copy.phone);
+    const thanksHref = (await thanksPickup
+      .getByRole('link', { name: copy.whatsapp })
+      .getAttribute('href'))!;
+    expect(new URL(thanksHref).searchParams.get('text')).toBe(
+      `${copy.hello} ${locale === 'fr' ? 'n° ' : 'no. '}RP-2026-0042.`,
+    );
+    await expect(page.locator('[data-next="pickup"]')).toBeVisible();
+    await expect(page.locator('[data-next="pickup"]')).toContainText('WhatsApp');
     await expect(page.locator('[data-thanks-discount-row]')).toBeHidden();
     await expect(page.locator('[data-cart-count]').first()).toHaveText('0');
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('rep.cart.v1')!));
@@ -216,8 +255,8 @@ test('relay without a chosen point, then an out-of-stock answer from the API', a
   await expect(relaySearch).toHaveClass(/is-invalid/);
   expect(await relaySearch.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');
 
-  // Home delivery, the API answers OUT_OF_STOCK: the line is flagged with a remove action.
-  await page.locator('.method-card', { hasText: 'domicile' }).click();
+  // Hand delivery, the API answers OUT_OF_STOCK: the line is flagged with a remove action.
+  await page.locator('.method-card', { hasText: 'Remise en mains propres' }).click();
   await page.route('**/api/checkout', (route) =>
     json(route, 409, {
       error: { code: 'OUT_OF_STOCK', message: 'out', details: { skus: [sku] } },
@@ -315,7 +354,7 @@ for (const [code, status, text] of [
     await page.goto(PATHS.fr.shop);
     await page.locator('button[data-add-to-cart]:not([disabled])').first().click();
     await page.goto(PATHS.fr.checkout);
-    await page.locator('.method-card', { hasText: 'Retrait' }).click();
+    await page.locator('.method-card', { hasText: 'Remise en mains propres' }).click();
     await page.locator('[data-co-terms]').check();
     await page.route('**/api/checkout', (route) =>
       json(route, status, { error: { code, message: 'x' } }),
@@ -569,7 +608,7 @@ test('phone checkout: a sticky total and Payer bar while the pay button is below
     { sku: 'REP-MOR-100', quantity: 2 },
     { sku: 'REP-BAO-100', quantity: 1 },
   ]);
-  await page.locator('.method-card', { hasText: 'Retrait' }).click();
+  await page.locator('.method-card', { hasText: 'Remise en mains propres' }).click();
   const bar = page.locator('[data-co-bar]');
   if (!phone) {
     await expect(bar).toBeHidden();

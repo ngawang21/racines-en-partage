@@ -1,23 +1,24 @@
-# Recette de l’étiquette du sachet (source: label). Les textes viennent de l’étiquette.
+# Recette de la maison (source: house), dans la version de la propriétaire, validée le 2026-11-23 (docs/client/recettes-a-valider.md).
 order: 3
 product: poudre-de-moringa-100g
-source: label
+source: house
 prepMinutes: 5
 title: 'Smoothie au moringa'
-summary: 'Une cuillère de poudre de moringa, une banane, un fruit : le smoothie vert de l’étiquette, pour le matin.'
+summary: 'Une cuillère de poudre de moringa, un fruit : le smoothie de la maison pour le matin ou le goûter.'
 yield: '1 grand verre'
 ingredients:
   - '1 cuillère à café de poudre de moringa'
-  - '1 banane bien mûre'
-  - '1 pomme ou quelques morceaux d’ananas'
-  - '200 ml d’eau ou de lait végétal'
+  - '1 kaki bien mûr'
+  - '200 ml de lait de coco'
+  - 'Un peu de cannelle'
   - '1 cuillère à café de miel selon votre goût'
   - 'Quelques glaçons'
 steps:
+  - 'Retirez le pédoncule du kaki et coupez le fruit en morceaux.'
   - 'Mettez tous les ingrédients dans un mixeur.'
   - 'Mixez jusqu’à obtenir une préparation homogène et onctueuse.'
   - 'Servez frais.'
 tips:
   - 'Si vous découvrez le moringa, commencez par une demi-cuillère : son goût herbacé, entre épinard et thé vert, se remarque vite.'
-  - 'La banane bien mûre adoucit le goût du moringa ; la mangue fonctionne aussi très bien.'
-  - 'Buvez-le aussitôt : il garde ainsi sa couleur vert franc.'
+  - 'La framboise et la mangue fonctionnent aussi très bien, testez !'
+  - 'Buvez-le aussitôt : il garde ainsi sa belle couleur.'

@@ -26,7 +26,7 @@ const homeOrderEn = () =>
         amount_subtotal: 0,
         amount_tax: 0,
         amount_total: 0,
-        shipping_rate: { id: 'shr_home', display_name: 'Home delivery (Colissimo)' },
+        shipping_rate: { id: 'shr_home', display_name: 'Home delivery' },
       },
       total_details: { amount_discount: 534, amount_shipping: 0, amount_tax: 0 },
       collected_information: {
@@ -116,7 +116,8 @@ describe('order e-mails', () => {
 
   it('owner e-mail (EN home order) stays in French and shows the shipping address', () => {
     const { text } = renderOwnerEmail(homeOrderEn());
-    expect(text).toContain(fr('Livraison : Livraison à domicile (Colissimo)'));
+    expect(text).toContain(fr('Livraison : Livraison à domicile\n'));
+    expect(text).not.toContain('Colissimo');
     expect(text).toContain(fr('Langue du client : anglais'));
     expect(text).toContain('John Smith\n1 Place de la Mairie\nBât. B\n75001 Paris\nFrance');
     expect(text).toContain(fr('Remise : −5,34 €'));
@@ -161,14 +162,44 @@ describe('order e-mails', () => {
     }
   });
 
-  it('pickup: shop address and the appointment note', () => {
-    const summary = summariseSession(
-      sessionFixture({ metadata: { locale: 'fr', delivery_method: 'pickup' } }),
+  it('pickup: hand delivery arranged on WhatsApp, no shop address', () => {
+    const session = (locale: 'fr' | 'en') =>
+      summariseSession(sessionFixture({ metadata: { locale, delivery_method: 'pickup' } }));
+    const customer = renderCustomerEmail(session('fr'));
+    expect(customer.text).toContain(fr('Livraison : Remise en mains propres'));
+    expect(customer.text).toContain(
+      'Écrivez-nous sur WhatsApp au 07 75 68 91 08 pour convenir du lieu et du moment de la remise en mains propres.',
     );
-    expect(renderCustomerEmail(summary).text).toContain('9 Rue du Marché\n95400 Arnouville');
-    expect(renderOwnerEmail(summary).text).toContain(
-      'Contactez la cliente ou le client pour convenir du rendez-vous',
+    // The link opens WhatsApp with a message that quotes the order number.
+    const number = session('fr').number;
+    const link = `https://wa.me/33775689108?text=${encodeURIComponent(
+      `Bonjour, je souhaite une remise en mains propres pour ma commande Racines en Partage n° ${number}.`,
+    )}`;
+    expect(customer.text).toContain(link);
+    expect(customer.html).toContain(`href="${link}"`);
+    expect(customer.html).toContain('Écrire sur WhatsApp');
+    const english = renderCustomerEmail(session('en'));
+    expect(english.text).toContain('Delivery: Hand delivery');
+    expect(english.text).toContain(
+      'Message us on WhatsApp at 07 75 68 91 08 to agree on a place and time for the hand delivery.',
     );
+    expect(english.html).toContain('href="https://wa.me/33775689108?text=Hello');
+    const owner = renderOwnerEmail(session('fr'));
+    expect(owner.text).toContain(fr('Livraison : Remise en mains propres'));
+    expect(owner.text).toContain(
+      'Contactez la cliente ou le client sur WhatsApp pour convenir de la remise en mains propres.',
+    );
+    for (const email of [customer, english, owner])
+      for (const body of [email.text, email.html])
+        expect(body).not.toMatch(/Rue du Marché|Retrait|pickup in|collection/i);
+  });
+
+  it('no e-mail footer prints the street address', () => {
+    for (const email of [renderOwnerEmail(relayOrder()), renderCustomerEmail(homeOrderEn())]) {
+      expect(email.html).not.toContain('Rue du Marché');
+      expect(email.html).toMatch(/SIRET\s911\s858\s843\s00020/);
+      expect(email.html).toContain('racinesenpartage@gmail.com');
+    }
   });
 });
 

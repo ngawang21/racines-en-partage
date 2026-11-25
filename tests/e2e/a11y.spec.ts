@@ -13,7 +13,7 @@ import { PATHS, blockThirdParties, json, orderFixture, readCatalog, type Locale 
 const HOME = { fr: '/', en: '/en/' } as const;
 const FAQ = { fr: '/faq/', en: '/en/faq/' } as const;
 const RECIPES = { fr: '/recettes/', en: '/en/recipes/' } as const;
-const PICKUP = { fr: /Retrait/, en: /pickup in Arnouville/i } as const;
+const PICKUP = { fr: /Remise en mains propres/, en: /Hand delivery/i } as const;
 const FAILING = new Set(['serious', 'critical']);
 
 test.beforeEach(async ({ page }) => {

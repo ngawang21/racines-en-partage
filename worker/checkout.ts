@@ -3,6 +3,7 @@
 import type Stripe from 'stripe';
 import { z } from 'zod';
 import { LOCALES } from '../src/consts';
+import { formatPhone } from '../src/i18n/format';
 import type { CatalogProduct, CatalogShipping, WorkerCatalog } from './catalog';
 import { ApiError } from './errors';
 import { SHOP } from './shop';
@@ -183,11 +184,16 @@ export function submitMessage(delivery: Delivery, locale: Locale): string | unde
       : `Delivery to the Mondial Relay pickup point: ${where}.`;
   }
   if (delivery.method === 'pickup') {
-    const a = SHOP.address;
-    const where = `${a.street}, ${a.postcode} ${a.city}`;
+    // No address: the place and time are agreed on WhatsApp (or by phone).
+    const phone = formatPhone(SHOP.phone);
+    if (SHOP.whatsapp) {
+      return locale === 'fr'
+        ? `Remise en mains propres gratuite, sur demande : écrivez-nous sur WhatsApp au ${phone} pour convenir du lieu et du moment.`
+        : `Free hand delivery, on request: message us on WhatsApp at ${phone} to agree on a place and time.`;
+    }
     return locale === 'fr'
-      ? `Retrait gratuit sur rendez-vous : ${where}. Nous vous contactons pour fixer un créneau.`
-      : `Free pickup by appointment: ${where}. We will contact you to arrange a time.`;
+      ? `Remise en mains propres gratuite, sur demande : appelez-nous au ${phone} pour convenir du lieu et du moment.`
+      : `Free hand delivery, on request: call us on ${phone} to agree on a place and time.`;
   }
   return undefined;
 }

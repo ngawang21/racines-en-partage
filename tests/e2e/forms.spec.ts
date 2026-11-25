@@ -1,13 +1,23 @@
 // Iteration 3, forms and cart: contact, newsletter (footer and landing page),
 // stock alert, order lookup, review page, cart cross-sell and the header
 // search dialog, with /api/* mocked per test. Runs at both viewports.
+import { readFileSync } from 'node:fs';
 import { expect, test, type Page, type Request } from '@playwright/test';
+import { parse as parseYaml } from 'yaml';
 import { PATHS, blockThirdParties, json, orderFixture, readCatalog } from './helpers';
 
 const CONTACT = { fr: '/contact/', en: '/en/contact/' } as const;
 const LOOKUP = { fr: '/ma-commande/', en: '/en/my-order/' } as const;
 const REVIEW = { fr: '/avis/', en: '/en/review/' } as const;
 const NEWSLETTER = { fr: '/newsletter/', en: '/en/newsletter/' } as const;
+// The owner's switch (off since the client feedback of 2026-11-23): the build
+// under test follows it, so the signup tests follow it too.
+const NEWSLETTER_ON =
+  (
+    parseYaml(
+      readFileSync(new URL('../../src/content/settings/shop.yml', import.meta.url), 'utf8'),
+    ) as { newsletter?: { enabled?: boolean } }
+  ).newsletter?.enabled !== false;
 
 test.beforeEach(async ({ page }) => {
   await blockThirdParties(page);
@@ -124,7 +134,21 @@ test.describe('contact form', () => {
 });
 
 test.describe('newsletter', () => {
+  test('no page offers the signup or links the landing page while the newsletter is off', async ({
+    page,
+  }) => {
+    test.skip(NEWSLETTER_ON, 'the newsletter is switched on');
+    for (const path of ['/', '/en/', '/recettes/', '/en/recipes/', '/boutique/', CONTACT.fr]) {
+      await page.goto(path);
+      await expect(page.locator('.site-footer')).toBeVisible();
+      await expect(page.locator('form[data-form="newsletter"]'), path).toHaveCount(0);
+      await expect(page.locator('.nl-band'), path).toHaveCount(0);
+      await expect(page.locator('a[href*="/newsletter/"]'), path).toHaveCount(0);
+    }
+  });
+
   test('footer signup posts the address and asks to confirm by e-mail', async ({ page }) => {
+    test.skip(!NEWSLETTER_ON, 'the newsletter is switched off in the settings');
     const calls = await mockApi(page, '/api/newsletter', 202, { ok: true });
     await page.goto('/en/');
     const form = page.locator('.site-footer form[data-form="newsletter"]');
@@ -167,7 +191,10 @@ test.describe('newsletter', () => {
       await page.getByRole('button', { name: 'Confirm my subscription' }).click();
       await expect(page.locator(`[data-landing-when="${shown}"]`)).toContainText(text);
       await expect(page.locator('[data-landing-when="confirm"]')).toBeHidden();
-      await expect(page.locator('.nl-band')).toBeVisible({ visible: shown === 'invalid' });
+      // The signup band to start again exists only while the newsletter is on.
+      await expect(page.locator('.nl-band')).toBeVisible({
+        visible: NEWSLETTER_ON && shown === 'invalid',
+      });
     });
   }
 
@@ -194,7 +221,7 @@ test.describe('newsletter', () => {
   }) => {
     await page.goto(NEWSLETTER.fr);
     await expect(page.locator('[data-landing-when="invalid"]')).toContainText('ne fonctionne plus');
-    await expect(page.locator('.nl-band')).toBeVisible();
+    await expect(page.locator('.nl-band')).toBeVisible({ visible: NEWSLETTER_ON });
     await expect(page.locator('.lead[data-landing-when="initial"]')).toBeHidden();
 
     await page.goto(`${NEWSLETTER.en}?status=ok`);

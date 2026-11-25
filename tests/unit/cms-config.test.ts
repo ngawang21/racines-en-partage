@@ -724,7 +724,12 @@ describe('CMS config: pages', () => {
   it('has exactly the fields of each page schema, at every level', () => {
     for (const key of keys) {
       const shape = (PAGE_SCHEMAS[key] as unknown as z.ZodObject).shape;
-      expect(compare(fileOf(pages, key).fields, shape, `${key}.`), key).toEqual([]);
+      // contact.mapsLabel: tolerated in an older file, no longer a CMS field (the
+      // address card and its Google Maps link are gone).
+      expect(
+        compare(fileOf(pages, key).fields, shape, `${key}.`, [], ['contact.mapsLabel']),
+        key,
+      ).toEqual([]);
     }
   });
   it('translates every text field and subfield, and never requires English', () => {

@@ -1004,8 +1004,7 @@ collections:
             widget: text
             i18n: true
             required: [fr]
-            hint: L'adresse, le téléphone et l'e-mail se changent dans les Réglages de la boutique.
-          - { name: mapsLabel, label: Texte du lien vers Google Maps, widget: string, i18n: true, required: [fr] }
+            hint: Le téléphone, le numéro WhatsApp et l'e-mail se changent dans les Réglages de la boutique.
           - { name: seoTitle, label: Titre pour Google, widget: string, i18n: true, required: [fr] }
           - { name: seoDescription, label: Description pour Google, widget: text, i18n: true, required: [fr] }
 
@@ -1172,7 +1171,7 @@ singletons:
             options:
               - { label: Point Relais Mondial Relay, value: relay }
               - { label: Livraison à domicile, value: home }
-              - { label: Retrait à Arnouville, value: pickup }
+              - { label: Remise en mains propres, value: pickup }
           - name: enabled
             label: Proposé aux clients
             widget: boolean
@@ -1270,11 +1269,18 @@ singletons:
             widget: string
             pattern: ['^0\d{9}$', '10 chiffres collés, commençant par 0, par exemple 0775689108']
             hint: 10 chiffres sans espace, par exemple 0775689108 ; le site l'affiche ensuite joliment (07 75 68 91 08).
+          - name: whatsapp
+            label: Numéro WhatsApp
+            widget: string
+            required: false
+            pattern: ['^([1-9]\d{7,14})?$', 'Chiffres collés au format international, sans + ni espace, par exemple 33775689108']
+            hint: Le numéro au format international sans le +, par exemple 33775689108 pour le 07 75 68 91 08. Il sert aux boutons « Écrire sur WhatsApp » (remise en mains propres, page Contact, pied de page). Vide, ces boutons disparaissent.
           - name: address
             label: Adresse
             widget: object
+            hint: Adresse du siège, imprimée uniquement dans les mentions légales, les CGV et la politique de confidentialité. Elle n'apparaît nulle part ailleurs sur le site.
             fields:
-              - { name: street, label: Rue, widget: string, hint: 'Par exemple « 9 Rue du Marché ».' }
+              - { name: street, label: Rue, widget: string, hint: 'Le numéro et le nom de la rue du siège.' }
               - name: postcode
                 label: Code postal
                 widget: string

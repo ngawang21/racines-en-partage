@@ -8,7 +8,7 @@ originCountryCode: CI
 images:
   - /src/assets/products/cacao-poudre-100.webp
 stock: in_stock
-featured: false
+featured: true
 nutritionVerified: true
 nutrition:
   energy: 1489 kJ / 357 kcal

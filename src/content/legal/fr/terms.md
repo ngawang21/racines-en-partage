@@ -1,7 +1,7 @@
 ---
 title: Conditions générales de vente
 description: Conditions générales de vente de la boutique en ligne Racines en Partage, prix, commande, paiement, livraison, rétractation et garanties.
-updated: '2026-11-01'
+updated: '2026-11-25'
 ---
 
 ## 1. Objet
@@ -26,21 +26,20 @@ Le paiement est exigible à la commande. Il est traité par Stripe, prestataire 
 
 ## 6. Livraison
 
-Trois modes de livraison sont proposés :
+Deux modes de livraison sont proposés :
 
 - Point Relais Mondial Relay, en France, en Belgique et au Luxembourg : 3 à 5 jours ouvrés après expédition ;
-- livraison à domicile par Colissimo, en France : 2 à 4 jours ouvrés après expédition ;
-- retrait gratuit au 9 Rue du Marché, 95400 Arnouville, sur rendez-vous.
+- remise en mains propres, gratuite, sur demande, en France : le lieu et le moment sont convenus avec le vendeur par WhatsApp ou par téléphone au {phone}.
 
 Les commandes sont préparées sous 2 jours ouvrés. Les délais indiqués sont ceux auxquels le vendeur s'engage. En cas de retard de plus de 7 jours au-delà de la date indiquée, le client peut annuler sa commande dans les conditions de l'article L216-6 du code de la consommation.
 
 ## 7. Transfert des risques
 
-Les risques de perte ou d'endommagement des produits sont transférés au client au moment où il prend physiquement possession des produits, au Point Relais, à son domicile ou lors du retrait.
+Les risques de perte ou d'endommagement des produits sont transférés au client au moment où il prend physiquement possession des produits, au Point Relais ou lors de la remise en mains propres.
 
 ## 8. Droit de rétractation
 
-Le client dispose d'un délai de 14 jours à compter de la réception des produits pour exercer son droit de rétractation, sans avoir à se justifier, en informant le vendeur par e-mail à {email}. Les produits doivent être retournés non ouverts dans les 14 jours suivant cette information, aux frais du client. Le remboursement, frais de livraison initiaux compris (au tarif standard le moins coûteux), intervient dans les 14 jours suivant la date à laquelle le vendeur est informé de la rétractation ; il peut être différé jusqu'à la récupération des produits. Le client peut utiliser le formulaire de rétractation ci-dessous ou toute autre déclaration dénuée d'ambiguïté.
+Le client dispose d'un délai de 14 jours à compter de la réception des produits pour exercer son droit de rétractation, sans avoir à se justifier, en informant le vendeur par e-mail à {email}. Les produits doivent être retournés non ouverts dans les 14 jours suivant cette information, aux frais du client ; l'adresse de retour lui est communiquée par e-mail sur simple demande. Le remboursement, frais de livraison initiaux compris (au tarif standard le moins coûteux), intervient dans les 14 jours suivant la date à laquelle le vendeur est informé de la rétractation ; il peut être différé jusqu'à la récupération des produits. Le client peut utiliser le formulaire de rétractation ci-dessous ou toute autre déclaration dénuée d'ambiguïté.
 
 Conformément à l'article L221-28 du code de la consommation, le droit de rétractation ne peut pas être exercé pour les biens qui ont été descellés par le client après la livraison et qui ne peuvent être renvoyés pour des raisons d'hygiène ou de protection de la santé, ni pour les biens susceptibles de se détériorer rapidement. Un sachet ouvert ne peut donc pas être repris.
 

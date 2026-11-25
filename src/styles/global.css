@@ -227,6 +227,13 @@ blockquote {
 .prose li + li {
   margin-top: var(--space-2);
 }
+/* Inline code (the cookie name in the privacy policy): a monospace face reads
+   larger than the text at the same size, so it is set a notch smaller. */
+.prose code {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.875em;
+  overflow-wrap: anywhere;
+}
 
 /* --------------------------------------------------------------- layout */
 

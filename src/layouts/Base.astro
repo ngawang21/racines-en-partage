@@ -89,7 +89,8 @@ const store: StoreInfo = {
   slogan: pickLabel(settings.brand.tagline, locale),
   email: settings.brand.email,
   telephone: phoneE164(settings.brand.phone),
-  address: settings.brand.address,
+  // No street or postcode in the structured data (the legal pages carry the address).
+  address: { region: SITE.region, country: settings.brand.address.country },
   logo: `${SITE.url}/icons/icon-512.png`,
   image: ogImage.url,
   sameAs: [settings.brand.facebook, settings.brand.instagram].filter(Boolean),

@@ -4,7 +4,7 @@
 // to 2.3). HTML with inline styles plus a plain-text twin.
 import { INTL_LOCALE, SITE } from '../../src/consts';
 import { escapeHtml } from '../../src/i18n/fallback';
-import { formatPhone, formatPrice } from '../../src/i18n/format';
+import { formatPhone, formatPrice, whatsappUrl } from '../../src/i18n/format';
 import { ROUTES } from '../../src/i18n/routing';
 import { frenchTypographyHtml, frenchTypographyText } from '../../src/i18n/typography';
 import type { OrderSummary, PostalAddress } from '../orders';
@@ -73,7 +73,15 @@ function relayLines(delivery: Extract<Delivery, { method: 'relay' }>, locale: Lo
   );
 }
 
-const SHOP_ADDRESS_LINES = [SHOP.address.street, `${SHOP.address.postcode} ${SHOP.address.city}`];
+/** The prefilled WhatsApp message of a hand delivery, with the order number. */
+function handDeliveryUrl(locale: Locale, orderNumber: string): string {
+  return whatsappUrl(
+    SHOP.whatsapp,
+    locale === 'fr'
+      ? `Bonjour, je souhaite une remise en mains propres pour ma commande Racines en Partage n° ${orderNumber}.`
+      : `Hello, I would like a hand delivery for my Racines en Partage order no. ${orderNumber}.`,
+  );
+}
 
 // HTML building blocks -------------------------------------------------------
 
@@ -91,7 +99,7 @@ function layout(locale: Locale, title: string, preheader: string, body: string):
     `<tr><td style="background:${C.forest};padding:18px 28px;"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="padding-right:12px;vertical-align:middle;"><img src="${SITE.url}/icons/icon-96.png" width="40" height="40" alt="" style="display:block;border:0;border-radius:20px;"></td><td style="vertical-align:middle;color:${C.cream};font-family:${SERIF};font-size:22px;letter-spacing:0.5px;">${esc(SHOP.name)}</td></tr></table></td></tr>`,
     `<tr><td style="height:4px;line-height:4px;font-size:0;background:${C.hibiscus};">&nbsp;</td></tr>`,
     `<tr><td style="padding:28px;font-size:15px;line-height:1.55;color:${C.forest};">${body}</td></tr>`,
-    `<tr><td style="background:${C.kraft};color:${C.forest};padding:16px 28px;font-size:12px;line-height:1.5;">${esc(SHOP.name)} · ${esc(SHOP.address.street)}, ${esc(SHOP.address.postcode)} ${esc(SHOP.address.city)} · <a href="mailto:${esc(SHOP.email)}" style="color:${C.forest};">${esc(SHOP.email)}</a><br>SIRET ${esc(SHOP.siret)} · <a href="${SITE.url}${ROUTES.terms[locale]}" style="color:${C.forest};">${locale === 'fr' ? 'Conditions générales de vente' : 'Terms of sale'}</a></td></tr>`,
+    `<tr><td style="background:${C.kraft};color:${C.forest};padding:16px 28px;font-size:12px;line-height:1.5;">${esc(SHOP.name)} · <a href="mailto:${esc(SHOP.email)}" style="color:${C.forest};">${esc(SHOP.email)}</a><br>SIRET ${esc(SHOP.siret)} · <a href="${SITE.url}${ROUTES.terms[locale]}" style="color:${C.forest};">${locale === 'fr' ? 'Conditions générales de vente' : 'Terms of sale'}</a></td></tr>`,
     '</table></td></tr></table></body></html>',
   ].join('\n');
 }
@@ -208,8 +216,8 @@ export function stripePaymentUrl(summary: OrderSummary): string | null {
 
 const OWNER_METHOD: Record<Delivery['method'], string> = {
   relay: 'Point Relais Mondial Relay',
-  home: 'Livraison à domicile (Colissimo)',
-  pickup: 'Retrait à Arnouville',
+  home: 'Livraison à domicile',
+  pickup: 'Remise en mains propres',
 };
 
 const FR_TOTALS: TotalsLabels = {
@@ -262,10 +270,10 @@ export function renderOwnerEmail(summary: OrderSummary): RenderedEmail {
     deliveryLines = c.shipping
       ? [c.shipping.name, ...addressLines(c.shipping.address, locale)]
       : [];
-    deliveryNote = 'Expédiez en Colissimo à cette adresse.';
+    deliveryNote = 'Expédiez le colis à cette adresse.';
   } else if (d?.method === 'pickup') {
-    deliveryLines = SHOP_ADDRESS_LINES;
-    deliveryNote = 'Contactez la cliente ou le client pour convenir du rendez-vous de retrait.';
+    deliveryNote =
+      'Contactez la cliente ou le client sur WhatsApp pour convenir de la remise en mains propres.';
   } else {
     deliveryTitle = 'Livraison : non précisée';
   }
@@ -328,7 +336,14 @@ interface CustomerStrings {
   delivery: string;
   method: Record<Delivery['method'], string>;
   next: string;
-  nextBy: Record<Delivery['method'], string>;
+  /** Label of the WhatsApp button of a hand delivery. */
+  whatsapp: string;
+  nextBy: {
+    relay: string;
+    home: string;
+    /** The shop's phone as printed, and whether a WhatsApp link follows. */
+    pickup: (phone: string, whatsapp: boolean) => string;
+  };
   /** Before the order lookup link. */
   lookup: string;
   contactTitle: string;
@@ -349,16 +364,19 @@ const CUSTOMER: Record<Locale, CustomerStrings> = {
     delivery: 'Livraison',
     method: {
       relay: 'Point Relais Mondial Relay',
-      home: 'Livraison à domicile (Colissimo)',
-      pickup: 'Retrait gratuit à Arnouville',
+      home: 'Livraison à domicile',
+      pickup: 'Remise en mains propres',
     },
     next: 'Et maintenant ?',
+    whatsapp: 'Écrire sur WhatsApp',
     nextBy: {
       relay:
         'Nous préparons votre colis et le confions à Mondial Relay. Vous recevrez un SMS et un e-mail de Mondial Relay dès qu’il vous attend dans votre Point Relais. Pensez à vous munir d’une pièce d’identité pour le retirer.',
-      home: 'Nous préparons votre colis et l’expédions en Colissimo. Vous recevrez le numéro de suivi dès son expédition.',
-      pickup:
-        'Nous vous contactons très vite par téléphone ou par e-mail pour convenir d’un rendez-vous de retrait.',
+      home: 'Nous préparons votre colis et l’expédions à votre adresse. Vous recevrez le numéro de suivi dès son expédition.',
+      pickup: (phone, whatsapp) =>
+        whatsapp
+          ? `Écrivez-nous sur WhatsApp au ${phone} pour convenir du lieu et du moment de la remise en mains propres.`
+          : `Appelez-nous au ${phone} pour convenir du lieu et du moment de la remise en mains propres.`,
     },
     lookup: 'Retrouver ma commande à tout moment : ',
     contactTitle: 'Une question ?',
@@ -380,15 +398,19 @@ const CUSTOMER: Record<Locale, CustomerStrings> = {
     delivery: 'Delivery',
     method: {
       relay: 'Mondial Relay pickup point',
-      home: 'Home delivery (Colissimo)',
-      pickup: 'Free collection in Arnouville',
+      home: 'Home delivery',
+      pickup: 'Hand delivery',
     },
     next: 'What happens next?',
+    whatsapp: 'Message us on WhatsApp',
     nextBy: {
       relay:
         'We prepare your parcel and hand it to Mondial Relay. Mondial Relay will send you a text message and an e-mail as soon as it is waiting at your pickup point. Please bring photo ID when you collect it.',
-      home: 'We prepare your parcel and ship it with Colissimo. You will receive the tracking number as soon as it has been dispatched.',
-      pickup: 'We will contact you shortly by phone or e-mail to arrange a collection time.',
+      home: 'We prepare your parcel and ship it to your address. You will receive the tracking number as soon as it has been dispatched.',
+      pickup: (phone, whatsapp) =>
+        whatsapp
+          ? `Message us on WhatsApp at ${phone} to agree on a place and time for the hand delivery.`
+          : `Call us on ${phone} to agree on a place and time for the hand delivery.`,
     },
     lookup: 'Find your order at any time: ',
     contactTitle: 'Any questions?',
@@ -428,9 +450,13 @@ export function renderCustomerEmail(
   if (d?.method === 'relay') deliveryLines = relayLines(d, locale);
   else if (d?.method === 'home' && c.shipping) {
     deliveryLines = [c.shipping.name, ...addressLines(c.shipping.address, locale)];
-  } else if (d?.method === 'pickup') deliveryLines = SHOP_ADDRESS_LINES;
-  const next = d ? t.nextBy[d.method] : '';
+  }
   const phone = formatPhone(SHOP.phone);
+  // Hand delivery: no address, the customer writes on WhatsApp (link below the sentence).
+  const handUrl = d?.method === 'pickup' ? handDeliveryUrl(locale, summary.number) : '';
+  let next = '';
+  if (d?.method === 'pickup') next = t.nextBy.pickup(phone, handUrl !== '');
+  else if (d) next = t.nextBy[d.method];
 
   const html = layout(
     locale,
@@ -447,6 +473,7 @@ export function renderCustomerEmail(
       subheading(`${t.delivery}${colon(locale)}${methodLabel}`),
       deliveryLines.length ? block(deliveryLines) : '',
       next ? subheading(t.next) + paragraph(esc(next)) : '',
+      handUrl ? button(handUrl, t.whatsapp) : '',
       button(lookup, locale === 'fr' ? 'Suivre ma commande' : 'Track my order'),
       subheading(t.contactTitle),
       paragraph(
@@ -471,6 +498,7 @@ export function renderCustomerEmail(
     `${t.delivery}${colon(locale)}${methodLabel}`,
     ...deliveryLines,
     ...(next ? ['', t.next, next] : []),
+    ...(handUrl ? [`${t.whatsapp}${colon(locale)}${handUrl}`] : []),
     '',
     `${t.lookup}${lookup}`,
     '',

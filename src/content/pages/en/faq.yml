@@ -1,7 +1,7 @@
 seoTitle: Frequently asked questions
 seoDescription: >-
-  Origins, allergens, storage, Mondial Relay pickup point delivery, pickup in
-  Arnouville, delivery times, payment and returns: our answers to your
+  Origins, allergens, storage, Mondial Relay pickup point delivery, hand
+  delivery, delivery times, payment and returns: our answers to your
   questions.
 title: Frequently asked questions
 lead: Everything you need to know before ordering. Another question? Write to us.
@@ -53,14 +53,13 @@ items:
     group: products
     answer: >-
       Somewhere dry, away from heat and light, in the pouch closed tightly after
-      each use or in an airtight jar. Use a dry spoon: powders do not like
-      moisture and turn lumpy. The best-before date is printed on every pouch.
+      each use or in an airtight jar. Use a dry wooden spoon: powders do not
+      like moisture and turn lumpy. The best-before date is printed on every pouch.
   - question: How long does delivery take?
     group: orders
     answer: >-
       We pack your parcel within 2 working days. Then allow 3 to 5 working days
-      to a Mondial Relay pickup point and 2 to 4 working days for home delivery
-      with Colissimo.
+      for delivery to a Mondial Relay pickup point.
   - question: How does pickup point delivery work?
     group: orders
     answer: >-
@@ -72,15 +71,13 @@ items:
   - question: Is delivery free?
     group: orders
     answer: >-
-      Yes, from €49, whatever the delivery method. Below that, pickup point
-      delivery costs €4.90 and home delivery €6.90.
-  - question: Can I collect my order in person?
+      Yes, from €49, in France, Belgium and Luxembourg. Below that, pickup point
+      delivery costs €4.90. Hand delivery, on request, is always free.
+  - question: Can I have my order handed over in person?
     group: orders
     answer: >-
-      Yes, pickup is free at 9 Rue du Marché, 95400 Arnouville, France, by
-      appointment.
-      Choose "Free pickup in Arnouville" when you order: we will contact you as
-      soon as your order is ready.
+      Yes. Hand delivery is free, on request: write to us on WhatsApp to agree
+      on a place and a time.
   - question: Which payment methods do you accept?
     group: orders
     answer: >-

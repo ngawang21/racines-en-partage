@@ -257,7 +257,7 @@ const TIDY = 'data-rep-tidy';
 
 /**
  * Brings the widget's result list to the shop's conventions as it renders:
- * "1 - LOCKER 24/7 LIDL ARNOUVILLE" reads "Locker 24/7 Lidl Arnouville"
+ * "1 - LOCKER 24/7 LIDL GONESSE" reads "Locker 24/7 Lidl Gonesse"
  * (the numbers match nothing on the map), each point is a keyboard button,
  * and a closed point (the widget's PR-Disabled, "En vacances" in its map
  * card only) carries a visible note and moves to the end of the list. The
@@ -280,7 +280,7 @@ export function tidyRelayList(
         (line.textContent ?? '')
           .replace(/\s+/g, ' ')
           .trim()
-          // "95400 - ARNOUVILLE" reads "95400 Arnouville", as on the chosen card.
+          // "95500 - GONESSE" reads "95500 Gonesse", as on the chosen card.
           .replace(/^(\S+) - /, '$1 '),
       );
     item.setAttribute('role', 'button');

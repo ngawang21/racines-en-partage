@@ -185,7 +185,7 @@ export function closedUntil(warning: unknown): string | null {
 
 /**
  * Display form of the widget's upper-case labels: "LOCKER 24/7 LIDL
- * ARNOUVILLE" reads "Locker 24/7 Lidl Arnouville". Mixed-case text is kept.
+ * GONESSE" reads "Locker 24/7 Lidl Gonesse". Mixed-case text is kept.
  */
 export function displayCase(text: unknown): string {
   // An order payload may lack a field: never throw while rendering it.

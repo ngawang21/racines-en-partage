@@ -5,7 +5,8 @@ Guide for agents working in this repository. Humans: see `README.md`.
 ## What this is
 
 The bilingual online shop of Racines en Partage (botanical powders, herbal
-teas, seeds and cacao, Arnouville). Static Astro 7 site, French at `/`,
+teas, seeds and cacao, from Africa and Asia; the house is in the
+Val-d'Oise). Static Astro 7 site, French at `/`,
 English at `/en/`, cart in the browser, Stripe Checkout and Mondial Relay
 through a Cloudflare Worker on `/api/*`, Sveltia CMS at `/admin/`. Private
 repository `ngawang21/racines-en-partage`, work on `main`.
@@ -248,6 +249,20 @@ Node 22 (`.nvmrc`), pnpm 9 (`packageManager`). Use `pnpm exec`, not `npx`.
   (`src/content/{products,recipes,categories,pages,legal,reviews,settings}`): Sveltia
   writes its own YAML style and a CMS save must never fail `pnpm check`. The
   unit tests still parse every file; format them by hand when you edit them.
+- Client feedback of 2026-11-23
+  (`docs/superpowers/plans/2026-11-25-client-feedback-master-plan.md`): two
+  ways to receive an order, the Mondial Relay point and a hand delivery on
+  request arranged on WhatsApp (method id `pickup`, `brand.whatsapp`, links
+  built by `whatsappUrl` in `src/i18n/format.ts`; empty hides the buttons).
+  Home delivery keeps its code and settings with `enabled: false` and
+  carrier-neutral words. The street address is a registered address, not a
+  place to visit: it prints only through `{address}` in the legal texts; the
+  footer, the contact page, the checkout, the e-mails, the vCard and the
+  JSON-LD (region `SITE.region` and country only) never show it, and a build
+  test (`tests/build/forms.test.ts`) fails if a page outside the legal ones
+  does. The newsletter is off (`newsletter.enabled: false`): no signup
+  anywhere, the landing page stays reachable and unlinked, the privacy policy
+  no longer describes it (restore the paragraphs from git when it returns).
 - Feature switches the owner controls (`settings.newsletter.enabled`,
   `settings.newsletter.welcomeCode`, `settings.reviews.enabled`) reach the
   Worker through `features` in `dist/catalog.json`; the Worker also disables

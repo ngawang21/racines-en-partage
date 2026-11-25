@@ -40,6 +40,15 @@ if (settings?.launch?.pricesConfirmed !== true) {
   problems.push('src/content/settings/shop.yml: launch.pricesConfirmed is not true');
 }
 
+// Hand deliveries are arranged on WhatsApp: without the number the checkout
+// falls back to the phone and the e-mail.
+const pickup = (settings?.shipping ?? []).find((m) => m?.id === 'pickup');
+if (pickup?.enabled && !String(settings?.brand?.whatsapp ?? '').trim()) {
+  problems.push(
+    'src/content/settings/shop.yml: brand.whatsapp is empty while the hand delivery (pickup) is enabled',
+  );
+}
+
 if (!String(settings?.forms?.turnstileSiteKey ?? '').trim()) {
   problems.push(
     'src/content/settings/shop.yml: forms.turnstileSiteKey is empty (contact, newsletter, stock alert and sign-in forms would answer CAPTCHA_FAILED)',

@@ -2,7 +2,7 @@
 // the static shell of OrderDetails.astro: number and status, lines, amounts,
 // delivery, Point Relais, next steps. Shared by the thanks page and the order
 // lookup page; every hook is optional, so a shell may leave parts out.
-import { nowrapWeight } from '../i18n/format';
+import { nowrapWeight, whatsappUrl } from '../i18n/format';
 import type { OrderSummary } from './api';
 import type { CartContext } from './context';
 import { h } from './dom';
@@ -84,6 +84,15 @@ export function renderOrder(root: HTMLElement, order: OrderSummary, ctx: CartCon
   }
   const pickup = q<HTMLElement>('[data-thanks-pickup]');
   if (pickup) pickup.hidden = method !== 'pickup';
+  // The WhatsApp message of a hand delivery quotes the order number.
+  const whatsapp = q<HTMLAnchorElement>('[data-thanks-whatsapp]');
+  const message = tt.whatsappMessageOrder;
+  if (whatsapp?.dataset.whatsapp && message && order.number) {
+    whatsapp.href = whatsappUrl(
+      whatsapp.dataset.whatsapp,
+      ctx.fmt(message, { number: order.number }),
+    );
+  }
   for (const step of root.querySelectorAll<HTMLElement>('[data-next]'))
     step.hidden = step.dataset.next !== method;
 

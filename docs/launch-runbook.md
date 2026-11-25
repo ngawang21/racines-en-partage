@@ -48,12 +48,10 @@ page the day it is used.
 | Content editing           | Sveltia CMS at `/admin/` plus its auth Worker      | 0                                                                               | none                                                                                                                                                   |
 | Payments                  | Stripe Checkout, standard pricing France           | 0 monthly                                                                       | 1.5 % + 0.25 EUR per EEA card payment; 2.5 % UK cards; 3.15 % other cards (+2 % conversion)                                                            |
 | Order and form e-mails    | Resend, Free plan, domain `racinesenpartage.fr`    | 0                                                                               | 3,000 e-mails a month, 100 a day, one domain; about 50 orders a day at two e-mails each                                                                |
-| Newsletter                | Resend Segments and Broadcasts, Free plan          | 0                                                                               | 1,000 contacts on the free plan; Pro is 20 USD a month                                                                                                 |
 | Anti-bot, analytics, mail | Cloudflare Turnstile, Web Analytics, Email Routing | 0                                                                               | none                                                                                                                                                   |
 | Form budget               | Cloudflare Workers KV, Free                        | 0                                                                               | 1,000 writes a day; the forms write one per e-mail                                                                                                     |
 | Domain                    | OVHcloud, `.fr`, DNS at Cloudflare                 | 4.99 EUR HT the first year, then 7.79 EUR HT a year (5.99 and 9.35 TTC, verify) | auto-renewal on                                                                                                                                        |
 | Relay delivery            | Mondial Relay Offre Start, prepaid                 | 0 monthly on the offer as published (verify)                                    | about 3 EUR HT per label for a small parcel (verify at sign-up)                                                                                        |
-| Home delivery             | Colissimo labels bought on laposte.fr              | 0 monthly                                                                       | per parcel, by weight (verify)                                                                                                                         |
 | Bank                      | Marie's Hello bank! account                        | her existing fees                                                               | Stripe pays out to any French IBAN; a dedicated pro account is mandatory for a micro-entrepreneur only above 10,000 EUR of turnover two years in a row |
 | Consumer mediator         | Chosen from the CECMC list                         | yearly membership, varies by mediator                                           | mandatory for sales to consumers                                                                                                                       |
 
@@ -224,7 +222,7 @@ Each step: **who**, what, check. Commands run at the repository root.
    event destination `https://racinesenpartage.fr/api/webhooks/stripe`
    (Snapshot payload) with the three `checkout.session.*` events; `whsec_` into `STRIPE_WEBHOOK_SECRET`.
    D8.2.
-5. **Dev** Test checklist D8.2 step 5: three delivery methods, FR and EN,
+5. **Dev** Test checklist D8.2 step 5: both delivery methods (relay, hand delivery), FR and EN,
    3-D Secure card, declined card, back button, promo code, refund. Both
    e-mails received each time, webhook 200. Note the date of the first test
    order: the review step K4 needs an order 7 to 10 days old.
@@ -294,9 +292,9 @@ Each step: **who**, what, check. Commands run at the repository root.
    TXT record in Cloudflare DNS. Submit
    `https://racinesenpartage.fr/sitemap-index.xml`. Request indexing for
    `/`, `/boutique/`, `/en/` and the featured products. D12 steps 10 and 11.
-2. **Dev** Google Business Profile for 9 Rue du Marché, 95400 Arnouville
-   (pickup by appointment), or a service-area profile if Marie prefers not
-   to show the address. **Marie** completes the verification Google asks
+2. **Dev** Google Business Profile as a service-area business with the
+   address hidden (the registered address is not a place to visit; hand
+   deliveries are arranged on WhatsApp). **Marie** completes the verification Google asks
    for (video of the premises or a postcard). D12 step 12.
 3. **Dev** Bing Webmaster Tools, Import from Google Search Console.
 4. **Marie** Instagram bio link to the site.

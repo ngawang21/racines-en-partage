@@ -2,7 +2,7 @@
 // The origins map of the home "Deux terres" band, drawn from Natural Earth
 // (public domain, 1:50m, through the world-atlas TopoJSON package):
 //   src/assets/brand/origins-map.svg   coastlines, the six origin countries
-//                                      and the routes to Arnouville
+//                                      and the routes to France
 //   src/assets/brand/origins-map.json  the viewBox and, per place, its point
 //                                      and the side its label sits on
 // Both are committed; nothing of this runs in the browser. OriginsMap.astro
@@ -52,11 +52,11 @@ const ORIGINS = [
   { id: '356', key: 'india', fr: 'Inde', en: 'India', label: 's' },
   { id: '276', key: 'germany', fr: 'Allemagne', en: 'Germany', label: 'e' },
 ];
-/** The shop, 9 rue du Marché, Arnouville (Val-d'Oise). */
+/** The house, in the Val-d'Oise; the page names the country only. */
 const HOME = {
-  key: 'arnouville',
-  fr: 'Arnouville',
-  en: 'Arnouville',
+  key: 'france',
+  fr: 'France',
+  en: 'France',
   lon: 2.42,
   lat: 48.99,
   label: 'w',
@@ -194,7 +194,7 @@ const origins = ORIGINS.map((o) => {
 const [hx, hy] = projection([HOME.lon, HOME.lat]);
 
 /**
- * A fine arc from an origin to Arnouville: a quadratic curve bowed to the
+ * A fine arc from an origin to the house: a quadratic curve bowed to the
  * left of the way (west for the African lands, so the routes fan out over
  * the Atlantic side like the sea roads they recall), at a sixth of its length.
  */

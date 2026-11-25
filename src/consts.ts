@@ -1,4 +1,9 @@
-export const SITE = { url: 'https://racinesenpartage.fr', name: 'Racines en Partage' } as const;
+export const SITE = {
+  url: 'https://racinesenpartage.fr',
+  name: 'Racines en Partage',
+  /** The only place name the pages and the structured data give (no street, no town). */
+  region: "Val-d'Oise",
+} as const;
 export const LOCALES = ['fr', 'en'] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = 'fr';

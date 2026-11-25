@@ -2,7 +2,7 @@
 // newsletter and stock-alert forms follow the markup src/forms/kit.ts
 // enhances, the footer links, the new pages, the cross-sell shells, and no
 // third-party script is referenced while the settings leave the keys empty.
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse, type HTMLElement } from 'node-html-parser';
@@ -281,24 +281,109 @@ describe('customer space', () => {
   });
 });
 
-describe('address and phone (spec 8.4)', () => {
-  it('the footer and the contact cards print the country; the phone is national in French, international in English', () => {
+describe('contact details: phone and WhatsApp, no postal address (client feedback of 2026-11-23)', () => {
+  const walk = (dir: string): string[] =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+      e.isDirectory()
+        ? walk(join(dir, e.name))
+        : /\.(html|json|vcf|webmanifest|xml|txt)$/.test(e.name)
+          ? [join(dir, e.name)]
+          : [],
+    );
+  const wa = `https://wa.me/${settings.brand.whatsapp}`;
+
+  it('the footer and the contact cards carry the phone and a WhatsApp link, never the address', () => {
+    expect(settings.brand.whatsapp).toMatch(/^\d{8,15}$/);
     for (const locale of LOCALES) {
-      for (const key of ['home', 'contact'] as const) {
+      for (const key of ['home', 'contact', 'checkout'] as const) {
         const d = page(key, locale);
         const footer = d.querySelector('.site-footer')!;
-        expect(footer.text, `${key} ${locale}`).toContain('Arnouville, France');
+        expect(footer.text, `${key} ${locale}`).not.toMatch(/Arnouville|Rue du Marché|95400/);
+        expect(footer.querySelector('a[href*="google.com/maps"]'), `${key} ${locale}`).toBeNull();
         const tel = footer.querySelector('a[href^="tel:"]')!;
         expect(tel.getAttribute('href')).toMatch(/^tel:\+33\d{9}$/);
         expect(tel.text.trim()).toMatch(
           locale === 'fr' ? /^0\d( \d{2}){4}$/ : /^\+33 \d( \d{2}){4}$/,
         );
+        const whatsapp = footer.querySelector('a[data-footer-whatsapp]')!;
+        expect(whatsapp.getAttribute('href'), `${key} ${locale}`).toBe(wa);
+        expect(whatsapp.getAttribute('target')).toBe('_blank');
+        expect(whatsapp.getAttribute('rel')).toBe('noopener');
+        expect(whatsapp.text).toContain('WhatsApp');
       }
       const contact = page('contact', locale);
-      expect(contact.querySelector('.contact address')?.text).toContain('France');
+      expect(contact.querySelector('.contact address')).toBeNull();
+      expect(contact.querySelector('.contact a[href*="google.com/maps"]')).toBeNull();
       const big = contact.querySelector('.contact a.big[href^="tel:"]')!;
       expect(big.text.trim().startsWith(locale === 'fr' ? '0' : '+33')).toBe(true);
+      const card = contact.querySelector('.contact [data-contact-whatsapp]')!;
+      expect(card.querySelector('a.big')!.getAttribute('href')).toBe(wa);
+      expect(card.text).toMatch(locale === 'fr' ? /mains propres/ : /hand delivery/i);
     }
+  });
+
+  it('the checkout hand-delivery card and the thanks page link WhatsApp with a prefilled message', () => {
+    for (const locale of LOCALES) {
+      const checkout = page('checkout', locale);
+      expect(
+        checkout
+          .querySelectorAll('input[name="delivery-method"]')
+          .map((i) => i.getAttribute('value')),
+        locale,
+      ).toEqual(['relay', 'pickup']);
+      const card = checkout.querySelector('[data-method-detail="pickup"]')!;
+      expect(card.querySelector('address')).toBeNull();
+      const link = card.querySelector('a[data-pickup-whatsapp]')!;
+      const href = link.getAttribute('href')!.replace(/&amp;/g, '&');
+      expect(href.startsWith(`${wa}?text=`), href).toBe(true);
+      expect(decodeURIComponent(href.split('?text=')[1]!)).toMatch(
+        locale === 'fr'
+          ? /^Bonjour, je souhaite une remise en mains propres/
+          : /^Hello, I would like a hand delivery/,
+      );
+      expect(link.getAttribute('target')).toBe('_blank');
+      expect(link.getAttribute('rel')).toBe('noopener');
+      expect(card.text).toContain(locale === 'fr' ? '07 75 68 91 08' : '+33 7 75 68 91 08');
+      const thanks = page('thanks', locale).querySelector('[data-thanks-pickup]')!;
+      expect(thanks.hasAttribute('hidden')).toBe(true);
+      expect(thanks.querySelector('address')).toBeNull();
+      expect(thanks.querySelector('a[data-thanks-whatsapp]')!.getAttribute('data-whatsapp')).toBe(
+        settings.brand.whatsapp,
+      );
+    }
+  });
+
+  it('the street address is printed on the legal pages only, and no page names Colissimo', () => {
+    const legal = new Set(
+      LOCALES.flatMap((l) =>
+        (['legal', 'terms', 'privacy'] as const).map((k) => join(dist, fileOf(routePath(k, l)))),
+      ),
+    );
+    const street = settings.brand.address.street;
+    let withAddress = 0;
+    for (const file of walk(dist)) {
+      if (file.includes(`${join(dist, 'admin')}`)) continue; // the CMS shows the owner her own settings
+      const text = readFileSync(file, 'utf8');
+      expect(/colissimo/i.test(text), file).toBe(false);
+      if (legal.has(file)) {
+        if (text.includes(street)) withAddress += 1;
+        continue;
+      }
+      expect(text.includes(street), file).toBe(false);
+      expect(/Arnouville/.test(text), file).toBe(false);
+    }
+    // Publisher, seller and data controller keep their geographic address.
+    expect(withAddress).toBe(legal.size);
+  });
+
+  it('the structured data gives the region and the country only', () => {
+    const ld = page('home', 'fr')
+      .querySelectorAll('script[type="application/ld+json"]')
+      .map((s) => s.text)
+      .join('');
+    expect(ld).toContain('"addressRegion":"Val-d\'Oise"');
+    expect(ld).toContain('"addressCountry":"FR"');
+    expect(ld).not.toMatch(/streetAddress|postalCode|addressLocality/);
   });
 });
 

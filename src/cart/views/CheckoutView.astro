@@ -7,12 +7,12 @@ import Icon from '../../components/Icon.astro';
 import RelayPicker from '../../components/RelayPicker.astro';
 import { INTL_LOCALE, type Locale } from '../../consts';
 import type { LocaleContent } from '../../content/locale-schema';
-import { formatPrice } from '../../i18n/format';
+import { formatPrice, phoneE164, whatsappUrl } from '../../i18n/format';
 import { loadSettings } from '../../i18n/locale';
 import { routePath } from '../../i18n/routing';
 import { getClientCatalog } from '../catalog';
 import { pageStrings, serializeStrings } from '../strings';
-import { countryName, displayPhone } from '../address';
+import { displayPhone } from '../address';
 import { wholePrice } from '../shipping-hint';
 
 interface Props {
@@ -27,18 +27,15 @@ const list = new Intl.ListFormat(INTL_LOCALE[locale], { style: 'long', type: 'co
 const countryNames = (codes: string[]) => list.format(codes.map((c) => regions.of(c) ?? c));
 const ICON = { relay: 'pin', home: 'truck', pickup: 'leaf' } as const;
 const [termsBefore = '', termsAfter = ''] = t.checkout.acceptTerms.split('{terms}');
-const address = settings.brand.address;
+// Hand delivery: no address, the place and time are agreed on WhatsApp.
+const shopPhone = displayPhone(settings.brand.phone, locale);
+const whatsapp = whatsappUrl(settings.brand.whatsapp, t.checkout.whatsappMessage);
 const threshold = catalog.freeShippingFrom;
 // "Offerte dès 49 €", as on the product pages (no ",00" on a round threshold).
 const roundPrice = (cents: number) => wholePrice(formatPrice(cents, locale));
 ---
 
-<section
-  class="container checkout"
-  data-checkout
-  data-phone={displayPhone(settings.brand.phone, locale)}
-  aria-busy="true"
->
+<section class="container checkout" data-checkout data-phone={shopPhone} aria-busy="true">
   <header class="rep-head">
     <h1 class="rep-title">{t.checkout.title}</h1>
     <a class="text-link" href={routePath('cart', locale)} data-checkout-edit>
@@ -128,14 +125,36 @@ const roundPrice = (cents: number) => wholePrice(formatPrice(cents, locale));
                   {m.id === 'pickup' && (
                     <div class="pickup-card">
                       <p class="eyebrow">{t.checkout.pickupTitle}</p>
-                      <address class="pickup-address">
-                        {address.street}
-                        <br />
-                        {address.postcode} {address.city}
-                        <br />
-                        {countryName(address.country, locale)}
-                      </address>
-                      <p class="method-note">{t.checkout.pickupNote}</p>
+                      <p class="method-note">
+                        {whatsapp ? t.checkout.pickupNote : t.checkout.pickupNoteNoWhatsapp}
+                      </p>
+                      {whatsapp ? (
+                        <p class="pickup-actions">
+                          <a
+                            class="btn btn-secondary pickup-whatsapp"
+                            href={whatsapp}
+                            rel="noopener"
+                            target="_blank"
+                            data-pickup-whatsapp
+                          >
+                            <Icon name="whatsapp" size={18} />
+                            {t.checkout.whatsappCta}
+                            <span class="visually-hidden">{t.a11y.newTab}</span>
+                          </a>
+                          <span class="pickup-phone">
+                            {t.checkout.whatsappOrPhone.replace('{phone}', shopPhone)}
+                          </span>
+                        </p>
+                      ) : (
+                        <p class="pickup-actions">
+                          <a class="text-link" href={`tel:${phoneE164(settings.brand.phone)}`}>
+                            {shopPhone}
+                          </a>
+                          <a class="text-link" href={`mailto:${settings.brand.email}`}>
+                            {settings.brand.email}
+                          </a>
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>

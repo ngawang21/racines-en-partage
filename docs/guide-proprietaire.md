@@ -535,8 +535,9 @@ un panier de 52 € avec un code de 5 € reste livré gratuitement.
 
 **Changer les prix de livraison**
 
-1. Dans **Livraison, modes et prix**, touchez le mode : Point Relais,
-   livraison à domicile ou retrait à Arnouville.
+1. Dans **Livraison, modes et prix**, touchez le mode : Point Relais ou
+   remise en mains propres (la livraison à domicile existe dans la liste
+   mais n’est pas proposée aux clients).
 2. Changez le **Prix** (`4,90`, ou `0` pour gratuit), le **Délai affiché**
    ou le **Nom affiché**, ou décochez **Proposé aux clients** pour le
    retirer temporairement.
@@ -757,16 +758,10 @@ mode de livraison, et pour le Point Relais l’**ID Point Relais** en grand
 Les écrans de Mondial Relay peuvent évoluer ; les informations demandées
 restent celles de l’e-mail.
 
-**Livraison à domicile (Colissimo)**
+**Remise en mains propres**
 
-L’e-mail contient l’adresse de livraison. Achetez l’étiquette Colissimo
-(en ligne sur le site de La Poste, ou au bureau de poste) avec cette
-adresse et le poids, puis déposez le colis.
-
-**Retrait à Arnouville**
-
-L’e-mail indique « Retrait ». Appelez ou envoyez un SMS au client (numéro
-dans l’e-mail) pour convenir d’un rendez-vous au 9 Rue du Marché.
+Elle est gratuite et se fait sur demande. Écrivez à la cliente ou au client
+sur WhatsApp (numéro dans l’e-mail) pour convenir du lieu et du moment.
 
 Astuce : quand le colis est parti, répondez à l’e-mail du client (partie 17) pour lui dire qu’il est en route.
 
@@ -837,7 +832,7 @@ Si la page ne trouve rien, c’est presque toujours une autre adresse e-mail
 que celle de la commande. Cherchez son nom ou son adresse dans Stripe
 (**Paiements**, partie 15) et donnez-lui le numéro et l’adresse exacts. Le
 suivi du colis lui-même vient du transporteur (SMS et e-mail de Mondial
-Relay, ou lien Colissimo).
+Relay).
 
 ---
 
@@ -956,8 +951,8 @@ main : chacun doit s’être inscrit lui-même.
 4. Comme destinataires, choisissez le segment « Newsletter Racines en
    Partage ».
 5. Tapez l’objet, par exemple « Le bissap est de retour ».
-6. Écrivez la lettre. Terminez par le nom et l’adresse de la boutique :
-   « Racines en Partage, 9 Rue du Marché, 95400 Arnouville ».
+6. Écrivez la lettre. Terminez par le nom et l’adresse e-mail de la
+   boutique : « Racines en Partage, racinesenpartage@gmail.com ».
 7. Envoyez-vous d’abord un essai : **Send test email**, à
    racinesenpartage@gmail.com.
 8. Ouvrez l’essai sur votre téléphone : relisez, vérifiez les liens et les

@@ -36,8 +36,11 @@ export const localeSchema = z.object({
     facebook: text,
     /** "Suivez-nous sur {network}": the accessible name of a social icon link. */
     followOn: text,
-    maps: text,
-    address: text,
+    whatsapp: text,
+    /** The footer row: "Nous écrire sur WhatsApp". */
+    whatsappCta: text,
+    /** Under the number of the contact page's WhatsApp card. */
+    whatsappNote: text,
     phone: text,
     email: text,
     hours: text,
@@ -210,8 +213,14 @@ export const localeSchema = z.object({
     relayHours: text,
     relayFallback: text,
     homeCountries: text,
-    pickupAddress: text,
     pickupNote: text,
+    /** The pickup card text when `brand.whatsapp` is empty. */
+    pickupNoteNoWhatsapp: text,
+    whatsappCta: text,
+    /** Beside the button: "ou au {phone}". */
+    whatsappOrPhone: text,
+    /** Prefilled WhatsApp message of the checkout button. */
+    whatsappMessage: text,
     acceptTerms: text,
     termsLink: text,
     pay: text,
@@ -250,7 +259,11 @@ export const localeSchema = z.object({
     nextPreparation: text,
     nextRelay: text,
     nextHome: text,
+    /** "{phone}" is the shop's number as printed. */
     nextPickup: text,
+    nextPickupNoWhatsapp: text,
+    /** Prefilled WhatsApp message of the thanks page, with the order "{number}". */
+    whatsappMessageOrder: text,
     nextContact: text,
     backToShop: text,
     loading: text,

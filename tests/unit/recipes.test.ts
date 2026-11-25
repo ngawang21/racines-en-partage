@@ -30,13 +30,7 @@ const recipesEn = [...frFiles].map(([slug, raw]) =>
   mergeRecipe(slug, raw, enFiles.get(slug) ?? {}),
 );
 
-const LABEL_RECIPES = [
-  'infusion-de-bissap',
-  'boisson-fraiche-au-baobab',
-  'smoothie-au-moringa',
-  'horchata-de-souchet',
-  'chocolat-chaud-maison',
-];
+const LABEL_RECIPES = ['infusion-de-bissap', 'horchata-de-souchet', 'chocolat-chaud-maison'];
 
 const recipe = (slug: string, over: Partial<RecipeEntry> = {}): RecipeEntry => ({
   slug,

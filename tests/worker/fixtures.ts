@@ -40,7 +40,7 @@ export function catalogFixture(overrides: Partial<WorkerCatalog> = {}): WorkerCa
         enabled: true,
         amount: 690,
         countries: ['FR'],
-        label: { fr: 'Livraison à domicile (Colissimo)', en: 'Home delivery (Colissimo)' },
+        label: { fr: 'Livraison à domicile', en: 'Home delivery' },
         estimate: { fr: '2 à 4 jours ouvrés', en: '2 to 4 working days' },
       },
       {
@@ -48,8 +48,8 @@ export function catalogFixture(overrides: Partial<WorkerCatalog> = {}): WorkerCa
         enabled: true,
         amount: 0,
         countries: ['FR'],
-        label: { fr: 'Retrait gratuit à Arnouville', en: 'Free pickup in Arnouville' },
-        estimate: { fr: 'sur rendez-vous, 9 Rue du Marché', en: 'by appointment, 9 Rue du Marché' },
+        label: { fr: 'Remise en mains propres, sur demande', en: 'Hand delivery, on request' },
+        estimate: { fr: 'à convenir sur WhatsApp', en: 'arranged on WhatsApp' },
       },
     ],
     products: [

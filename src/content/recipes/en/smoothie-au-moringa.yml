@@ -1,19 +1,20 @@
 # Translated fields only: shared fields (product, source, minutes, image) come from the French file.
 title: 'Moringa smoothie'
-summary: 'A spoon of moringa powder, a banana, a piece of fruit: the green smoothie from the label, for the morning.'
+summary: 'A spoon of moringa powder, a piece of fruit: the house smoothie for the morning or an afternoon snack.'
 yield: '1 tall glass'
 ingredients:
   - '1 teaspoon of moringa powder'
-  - '1 very ripe banana'
-  - '1 apple or a few pieces of pineapple'
-  - '200 ml of water or plant milk'
+  - '1 ripe persimmon (kaki)'
+  - '200 ml of coconut milk'
+  - 'A little cinnamon'
   - '1 teaspoon of honey, to taste'
   - 'A few ice cubes'
 steps:
+  - 'Remove the stalk of the persimmon and cut the fruit into pieces.'
   - 'Put all the ingredients in a blender.'
   - 'Blend until smooth and creamy.'
   - 'Serve chilled.'
 tips:
   - 'If moringa is new to you, start with half a spoon: its grassy taste, between spinach and green tea, comes through quickly.'
-  - 'A very ripe banana softens the taste of moringa; mango works very well too.'
-  - 'Drink it straight away, while it keeps its bright green colour.'
+  - 'Raspberry and mango work very well too, give them a try!'
+  - 'Drink it straight away, while it keeps its lovely colour.'

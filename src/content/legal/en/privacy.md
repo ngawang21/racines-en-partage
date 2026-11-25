@@ -1,7 +1,7 @@
 ---
 title: Privacy policy
 description: How Racines en Partage processes your personal data, service providers, retention periods and your rights.
-updated: '2026-11-08'
+updated: '2026-11-25'
 ---
 
 This English version is provided for convenience; the French version is the binding one.
@@ -18,7 +18,6 @@ We only collect the data each service needs:
 - **Customer space**: e-mail address, used to send you a sign-in link valid for 15 minutes and to find your orders; a strictly necessary session cookie, `rep_session`, kept for 30 days, signed, holding only your e-mail address. Legal basis: performance of the contract.
 - **Review invitation**: about a week after the order, we send you an e-mail inviting you to review it. Legal basis: our legitimate interest in hearing from our customers; you may simply ignore it.
 - **Customer reviews**: first name or pseudonym, rating, title and text of the review, language, date and order number. We read every review before publishing it; only the first name or pseudonym, the rating, the title, the text, the date and any reply from us are published. Legal basis: your consent, given by sending the review.
-- **Newsletter**: e-mail address and language, saved only after you click the confirmation link we send by e-mail. Every message includes an unsubscribe link. Legal basis: your consent.
 - **Contact form and back-in-stock alert**: name, e-mail address, message or product concerned. They reach us by e-mail so we can answer, and are not stored on the website. Legal basis: your request.
 
 ## Service providers
@@ -27,10 +26,11 @@ Your data is only shared with the following providers, for the needs described a
 
 - Stripe (online payment and receipts);
 - Cloudflare (website hosting and technical processing of requests; Turnstile, the cookieless anti-bot check of the forms; Web Analytics, cookieless audience measurement);
-- Resend (sending the order, review invitation and newsletter e-mails; list of newsletter subscribers);
+- Resend (sending the order and review invitation e-mails);
 - Mondial Relay (pickup point delivery: name, phone and e-mail for the collection notice);
-- La Poste / Colissimo (home delivery: name, address and phone);
 - GitHub (storage of the website content in a private repository: customer reviews are saved there to be read before publication; no other customer data is stored there).
+
+If you choose to message us on WhatsApp (for example to arrange a hand delivery), your messages go through that service, under its own terms.
 
 Some of these providers are based in the United States; transfers are covered by the European Commission's standard contractual clauses or the EU-US Data Privacy Framework.
 
@@ -40,7 +40,7 @@ Your basket is saved in your browser's local storage (localStorage), on your dev
 
 ## Retention periods
 
-Order data is kept for 10 years to meet accounting obligations. E-mail exchanges, including contact form messages and back-in-stock alerts, are kept for 3 years after the last contact. Your address stays on the newsletter list until you unsubscribe. Reviews stay online while the product is on sale, unless you ask us to remove yours.
+Order data is kept for 10 years to meet accounting obligations. E-mail exchanges, including contact form messages and back-in-stock alerts, are kept for 3 years after the last contact. Reviews stay online while the product is on sale, unless you ask us to remove yours.
 
 ## Your rights
 

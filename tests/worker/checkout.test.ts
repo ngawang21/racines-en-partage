@@ -131,7 +131,7 @@ describe('POST /api/checkout: happy paths', () => {
     });
     expect(params.line_items?.[0]?.price_data?.product_data?.name).toBe('Moringa powder 100 g');
     expect(params.shipping_options?.[0]?.shipping_rate_data).toMatchObject({
-      display_name: 'Home delivery (Colissimo)',
+      display_name: 'Home delivery',
       fixed_amount: { amount: 690, currency: 'eur' },
       delivery_estimate: {
         minimum: { unit: 'business_day', value: 2 },
@@ -144,7 +144,7 @@ describe('POST /api/checkout: happy paths', () => {
     expect(params.cancel_url).toBe('https://racinesenpartage.fr/en/cart/');
   });
 
-  it('pickup: free, no estimate, pickup address in the submit message', async () => {
+  it('pickup: free, no estimate, WhatsApp and no address in the submit message', async () => {
     const { app, stripe } = makeApp();
     const res = await postJson(app, '/api/checkout', {
       locale: 'fr',
@@ -159,14 +159,14 @@ describe('POST /api/checkout: happy paths', () => {
         shipping_rate_data: {
           type: 'fixed_amount',
           fixed_amount: { amount: 0, currency: 'eur' },
-          display_name: 'Retrait gratuit à Arnouville',
+          display_name: 'Remise en mains propres, sur demande',
         },
       },
     ]);
     expect(params.custom_text).toEqual({
       submit: {
         message:
-          'Retrait gratuit sur rendez-vous : 9 Rue du Marché, 95400 Arnouville. Nous vous contactons pour fixer un créneau.',
+          'Remise en mains propres gratuite, sur demande : écrivez-nous sur WhatsApp au 07 75 68 91 08 pour convenir du lieu et du moment.',
       },
     });
     expect(params.metadata).toEqual({
@@ -188,7 +188,7 @@ describe('POST /api/checkout: happy paths', () => {
     expect(stripe.create.mock.calls[0]![0].custom_text).toEqual({
       submit: {
         message:
-          'Free pickup by appointment: 9 Rue du Marché, 95400 Arnouville. We will contact you to arrange a time.',
+          'Free hand delivery, on request: message us on WhatsApp at 07 75 68 91 08 to agree on a place and time.',
       },
     });
   });
@@ -604,7 +604,7 @@ describe('parseDeliveryEstimate', () => {
   });
 
   it('returns undefined when no day count parses', () => {
-    expect(parseDeliveryEstimate('sur rendez-vous, 9 Rue du Marché')).toBeUndefined();
+    expect(parseDeliveryEstimate('à convenir sur WhatsApp')).toBeUndefined();
     expect(parseDeliveryEstimate('5 à 3 jours')).toBeUndefined();
   });
 });

@@ -155,7 +155,8 @@ widget, one small change per month, a reply within two working days.
 - Create Mondial Relay labels from the order e-mail.
 - Change her contact details in the CMS settings.
 - Publish or refuse customer reviews (CMS, "Avis clients"), answer them.
-- Write and send newsletters in Resend Broadcasts to the newsletter audience.
+- Once the newsletter is switched back on (off since 2026-11-25): write and
+  send newsletters in Resend Broadcasts to the newsletter audience.
 - Answer contact form messages and back-in-stock alerts from her Gmail inbox.
 
 ### What needs a developer
@@ -192,7 +193,6 @@ outside it is needed.
 | Extra domains (optional)                        | About the same each, per year (to verify)                                                  | OVHcloud                            |
 | Card payments                                   | 1.5 % + 0.25 EUR per EEA card payment (to verify on stripe.com/fr/pricing), no monthly fee | Stripe, deducted from payouts       |
 | Mondial Relay labels                            | From about 3 EUR HT per parcel, prepaid; read the Offre Start terms at sign-up             | Mondial Relay                       |
-| Colissimo labels                                | Per parcel (to verify)                                                                     | La Poste                            |
 | Consumer mediator                               | Depends on the mediator chosen (to verify)                                                 | Mediator                            |
 | Hosting, CMS, e-mail sending, e-mail forwarding | 0 EUR at her scale                                                                         | Cloudflare, GitHub, Sveltia, Resend |
 | Newsletter audience, Turnstile, Web Analytics   | 0 EUR at her scale (Resend free plan contact and sending limits to verify)                 | Resend, Cloudflare                  |

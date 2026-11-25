@@ -22,7 +22,7 @@ export function countryName(code: string, locale: Locale): string {
   }
 }
 
-/** ["9 Rue du Marché", "95400 Arnouville", "France"]. */
+/** [street, "postcode city", "France"]. */
 export function addressLines(address: PostalAddress, locale: Locale): [string, string, string] {
   return [
     address.street,
@@ -31,7 +31,7 @@ export function addressLines(address: PostalAddress, locale: Locale): [string, s
   ];
 }
 
-/** "9 Rue du Marché, 95400 Arnouville, France". */
+/** The three lines on one, comma separated. */
 export const addressLine = (address: PostalAddress, locale: Locale): string =>
   addressLines(address, locale).join(', ');
 
@@ -40,7 +40,7 @@ export const displayPhone = (raw: string, locale: Locale): string =>
 
 /**
  * The lines of a Point Relais address as the order pages print them: street,
- * second line, "95400 Arnouville", country. A payload missing a field (an
+ * second line, "95500 Gonesse", country. A payload missing a field (an
  * older order, an unexpected shape) yields the lines it can, never throws.
  */
 export function relayAddressLines(

@@ -286,7 +286,8 @@ export const contactPageSchema = z.object({
   title: text,
   lead: text,
   hours: text,
-  mapsLabel: text,
+  /** No longer shown (the address card became a WhatsApp card); tolerated in older files. */
+  mapsLabel: text.optional(),
 });
 export type ContactPage = z.infer<typeof contactPageSchema>;
 
@@ -335,6 +336,11 @@ export const settingsSchema = z.object({
     tagline: label,
     email: z.email(),
     phone: z.string().regex(/^0\d{9}$/, '10 digits starting with 0'),
+    /** WhatsApp number, international digits without "+" ("33775689108"); empty hides the buttons. */
+    whatsapp: z
+      .string()
+      .regex(/^([1-9]\d{7,14})?$/, 'international digits without + or spaces, or empty')
+      .default(''),
     address: z.object({
       street: text,
       postcode: z.string().regex(/^\d{5}$/),

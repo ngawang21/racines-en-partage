@@ -376,11 +376,18 @@ describe('worker entry (index.ts)', () => {
 describe('shop facts', () => {
   it('worker/shop.ts mirrors brand in shop.yml', () => {
     const settings = parse(shopYml) as {
-      brand: { name: string; email: string; phone: string; address: Record<string, string> };
+      brand: {
+        name: string;
+        email: string;
+        phone: string;
+        whatsapp: string;
+        address: Record<string, string>;
+      };
     };
     expect(SHOP.name).toBe(settings.brand.name);
     expect(SHOP.email).toBe(settings.brand.email);
     expect(SHOP.phone).toBe(settings.brand.phone);
+    expect(SHOP.whatsapp).toBe(settings.brand.whatsapp);
     expect(SHOP.siret).toBe(settings.brand.siret);
     expect(SHOP.address).toEqual(settings.brand.address);
   });

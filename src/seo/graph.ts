@@ -26,7 +26,8 @@ export interface StoreInfo {
   email: string;
   /** E.164, "+33775689108". */
   telephone: string;
-  address: { street: string; postcode: string; city: string; country: string };
+  /** Region and country only: the registered street address is not a place to visit. */
+  address: { region: string; country: string };
   /** Absolute URL. */
   logo: string;
   /** Absolute URL of a representative image. */
@@ -137,9 +138,7 @@ function storeNode(store: StoreInfo): Node {
     telephone: store.telephone,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: store.address.street,
-      postalCode: store.address.postcode,
-      addressLocality: store.address.city,
+      addressRegion: store.address.region,
       addressCountry: store.address.country,
     },
     currenciesAccepted: 'EUR',

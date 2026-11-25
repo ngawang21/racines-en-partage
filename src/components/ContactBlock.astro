@@ -1,12 +1,13 @@
 ---
 // Contact page body: the contact form (spec iteration 3, 2.3) next to the
-// contact details (spec 5.4): address with a Google Maps link (no embed),
-// phone, e-mail, Facebook and Instagram when set, and the hours text.
+// contact details: phone, e-mail, WhatsApp (hand deliveries are arranged
+// there; no postal address, the shop receives no visitors), Facebook and
+// Instagram when set, and the hours text.
 import type { Locale } from '../consts';
 import type { LocaleContent } from '../content/locale-schema';
 import type { ContactPage, Settings } from '../content/schemas';
-import { addressLines, displayPhone } from '../cart/address';
-import { phoneE164 } from '../i18n/format';
+import { displayPhone } from '../cart/address';
+import { phoneE164, whatsappUrl } from '../i18n/format';
 import Icon from './Icon.astro';
 import ContactForm from './forms/ContactForm.astro';
 
@@ -20,10 +21,7 @@ const { page, settings, t, locale } = Astro.props;
 const { brand } = settings;
 // Break the address before the "@" on narrow screens, never inside a word.
 const [emailUser, emailHost] = brand.email.split('@');
-const [street, city, country] = addressLines(brand.address, locale);
-const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-  `${brand.name}, ${street}, ${city}, ${country}`,
-)}`;
+const whatsapp = whatsappUrl(brand.whatsapp);
 ---
 
 <div class="contact">
@@ -55,19 +53,23 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
           </a>
         </dd>
       </div>
-      <div class="card card-wide">
-        <dt><Icon name="pin" size={20} />{t.footer.address}</dt>
-        <dd>
-          <address>
-            {brand.name}<br />{street}<br />{city}<br />{country}
-          </address>
-          <a class="link-arrow" href={mapsUrl} rel="noopener" target="_blank">
-            {page.mapsLabel}
-            <span class="visually-hidden">{t.a11y.newTab}</span>
-            <Icon name="chevron" />
-          </a>
-        </dd>
-      </div>
+      {
+        whatsapp && (
+          <div class="card card-wide" data-contact-whatsapp>
+            <dt>
+              <Icon name="whatsapp" size={20} />
+              {t.footer.whatsapp}
+            </dt>
+            <dd>
+              <a class="big" href={whatsapp} rel="noopener" target="_blank">
+                {displayPhone(brand.phone, locale)}
+                <span class="visually-hidden">{t.a11y.newTab}</span>
+              </a>
+              <p class="card-note">{t.footer.whatsappNote}</p>
+            </dd>
+          </div>
+        )
+      }
       {
         brand.facebook && (
           <div class="card">
@@ -193,13 +195,11 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
     font-size: clamp(1rem, 0.86rem + 0.7vw, 1.25rem);
     line-height: 1.4;
   }
-  address {
-    font-style: normal;
-    font-size: var(--fs-1);
+  .card-note {
+    margin-top: var(--space-1);
+    color: var(--ink-2);
+    font-size: var(--fs-0, 1rem);
     line-height: 1.5;
-  }
-  .card .link-arrow {
-    margin-top: var(--space-2);
   }
   .hours {
     padding: clamp(var(--space-6), 4vw, var(--space-8));

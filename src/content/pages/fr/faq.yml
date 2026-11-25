@@ -1,7 +1,8 @@
 seoTitle: Questions fréquentes
 seoDescription: >-
-  Origines, allergènes, conservation, livraison en Point Relais Mondial Relay, retrait à
-  Arnouville, délais, paiement et retours : nos réponses à vos questions.
+  Origines, allergènes, conservation, livraison en point relais Mondial Relay,
+  remise en mains propres, délais, paiement et retours : nos réponses à vos
+  questions.
 title: Questions fréquentes
 lead: Tout ce qu’il faut savoir avant de commander. Une autre question ? Écrivez-nous.
 groupTitles:
@@ -54,34 +55,33 @@ items:
     answer: >-
       Au sec, à l’abri de la chaleur et de la lumière, dans le sachet bien
       refermé après chaque utilisation ou dans un bocal hermétique. Servez-vous
-      avec une cuillère bien sèche : les poudres craignent l’humidité et
-      forment alors des grumeaux. La date de durabilité minimale est indiquée
-      sur chaque sachet.
+      avec une cuillère en bois bien sèche : les poudres craignent l’humidité
+      et forment alors des grumeaux. La date « à consommer de préférence
+      avant » est indiquée sur chaque sachet.
   - question: Quels sont les délais de livraison ?
     group: orders
     answer: >-
       Nous préparons votre colis sous 2 jours ouvrés. Comptez ensuite 3 à 5 jours
-      ouvrés en Point Relais Mondial Relay et 2 à 4 jours ouvrés en livraison à
-      domicile avec Colissimo.
-  - question: Comment fonctionne la livraison en Point Relais ?
+      ouvrés pour la livraison en point relais Mondial Relay.
+  - question: Comment fonctionne la livraison en point relais ?
     group: orders
     answer: >-
-      Au moment de commander, choisissez un Point Relais Mondial Relay sur la
+      Au moment de commander, choisissez un point relais Mondial Relay sur la
       carte, près de chez vous ou de votre travail. Vous recevez un SMS et un
       e-mail dès que le colis est arrivé ; il vous attend alors plusieurs jours.
-      Pensez à vous munir d’une pièce d’identité. Nous livrons les Points Relais
+      Pensez à vous munir d’une pièce d’identité. Nous livrons en point relais
       en France, en Belgique et au Luxembourg.
   - question: La livraison est-elle offerte ?
     group: orders
     answer: >-
-      Oui, dès 49 € d’achat, quel que soit le mode de livraison. En dessous, la
-      livraison en Point Relais coûte 4,90 € et la livraison à domicile 6,90 €.
-  - question: Puis-je retirer ma commande sur place ?
+      Oui, dès 49 € d’achat, en France, en Belgique et au Luxembourg. En dessous,
+      la livraison en point relais coûte 4,90 €. La remise en mains propres, sur
+      demande, est toujours gratuite.
+  - question: Puis-je recevoir ma commande en mains propres ?
     group: orders
     answer: >-
-      Oui, le retrait est gratuit au 9 Rue du Marché, 95400 Arnouville,
-      France, sur rendez-vous. Choisissez « Retrait gratuit à Arnouville » au moment de
-      commander : nous vous contactons dès que votre commande est prête.
+      Oui. Remise en mains propres gratuite, sur demande : écrivez-nous sur
+      WhatsApp pour convenir du lieu et du moment.
   - question: Quels moyens de paiement acceptez-vous ?
     group: orders
     answer: >-

@@ -299,7 +299,7 @@ describe('featuredFirst (the shop default order)', () => {
       'poudre-de-baobab-100g',
       'poudre-de-moringa-100g',
       'fleurs-d-hibiscus-bissap-100g',
-      'tubercules-de-souchet-200g',
+      'poudre-de-cacao-100g',
     ]);
     expect(leads[0]).not.toBe('poudre-d-orge-grillee-100g');
   });

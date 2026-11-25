@@ -1,10 +1,10 @@
-# Recette de la maison (source: house), écrite pour le site à partir de sources publiques ; à valider par la propriétaire (docs/client/recettes-a-valider.md).
+# Recette de la maison (source: house), écrite pour le site à partir de sources publiques ; relue par la propriétaire le 2026-11-23 (docs/client/recettes-a-valider.md).
 order: 8
 product: poudre-de-baobab-100g
 source: house
 prepMinutes: 3
 title: 'Yaourt au baobab et au miel'
-summary: 'Une cuillère de poudre de baobab dans un yaourt nature, un filet de miel : le goût acidulé du fruit, entre citron et poire, rencontre la douceur du miel.'
+summary: 'Une cuillère de poudre de baobab dans un yaourt nature, un filet de miel : ses notes acidulées, entre citron et poire, réveillent la douceur du fruit et du miel.'
 yield: '1 bol'
 ingredients:
   - '1 yaourt nature (125 g) ou 150 g de fromage blanc'

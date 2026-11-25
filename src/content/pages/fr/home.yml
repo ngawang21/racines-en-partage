@@ -1,12 +1,12 @@
-seoTitle: 'Racines en Partage : poudres, tisanes et cacao d’Afrique de l’Ouest'
+seoTitle: 'Racines en Partage : poudres, tisanes et cacao d’Afrique et d’Asie'
 seoDescription: >-
   Moringa, baobab, bissap, souchet, cacao ivoirien : des produits simples, sans
-  additifs, conditionnés en France par l’ESAT Les Oliviers. Livraison en Point
-  Relais Mondial Relay.
+  additifs, conditionnés en France par l’ESAT Les Oliviers. Livraison en point
+  relais Mondial Relay.
 hero:
-  # No-break spaces join “de” and “l’Ouest” (one line break fewer) and keep
-  # “en” with “sachet” (no “en” hanging at a line end on phones).
-  title: Des plantes d’Afrique de l’Ouest, en sachet kraft.
+  # A no-break space keeps “en” with “sachet” (no “en” hanging at a line end
+  # on phones).
+  title: Des plantes d’Afrique et d’Asie, en sachet kraft.
   lead: >-
     Moringa, bissap, baobab, souchet, cacao : un seul ingrédient par sachet,
     à infuser, à mixer dans un smoothie ou à saupoudrer sur un plat.
@@ -22,22 +22,22 @@ reassurance:
   - icon: flower
     text: Conditionné en France par l’ESAT Les Oliviers
   - icon: truck
-    text: Livraison en Point Relais, offerte dès 49 €
+    text: Livraison en point relais, offerte dès 49 €
   # Specific and true (review 17): the payment line stays with the cart.
   - icon: pin
-    text: Retrait gratuit à Arnouville
+    text: Remise en mains propres sur demande
 featuredTitle: Nos incontournables
 storyTitle: Deux terres
-# Owner to validate (Marie’s own words welcome). Keep storyLands.from in line
+# Marie’s own sentence (feedback of 2026-11-23). Keep storyLands.from in line
 # with the product origins (a unit test checks). The lands show as chips under
 # the text, so the text does not list them again (a unit test checks).
 storyBody: >-
-  Racines en Partage est née entre deux terres : l’Afrique de l’Ouest, où le
-  moringa, le bissap et le souchet font partie du quotidien, et la France, où
-  nous vivons.
+  Racines en Partage est née entre deux terres : naviguant entre zones
+  tropicales et tempérées, pour vous faire découvrir des produits d’exception,
+  qui vous accompagneront au quotidien.
 storyLands:
   from: [Niger, Sénégal, Cameroun, Côte d’Ivoire, Inde, Allemagne]
-  to: Arnouville
+  to: France
 # Le mot de Marie : à écrire avec elle (trois phrases, signées), par exemple
 # ownerNote:
 #   text: >-
@@ -57,9 +57,10 @@ ritual:
 commitmentTitle: Nos engagements
 # The three commitments (origin, short lists, a serving idea) are the list
 # next to this text (locales, shop.commitments): the text tells who the ESAT
-# is. The trust strip already says the pouches are packed there: each claim
-# once on the home page.
+# is, in Marie’s own words (feedback of 2026-11-23). The trust strip already
+# says the pouches are packed there: each claim once on the home page.
 commitmentBody: >-
-  L’ESAT Les Oliviers, à Gennevilliers, accompagne par le travail des personnes
-  en situation de handicap. Pesée, ensachage, étiquetage : chaque sachet passe
-  entre leurs mains.
+  L’ESAT Les Oliviers, à Gennevilliers, dans les Hauts-de-Seine, qui soutient
+  le travail des personnes en situation de handicap, nous accompagne dans
+  cette aventure. Ils réalisent la pesée, l’ensachage, l’étiquetage : chaque
+  sachet passe entre leurs mains.
